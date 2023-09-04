@@ -9,9 +9,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Log4j2
-public class Server2 {
+public class ServerController {
 
-    public static void serverrun() {
+    public static void start() {
+        log.info("\nSTART\n");
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
         HttpServer server = null;
         try {

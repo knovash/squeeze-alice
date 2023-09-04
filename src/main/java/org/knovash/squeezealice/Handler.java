@@ -2,105 +2,74 @@ package org.knovash.squeezealice;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.lms.Player;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 
+@Log4j2
 public class Handler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        System.out.println("\nMETHOD " + httpExchange.getRequestMethod());
-        System.out.println("HEADERS " + httpExchange.getRequestHeaders().values());
-        System.out.println("URI " + httpExchange.getRequestURI());
-        System.out.println("URI " + httpExchange.getRequestURI().getQuery());
-
+        log.info("\nREQUEST\n");
+        log.info("URI " + httpExchange.getRequestURI().getQuery());
         String query = httpExchange.getRequestURI().getQuery();
         HashMap<String, String> parameters = new HashMap<>();
-        Arrays.asList(query.split("&"))
-                .stream()
-                .peek(System.out::println)
+        Arrays.asList(query.split("&")).stream()
                 .map(s -> s.split("="))
                 .forEach(s -> parameters.put(s[0], s[1]));
-        System.out.println("\nMAP\n" + parameters);
-
+        log.info("QUERY PARAMETERS: " + parameters);
         String action = String.valueOf(parameters.get("action"));
+        log.info("ACTION: " + action);
 
-        System.out.println("ACTION: " + action);
+        //ACTION        PLAYER      VALUE
+        //channel       homepod     1/2/3.../9      Алиса включи канал --
+        //volume        homepod     1/2/.../100     Алиса музыку громче/тише
+        //preset_high   homepod     high            Алиса все громко
+        //preset_low    homepod     low             Алиса все тихо
+        //turnon        homepod                     Алиса включи музыку (включить/подключить колонку в комнате)
+        //turnoff       homepod                     Алиса выключи музыку (все плееры на паузу)
+        //spotify       homepod                     Алиса ключи Спотифай (трансфер на колонку в комнате)
 
         switch (action) {
-            case ("play"):
-                System.out.println("play");
-                break;
-            case ("stop"):
-                System.out.println("stop");
-                break;
-            case ("stopall"):
-                System.out.println("stopall");
-                break;
-            case ("separate"):
-                System.out.println("separate");
-                break;
-            case ("alone"):
-                System.out.println("alone");
-                break;
-            case ("syncto"):
-                System.out.println("syncto");
+            case ("channel"):
+                Action.channel(parameters.get("player"), parameters.get("channel"));
                 break;
             case ("volume"):
-                System.out.println("volume");
-                Player.volume(parameters.get("player"),parameters.get("value"));
+                Player.volumeSet(parameters.get("player"), parameters.get("value"));
                 break;
-            case ("volumedn"):
-                System.out.println("volumedn");
+            case ("preset_low"):
+                Action.presetLow();
                 break;
-            case ("volumeset"):
-                System.out.println("volumeset");
+            case ("preset_high"):
+                Action.presetHigh();
                 break;
-            case ("volumehigh"):
-                System.out.println("volumehigh");
+            case ("turnon"):
+                Action.turnOnMusic(parameters.get("player"));
                 break;
-            case ("volumelow"):
-                System.out.println("volumelow");
-                break;
-            case ("channelplay"):
-                System.out.println("channelplay");
-                break;
-            case ("select"):
-                System.out.println("select");
-                break;
-            case ("off"):
-                System.out.println("off");
+            case ("turnoff"):
+                Action.stopAll();
                 break;
             case ("spotify"):
-                System.out.println("spotify");
+                break;
+            case ("sync"):
+                break;
+            case ("unsync"):
+                break;
+            case ("update_players"):
+                Action.updatePlayers();
+                break;
+            case ("update_favorites"):
+                Action.updatePlayers();
                 break;
             default:
-                System.out.println("default");
                 break;
         }
-
-
-//        if ("GET".equals(httpExchange.getRequestMethod())) {
-//            System.out.println("GET");
-//            System.out.println(httpExchange.getRequestMethod());
-//
-//        } else if ("POST".equals(httpExchange)) {
-//            System.out.println("POST");
-//            requestParamValue = handleGetRequest(httpExchange);
-//        }
-
         handleResponse(httpExchange);
-    }
-
-    private String handleGetRequest(HttpExchange httpExchange) {
-        return httpExchange
-                .getRequestURI()
-                .toString()
-                .split("\\?")[1]
-                .split("=")[1];
     }
 
     private void handleResponse(HttpExchange httpExchange) throws IOException {
@@ -108,7 +77,6 @@ public class Handler implements HttpHandler {
         String response = "{value\":\"100\"}";
         httpExchange.getResponseHeaders().set("Content-Type", "application/json");
         httpExchange.sendResponseHeaders(200, response.length());
-        System.out.println(httpExchange.getResponseBody().toString());
         outputStream.write(response.getBytes());
         outputStream.flush();
         outputStream.close();
