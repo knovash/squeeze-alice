@@ -22,7 +22,8 @@ public class Player {
     Mode mode;
     String path;
     String title;
-
+    Integer volumeStep;
+  public   Integer volumeLastAlice;
 
     public Player() {
     }
@@ -30,34 +31,12 @@ public class Player {
     public Player(String name, String id) {
         this.name = name;
         this.id = id;
+        this.volumeLastAlice = 1;
+        this.volumeStep = 2;
     }
-
-    public Player(String name) {
-        this.name = name;
-        this.id = id;
-    }
-
-
-    @Override
-    public String toString() {
-        return "\nPlayer{" +
-                "name='" + name + '\'' +
-                ", id='" + id + '\'' +
-                ", volume='" + volume + '\'' +
-                ", mode=" + mode +
-                ", path='" + path + '\'' +
-                ", title='" + title + '\'' +
-                '}';
-    }
-
-    public static void play(String player, String channel) {
-        log.info("static PLAYER: " + player + " CHANNEL: " + channel);
-        Fluent.post(Requests.favoritePlay(player, channel).toString());
-    }
-
 
     public static String name(String index) {
-        Content content = Fluent.post(Requests.getName(index).toString());
+        Content content = Fluent.post(Requests.name(index).toString());
         Response response;
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -65,12 +44,12 @@ public class Player {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        log.info(response.result._name);
+        log.info("NAME: " + response.result._name);
         return response.result._name;
     }
 
     public static String id(String index) {
-        Content content = Fluent.post(Requests.getId(index).toString());
+        Content content = Fluent.post(Requests.id(index).toString());
         Response response;
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -78,12 +57,12 @@ public class Player {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        log.info(response.result._id);
+        log.info("ID: " + response.result._id);
         return response.result._id;
     }
 
     public static String mode(String player) {
-        Content content = Fluent.post(Requests.getMode(player).toString());
+        Content content = Fluent.post(Requests.mode(player).toString());
         Response response;
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -91,34 +70,98 @@ public class Player {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        log.info(response.result._mode);
+        log.info("PLAYER: " + player + " MODE: " + response.result._mode);
         return response.result._mode;
     }
 
+    public static void channel(String player, String channel) {
+        log.info("PLAYER: " + player + " CHANNEL: " + channel);
+        Fluent.post(Requests.channel(player, channel).toString());
+    }
+
+    public static void volume(String player, String value) {
+        log.info("PLAYER: " + player + " VOLUME: " + value);
+        Fluent.post(Requests.volume(player, value).toString());
+    }
+
+    public static String volumeget(String player) {
+        Content content = Fluent.post(Requests.mode(player).toString());
+        Response response;
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            response = objectMapper.readValue(content.asString(), Response.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("PLAYER: " + player + " MODE: " + response.result._volume);
+        return response.result._volume;
+    }
+
+    public static Player playerByName(String name) {
+        return ServerLMS.players.stream().filter(p -> p.getName().equals(name)).findFirst().orElse(null);
+    }
+
+    // -----------------------------------------------------
 
     public void pause() {
-        log.info("pause " + this.name);
-        Fluent.post(Requests.playerPause(this.name).toString());
+        log.info("PLAYER: " + this.name + " PAUSE");
+        Fluent.post(Requests.pause(this.name).toString());
     }
 
-    public void volumeSet(String value) {
+    public void volume(String value) {
         log.info("PLAYER: " + this.name + " VOLUME: " + value);
-        Fluent.post(Requests.volumeset(this.name, value).toString());
+        Fluent.post(Requests.volume(this.name, value).toString());
     }
 
-    public static void volumeSet(String player, String value) {
-        log.info("static PLAYER: " + player + " VOLUME: " + value);
-        Fluent.post(Requests.volumeset(player, value).toString());
+    public String volumeget() {
+        // Запрос громкости, должно вернуть json c параметром value=0, где 0 текущая громкость
+        log.info("GET PLAYER VOLUME");
+//        Content content = Fluent.post(Requests.volume(this.name).toString());
+//        Response response;
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        try {
+//            response = objectMapper.readValue(content.asString(), Response.class);
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException(e);
+//        }
+//        log.info("PLAYER: " + this.name + " VOLUME: " + response.result._volume);
+//        return response.result._volume;
+        return "{\"value\":\"4\"}";
     }
 
-    public static void volumeGet(String player) {
-        log.info(player);
-        Fluent.post(Requests.volumeget(player).toString());
+    public static String channelget(String player) {
+        // Запрос состояния, должно вернуть json c параметром value=(true|false)
+        log.info("GET PLAYER CHANNEL");
+        return "{\"value\":\"true\"}";
     }
 
-    public static void favoritePlay(String player) {
-        log.info(player);
-        Fluent.post(Requests.favoritePlay(player, "3").toString());
+    public static String stateget(String player) {
+        // Запрос состояния, должно вернуть json c параметром value=(true|false)
+        log.info("GET PLAYER STATE");
+        return "{\"value\":\"true\"}";
     }
 
+    public String mode() {
+        log.info("GET PLAYER MODE");
+        Content content = Fluent.post(Requests.mode(this.name).toString());
+        Response response;
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            response = objectMapper.readValue(content.asString(), Response.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("PLAYER: " + this.name + " MODE: " + response.result._mode);
+        return response.result._mode;
+    }
+
+    public void wake() {
+        log.info("PLAYER: " + this.name + " WAKE");
+//        Fluent.post(Requests.volume(this.name, value).toString());
+    }
+
+    public void check() {
+        log.info("PLAYER: " + this.name + " CHECK");
+//        Fluent.post(Requests.volume(this.name, value).toString());
+    }
 }

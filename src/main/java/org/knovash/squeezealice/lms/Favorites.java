@@ -38,44 +38,14 @@ public class Favorites {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        log.info("\nNODE: \n" + jsonNode);
+//        log.info("\nNODE: \n" + jsonNode);
         String node = String.valueOf(jsonNode.findValue("loop_loop"));
-        log.info("\nNODEget: \n" + node);
-
+//        log.info("\nNODEget: \n" + node);
         List<Loop> loops = new ArrayList<>();
         loops = JsonGenericUtils.getListFromJson(node, Loop.class);
-        loops.stream().forEach(loop -> log.info(loop.id + " " + loop.name + " " + loop.url));
+//        loops.stream().forEach(loop -> log.info(loop.id + " " + loop.name + " " + loop.url));
         loops.stream().forEach(loop -> loop.setId(loop.id.replaceFirst(".*\\.", "")));
         loops.stream().forEach(loop -> log.info(loop.id + " " + loop.name + " " + loop.url));
-
-
-       log.info("FILTER "+ loops.stream().filter(loop -> loop.id.equals("3")).findFirst().orElse(null).name );
-    }
-
-    public static class Loop {
-
-        public String id;
-        public String name;
-        public String type;
-        public String image;
-        public String url;
-        public int isaudio;
-        public int hasitems;
-
-        public String getId() {
-            return id;
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
+        log.info("FILTER " + loops.stream().filter(loop -> loop.id.equals("3")).findFirst().orElse(null).name);
     }
 }

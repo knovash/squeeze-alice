@@ -10,7 +10,6 @@ public class Main {
         log.info("\nSTART MAIN\n");
         ServerLMS.countPlayers();
         ServerLMS.updatePlayers();
-        ServerLMS.updateFavorites();
         ServerController.start();
     }
 }
