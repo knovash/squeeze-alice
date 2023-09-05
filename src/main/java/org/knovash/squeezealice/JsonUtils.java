@@ -1,10 +1,13 @@
 package org.knovash.squeezealice;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.gson.JsonParser;
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.lms.ServerLMS;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,13 +16,16 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
 @Log4j2
-public class JsonGenericUtils {
+public class JsonUtils {
 
 
     public static String getJsonFromFile(String path, String fileName) {
+        log.info("PATH: " + path + " NAME:  " + fileName);
         String jsonData = null;
-        URL resourceItems = JsonGenericUtils.class.getClassLoader().getResource(path + fileName);
+        URL resourceItems = JsonUtils.class.getClassLoader().getResource(path + fileName);
+        log.info("resourceItems: " + resourceItems);
         File jsonFile = new File(Objects.requireNonNull(resourceItems).getFile());
         log.info("JSON FILE: " + jsonFile);
         try {
@@ -47,8 +53,23 @@ public class JsonGenericUtils {
         return (ArrayList<T>) list;
     }
 
+    public static <T> T getObjectFromFile(String fileName, Class<T> clazz) {
+        String jsonData = getJsonFromFile("", fileName);
+        ObjectMapper objectMapper = new ObjectMapper();
+        log.info("CLASS: " + clazz.getTypeName());
+        JavaType type = objectMapper.getTypeFactory().constructType(clazz);
+        log.info("TYPE: " + type);
+        T object;
+        try {
+            object = objectMapper.readValue(jsonData, type);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return object;
+    }
+
     public static void setObjectToFile(Object object, String fileName) {
-        File file = new File("src/main/resources/data/" + fileName);
+        File file = new File("src/main/resources/" + fileName);
         try {
             file.createNewFile();
             ObjectMapper objectMapper = new ObjectMapper();

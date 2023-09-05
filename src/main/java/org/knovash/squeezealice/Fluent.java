@@ -15,18 +15,19 @@ public class Fluent {
     private static final String LMS = bundle.getString("lms");
 
     public static Content post(String json) {
-        log.info("REQUEST: " + json);
-        final Content postResult;
+//        log.info("REQUEST: " + json);
+        Content postResult;
         try {
-            postResult = Request
-                    .Post(LMS)
-                    .bodyString(json, ContentType.APPLICATION_JSON)
-                    .execute()
-                    .returnContent();
+//            log.info("POST");
+            postResult = Request.Post(LMS).bodyString(json, ContentType.APPLICATION_JSON)
+                    .connectTimeout(1000)
+                    .socketTimeout(1000)
+                    .execute().returnContent();
+//            log.info("POST >>>");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        log.info("RESPONSE: " + postResult.asString());
+//        log.info("RESPONSE: " + postResult.asString());
         return postResult;
     }
 }

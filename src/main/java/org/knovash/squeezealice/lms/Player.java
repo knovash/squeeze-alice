@@ -11,28 +11,35 @@ import org.knovash.squeezealice.requests.Requests;
 import org.knovash.squeezealice.requests.Response;
 import org.knovash.squeezealice.enums.Mode;
 
+import java.util.Objects;
+
+import static org.knovash.squeezealice.Main.serverLMS;
+
 @Log4j2
 @Data
+//@NoArgsConstructor
 @AllArgsConstructor
 public class Player {
 
-    String name;
-    String id;
-    String volume;
-    Mode mode;
-    String path;
-    String title;
-    Integer volumeStep;
-  public   Integer volumeLastAlice;
+    public String name;
+    public String id;
+    public String volume;
+    public Mode mode;
+    public String path;
+    public String title;
+    public Integer volumeStep;
+    public Integer volumePrevious;
 
     public Player() {
+        this.volumePrevious = 1;
+        this.volumeStep = 5;
     }
 
     public Player(String name, String id) {
         this.name = name;
         this.id = id;
-        this.volumeLastAlice = 1;
-        this.volumeStep = 2;
+        this.volumePrevious = 1;
+        this.volumeStep = 5;
     }
 
     public static String name(String index) {
@@ -74,6 +81,22 @@ public class Player {
         return response.result._mode;
     }
 
+    public static String check(String player) {
+        log.info("PLAYER: " + player + " CHECK");
+        Content content = Fluent.post(Requests.mode(player).toString());
+        Response response;
+        log.info("CHECK CONTENT: " + content);
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            response = objectMapper.readValue(content.asString(), Response.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+//        log.info("CHECK RESPONSE: " + response);
+        log.info("CHECK: " + player + " MODE: " + response.result._mode);
+        return "response.result._mode";
+    }
+
     public static void channel(String player, String channel) {
         log.info("PLAYER: " + player + " CHANNEL: " + channel);
         Fluent.post(Requests.channel(player, channel).toString());
@@ -98,7 +121,8 @@ public class Player {
     }
 
     public static Player playerByName(String name) {
-        return ServerLMS.players.stream().filter(p -> p.getName().equals(name)).findFirst().orElse(null);
+
+        return serverLMS.players.stream().filter(p -> p.getName().equals(name)).findFirst().orElse(null);
     }
 
     // -----------------------------------------------------
@@ -163,5 +187,33 @@ public class Player {
     public void check() {
         log.info("PLAYER: " + this.name + " CHECK");
 //        Fluent.post(Requests.volume(this.name, value).toString());
+    }
+
+
+    @Override
+    public String toString() {
+        return "\nPlayer{" +
+                "name='" + name + '\'' +
+                ", id='" + id + '\'' +
+                ", volume='" + volume + '\'' +
+                ", mode=" + mode +
+                ", path='" + path + '\'' +
+                ", title='" + title + '\'' +
+                ", volumeStep=" + volumeStep +
+                ", volumePrevious=" + volumePrevious +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Player)) return false;
+        Player player = (Player) o;
+        return Objects.equals(getName(), player.getName()) && Objects.equals(getId(), player.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getName(), getId());
     }
 }

@@ -1,0 +1,31 @@
+{
+  "players" : [ {
+    "name" : "ggmm",
+    "id" : "bb:bb:6c:b8:26:52",
+    "volume" : null,
+    "mode" : null,
+    "path" : null,
+    "title" : null,
+    "volumeStep" : 5,
+    "volumePrevious" : 1
+  }, {
+    "name" : "tecno",
+    "id" : "cc:cc:b3:b5:90:66",
+    "volume" : null,
+    "mode" : null,
+    "path" : null,
+    "title" : null,
+    "volumeStep" : 5,
+    "volumePrevious" : 1
+  }, {
+    "name" : "mibox",
+    "id" : "cc:cc:b2:b5:90:66",
+    "volume" : null,
+    "mode" : null,
+    "path" : null,
+    "title" : null,
+    "volumeStep" : 5,
+    "volumePrevious" : 1
+  } ],
+  "counter" : 3
+}

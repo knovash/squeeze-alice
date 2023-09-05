@@ -4,6 +4,8 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.lms.Player;
 import org.knovash.squeezealice.lms.ServerLMS;
 
+import static org.knovash.squeezealice.Main.serverLMS;
+
 @Log4j2
 public class Action {
 
@@ -21,12 +23,9 @@ public class Action {
     // Алиса включи канал
     public static void channel(String player, String channel) {
         log.info("CHANNEL: " + channel + " PLAYER: " + player);
-        // включи канал -- на плеере --
-        // если плеер играет - включить канал --
-        // если плеер не играет - wake, unsync, preset, play channel
         String mode = Player.mode(player);
         if (mode.equals("play")) {
-            log.info("PLAYER: " + player + "MODE: " + mode + " PLAY CHANNEL");
+            log.info("PLAYER: " + player + " MODE: " + mode + " PLAY CONTINUE: ");
             Player.channel(player, channel);
         } else {
             log.info("PLAYER: " + player + "MODE: " + mode + " WAKE - PRESET - PLAY CHANNEL");
@@ -38,20 +37,21 @@ public class Action {
 
     // Алиса музыку громче\тише
     public static void volume(String name, String value) {
-        log.info("VOLUME: " + value + " PLAYER: " + name);
+        log.info("VOLUME: (alice) " + value + " PLAYER: " + name);
         Player player = Player.playerByName(name);
-        Integer last = player.getVolumeLastAlice();
-        Integer now = Integer.valueOf(value);
-        log.info(now + " " + last);
-        if (now > last)
-        {
-            log.info("VOLUME UP");
-            player.volume("+5");}
-        else  {
-            log.info("VOLUME DN");
-            player.volume("-5");}
-        player.setVolumeLastAlice(now
-        );
+        Integer volumePrevious = player.volumePrevious;
+        Integer volumeCurrent = Integer.valueOf(value);
+        Integer step = player.volumeStep;
+        log.info("alice: " + volumeCurrent + " > alice last: " + volumePrevious);
+        if (volumeCurrent > volumePrevious || volumeCurrent == 1) {
+            log.info("VOLUME UP +" + step);
+            player.volume("+" + step);
+        }
+        if (volumeCurrent < volumePrevious || volumeCurrent == 100) {
+            log.info("VOLUME DN -" + step);
+            player.volume("-" + step);
+        }
+        player.volumePrevious = volumeCurrent;
     }
 
     // Алиса включи музыку. Алиса включи колонку ---
@@ -59,8 +59,8 @@ public class Action {
         Player player = Player.playerByName(name);
         log.info("TURN ON PLAYER: " + name);
         // обновить плееры
-        ServerLMS.updatePlayers();
-        log.info("CHECK PLAYER: " + name + " " + ServerLMS.players.stream().filter(player1 -> player1.getName().equals(name)).findFirst().orElse(null).getName());
+//        ServerLMS.updatePlayers();
+        log.info("CHECK PLAYER: " + name + " " + serverLMS.players.stream().filter(player1 -> player1.getName().equals(name)).findFirst().orElse(null).getName());
         // если плеер на сервере
         if (player.mode().equals("play")) {
             log.info("continue playing");
@@ -82,22 +82,22 @@ public class Action {
 
     public static void turnoff() {
         // Алиса выключи музыку
-        ServerLMS.players.stream().forEach(player -> player.pause());
+        serverLMS.players.stream().forEach(player -> player.pause());
     }
 
     public static void low() {
         // Алиса все тихо
-        ServerLMS.players.stream().forEach(player -> player.volume("5"));
+        serverLMS.players.stream().forEach(player -> player.volume("5"));
     }
 
     public static void high() {
         // Алиса все громко
-        ServerLMS.players.stream().forEach(player -> player.volume("20"));
+        serverLMS.players.stream().forEach(player -> player.volume("20"));
     }
 
     // Алиса обнови плеееры
     public static void updatePlayers() {
-        ServerLMS.updatePlayers();
+        serverLMS.updatePlayers();
     }
 
     public static void wake(String player) {
@@ -113,7 +113,7 @@ public class Action {
     }
 
     public static Player playing() {
-        return ServerLMS.players
+        return serverLMS.players
                 .stream()
                 .filter(player -> player.mode().equals("play"))
                 .findFirst().orElse(null);

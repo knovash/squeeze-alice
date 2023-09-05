@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Content;
 import org.knovash.squeezealice.Fluent;
-import org.knovash.squeezealice.JsonGenericUtils;
+import org.knovash.squeezealice.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +42,7 @@ public class Favorites {
         String node = String.valueOf(jsonNode.findValue("loop_loop"));
 //        log.info("\nNODEget: \n" + node);
         List<Loop> loops = new ArrayList<>();
-        loops = JsonGenericUtils.getListFromJson(node, Loop.class);
+        loops = JsonUtils.getListFromJson(node, Loop.class);
 //        loops.stream().forEach(loop -> log.info(loop.id + " " + loop.name + " " + loop.url));
         loops.stream().forEach(loop -> loop.setId(loop.id.replaceFirst(".*\\.", "")));
         loops.stream().forEach(loop -> log.info(loop.id + " " + loop.name + " " + loop.url));
