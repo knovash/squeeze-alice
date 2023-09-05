@@ -9,13 +9,13 @@ import org.knovash.squeezealice.JsonUtils;
 import org.knovash.squeezealice.requests.Requests;
 import org.knovash.squeezealice.requests.Response;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static org.knovash.squeezealice.Main.serverLMS;
 
 @Log4j2
 public class ServerLMS {
+
 
     public List<Player> players;
     public Integer counter;
@@ -37,24 +37,28 @@ public class ServerLMS {
         this.countPlayers();
         Integer counter = this.counter;
         List<Player> players = new ArrayList<>();
+        Map<String,String> namebind = new HashMap<>();
         for (Integer index = 0; index < counter; index++) {
             String name = Player.name(index.toString());
             String id = Player.id(index.toString());
 
-
-            log.info("CONTAINS?: " + this.players.contains(new Player(name, id)));
-
-            if (this.players.contains(new Player(name, id))) {
-                log.info("CONTAINS YES: " + name);
+            if (this.players == null) {
+                players.add(new Player(name, id));
+            } else {
+                log.info("CONTAINS?: " + this.players.contains(new Player(name, id)));
+                if (this.players.contains(new Player(name, id))) {
+                    log.info("CONTAINS YES: " + name);
+                } else {
+                    log.info("CONTAINS NO. ADD PLAYER: " + name);
+                    this.players.add(new Player(name, id));
+                }
             }
-            else
-            { log.info("CONTAINS NO. ADD PLAYER: " + name);
-                this.players.add(new Player(name, id));}
-
-
         }
         log.info("\nPLAYERS FROM SERVER:\n" + this.players);
-//        this.players = players;
+
+        log.info("\nBIND:\n" + namebind);
+
+        if (this.players == null) this.players = players;
 
 
     }

@@ -13,6 +13,7 @@ import org.knovash.squeezealice.enums.Mode;
 
 import java.util.Objects;
 
+import static java.rmi.server.LogStream.SILENT;
 import static org.knovash.squeezealice.Main.serverLMS;
 
 @Log4j2
@@ -29,17 +30,16 @@ public class Player {
     public String title;
     public Integer volumeStep;
     public Integer volumePrevious;
+    public boolean black;
 
-    public Player() {
-        this.volumePrevious = 1;
-        this.volumeStep = 5;
-    }
+    public static String pathLast;
 
     public Player(String name, String id) {
         this.name = name;
         this.id = id;
         this.volumePrevious = 1;
         this.volumeStep = 5;
+        this.black = false;
     }
 
     public static String name(String index) {
@@ -97,9 +97,18 @@ public class Player {
         return "response.result._mode";
     }
 
-    public static void channel(String player, String channel) {
+    public static void channel(String player, Integer channel) {
         log.info("PLAYER: " + player + " CHANNEL: " + channel);
-        Fluent.post(Requests.channel(player, channel).toString());
+        Fluent.post(Requests.play(player, channel).toString());
+    }
+
+    public static void play(String player, String path) {
+        log.info("PLAYER: " + player + " PATH: " + path);
+        Fluent.post(Requests.play(player, path).toString());
+    }
+    public void play( Integer channel) {
+        log.info("PLAYER: " + this.name + " CHANNEL: " + channel);
+        Fluent.post(Requests.play(this.name, channel).toString());
     }
 
     public static void volume(String player, String value) {
@@ -181,12 +190,36 @@ public class Player {
 
     public void wake() {
         log.info("PLAYER: " + this.name + " WAKE");
-//        Fluent.post(Requests.volume(this.name, value).toString());
+        Fluent.post(Requests.play(this.name, SILENT).toString());
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        Fluent.post(Requests.pause(this.name).toString());
     }
 
-    public void check() {
+    public static void wake(String name) {
+        log.info("PLAYER: " + name + " WAKE");
+        Fluent.post(Requests.play(name, SILENT).toString());
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        Fluent.post(Requests.pause(name).toString());
+    }
+
+    public void check(Player player) {
         log.info("PLAYER: " + this.name + " CHECK");
-//        Fluent.post(Requests.volume(this.name, value).toString());
+
+        serverLMS.players.contains(player);
+
+    }
+
+    public void sync(String toPlayer) {
+        log.info("PLAYER: " + this.name + " PAUSE");
+        Fluent.post(Requests.sync(this.name, toPlayer).toString());
     }
 
 

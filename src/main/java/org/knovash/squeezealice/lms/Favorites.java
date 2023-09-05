@@ -48,4 +48,9 @@ public class Favorites {
         loops.stream().forEach(loop -> log.info(loop.id + " " + loop.name + " " + loop.url));
         log.info("FILTER " + loops.stream().filter(loop -> loop.id.equals("3")).findFirst().orElse(null).name);
     }
+
+    public static boolean checkExists(Integer index) {
+        log.info("CHECK FAVORITE " + index + " EXISTS ON SERVER");
+        return true;
+    }
 }

@@ -22,8 +22,12 @@ public class Requests {
         return Request.create(player, new String[]{"pause", "1"});
     }
 
-    public static Request channel(String player, String id) {
+    public static Request play(String player, Integer id) {
         return Request.create(player, new String[]{"favorites", "playlist", "play", "item_id:" + id});
+    }
+
+    public static Request play(String player, String url) {
+        return Request.create(player, new String[]{"playlist", "play", url});
     }
 
     public static Request volume(String player, String value) {

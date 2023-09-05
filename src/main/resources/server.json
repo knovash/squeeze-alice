@@ -1,31 +1,34 @@
 {
   "players" : [ {
-    "name" : "ggmm",
-    "id" : "bb:bb:6c:b8:26:52",
+    "name" : "HomePod",
+    "id" : "aa:aa:c2:7c:e0:12",
     "volume" : null,
     "mode" : null,
     "path" : null,
     "title" : null,
     "volumeStep" : 5,
-    "volumePrevious" : 1
+    "volumePrevious" : 1,
+    "black" : false
   }, {
-    "name" : "tecno",
-    "id" : "cc:cc:b3:b5:90:66",
+    "name" : "Bathroom",
+    "id" : "cc:cc:31:b3:64:ab",
     "volume" : null,
     "mode" : null,
     "path" : null,
     "title" : null,
     "volumeStep" : 5,
-    "volumePrevious" : 1
+    "volumePrevious" : 1,
+    "black" : false
   }, {
-    "name" : "mibox",
-    "id" : "cc:cc:b2:b5:90:66",
+    "name" : "MiBox",
+    "id" : "cc:cc:be:b5:90:66",
     "volume" : null,
     "mode" : null,
     "path" : null,
     "title" : null,
     "volumeStep" : 5,
-    "volumePrevious" : 1
+    "volumePrevious" : 1,
+    "black" : false
   } ],
   "counter" : 3
 }
