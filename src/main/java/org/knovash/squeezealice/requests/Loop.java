@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.lms;
+package org.knovash.squeezealice.requests;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

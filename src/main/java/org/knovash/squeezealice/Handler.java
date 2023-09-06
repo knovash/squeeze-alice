@@ -22,12 +22,10 @@ public class Handler implements HttpHandler {
         Arrays.asList(query.split("&")).stream()
                 .map(s -> s.split("="))
                 .forEach(s -> parameters.put(s[0], s[1]));
-//        log.info("QUERY PARAMETERS: " + parameters);
-        String action = parameters.get("action");
+        String action = parameters.get("action").replace("_","");
         log.info("ACTION: " + action);
         String name = bundle.getString(parameters.get("player"));
         log.info("PLAYER: " + parameters.get("player") + " = " + name);
-
 
         switch (action) {
             case ("channel"):
@@ -37,21 +35,21 @@ public class Handler implements HttpHandler {
                 Action.volume(name, parameters.get("value"));
                 break;
             case ("low"):
-                Action.low();
+                Action.allLow();
                 break;
             case ("high"):
-                Action.high();
+                Action.allHigh();
                 break;
-            case ("turnon"):
-                Action.turnon(name);
+            case ("turnonmusic"):
+                Action.turnOnMusic(name);
                 break;
-            case ("turnoff"):
-                Action.turnoff();
+            case ("turnoffmusic"):
+                Action.turnOffMusic();
                 break;
-            case ("update_players"):
+            case ("updateplayers"):
                 Action.updatePlayers();
                 break;
-            case ("update_favorites"):
+            case ("updatefavorites"):
                 Action.updatePlayers();
                 break;
             default:

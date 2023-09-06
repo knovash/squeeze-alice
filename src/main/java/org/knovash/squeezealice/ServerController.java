@@ -9,7 +9,6 @@ import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-
 @Log4j2
 public class ServerController {
 
@@ -23,7 +22,6 @@ public class ServerController {
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
         HttpServer server = null;
         try {
-//            server = HttpServer.create(new InetSocketAddress("localhost", 8001), 0);
             server = HttpServer.create(new InetSocketAddress(HOSTNAME, PORT), 0);
         } catch (IOException e) {
             throw new RuntimeException(e);

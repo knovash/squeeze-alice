@@ -27,7 +27,7 @@ public class Request {
         return request;
     }
 
-    // не удалять. переводит json в строку
+    /** не удалять. переводит json в строку */
     @Override
     public String toString() {
         String json;

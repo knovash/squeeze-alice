@@ -1,5 +1,13 @@
 {
   "players" : [ {
+    "name" : "ggmm",
+    "id" : "22",
+    "volumeStep" : 5,
+    "volumePrevious" : 1,
+    "low" : 5,
+    "high" : 20,
+    "black" : false
+  }, {
     "name" : "HomePod",
     "id" : "22",
     "volumeStep" : 5,
@@ -16,15 +24,7 @@
     "high" : 20,
     "black" : false
   }, {
-    "name" : "GGMM_E2_2650",
-    "id" : "22",
-    "volumeStep" : 5,
-    "volumePrevious" : 1,
-    "low" : 5,
-    "high" : 20,
-    "black" : false
-  }, {
-    "name" : "MiBox",
+    "name" : "Mi Box",
     "id" : "22",
     "volumeStep" : 5,
     "volumePrevious" : 1,

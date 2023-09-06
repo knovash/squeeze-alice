@@ -1,11 +1,12 @@
-package org.knovash.squeezealice.lms;
+package org.knovash.squeezealice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Content;
-import org.knovash.squeezealice.Fluent;
-import org.knovash.squeezealice.JsonUtils;
 import org.knovash.squeezealice.requests.Requests;
 import org.knovash.squeezealice.requests.Response;
 
@@ -13,9 +14,16 @@ import java.util.*;
 
 import static org.knovash.squeezealice.Main.serverLMS;
 
+
 @Log4j2
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ServerLMS {
 
+//    public ServerLMS() {
+//
+//    }
 
     public List<Player> players;
     public Integer counter;
@@ -40,7 +48,8 @@ public class ServerLMS {
         Map<String,String> namebind = new HashMap<>();
         for (Integer index = 0; index < counter; index++) {
             String name = Player.name(index.toString());
-            String id = Player.id(index.toString());
+//            String id = Player.id(index.toString());
+            String id = "22";
 
             if (this.players == null) {
                 players.add(new Player(name, id));
@@ -63,15 +72,15 @@ public class ServerLMS {
 
     }
 
-
     public void writeFile() {
         log.info("\nWRITE FILE:\n");
-        JsonUtils.setObjectToFile(serverLMS, "server.json");
+        JsonUtils.pojoToJsonFile(serverLMS, "server.json");
+
     }
 
     public void readFile() {
         log.info("\nREAD FILE:\n");
-        serverLMS = JsonUtils.getObjectFromFile("server.json", ServerLMS.class);
+        serverLMS = JsonUtils.jsonFileToPojo("server.json", ServerLMS.class);
         log.info("\nplayers are read into the server:\n" + serverLMS.players);
     }
 }

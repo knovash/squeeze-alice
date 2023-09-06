@@ -18,12 +18,10 @@ public class Fluent {
 //        log.info("REQUEST: " + json);
         Content postResult;
         try {
-//            log.info("POST");
             postResult = Request.Post(LMS).bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute().returnContent();
-//            log.info("POST >>>");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

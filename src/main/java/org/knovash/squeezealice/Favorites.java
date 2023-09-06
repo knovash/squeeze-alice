@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.lms;
+package org.knovash.squeezealice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -10,6 +10,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Content;
 import org.knovash.squeezealice.Fluent;
 import org.knovash.squeezealice.JsonUtils;
+import org.knovash.squeezealice.requests.Loop;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,11 +43,15 @@ public class Favorites {
         String node = String.valueOf(jsonNode.findValue("loop_loop"));
 //        log.info("\nNODEget: \n" + node);
         List<Loop> loops = new ArrayList<>();
-        loops = JsonUtils.getListFromJson(node, Loop.class);
+        loops = JsonUtils.jsonToList(node, Loop.class);
 //        loops.stream().forEach(loop -> log.info(loop.id + " " + loop.name + " " + loop.url));
         loops.stream().forEach(loop -> loop.setId(loop.id.replaceFirst(".*\\.", "")));
         loops.stream().forEach(loop -> log.info(loop.id + " " + loop.name + " " + loop.url));
         log.info("FILTER " + loops.stream().filter(loop -> loop.id.equals("3")).findFirst().orElse(null).name);
+
+        JsonUtils.pojoToJsonFile(loops, "fav.json");
+
+
     }
 
     public static boolean checkExists(Integer index) {
