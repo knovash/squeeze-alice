@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Log4j2
-public class ServerController {
+public class Controller {
 
     private static ResourceBundle bundle = ResourceBundle.getBundle("config");
     private static final String HOSTNAME = bundle.getString("hostname");

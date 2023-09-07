@@ -9,17 +9,14 @@ public class Main {
 
     private static ResourceBundle bundle = ResourceBundle.getBundle("config");
     public static final String SILENCE = bundle.getString("silence");
-    private static final String WAKESECONDS = bundle.getString("wake_seconds");
-    public static ServerLMS serverLMS = new ServerLMS();
+    public static Server server = new Server();
 
     public static void main(String[] args) {
         log.info("\nSTART MAIN\n");
-        log.info(SILENCE);
-        serverLMS = new ServerLMS();
-//        serverLMS.readFile();
-        serverLMS.updatePlayers();
-        serverLMS.writeFile();
-        serverLMS.readFile();
-//        ServerController.start();
+        server = new Server();
+//        server.readFile();
+        server.updatePlayers();
+        server.writeFile();
+        Controller.start();
     }
 }

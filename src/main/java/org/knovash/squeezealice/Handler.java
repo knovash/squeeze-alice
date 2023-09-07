@@ -15,24 +15,48 @@ public class Handler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) {
-        log.info("\n\nREQUEST");
+        log.info(" ----===[ REQUEST ]===----");
         log.info("URI: " + httpExchange.getRequestURI().getQuery());
         String query = httpExchange.getRequestURI().getQuery();
         HashMap<String, String> parameters = new HashMap<>();
         Arrays.asList(query.split("&")).stream()
                 .map(s -> s.split("="))
                 .forEach(s -> parameters.put(s[0], s[1]));
-        String action = parameters.get("action").replace("_","");
-        log.info("ACTION: " + action);
-        String name = bundle.getString(parameters.get("player"));
-        log.info("PLAYER: " + parameters.get("player") + " = " + name);
+        String action = parameters.get("action").replace("_", "");
+
+        String name = null;
+        Player player = null;
+        if (parameters.get("player") != null) {
+            name = parameters.get("player");
+// проверка альтернативных имен плееров
+            if (bundle.containsKey(name)) {
+                name = bundle.getString(name);
+            } else {
+                log.info("NO ALTER NAME FOR " + name);
+            }
+            player =Server.playerByName(name);
+            if (player == null) {
+                log.info("NO PLAYER: " + name + " TRY UPDATE FROM SERVER");
+                Server.updatePlayers();
+                player =Server.playerByName(name);
+                if (player == null) {
+                    log.info("NO PLAYER: " + name + " ON SERVER");
+                    return;
+                }
+            }
+            if (player.isBlack()) {
+                log.info("PLAYER: " + name + " IN BLACK");
+                return;
+            }
+        }
+
 
         switch (action) {
             case ("channel"):
-                Action.channel(name, Integer.valueOf(parameters.get("value"))-1);
+                Action.channel(player, Integer.valueOf(parameters.get("value")));
                 break;
             case ("volume"):
-                Action.volume(name, parameters.get("value"));
+                Action.volume(player, parameters.get("value"));
                 break;
             case ("low"):
                 Action.allLow();
@@ -41,16 +65,22 @@ public class Handler implements HttpHandler {
                 Action.allHigh();
                 break;
             case ("turnonmusic"):
-                Action.turnOnMusic(name);
+                Action.turnOnMusic(player);
                 break;
             case ("turnoffmusic"):
                 Action.turnOffMusic();
                 break;
+            case ("turnonspeaker"):
+                Action.turnOnSpeaker(player);
+                break;
+            case ("turnoffspeaker"):
+                Action.turnOffSpeaker(player);
+                break;
             case ("updateplayers"):
-                Action.updatePlayers();
+                Server.updatePlayers();
                 break;
             case ("updatefavorites"):
-                Action.updatePlayers();
+                Server.updatePlayers();
                 break;
             default:
                 break;

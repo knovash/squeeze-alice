@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.apache.http.client.fluent.Content;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,7 +74,6 @@ public class JsonUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public static <T> List<T> jsonFileToList(String fileName, Class<T> clazz) {
@@ -85,4 +85,15 @@ public class JsonUtils {
             throw new RuntimeException(e);
         }
     }
+
+//    public static <T> T jsonToClass(String json, Class<T> clazz) {
+//        JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, clazz);
+//        try {
+//            return objectMapper.readValue(json, type);
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
+
 }

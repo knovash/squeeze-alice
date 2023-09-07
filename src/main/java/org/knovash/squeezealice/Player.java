@@ -1,19 +1,19 @@
 package org.knovash.squeezealice;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Content;
+import org.apache.http.client.fluent.Response;
 import org.knovash.squeezealice.requests.Requests;
-import org.knovash.squeezealice.requests.Response;
+import org.knovash.squeezealice.requests.ResponseFromLms;
 
+import java.io.IOException;
 import java.util.Objects;
 
-import static java.rmi.server.LogStream.SILENT;
-import static org.knovash.squeezealice.Main.serverLMS;
+import static org.knovash.squeezealice.Main.SILENCE;
 
 @Log4j2
 @Data
@@ -24,170 +24,195 @@ public class Player {
     public String name;
     public String id;
     public Integer volumeStep;
-    public Integer volumePrevious;
-    public Integer low;
-    public Integer high;
+    public Integer volumeAlicePrevious;
+    public Integer presetLow;
+    public Integer presetHigh;
+    public Integer wakeDelay;
     public boolean black;
+    public Integer volumeAliceLow;
+    public Integer volumeAliceHigh;
 
     public static String pathLast;
 
     public Player(String name, String id) {
         this.name = name;
         this.id = id;
-        this.volumePrevious = 1;
+        this.volumeAlicePrevious = 1;
         this.volumeStep = 5;
-        this.low = 5;
-        this.high = 20;
+        this.presetLow = 5;
+        this.presetHigh = 20;
+        this.wakeDelay = 10000;
+        this.volumeAliceLow = 1;
+        this.volumeAliceHigh = 9;
         this.black = false;
     }
 
     public static String name(String index) {
-        Content content = Fluent.post(Requests.name(index).toString());
-        Response response;
-        ObjectMapper objectMapper = new ObjectMapper();
+        Response response = Fluent.post(Requests.name(index).toString());
+        Content content;
+        HttpResponse httpResponse;
         try {
-            response = objectMapper.readValue(content.asString(), Response.class);
-        } catch (JsonProcessingException e) {
+            content = response.returnContent();
+//            httpResponse = response.returnResponse();
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        log.info("NAME: " + response.result._name);
-        return response.result._name;
+        ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
+        log.info("NAME: " + responseFromLms.result._name);
+//        log.info("SATUS: " + httpResponse.getStatusLine());
+        return responseFromLms.result._name;
     }
 
     public static String id(String index) {
-        Content content = Fluent.post(Requests.id(index).toString());
-        Response response;
-        ObjectMapper objectMapper = new ObjectMapper();
+        Response response = Fluent.post(Requests.id(index).toString());
+        Content content;
+        HttpResponse httpResponse;
         try {
-            response = objectMapper.readValue(content.asString(), Response.class);
-        } catch (JsonProcessingException e) {
+            content = response.returnContent();
+//            httpResponse = response.returnResponse();
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        log.info("ID: " + response.result._id);
-        return response.result._id;
-    }
-
-    public static String mode(String player) {
-        Content content = Fluent.post(Requests.mode(player).toString());
-        Response response;
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            response = objectMapper.readValue(content.asString(), Response.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        log.info("PLAYER: " + player + " MODE: " + response.result._mode);
-        return response.result._mode;
+        ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
+        log.info("ID: " + responseFromLms.result._id);
+//        log.info("SATUS: " + httpResponse.getStatusLine());
+        return responseFromLms.result._id;
     }
 
     public String mode() {
-        log.info("GET PLAYER MODE");
-        Content content = Fluent.post(Requests.mode(this.name).toString());
-        Response response;
-        ObjectMapper objectMapper = new ObjectMapper();
+        Response response = Fluent.post(Requests.mode(this.name).toString());
+        Content content;
+        HttpResponse httpResponse;
         try {
-            response = objectMapper.readValue(content.asString(), Response.class);
-        } catch (JsonProcessingException e) {
+            content = response.returnContent();
+//            httpResponse = response.returnResponse();
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        log.info("PLAYER: " + this.name + " MODE: " + response.result._mode);
-        return response.result._mode;
+        ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
+        log.info("PLAYER: " + this.name + " MODE: " + responseFromLms.result._mode);
+//        log.info("SATUS: " + httpResponse.getStatusLine());
+        return responseFromLms.result._mode;
     }
 
-    public static void volume(String player, String value) {
-        log.info("PLAYER: " + player + " VOLUME: " + value);
-        Fluent.post(Requests.volume(player, value).toString());
+    public String path() {
+        Response response = Fluent.post(Requests.path(this.name).toString());
+        Content content;
+        HttpResponse httpResponse;
+        try {
+            content = response.returnContent();
+//            httpResponse = response.returnResponse();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
+        log.info("PLAYER: " + this.name + " PATH: " + responseFromLms.result._path);
+//        log.info("SATUS: " + httpResponse.getStatusLine());
+        return responseFromLms.result._path;
     }
 
-    public void volume(String value) {
+    public boolean volume(String value) {
         log.info("PLAYER: " + this.name + " VOLUME: " + value);
-        Fluent.post(Requests.volume(this.name, value).toString());
-    }
-
-    public static void play(String player, Integer channel) {
-        log.info("PLAYER: " + player + " CHANNEL: " + channel);
-        Fluent.post(Requests.play(player, channel).toString());
-    }
-
-    public static void play(String player, String path) {
-        log.info("PLAYER: " + player + " PATH: " + path);
-        Fluent.post(Requests.play(player, path).toString());
+        Response response =  Fluent.post(Requests.volume(this.name, value).toString());
+        HttpResponse httpResponse;
+        try {
+            httpResponse = response.returnResponse();
+        } catch (IOException e) {
+            log.info("ERROR");
+            throw new RuntimeException(e);
+        }
+        log.info("SATUS: " + httpResponse.getStatusLine());
+        return httpResponse.getStatusLine().getStatusCode() == 200;
     }
 
     public void play(Integer channel) {
-        log.info("PLAYER: " + this.name + " CHANNEL: " + channel);
-        Fluent.post(Requests.play(this.name, channel).toString());
+        log.info("PLAYER: " + this.name + " PLAY CHANNEL: " + channel);
+        Response response =  Fluent.post(Requests.play(this.name, channel - 1).toString());
+        Content content;
+        HttpResponse httpResponse;
+        try {
+            content = response.returnContent();
+//            httpResponse = response.returnResponse();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
+        log.info("RESPONSE: " + responseFromLms);
+//        log.info("SATUS: " + httpResponse.getStatusLine());
+//        return re.resultFromLms._path;
     }
 
-    public void play(String path) {
-        log.info("PLAYER: " + this.name + " PATH: " + path);
-        Fluent.post(Requests.play(this.name, path).toString());
+    public boolean play(String path) {
+        log.info("PLAYER: " + this.name + " PLAY PATH: " + path);
+        Response response =  Fluent.post(Requests.play(this.name, path).toString());
+        HttpResponse httpResponse;
+        try {
+            httpResponse = response.returnResponse();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("SATUS: " + httpResponse.getStatusLine());
+        return httpResponse.getStatusLine().getStatusCode() == 200;
     }
 
-    public static void pause(String name) {
-        log.info("PLAYER: " + name + " PAUSE");
-        Fluent.post(Requests.pause(name).toString());
-    }
-
-    public void pause() {
+    public boolean pause() {
         log.info("PLAYER: " + this.name + " PAUSE");
-        Fluent.post(Requests.pause(this.name).toString());
+        Response response = Fluent.post(Requests.pause(this.name).toString());
+        HttpResponse httpResponse;
+        try {
+            httpResponse = response.returnResponse();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("SATUS: " + httpResponse.getStatusLine());
+        return httpResponse.getStatusLine().getStatusCode() == 200;
     }
 
     public void sync(String toPlayer) {
-        log.info("PLAYER: " + this.name + " PAUSE");
-        Fluent.post(Requests.sync(this.name, toPlayer).toString());
-    }
-
-    public static void sync(String player, String toPlayer) {
-        log.info("PLAYER: " + player + " PAUSE");
-        Fluent.post(Requests.sync(player, toPlayer).toString());
-    }
-
-    public static void wake(String name) {
-        log.info("PLAYER: " + name + " WAKE");
-        Fluent.post(Requests.play(name, SILENT).toString());
+        log.info("PLAYER: " + this.name + " SYNC TO: " + toPlayer);
+        Response response = Fluent.post(Requests.sync(this.name, toPlayer).toString());
+        Content content;
+        HttpResponse httpResponse;
         try {
-            Thread.sleep(1000);
+//            content = response.returnContent();
+            httpResponse = response.returnResponse();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+//        ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
+//        log.info("RESPONSE: " + responseFromLms);
+        log.info("SATUS: " + httpResponse.getStatusLine());
+//        return re.resultFromLms._path;
+    }
+
+    public void unsync() {
+        log.info("PLAYER: " + this.name + " UNSYNC");
+        Response response =Fluent.post(Requests.unsync(this.name).toString());
+        Content content;
+        HttpResponse httpResponse;
+        try {
+            content = response.returnContent();
+//            httpResponse = response.returnResponse();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
+        log.info("RESPONSE: " + responseFromLms);
+//        log.info("SATUS: " + httpResponse.getStatusLine());
+//        return re.resultFromLms._path;
+    }
+
+    public void wakeAndSet() {
+        log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wakeDelay);
+        this.play(SILENCE); // wake by silence
+        this.volume(Preset.volume()); // set
+        try {
+            Thread.sleep(this.wakeDelay); // wait
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        Fluent.post(Requests.pause(name).toString());
-    }
-
-    public void wake() {
-        log.info("PLAYER: " + this.name + " WAKE");
-        Fluent.post(Requests.play(this.name, SILENT).toString());
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        Fluent.post(Requests.pause(this.name).toString());
-    }
-
-    public static String check(String player) {
-        log.info("PLAYER: " + player + " CHECK");
-        Content content = Fluent.post(Requests.mode(player).toString());
-        Response response;
-        log.info("CHECK CONTENT: " + content);
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            response = objectMapper.readValue(content.asString(), Response.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        log.info("CHECK: " + player + " MODE: " + response.result._mode);
-        return "response.result._mode";
-    }
-
-    public void check(Player player) {
-        log.info("PLAYER: " + this.name + " CHECK");
-        serverLMS.players.contains(player);
-    }
-
-    public static Player instance(String name) {
-        return serverLMS.players.stream().filter(p -> p.getName().equals(name)).findFirst().orElse(null);
+        this.volume(Preset.volume()); // set
+        this.pause(); // stop wake silence
     }
 
     @Override
@@ -195,8 +220,6 @@ public class Player {
         return "\nPlayer{" +
                 "name='" + name + '\'' +
                 ", id='" + id + '\'' +
-                ", volumeStep=" + volumeStep +
-                ", volumePrevious=" + volumePrevious +
                 '}';
     }
 

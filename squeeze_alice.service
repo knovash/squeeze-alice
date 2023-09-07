@@ -1,0 +1,8 @@
+[Unit]
+Description=SqueezeAlice
+After=multi-user.target
+[Service]
+Type=simple
+ExecStart= java -jar squeeze-alice.jar
+[Install]
+WantedBy=multi-user.target

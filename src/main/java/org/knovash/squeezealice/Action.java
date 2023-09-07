@@ -2,130 +2,139 @@ package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
 
-import static org.knovash.squeezealice.Main.serverLMS;
+import java.time.LocalTime;
+import java.util.Objects;
+
+import static org.knovash.squeezealice.Main.server;
 
 @Log4j2
 public class Action {
 
     // Алиса музыку громче\тише
-    public static void volume(String name, String value) {
-        log.info("VOLUME: (alice) " + value + " PLAYER: " + name);
-        Player player = Player.instance(name);
-        Integer volumePrevious = player.volumePrevious;
-        Integer volumeCurrent = Integer.valueOf(value);
+    public static void volume(Player player, String value) {
+        log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name);
+        Integer volumeAlicePrevious = player.volumeAlicePrevious;
+        Integer volumeAliceCurrent = Integer.valueOf(value);
         Integer step = player.volumeStep;
-        log.info("alice: " + volumeCurrent + " > alice last: " + volumePrevious);
-        if (volumeCurrent > volumePrevious || volumeCurrent == 1) {
+        log.info("alice: " + volumeAliceCurrent + " > alice last: " + volumeAlicePrevious + " low:" + player.volumeAliceLow + " hi:" + player.volumeAliceHigh);
+        if ((volumeAliceCurrent > volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volumeAliceHigh))) {
             log.info("VOLUME UP +" + step);
             player.volume("+" + step);
         }
-        if (volumeCurrent < volumePrevious || volumeCurrent == 100) {
+        if ((volumeAliceCurrent < volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volumeAliceLow))) {
             log.info("VOLUME DN -" + step);
             player.volume("-" + step);
         }
-        player.volumePrevious = volumeCurrent;
+        player.volumeAlicePrevious = volumeAliceCurrent;
     }
 
-    // Алиса включи канал
-    // 1. проверить в черном списке - если да то ничего неделать
-    // 2. обновить колонки на сервере
-    // 3. проверить что колонка есть на сервере - если нет - ничего
-    // 4. если колонка играет - включить канал
-    // 5. если колонка не играет - разбудить, установить громкость,
-    // 6. включить канал
-    public static void channel(String name, Integer channel) {
-        Player player = Player.instance(name);
-        log.info("CHANNEL: " + channel + " PLAYER: " + player);
-        if (player.black) return; // 1. проверить в черном списке - если да то ничего неделать
-//        serverLMS.updatePlayers();  // 2. обновить колонки на сервере
-        if (!serverLMS.players.contains(player))
-            return;  // 3. проверить что колонка есть на сервере - если нет - ничего
-        // 4. если колонка играет - включить канал
+    // Алиса, включи канал
+    // Если колонка играла канал включится без изменения громкости и группы,
+    // Если колонка не играла установить громкость приемлемой для данного времени,
+    public static void channel(Player player, Integer channel) {
+        log.info("CHANNEL: " + channel + " PLAYER: " + player.name);
         if (player.mode().equals("play")) {
-            log.info("PLAYER: " + player + " MODE: " + " PLAY CONTINUE: ");
+            log.info("PLAYER: " + player + " PLAY CHANNEL: " + channel);
             player.play(channel);
             return;
         }
-        // 5. если колонка не играет - разбудить, установить громкость,
-        log.info("PLAYER: " + player + "MODE: " + "mode" + " WAKE - PRESET - PLAY CHANNEL");
-        player.wake();
-        Action.preset(name, "low");
-        player.play(channel);  // 6. включить канал
+        log.info("PLAYER: " + player.name + "UNSYNC, WAKE, PLAY CHANNEL: " + channel);
+        player.unsync();
+        player.wakeAndSet();
+        player.play(channel);
     }
 
-
-    // Алиса включи музыку
-    // проверить в черном списке - если да то ничего неделать
-    // обновить колонки на сервере
-    // проверить что колонка есть на сервере - если нет - ничего
+    // Алиса, включи музыку
     // если колонка играет - ничего. продолжит играть
     // если колонка не играет - разбудить, установить громкость,
     // найти играющую - если есть подключиться к ней
     // если нет играющей - играть последнее, если нет то избранное1
-    public static void turnOnMusic(String name) {
-        Player player = Player.instance(name);
-        log.info("TURN ON PLAYER: " + name);
-        if (player.black) return; // проверить в черном списке - если да то ничего неделать
-//        serverLMS.updatePlayers();  // обновить колонки на сервере
-        if (!serverLMS.players.contains(player)) return;  // проверить что колонка есть на сервере - если нет - ничего
-        if (player.mode().equals("play")) return; // если колонка играет - ничего. продолжит играть
-        // если колонка не играет - разбудить, установить громкость,
-        log.info("not play - wake - set preset - search playing - try sync - else play last - else play fav1");
-        player.wake();  // TODO
-        player.volume("4"); // TODO
-        Player playing = Action.playing(); // найти играющую - если есть подключиться к ней
-        if (playing != null) {
-            player.sync(playing.name); // подключиться к играющей
+    // TODO проверить что синхронизировано, все вэйк и  пресет
+    public static void turnOnMusic(Player player) {
+        log.info("TURN ON PLAYER: " + player.name);
+        if (player.mode().equals("play")) {
+            log.info("STILL PLAYING");
             return;
         }
-        // если нет играющей - играть последнее, если нет то избранное1
-        if (Player.pathLast != null) {
-            Player.play(player.name, String.valueOf(Integer.valueOf(Player.pathLast)));  // играть последнее
-        } else if (Favorites.checkExists(2)) {
-            Player.play(player.name, 2);  // играть избранное 1
+        log.info("not play - wake - set preset - search playing - try sync - else play last - else play fav1");
+        player.unsync();
+        player.wakeAndSet();
+        Player playing = Server.playingPlayer(); // найти играющую - если есть подключиться к ней
+        if (playing != null) {
+            log.info("SYNC TO PLAYING: " + playing.name);
+
+            player.sync(playing.name);
+            return;
+        }
+
+        if (player.path() != null) { // играть путь из плеера
+            player.play(player.path());
+            Player.pathLast = player.path();
+            return;
+        }
+        if (Player.pathLast != null) { // играть последнее игравшее
+            player.play(Player.pathLast);
+            Player.pathLast = player.path();
+            return;
+        }
+        if (Favorites.checkExists(1)) {  // играть первое избранное
+            player.play(1);
+            Player.pathLast = player.path();
         }
     }
 
-    // Алиса выключи музыку - выключиться музыка везде
+    // Алиса, выключи музыку - выключиться музыка везде
     public static void turnOffMusic() {
-        serverLMS.players.stream().forEach(player -> player.pause());
+        server.players.forEach(Player::pause);
     }
 
-    public static void turnOnSpeaker() {
-        // Алиса включи колонку - подключить к играющей или играть последнее
+    // Алиса, включи колонку - подключить к играющей или играть последнее
+    //        играет + нет играющей         =   продолжить играть
+    //        играет + есть играющей        =   подключить к играющей
+    //        не играет + нет играющей      =   вэйк, пресет, ластплэй
+    //        не играет + есть играющей     =   вэйк, пресет, подключить к играющей
+    //TODO проверить что синхронизировано, все вэйк и  пресет
+    public static void turnOnSpeaker(Player player) {
+        String mode = player.mode();
+        Player playing = Server.playingPlayer();
+        if (Objects.equals(mode, "play") && playing == null) {
+            log.info("STILL PLAYING");
+        }
+        if (Objects.equals(mode, "play") && playing != null) {
+            log.info("SYNC TO PLAYING");
+            player.sync(playing.name);
+        }
+        if (!Objects.equals(mode, "play") && playing == null) {
+            log.info("WAKE PLAY LAST");
+            player.wakeAndSet();
+            player.play(Player.pathLast);
+        }
+        if (!Objects.equals(mode, "play") && playing != null) {
+            log.info("WAKE SYNC TO PLAYING");
+            player.wakeAndSet();
+            player.sync(playing.name);
+        }
     }
 
-    public static void turnOffSpeaker() {
-        // Алиса выключи колонку - отключить колонку
+    // Алиса выключи колонку - отключить и остановить колонку
+    public static void turnOffSpeaker(Player player) {
+        player.unsync();
+        player.pause();
     }
 
+    // Алиса все тихо
     public static void allLow() {
-        // Алиса все тихо
-        serverLMS.players.stream().forEach(player -> player.volume("5"));
+        LocalTime.now();
+        server.players.stream().forEach(player -> player.volume("5"));
     }
 
+    // Алиса все громко
     public static void allHigh() {
-        // Алиса все громко
-        serverLMS.players.stream().forEach(player -> player.volume("20"));
+        server.players.stream().forEach(player -> player.volume("20"));
     }
 
     public static void preset(String player, String preset) {
         log.info("PLAYER: " + player + " PRESET: " + preset);
-        Player.volume(player, "5");
-    }
-
-    public static Player playing() {
-        return serverLMS.players
-                .stream()
-                .filter(player -> player.mode().equals("play"))
-                .findFirst().orElse(null);
-    }
-
-    public static void updatePlayers() {
-        serverLMS.updatePlayers();
-    }
-
-    public static void updateFavorites() {
-        serverLMS.updatePlayers();
+        String volume = Preset.volume();
     }
 }

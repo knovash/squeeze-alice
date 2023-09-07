@@ -12,19 +12,19 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Request {
+public class RequestToLms {
 
     public String id;
     public String method;
     public List<Object> params;
 
-    public static Request create(String player, String[] params) {
+    public static RequestToLms create(String player, String[] params) {
         /** request sample {"id": 1, "method": "slim.request", "params":["HomePod", ["mixer", "volume", "?"]]} */
-        Request request = new Request();
-        request.setId("1");
-        request.setMethod("slim.request");
-        request.setParams(Arrays.asList(player, Arrays.asList(params)));
-        return request;
+        RequestToLms requestToLms = new RequestToLms();
+        requestToLms.setId("1");
+        requestToLms.setMethod("slim.request");
+        requestToLms.setParams(Arrays.asList(player, Arrays.asList(params)));
+        return requestToLms;
     }
 
     /** не удалять. переводит json в строку */
