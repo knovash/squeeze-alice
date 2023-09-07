@@ -4,6 +4,8 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.ResourceBundle;
@@ -34,11 +36,11 @@ public class Handler implements HttpHandler {
             } else {
                 log.info("NO ALTER NAME FOR " + name);
             }
-            player =Server.playerByName(name);
+            player = Server.playerByName(name);
             if (player == null) {
                 log.info("NO PLAYER: " + name + " TRY UPDATE FROM SERVER");
                 Server.updatePlayers();
-                player =Server.playerByName(name);
+                player = Server.playerByName(name);
                 if (player == null) {
                     log.info("NO PLAYER: " + name + " ON SERVER");
                     return;
@@ -49,7 +51,6 @@ public class Handler implements HttpHandler {
                 return;
             }
         }
-
 
         switch (action) {
             case ("channel"):
@@ -65,13 +66,13 @@ public class Handler implements HttpHandler {
                 Action.allHigh();
                 break;
             case ("turnonmusic"):
-//                Action.turnOnMusic(player);
+                Action.turnOnMusic(player);
                 break;
             case ("turnoffmusic"):
                 Action.turnOffMusic();
                 break;
             case ("turnonspeaker"):
-//                Action.turnOnSpeaker(player);
+                Action.turnOnSpeaker(player);
                 break;
             case ("turnoffspeaker"):
                 Action.turnOffSpeaker(player);
@@ -85,5 +86,26 @@ public class Handler implements HttpHandler {
             default:
                 break;
         }
+        handleResponse(httpExchange);
     }
+
+    private void handleResponse(HttpExchange httpExchange) {
+        OutputStream outputStream = httpExchange.getResponseBody();
+        String htmlResponse = "OK";
+        try {
+            httpExchange.sendResponseHeaders(200, htmlResponse.length());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            outputStream.write(htmlResponse.getBytes());
+            outputStream.flush();
+            outputStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
 }

@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.knovash.squeezealice.Main.server;
 
@@ -27,20 +28,15 @@ public class Server {
     public Integer counter;
 
     public void countPlayers() {
-        Response response =  Fluent.post(Requests.count().toString());
-//        Response response2 = response;
+        Response response = Fluent.post(Requests.count().toString());
         Content content;
-        HttpResponse httpResponse;
         try {
             content = response.returnContent();
-//            httpResponse = response2.returnResponse();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
         log.info("RESPONSE: " + responseFromLms);
-//        log.info("SATUS: " + httpResponse.getStatusLine());
-//        return re.resultFromLms._path;
         server.counter = Integer.parseInt(responseFromLms.result._count);
     }
 
@@ -49,40 +45,40 @@ public class Server {
         server.countPlayers();
         Integer counter = server.counter;
         List<Player> players = new ArrayList<>();
+        if (server.players == null) server.players = new ArrayList<>();
         for (Integer index = 0; index < counter; index++) {
             String name = Player.name(index.toString());
             String id = Player.id(index.toString());
-            if (server.players == null) {
-                log.info("PLAYERS NULL");
-                players.add(new Player(name, id));
-            } else {
-                if (server.players.contains(new Player(name, id))) {
-                    log.info("SKIP PLAYER: " + name + " CONTAINS: " + server.players.contains(new Player(name, id)));
-                } else {
-                    log.info("ADD NEW PLAYER: " + name + " CONTAINS: " + server.players.contains(new Player(name, id)));
-                    server.players.add(new Player(name, id));
-                }
+            if (!server.players.contains(new Player(name, id))) {
+                log.info("ADD NEW PLAYER: " + name + " " + id);
+                server.players.add(new Player(name, id));
             }
         }
-        log.info("THIS PLAYERS:\n" + server.players);
-        log.info("FOUND PLAYERS:\n" + players);
-        if (server.players == null) server.players = players;
-        log.info("THIS PLAYERS:\n" + server.players);
+        log.info("PLAYERS:");
+        log.info(server.players);
     }
 
     public void writeFile() {
-        log.info("WRITE FILE:\n");
+        log.info("WRITE FILE server.json");
         JsonUtils.pojoToJsonFile(server, "server.json");
     }
 
     public void readFile() {
-        log.info("READ FILE:\n");
+        log.info("TRY READING FILE server.json");
         File file = new File("server.json");
         if (file.exists()) {
-            server = JsonUtils.jsonFileToPojo("server.json", Server.class);
-            log.info("THIS PLAYERS:\n" + server.players);
+            try {
+                server = JsonUtils.jsonFileToPojoEx("server.json", Server.class);
+                log.info("FILE READING OK server.json");
+                log.info("READ PLAYERS:");
+                log.info(server.players);
+            } catch (IOException e) {
+                log.info("ERROR READING FILE server.json");
+                log.info(e);
+                log.info("Previous server state lost :(");
+            }
         } else {
-            log.info("NO FILE");
+            log.info("NO FILE server.json Previous server state not available");
         }
     }
 
@@ -94,10 +90,13 @@ public class Server {
     }
 
     public static Player playingPlayer() {
-        log.info("Search for playing player (instance)");
-        return server.players
+        log.info("Search for playing player...");
+        Player playing = server.players
                 .stream()
                 .filter(player -> player.mode().equals("play"))
-                .findFirst().orElse(null);
+                .findFirst()
+                .orElse(null);
+        log.info("PLAYING: " + playing.name);
+        return playing;
     }
 }

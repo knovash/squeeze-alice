@@ -34,7 +34,7 @@ public class Action {
     public static void channel(Player player, Integer channel) {
         log.info("CHANNEL: " + channel + " PLAYER: " + player.name);
         if (player.mode().equals("play")) {
-            log.info("PLAYER: " + player + " PLAY CHANNEL: " + channel);
+            log.info("PLAYER: " + player.name + " PLAY CHANNEL: " + channel);
             player.play(channel);
             return;
         }
@@ -98,7 +98,6 @@ public class Action {
     //        играет + есть играющей        =   подключить к играющей
     //        не играет + нет играющей      =   вэйк, пресет, ластплэй
     //        не играет + есть играющей     =   вэйк, пресет, подключить к играющей
-    //TODO проверить что синхронизировано, все вэйк и  пресет
     public static void turnOnSpeaker(Player player) {
         String mode = player.mode();
         Player playing = Server.playingPlayer();
@@ -130,12 +129,12 @@ public class Action {
     // Алиса все тихо
     public static void allLow() {
         LocalTime.now();
-        server.players.stream().forEach(player -> player.volume("5"));
+        server.players.forEach(player -> player.volume("5"));
     }
 
     // Алиса все громко
     public static void allHigh() {
-        server.players.stream().forEach(player -> player.volume("20"));
+        server.players.forEach(player -> player.volume("20"));
     }
 
     public static void preset(String player, String preset) {

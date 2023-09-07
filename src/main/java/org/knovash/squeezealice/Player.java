@@ -112,7 +112,7 @@ public class Player {
         return responseFromLms.result._path;
     }
 
-    public boolean volume(String value) {
+    public Player volume(String value) {
         log.info("PLAYER: " + this.name + " VOLUME: " + value);
         Response response =  Fluent.post(Requests.volume(this.name, value).toString());
         HttpResponse httpResponse;
@@ -123,28 +123,24 @@ public class Player {
             throw new RuntimeException(e);
         }
         log.info("SATUS: " + httpResponse.getStatusLine());
-        return httpResponse.getStatusLine().getStatusCode() == 200;
+        return this;
     }
 
-    public void play(Integer channel) {
+    public Player play(Integer channel) {
         log.info("PLAYER: " + this.name + " PLAY CHANNEL: " + channel);
         Response response =  Fluent.post(Requests.play(this.name, channel - 1).toString());
-        Content content;
         HttpResponse httpResponse;
         try {
-            content = response.returnContent();
-//            httpResponse = response.returnResponse();
+            httpResponse = response.returnResponse();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
         Player.lastChannel = channel;
-        log.info("RESPONSE: " + responseFromLms);
-//        log.info("SATUS: " + httpResponse.getStatusLine());
-//        return re.resultFromLms._path;
+        log.info("SATUS: " + httpResponse.getStatusLine());
+        return this;
     }
 
-    public boolean play(String path) {
+    public Player play(String path) {
         log.info("PLAYER: " + this.name + " PLAY PATH: " + path);
         Response response =  Fluent.post(Requests.play(this.name, path).toString());
         HttpResponse httpResponse;
@@ -154,6 +150,19 @@ public class Player {
             throw new RuntimeException(e);
         }
         Player.lastPath = path;
+        log.info("SATUS: " + httpResponse.getStatusLine());
+        return this;
+    }
+
+    public boolean silence() {
+        log.info("PLAYER: " + this.name + " PLAY SILINCE: " + SILENCE);
+        Response response =  Fluent.post(Requests.play(this.name, SILENCE).toString());
+        HttpResponse httpResponse;
+        try {
+            httpResponse = response.returnResponse();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         log.info("SATUS: " + httpResponse.getStatusLine());
         return httpResponse.getStatusLine().getStatusCode() == 200;
     }
@@ -174,27 +183,20 @@ public class Player {
     public void sync(String toPlayer) {
         log.info("PLAYER: " + this.name + " SYNC TO: " + toPlayer);
         Response response = Fluent.post(Requests.sync(this.name, toPlayer).toString());
-        Content content;
         HttpResponse httpResponse;
         try {
-//            content = response.returnContent();
             httpResponse = response.returnResponse();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-//        ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
-//        log.info("RESPONSE: " + responseFromLms);
         log.info("SATUS: " + httpResponse.getStatusLine());
-//        return re.resultFromLms._path;
     }
 
     public Player unsync() {
         log.info("PLAYER: " + this.name + " UNSYNC");
         Response response =Fluent.post(Requests.unsync(this.name).toString());
-        Content content;
         HttpResponse httpResponse;
         try {
-//            content = response.returnContent();
             httpResponse = response.returnResponse();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -206,7 +208,7 @@ public class Player {
 
     public Player wakeAndSet() {
         log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wakeDelay);
-        this.play(SILENCE); // wake by silence
+        this.silence(); // wake by silence
         this.volume(Preset.volume()); // set
         try {
             Thread.sleep(this.wakeDelay); // wait

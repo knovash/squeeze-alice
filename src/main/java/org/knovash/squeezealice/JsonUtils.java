@@ -86,14 +86,9 @@ public class JsonUtils {
         }
     }
 
-//    public static <T> T jsonToClass(String json, Class<T> clazz) {
-//        JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, clazz);
-//        try {
-//            return objectMapper.readValue(json, type);
-//        } catch (JsonProcessingException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-
+    public static <T> T jsonFileToPojoEx(String fileName, Class<T> clazz) throws IOException {
+        File file = new File(fileName);
+        return objectMapper.readValue(file, clazz);
+    }
 
 }

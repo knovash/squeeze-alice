@@ -18,7 +18,6 @@ public class Controller {
     private static final String CONTEXT = bundle.getString("context");
 
     public static void start() {
-        log.info("\nSTART\n");
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
         HttpServer server = null;
         try {
@@ -29,6 +28,6 @@ public class Controller {
         server.createContext(CONTEXT, new Handler());
         server.setExecutor(threadPoolExecutor);
         server.start();
-        log.info("\nServer started on port 8001\n");
+        log.info("server started on port " + PORT);
     }
 }
