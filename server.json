@@ -1,7 +1,7 @@
 {
   "players" : [ {
-    "name" : "ggmm",
-    "id" : "bb:bb:6c:b8:26:52",
+    "name" : "Bathroom",
+    "id" : "cc:cc:31:b3:64:ab",
     "volumeStep" : 5,
     "volumeAlicePrevious" : 1,
     "presetLow" : 5,
@@ -22,7 +22,7 @@
     "volumeAliceLow" : 1,
     "volumeAliceHigh" : 9
   }, {
-    "name" : "Mi Box",
+    "name" : "MiBox",
     "id" : "cc:cc:be:b5:90:66",
     "volumeStep" : 5,
     "volumeAlicePrevious" : 1,
@@ -32,17 +32,6 @@
     "black" : false,
     "volumeAliceLow" : 1,
     "volumeAliceHigh" : 9
-  }, {
-    "name" : "Bathroom",
-    "id" : "cc:cc:31:b3:64:ab",
-    "volumeStep" : 5,
-    "volumeAlicePrevious" : 1,
-    "presetLow" : 5,
-    "presetHigh" : 20,
-    "wakeDelay" : 10000,
-    "black" : false,
-    "volumeAliceLow" : 1,
-    "volumeAliceHigh" : 9
   } ],
-  "counter" : 4
+  "counter" : 3
 }

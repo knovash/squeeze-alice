@@ -1,8 +1,0 @@
-[Unit]
-Description=LocalTunnel
-After=multi-user.target
-[Service]
-Type=simple
-ExecStart= lt --port 8001 --subdomain squeeze &
-[Install]
-WantedBy=multi-user.target

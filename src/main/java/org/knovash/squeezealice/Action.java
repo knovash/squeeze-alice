@@ -12,17 +12,17 @@ public class Action {
 
     // Алиса музыку громче\тише
     public static void volume(Player player, String value) {
-        log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name);
+//        log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name);
         Integer volumeAlicePrevious = player.volumeAlicePrevious;
         Integer volumeAliceCurrent = Integer.valueOf(value);
         Integer step = player.volumeStep;
-        log.info("alice: " + volumeAliceCurrent + " > alice last: " + volumeAlicePrevious + " low:" + player.volumeAliceLow + " hi:" + player.volumeAliceHigh);
+        log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name + " current=" + volumeAliceCurrent + " last=" + volumeAlicePrevious + " low=" + player.volumeAliceLow + " hi=" + player.volumeAliceHigh);
         if ((volumeAliceCurrent > volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volumeAliceHigh))) {
-            log.info("VOLUME UP +" + step);
+//            log.info("VOLUME UP +" + step);
             player.volume("+" + step);
         }
         if ((volumeAliceCurrent < volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volumeAliceLow))) {
-            log.info("VOLUME DN -" + step);
+//            log.info("VOLUME DN -" + step);
             player.volume("-" + step);
         }
         player.volumeAlicePrevious = volumeAliceCurrent;
@@ -39,9 +39,10 @@ public class Action {
             return;
         }
         log.info("PLAYER: " + player.name + "UNSYNC, WAKE, PLAY CHANNEL: " + channel);
-        player.unsync();
-        player.wakeAndSet();
-        player.play(channel);
+        player
+                .unsync()
+                .wakeAndSet()
+                .play(channel);
     }
 
     // Алиса, включи музыку
@@ -57,30 +58,34 @@ public class Action {
             return;
         }
         log.info("not play - wake - set preset - search playing - try sync - else play last - else play fav1");
-        player.unsync();
-        player.wakeAndSet();
+        player
+                .unsync()
+                .wakeAndSet();
+
         Player playing = Server.playingPlayer(); // найти играющую - если есть подключиться к ней
+
         if (playing != null) {
             log.info("SYNC TO PLAYING: " + playing.name);
-
             player.sync(playing.name);
             return;
         }
-
         if (player.path() != null) { // играть путь из плеера
             player.play(player.path());
-            Player.pathLast = player.path();
             return;
         }
-        if (Player.pathLast != null) { // играть последнее игравшее
-            player.play(Player.pathLast);
-            Player.pathLast = player.path();
+        if (Player.lastPath != null) { // играть последнее игравшее
+            player.play(Player.lastPath);
+            return;
+        }
+
+        if (Player.lastChannel != null) { // играть последнее игравшее
+            player.play(Player.lastChannel);
             return;
         }
         if (Favorites.checkExists(1)) {  // играть первое избранное
             player.play(1);
-            Player.pathLast = player.path();
         }
+
     }
 
     // Алиса, выключи музыку - выключиться музыка везде
@@ -107,7 +112,7 @@ public class Action {
         if (!Objects.equals(mode, "play") && playing == null) {
             log.info("WAKE PLAY LAST");
             player.wakeAndSet();
-            player.play(Player.pathLast);
+            player.play(Player.lastPath);
         }
         if (!Objects.equals(mode, "play") && playing != null) {
             log.info("WAKE SYNC TO PLAYING");
@@ -118,8 +123,8 @@ public class Action {
 
     // Алиса выключи колонку - отключить и остановить колонку
     public static void turnOffSpeaker(Player player) {
-        player.unsync();
-        player.pause();
+        player.unsync().pause();
+//        player.pause();
     }
 
     // Алиса все тихо

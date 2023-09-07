@@ -65,13 +65,13 @@ public class Handler implements HttpHandler {
                 Action.allHigh();
                 break;
             case ("turnonmusic"):
-                Action.turnOnMusic(player);
+//                Action.turnOnMusic(player);
                 break;
             case ("turnoffmusic"):
                 Action.turnOffMusic();
                 break;
             case ("turnonspeaker"):
-                Action.turnOnSpeaker(player);
+//                Action.turnOnSpeaker(player);
                 break;
             case ("turnoffspeaker"):
                 Action.turnOffSpeaker(player);

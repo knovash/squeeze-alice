@@ -32,7 +32,8 @@ public class Player {
     public Integer volumeAliceLow;
     public Integer volumeAliceHigh;
 
-    public static String pathLast;
+    public static String lastPath;
+    public static Integer lastChannel;
 
     public Player(String name, String id) {
         this.name = name;
@@ -137,6 +138,7 @@ public class Player {
             throw new RuntimeException(e);
         }
         ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
+        Player.lastChannel = channel;
         log.info("RESPONSE: " + responseFromLms);
 //        log.info("SATUS: " + httpResponse.getStatusLine());
 //        return re.resultFromLms._path;
@@ -151,6 +153,7 @@ public class Player {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        Player.lastPath = path;
         log.info("SATUS: " + httpResponse.getStatusLine());
         return httpResponse.getStatusLine().getStatusCode() == 200;
     }
@@ -185,24 +188,23 @@ public class Player {
 //        return re.resultFromLms._path;
     }
 
-    public void unsync() {
+    public Player unsync() {
         log.info("PLAYER: " + this.name + " UNSYNC");
         Response response =Fluent.post(Requests.unsync(this.name).toString());
         Content content;
         HttpResponse httpResponse;
         try {
-            content = response.returnContent();
-//            httpResponse = response.returnResponse();
+//            content = response.returnContent();
+            httpResponse = response.returnResponse();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
-        log.info("RESPONSE: " + responseFromLms);
-//        log.info("SATUS: " + httpResponse.getStatusLine());
-//        return re.resultFromLms._path;
+        log.info("SATUS: " + httpResponse.getStatusLine());
+        if (httpResponse.getStatusLine().getStatusCode() == 200) return this;
+        return null;
     }
 
-    public void wakeAndSet() {
+    public Player wakeAndSet() {
         log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wakeDelay);
         this.play(SILENCE); // wake by silence
         this.volume(Preset.volume()); // set
@@ -213,6 +215,7 @@ public class Player {
         }
         this.volume(Preset.volume()); // set
         this.pause(); // stop wake silence
+        return this;
     }
 
     @Override
