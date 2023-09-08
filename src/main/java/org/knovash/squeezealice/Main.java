@@ -1,20 +1,22 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.lms.ServerLMS;
+
+import java.util.ResourceBundle;
 
 @Log4j2
 public class Main {
 
-    public static ServerLMS serverLMS = new ServerLMS();
+    private static ResourceBundle bundle = ResourceBundle.getBundle("config");
+    public static final String SILENCE = bundle.getString("silence");
+    public static Server server = new Server();
 
     public static void main(String[] args) {
-        log.info("\nSTART MAIN\n");
-        serverLMS = new ServerLMS();
-
-        serverLMS.readFile();
-        serverLMS.updatePlayers();
-        serverLMS.writeFile();
-        ServerController.start();
+        log.info("  ---+++===[ START ]===+++---");
+        server = new Server();
+        server.readFile();
+        server.updatePlayers();
+        server.writeFile();
+        Controller.start();
     }
 }

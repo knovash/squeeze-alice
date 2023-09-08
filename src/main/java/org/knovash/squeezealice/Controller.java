@@ -9,9 +9,8 @@ import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-
 @Log4j2
-public class ServerController {
+public class Controller {
 
     private static ResourceBundle bundle = ResourceBundle.getBundle("config");
     private static final String HOSTNAME = bundle.getString("hostname");
@@ -19,11 +18,9 @@ public class ServerController {
     private static final String CONTEXT = bundle.getString("context");
 
     public static void start() {
-        log.info("\nSTART\n");
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
         HttpServer server = null;
         try {
-//            server = HttpServer.create(new InetSocketAddress("localhost", 8001), 0);
             server = HttpServer.create(new InetSocketAddress(HOSTNAME, PORT), 0);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -31,6 +28,6 @@ public class ServerController {
         server.createContext(CONTEXT, new Handler());
         server.setExecutor(threadPoolExecutor);
         server.start();
-        log.info("\nServer started on port 8001\n");
+        log.info("server started on port " + PORT);
     }
 }
