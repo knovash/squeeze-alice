@@ -2,13 +2,15 @@
 target
 build
 log
+trash
 allure-results
 
 *.class
 *.log
 *.jar
 *.iml
-*.sh
 *.json
+*.tar
+*.gz
 /src/main/resources/result/
 result.json
