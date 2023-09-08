@@ -10,6 +10,7 @@ allure-results
 *.jar
 *.iml
 *.json
+*.sh
 *.tar
 *.gz
 *.tar.gz
