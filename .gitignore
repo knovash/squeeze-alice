@@ -12,5 +12,6 @@ allure-results
 *.json
 *.tar
 *.gz
+*.tar.gz
 /src/main/resources/result/
 result.json
