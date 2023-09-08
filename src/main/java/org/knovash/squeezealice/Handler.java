@@ -52,46 +52,58 @@ public class Handler implements HttpHandler {
             }
         }
 
+        String actionStatus = "FAIL";
+
         switch (action) {
             case ("channel"):
                 Action.channel(player, Integer.valueOf(parameters.get("value")));
+                actionStatus = "ACTION COMPLETE";
                 break;
             case ("volume"):
                 Action.volume(player, parameters.get("value"));
+                actionStatus = "ACTION COMPLETE";
                 break;
             case ("low"):
                 Action.allLow();
+                actionStatus = "ACTION COMPLETE";
                 break;
             case ("high"):
                 Action.allHigh();
                 break;
             case ("turnonmusic"):
                 Action.turnOnMusic(player);
+                actionStatus = "ACTION COMPLETE";
                 break;
             case ("turnoffmusic"):
                 Action.turnOffMusic();
+                actionStatus = "ACTION COMPLETE";
                 break;
             case ("turnonspeaker"):
                 Action.turnOnSpeaker(player);
+                actionStatus = "ACTION COMPLETE";
                 break;
             case ("turnoffspeaker"):
                 Action.turnOffSpeaker(player);
+                actionStatus = "ACTION COMPLETE";
                 break;
             case ("updateplayers"):
                 Server.updatePlayers();
+                actionStatus = "ACTION COMPLETE";
                 break;
             case ("updatefavorites"):
                 Server.updatePlayers();
+                actionStatus = "ACTION COMPLETE";
                 break;
             default:
+                actionStatus = "ACTION NOT FOUND";
                 break;
         }
-        handleResponse(httpExchange);
+        handleResponse(httpExchange, actionStatus);
     }
 
-    private void handleResponse(HttpExchange httpExchange) {
+    private void handleResponse(HttpExchange httpExchange, String actionStatus) {
         OutputStream outputStream = httpExchange.getResponseBody();
-        String htmlResponse = "OK";
+        String htmlResponse = "OK " + actionStatus ;
         try {
             httpExchange.sendResponseHeaders(200, htmlResponse.length());
         } catch (IOException e) {

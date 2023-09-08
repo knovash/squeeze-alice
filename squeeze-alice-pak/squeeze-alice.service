@@ -1,0 +1,9 @@
+[Unit]
+Description=Squeeze-Alice
+After=multi-user.target
+[Service]
+Type=simple
+ExecStart=java -jar /opt/squeeze-alice/squeeze-alice-1.0.jar
+WorkingDirectory=/opt/squeeze-alice/
+[Install]
+WantedBy=multi-user.target
