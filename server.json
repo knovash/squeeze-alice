@@ -1,0 +1,58 @@
+{
+  "players" : [ {
+    "name" : "Bathroom",
+    "id" : "cc:cc:31:b3:64:ab",
+    "volumeStep" : 5,
+    "volumeAlicePrevious" : 1,
+    "presetLow" : 5,
+    "presetHigh" : 20,
+    "wakeDelay" : 10000,
+    "black" : false,
+    "volumeAliceLow" : 1,
+    "volumeAliceHigh" : 9,
+    "timeVolume" : {
+      "16" : 7,
+      "0" : 2,
+      "20" : 5,
+      "22" : 5,
+      "7" : 5
+    }
+  }, {
+    "name" : "HomePod",
+    "id" : "aa:aa:c2:7c:e0:12",
+    "volumeStep" : 5,
+    "volumeAlicePrevious" : 1,
+    "presetLow" : 5,
+    "presetHigh" : 20,
+    "wakeDelay" : 10000,
+    "black" : false,
+    "volumeAliceLow" : 1,
+    "volumeAliceHigh" : 9,
+    "timeVolume" : {
+      "16" : 7,
+      "0" : 2,
+      "20" : 5,
+      "22" : 5,
+      "7" : 5
+    }
+  }, {
+    "name" : "Mi Box",
+    "id" : "cc:cc:be:b5:90:66",
+    "volumeStep" : 5,
+    "volumeAlicePrevious" : 1,
+    "presetLow" : 5,
+    "presetHigh" : 20,
+    "wakeDelay" : 10000,
+    "black" : false,
+    "volumeAliceLow" : 1,
+    "volumeAliceHigh" : 9,
+    "timeVolume" : {
+      "16" : 7,
+      "0" : 2,
+      "20" : 5,
+      "22" : 5,
+      "7" : 5
+    }
+  } ],
+  "counter" : 3
+}

@@ -12,17 +12,14 @@ public class Action {
 
     // Алиса музыку громче\тише
     public static void volume(Player player, String value) {
-//        log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name);
         Integer volumeAlicePrevious = player.volumeAlicePrevious;
         Integer volumeAliceCurrent = Integer.valueOf(value);
         Integer step = player.volumeStep;
         log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name + " current=" + volumeAliceCurrent + " last=" + volumeAlicePrevious + " low=" + player.volumeAliceLow + " hi=" + player.volumeAliceHigh);
         if ((volumeAliceCurrent > volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volumeAliceHigh))) {
-//            log.info("VOLUME UP +" + step);
             player.volume("+" + step);
         }
         if ((volumeAliceCurrent < volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volumeAliceLow))) {
-//            log.info("VOLUME DN -" + step);
             player.volume("-" + step);
         }
         player.volumeAlicePrevious = volumeAliceCurrent;

@@ -94,6 +94,11 @@ public class Handler implements HttpHandler {
                 Server.updatePlayers();
                 actionStatus = "ACTION COMPLETE";
                 break;
+            case ("silence"):
+                log.info("SILENCE");
+                player.playSilence();
+                actionStatus = "ACTION COMPLETE";
+                break;
             default:
                 actionStatus = "ACTION NOT FOUND";
                 break;
