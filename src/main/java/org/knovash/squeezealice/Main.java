@@ -14,7 +14,7 @@ public class Main {
     public static void main(String[] args) {
         log.info("  ---+++===[ START ]===+++---");
         server = new Server();
-        server.readFile();
+//        server.readFile();
         server.updatePlayers();
         server.writeFile();
         Controller.start();

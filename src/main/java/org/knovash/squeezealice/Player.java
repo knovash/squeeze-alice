@@ -11,7 +11,8 @@ import org.knovash.squeezealice.requests.Requests;
 import org.knovash.squeezealice.requests.ResponseFromLms;
 
 import java.io.IOException;
-import java.util.Objects;
+import java.time.LocalTime;
+import java.util.*;
 
 import static org.knovash.squeezealice.Main.SILENCE;
 
@@ -25,12 +26,13 @@ public class Player {
     public String id;
     public Integer volumeStep;
     public Integer volumeAlicePrevious;
-    public Integer presetLow;
-    public Integer presetHigh;
+    public Integer volumelow;
+    public Integer volumehigh;
     public Integer wakeDelay;
     public boolean black;
     public Integer volumeAliceLow;
     public Integer volumeAliceHigh;
+    public Map<Integer, Integer> timeVolume;
 
     public static String lastPath;
     public static Integer lastChannel;
@@ -40,81 +42,76 @@ public class Player {
         this.id = id;
         this.volumeAlicePrevious = 1;
         this.volumeStep = 5;
-        this.presetLow = 5;
-        this.presetHigh = 20;
+        this.volumelow = 5;
+        this.volumehigh = 20;
         this.wakeDelay = 10000;
         this.volumeAliceLow = 1;
         this.volumeAliceHigh = 9;
         this.black = false;
+        this.timeVolume = new HashMap<>(Map.of(
+                0, 3,
+                7, 5,
+                8, 10,
+                9,15,
+                20,10,
+                22, 5));
     }
 
     public static String name(String index) {
         Response response = Fluent.post(Requests.name(index).toString());
         Content content;
-        HttpResponse httpResponse;
         try {
             content = response.returnContent();
-//            httpResponse = response.returnResponse();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
         log.info("NAME: " + responseFromLms.result._name);
-//        log.info("SATUS: " + httpResponse.getStatusLine());
         return responseFromLms.result._name;
     }
 
     public static String id(String index) {
         Response response = Fluent.post(Requests.id(index).toString());
         Content content;
-        HttpResponse httpResponse;
         try {
             content = response.returnContent();
-//            httpResponse = response.returnResponse();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
         log.info("ID: " + responseFromLms.result._id);
-//        log.info("SATUS: " + httpResponse.getStatusLine());
         return responseFromLms.result._id;
     }
 
     public String mode() {
         Response response = Fluent.post(Requests.mode(this.name).toString());
         Content content;
-        HttpResponse httpResponse;
         try {
             content = response.returnContent();
-//            httpResponse = response.returnResponse();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
         log.info("PLAYER: " + this.name + " MODE: " + responseFromLms.result._mode);
-//        log.info("SATUS: " + httpResponse.getStatusLine());
         return responseFromLms.result._mode;
     }
 
     public String path() {
         Response response = Fluent.post(Requests.path(this.name).toString());
         Content content;
-        HttpResponse httpResponse;
         try {
             content = response.returnContent();
-//            httpResponse = response.returnResponse();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
         log.info("PLAYER: " + this.name + " PATH: " + responseFromLms.result._path);
-//        log.info("SATUS: " + httpResponse.getStatusLine());
         return responseFromLms.result._path;
     }
 
     public Player volume(String value) {
         log.info("PLAYER: " + this.name + " VOLUME: " + value);
-        Response response =  Fluent.post(Requests.volume(this.name, value).toString());
+        Response response = Fluent.post(Requests.volume(this.name, value).toString());
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
@@ -128,7 +125,7 @@ public class Player {
 
     public Player play(Integer channel) {
         log.info("PLAYER: " + this.name + " PLAY CHANNEL: " + channel);
-        Response response =  Fluent.post(Requests.play(this.name, channel - 1).toString());
+        Response response = Fluent.post(Requests.play(this.name, channel - 1).toString());
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
@@ -142,7 +139,7 @@ public class Player {
 
     public Player play(String path) {
         log.info("PLAYER: " + this.name + " PLAY PATH: " + path);
-        Response response =  Fluent.post(Requests.play(this.name, path).toString());
+        Response response = Fluent.post(Requests.play(this.name, path).toString());
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
@@ -154,9 +151,9 @@ public class Player {
         return this;
     }
 
-    public boolean silence() {
+    public Player playSilence() {
         log.info("PLAYER: " + this.name + " PLAY SILINCE: " + SILENCE);
-        Response response =  Fluent.post(Requests.play(this.name, SILENCE).toString());
+        Response response = Fluent.post(Requests.play(this.name, SILENCE).toString());
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
@@ -164,10 +161,10 @@ public class Player {
             throw new RuntimeException(e);
         }
         log.info("SATUS: " + httpResponse.getStatusLine());
-        return httpResponse.getStatusLine().getStatusCode() == 200;
+        return this;
     }
 
-    public boolean pause() {
+    public Player pause() {
         log.info("PLAYER: " + this.name + " PAUSE");
         Response response = Fluent.post(Requests.pause(this.name).toString());
         HttpResponse httpResponse;
@@ -177,10 +174,10 @@ public class Player {
             throw new RuntimeException(e);
         }
         log.info("SATUS: " + httpResponse.getStatusLine());
-        return httpResponse.getStatusLine().getStatusCode() == 200;
+        return this;
     }
 
-    public void sync(String toPlayer) {
+    public Player sync(String toPlayer) {
         log.info("PLAYER: " + this.name + " SYNC TO: " + toPlayer);
         Response response = Fluent.post(Requests.sync(this.name, toPlayer).toString());
         HttpResponse httpResponse;
@@ -190,11 +187,12 @@ public class Player {
             throw new RuntimeException(e);
         }
         log.info("SATUS: " + httpResponse.getStatusLine());
+        return this;
     }
 
     public Player unsync() {
         log.info("PLAYER: " + this.name + " UNSYNC");
-        Response response =Fluent.post(Requests.unsync(this.name).toString());
+        Response response = Fluent.post(Requests.unsync(this.name).toString());
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
@@ -208,15 +206,41 @@ public class Player {
 
     public Player wakeAndSet() {
         log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wakeDelay);
-        this.silence(); // wake by silence
-        this.volume(Preset.volume()); // set
+        this
+                .playSilence()
+                .volume("-1")
+                .setVolumeByTime()
+                .waitForWake()
+                .volume("-1")
+                .setVolumeByTime()
+                .pause();
+        return this;
+    }
+
+    public Player setVolumeByTime() {
+        LocalTime time = LocalTime.now();
+        log.info("VOLUME BY TIME: " + time + " OF: " + this.timeVolume);
+        int volume =
+                timeVolume.entrySet()
+                        .stream()
+                        .filter(entry -> LocalTime.of(entry.getKey(), 0).isBefore(time))
+                        .peek(entry -> log.info("FILTER " + entry))
+                        .max(Comparator.comparing(Map.Entry::getKey))
+                        .get()
+                        .getValue();
+        log.info("VOLUME: " + volume);
+        this.volume(String.valueOf(volume));
+        return this;
+    }
+
+    public Player waitForWake() {
+        log.info("WAIT " + wakeDelay);
+        log.info(". . . . . .");
         try {
-            Thread.sleep(this.wakeDelay); // wait
+            Thread.sleep(this.wakeDelay);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        this.volume(Preset.volume()); // set
-        this.pause(); // stop wake silence
         return this;
     }
 

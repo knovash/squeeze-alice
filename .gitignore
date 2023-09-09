@@ -12,3 +12,5 @@ log
 *.tar4
 *.gz4
 *.tar.gz4
+
+server.json

@@ -5,5 +5,7 @@ After=multi-user.target
 Type=simple
 ExecStart=java -jar /opt/squeeze-alice/squeeze-alice-1.0.jar
 WorkingDirectory=/opt/squeeze-alice/
+Restart=always
+RestartSec=5
 [Install]
 WantedBy=multi-user.target

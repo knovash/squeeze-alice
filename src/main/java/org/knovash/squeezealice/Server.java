@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Response;
 import org.knovash.squeezealice.requests.Requests;
@@ -14,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static org.knovash.squeezealice.Main.server;
 
@@ -68,7 +66,7 @@ public class Server {
         File file = new File("server.json");
         if (file.exists()) {
             try {
-                server = JsonUtils.jsonFileToPojoEx("server.json", Server.class);
+                server = JsonUtils.jsonFileToPojoTrows("server.json", Server.class);
                 log.info("FILE READING OK server.json");
                 log.info("READ PLAYERS:");
                 log.info(server.players);
@@ -96,7 +94,9 @@ public class Server {
                 .filter(player -> player.mode().equals("play"))
                 .findFirst()
                 .orElse(null);
-        log.info("PLAYING: " + playing.name);
+        if (playing == null) { log.info("NO PLAYING");}
+        else {
+        log.info("PLAYING: " + playing.name);}
         return playing;
     }
 }
