@@ -2,7 +2,6 @@ package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
 
-import java.time.LocalTime;
 import java.util.ResourceBundle;
 
 @Log4j2

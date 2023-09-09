@@ -52,7 +52,7 @@ public class Handler implements HttpHandler {
             }
         }
 
-        String actionStatus = "FAIL";
+        String actionStatus;
 
         switch (action) {
             case ("channel"):
@@ -96,6 +96,11 @@ public class Handler implements HttpHandler {
                 player.playSilence();
                 actionStatus = "ACTION COMPLETE";
                 break;
+            case ("changevalue"):
+                log.info("CHANGE PLAYER VALUE");
+                Utils.changePlayerValue(parameters);
+                actionStatus = "ACTION COMPLETE";
+                break;
             default:
                 actionStatus = "ACTION NOT FOUND";
                 break;
@@ -111,7 +116,6 @@ public class Handler implements HttpHandler {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
         try {
             outputStream.write(htmlResponse.getBytes());
             outputStream.flush();

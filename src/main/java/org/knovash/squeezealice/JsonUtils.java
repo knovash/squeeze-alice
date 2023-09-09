@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import org.apache.http.client.fluent.Content;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,6 +75,11 @@ public class JsonUtils {
         }
     }
 
+    public static <T> T jsonFileToPojoTrows(String fileName, Class<T> clazz) throws IOException {
+        File file = new File(fileName);
+        return objectMapper.readValue(file, clazz);
+    }
+
     public static <T> List<T> jsonFileToList(String fileName, Class<T> clazz) {
         File file = new File(fileName);
         JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, clazz);
@@ -85,10 +89,4 @@ public class JsonUtils {
             throw new RuntimeException(e);
         }
     }
-
-    public static <T> T jsonFileToPojoEx(String fileName, Class<T> clazz) throws IOException {
-        File file = new File(fileName);
-        return objectMapper.readValue(file, clazz);
-    }
-
 }

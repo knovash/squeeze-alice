@@ -26,8 +26,8 @@ public class Player {
     public String id;
     public Integer volumeStep;
     public Integer volumeAlicePrevious;
-    public Integer volumeLow;
-    public Integer volumeHigh;
+    public Integer volumelow;
+    public Integer volumehigh;
     public Integer wakeDelay;
     public boolean black;
     public Integer volumeAliceLow;
@@ -42,13 +42,19 @@ public class Player {
         this.id = id;
         this.volumeAlicePrevious = 1;
         this.volumeStep = 5;
-        this.volumeLow = 5;
-        this.volumeHigh = 20;
+        this.volumelow = 5;
+        this.volumehigh = 20;
         this.wakeDelay = 10000;
         this.volumeAliceLow = 1;
         this.volumeAliceHigh = 9;
         this.black = false;
-        this.timeVolume = new HashMap<>(Map.of(20, 5, 7, 5, 0, 2, 22, 5, 16, 7));
+        this.timeVolume = new HashMap<>(Map.of(
+                0, 3,
+                7, 5,
+                8, 10,
+                9,15,
+                20,10,
+                22, 5));
     }
 
     public static String name(String index) {
@@ -213,11 +219,11 @@ public class Player {
 
     public Player setVolumeByTime() {
         LocalTime time = LocalTime.now();
-        log.info("VOLUME BY TIME: " + time +" OF: "+this.timeVolume);
+        log.info("VOLUME BY TIME: " + time + " OF: " + this.timeVolume);
         int volume =
                 timeVolume.entrySet()
                         .stream()
-                        .filter(entry -> LocalTime.of(entry.getKey(),0).isBefore(time))
+                        .filter(entry -> LocalTime.of(entry.getKey(), 0).isBefore(time))
                         .peek(entry -> log.info("FILTER " + entry))
                         .max(Comparator.comparing(Map.Entry::getKey))
                         .get()
@@ -231,7 +237,7 @@ public class Player {
         log.info("WAIT " + wakeDelay);
         log.info(". . . . . .");
         try {
-            Thread.sleep(this.wakeDelay); // wait
+            Thread.sleep(this.wakeDelay);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

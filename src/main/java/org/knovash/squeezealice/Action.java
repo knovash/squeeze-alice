@@ -2,7 +2,6 @@ package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
 
-import java.time.LocalTime;
 import java.util.Objects;
 
 import static org.knovash.squeezealice.Main.server;
@@ -43,11 +42,10 @@ public class Action {
     }
 
     // Алиса, включи музыку
-    // если колонка играет - ничего. продолжит играть
+    // если колонка играет - продолжит играть
     // если колонка не играет - разбудить, установить громкость,
     // найти играющую - если есть подключиться к ней
     // если нет играющей - играть последнее, если нет то избранное1
-    // TODO проверить что синхронизировано, все вэйк и  пресет
     public static void turnOnMusic(Player player) {
         log.info("TURN ON PLAYER: " + player.name);
         if (player.mode().equals("play")) {
@@ -75,16 +73,13 @@ public class Action {
             player.play(Player.lastPath);
             return;
         }
-
         if (Player.lastChannel != null) { // играть последнее игравшее
             log.info("PLAY LAST CHANNEL: " + Player.lastChannel);
             player.play(Player.lastChannel);
             return;
         }
-        if (Favorites.checkExists(1)) {  // играть первое избранное
-            player.play(1);
-        }
 
+        player.play(1); // играть первое избранное
     }
 
     // Алиса, выключи музыку - выключиться музыка везде
@@ -109,13 +104,15 @@ public class Action {
         }
         if (!Objects.equals(mode, "play") && playing == null) {
             log.info("WAKE PLAY LAST");
-            player.wakeAndSet();
-            player.play(Player.lastPath);
+            player
+                    .wakeAndSet()
+                    .play(Player.lastPath);
         }
         if (!Objects.equals(mode, "play") && playing != null) {
             log.info("WAKE SYNC TO PLAYING");
-            player.wakeAndSet();
-            player.sync(playing.name);
+            player
+                    .wakeAndSet()
+                    .sync(playing.name);
         }
     }
 
@@ -131,11 +128,11 @@ public class Action {
         switch (mute) {
             case ("1"):
                 log.info("ALL LOW");
-                server.players.forEach(player -> player.volume(String.valueOf(player.volumeLow)));
+                server.players.forEach(player -> player.volume(String.valueOf(player.volumelow)));
                 break;
             case ("0"):
                 log.info("ALL HIGH");
-                server.players.forEach(player -> player.volume(String.valueOf(player.volumeHigh)));
+                server.players.forEach(player -> player.volume(String.valueOf(player.volumehigh)));
                 break;
         }
     }
