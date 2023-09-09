@@ -96,7 +96,9 @@ public class Server {
                 .filter(player -> player.mode().equals("play"))
                 .findFirst()
                 .orElse(null);
-        log.info("PLAYING: " + playing.name);
+        if (playing == null) { log.info("NO PLAYING");}
+        else {
+        log.info("PLAYING: " + playing.name);}
         return playing;
     }
 }

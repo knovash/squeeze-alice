@@ -35,7 +35,7 @@ public class Action {
             player.play(channel);
             return;
         }
-        log.info("PLAYER: " + player.name + "UNSYNC, WAKE, PLAY CHANNEL: " + channel);
+        log.info("PLAYER: " + player.name + " UNSYNC, WAKE, PLAY CHANNEL: " + channel);
         player
                 .unsync()
                 .wakeAndSet()
@@ -66,16 +66,18 @@ public class Action {
             player.sync(playing.name);
             return;
         }
-        if (player.path() != null) { // играть путь из плеера
-            player.play(player.path());
-            return;
-        }
+//        if (player.path() != null) { // играть путь из плеера
+//            player.play(player.path());
+//            return;
+//        }
         if (Player.lastPath != null) { // играть последнее игравшее
+            log.info("PLAY LAST PATH: " + Player.lastPath);
             player.play(Player.lastPath);
             return;
         }
 
         if (Player.lastChannel != null) { // играть последнее игравшее
+            log.info("PLAY LAST CHANNEL: " + Player.lastChannel);
             player.play(Player.lastChannel);
             return;
         }
@@ -119,23 +121,22 @@ public class Action {
 
     // Алиса выключи колонку - отключить и остановить колонку
     public static void turnOffSpeaker(Player player) {
-        player.unsync().pause();
-//        player.pause();
+        player
+                .unsync()
+                .pause();
     }
 
     // Алиса все тихо
-    public static void allLow() {
-        LocalTime.now();
-        server.players.forEach(player -> player.volume("5"));
-    }
-
-    // Алиса все громко
-    public static void allHigh() {
-        server.players.forEach(player -> player.volume("20"));
-    }
-
-    public static void preset(String player, String preset) {
-        log.info("PLAYER: " + player + " PRESET: " + preset);
-        String volume = Preset.volume();
+    public static void allLowHigh(String mute) {
+        switch (mute) {
+            case ("1"):
+                log.info("ALL LOW");
+                server.players.forEach(player -> player.volume(String.valueOf(player.volumeLow)));
+                break;
+            case ("0"):
+                log.info("ALL HIGH");
+                server.players.forEach(player -> player.volume(String.valueOf(player.volumeHigh)));
+                break;
+        }
     }
 }

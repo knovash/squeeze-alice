@@ -63,12 +63,9 @@ public class Handler implements HttpHandler {
                 Action.volume(player, parameters.get("value"));
                 actionStatus = "ACTION COMPLETE";
                 break;
-            case ("low"):
-                Action.allLow();
+            case ("alllowhigh"):
+                Action.allLowHigh(parameters.get("value"));
                 actionStatus = "ACTION COMPLETE";
-                break;
-            case ("high"):
-                Action.allHigh();
                 break;
             case ("turnonmusic"):
                 Action.turnOnMusic(player);

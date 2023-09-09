@@ -26,8 +26,8 @@ public class Player {
     public String id;
     public Integer volumeStep;
     public Integer volumeAlicePrevious;
-    public Integer presetLow;
-    public Integer presetHigh;
+    public Integer volumeLow;
+    public Integer volumeHigh;
     public Integer wakeDelay;
     public boolean black;
     public Integer volumeAliceLow;
@@ -42,8 +42,8 @@ public class Player {
         this.id = id;
         this.volumeAlicePrevious = 1;
         this.volumeStep = 5;
-        this.presetLow = 5;
-        this.presetHigh = 20;
+        this.volumeLow = 5;
+        this.volumeHigh = 20;
         this.wakeDelay = 10000;
         this.volumeAliceLow = 1;
         this.volumeAliceHigh = 9;
@@ -200,7 +200,8 @@ public class Player {
 
     public Player wakeAndSet() {
         log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wakeDelay);
-        this.playSilence()
+        this
+                .playSilence()
                 .volume("-1")
                 .setVolumeByTime()
                 .waitForWake()
@@ -211,10 +212,8 @@ public class Player {
     }
 
     public Player setVolumeByTime() {
-        log.info("VOLUME BY TIME");
-        log.info(this.timeVolume);
         LocalTime time = LocalTime.now();
-        log.info("TIME: " + time);
+        log.info("VOLUME BY TIME: " + time +" OF: "+this.timeVolume);
         int volume =
                 timeVolume.entrySet()
                         .stream()
@@ -230,6 +229,7 @@ public class Player {
 
     public Player waitForWake() {
         log.info("WAIT " + wakeDelay);
+        log.info(". . . . . .");
         try {
             Thread.sleep(this.wakeDelay); // wait
         } catch (InterruptedException e) {
