@@ -1,5 +1,7 @@
 # SqueezeBox control by Alice
 Bridge for Logitech Media Server players (SqueezeBox) control via Alice voice assistant.
+
+https://dzen.ru/a/ZP0AKcRQ-h8hfwhT
 ## Basic features
 * Alice, turn on the music - turn on the last one that played
 * Alice, turn off the music - turn off all players
@@ -15,7 +17,7 @@ Project is created with:
 ## Launch
 to run:
 ```
-java -jar squeeze-alice-1.0-SNAPSHOT.jar
+java -jar squeeze-alice-1.0.jar
 ```
 create access to your computer from the Internetyour url is: https://squeeze.loca.lt
 
@@ -33,6 +35,8 @@ https://squeeze.loca.lt/cmd?action=volume&player=homepod&value={value}
 https://squeeze.loca.lt/cmd?action=channel&player=homepod&value={value}
 ```
 ## Links
+* Alex Star
+  https://alexstar.ru/smarthome
 * Localtunel
 https://localtunnel.github.io/www/
 * Logitech Media Server

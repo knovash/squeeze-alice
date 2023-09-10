@@ -4,6 +4,7 @@ import lombok.extern.log4j.Log4j2;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import static org.knovash.squeezealice.Main.server;
@@ -12,6 +13,16 @@ import static org.knovash.squeezealice.Main.server;
 public class Utils {
 
     private static ResourceBundle bundle = ResourceBundle.getBundle("config");
+
+    public static void addPlayerAlterName(){
+        Map<String ,String > alternames = new HashMap<>();
+        alternames = new HashMap<>(Map.of(
+                "homepod","HomePod",
+                "bathroom","Bathroom",
+                "ggmm","GGMM_E2_2650",
+                "mibox","Mi Box"));
+
+    }
 
     public static void changePlayerValue(HashMap<String, String> parameters) {
         String playerName = parameters.get("player");

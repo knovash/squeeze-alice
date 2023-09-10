@@ -4,6 +4,7 @@ import lombok.extern.log4j.Log4j2;
 
 import java.util.Objects;
 
+import static org.knovash.squeezealice.Main.SILENCE;
 import static org.knovash.squeezealice.Main.server;
 
 @Log4j2
@@ -64,8 +65,11 @@ public class Action {
             player.sync(playing.name);
             return;
         }
-//        if (player.path() != null) { // играть путь из плеера
-//            player.play(player.path());
+        log.info("PATH: " + player.path());
+        log.info("SILENCE: " + SILENCE);
+        log.info("PATH=SILENCE: "+player.path().equals(SILENCE));
+//        if (player.path() != null && player.path() != SILENCE) { // играть путь из плеера если путь не нул и не сайлент
+//            player.play();
 //            return;
 //        }
         if (Player.lastPath != null) { // играть последнее игравшее

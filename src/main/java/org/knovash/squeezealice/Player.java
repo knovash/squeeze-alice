@@ -120,7 +120,21 @@ public class Player {
             throw new RuntimeException(e);
         }
         log.info("SATUS: " + httpResponse.getStatusLine());
+        this.volume();
         return this;
+    }
+
+    public String volume() {
+        Response response = Fluent.post(Requests.volume(this.name).toString());
+        Content content;
+        try {
+            content = response.returnContent();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
+        log.info("PLAYER: " + this.name + " _VOLUME: " + responseFromLms.result._volume);
+        return responseFromLms.result._volume;
     }
 
     public Player play(Integer channel) {
@@ -154,6 +168,19 @@ public class Player {
     public Player playSilence() {
         log.info("PLAYER: " + this.name + " PLAY SILINCE: " + SILENCE);
         Response response = Fluent.post(Requests.play(this.name, SILENCE).toString());
+        HttpResponse httpResponse;
+        try {
+            httpResponse = response.returnResponse();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("SATUS: " + httpResponse.getStatusLine());
+        return this;
+    }
+
+    public Player play() {
+        log.info("PLAYER: " + this.name + " PLAY");
+        Response response = Fluent.post(Requests.play(this.name).toString());
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
