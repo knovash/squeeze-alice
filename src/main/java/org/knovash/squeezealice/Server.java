@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.knovash.squeezealice.Main.SILENCE;
 import static org.knovash.squeezealice.Main.server;
 
 @Log4j2
@@ -87,14 +88,14 @@ public class Server {
                 .orElse(null);
     }
 
-    public static Player playingPlayer() {
+    public static Player playingPlayer(String currentName) {
         log.info("Search for playing player...");
         Player playing = server.players
                 .stream()
                 .filter(player -> player.mode().equals("play"))
                 .findFirst()
                 .orElse(null);
-        if (playing == null) { log.info("NO PLAYING");}
+        if (playing == null || playing.path().equals(SILENCE) || playing.name.equals(currentName)) { log.info("NO PLAYING");}
         else {
         log.info("PLAYING: " + playing.name);}
         return playing;

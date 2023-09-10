@@ -12,17 +12,17 @@ public class Action {
 
     // Алиса музыку громче\тише
     public static void volume(Player player, String value) {
-        Integer volumeAlicePrevious = player.volumeAlicePrevious;
+        Integer volumeAlicePrevious = player.volume_alice_previous;
         Integer volumeAliceCurrent = Integer.valueOf(value);
-        Integer step = player.volumeStep;
-        log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name + " current=" + volumeAliceCurrent + " last=" + volumeAlicePrevious + " low=" + player.volumeAliceLow + " hi=" + player.volumeAliceHigh);
-        if ((volumeAliceCurrent > volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volumeAliceHigh))) {
+        Integer step = player.volume_step;
+        log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name + " current=" + volumeAliceCurrent + " last=" + volumeAlicePrevious + " low=" + player.volume_alice_low + " hi=" + player.volume_alice_high);
+        if ((volumeAliceCurrent > volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_high))) {
             player.volume("+" + step);
         }
-        if ((volumeAliceCurrent < volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volumeAliceLow))) {
+        if ((volumeAliceCurrent < volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_low))) {
             player.volume("-" + step);
         }
-        player.volumeAlicePrevious = volumeAliceCurrent;
+        player.volume_alice_previous = volumeAliceCurrent;
     }
 
     // Алиса, включи канал
@@ -58,7 +58,7 @@ public class Action {
                 .unsync()
                 .wakeAndSet();
 
-        Player playing = Server.playingPlayer(); // найти играющую - если есть подключиться к ней
+        Player playing = Server.playingPlayer(player.name); // найти играющую - если есть подключиться к ней
 
         if (playing != null) {
             log.info("SYNC TO PLAYING: " + playing.name);
@@ -98,7 +98,7 @@ public class Action {
     //        не играет + есть играющей     =   вэйк, пресет, подключить к играющей
     public static void turnOnSpeaker(Player player) {
         String mode = player.mode();
-        Player playing = Server.playingPlayer();
+        Player playing = Server.playingPlayer(player.name);
         if (Objects.equals(mode, "play") && playing == null) {
             log.info("STILL PLAYING");
         }
@@ -132,11 +132,11 @@ public class Action {
         switch (mute) {
             case ("1"):
                 log.info("ALL LOW");
-                server.players.forEach(player -> player.volume(String.valueOf(player.volumelow)));
+                server.players.forEach(player -> player.volume(String.valueOf(player.volume_low)));
                 break;
             case ("0"):
                 log.info("ALL HIGH");
-                server.players.forEach(player -> player.volume(String.valueOf(player.volumehigh)));
+                server.players.forEach(player -> player.volume(String.valueOf(player.volume_high)));
                 break;
         }
     }

@@ -9,23 +9,18 @@ echo -e ${BGreen}"skip install npm and localtunnel"${NC}"\n"
 
 echo -e ${BGreen}"install squeeze-alice"${NC}"\n"
 sudo tar xzvf squeeze-alice-1.0.tar.gz -C /opt/
-sudo chmod +x *.jar
-sudo ls /opt/
-sudo ls /opt/squeeze-alice/
 
 echo -e ${BGreen}"install squeeze-tunnel.service"${NC}"\n"
 sudo cp squeeze-tunnel.service /lib/systemd/system/
 sudo systemctl enable squeeze-tunnel.service
 sudo systemctl daemon-reload
 sudo systemctl start squeeze-tunnel.service
-#sudo service squeeze-tunnel status
 
 echo -e ${BGreen}"install squeeze-tunnel.service"${NC}"\n"
-sudo cp squeeze-alice.service /lib/systemd/system/
-sudo systemctl enable squeeze-alice.service
-sudo systemctl daemon-reload
-sudo systemctl start squeeze-alice.service
-#sudo service squeeze-alice status
+#sudo cp squeeze-alice.service /lib/systemd/system/
+#sudo systemctl enable squeeze-alice.service
+#sudo systemctl daemon-reload
+#sudo systemctl start squeeze-alice.service
 
 $SHELL
 

@@ -24,14 +24,14 @@ public class Player {
 
     public String name;
     public String id;
-    public Integer volumeStep;
-    public Integer volumeAlicePrevious;
-    public Integer volumelow;
-    public Integer volumehigh;
-    public Integer wakeDelay;
+    public Integer volume_step;
+    public Integer volume_alice_previous;
+    public Integer volume_low;
+    public Integer volume_high;
+    public Integer wake_delay;
     public boolean black;
-    public Integer volumeAliceLow;
-    public Integer volumeAliceHigh;
+    public Integer volume_alice_low;
+    public Integer volume_alice_high;
     public Map<Integer, Integer> timeVolume;
 
     public static String lastPath;
@@ -40,13 +40,13 @@ public class Player {
     public Player(String name, String id) {
         this.name = name;
         this.id = id;
-        this.volumeAlicePrevious = 1;
-        this.volumeStep = 5;
-        this.volumelow = 5;
-        this.volumehigh = 20;
-        this.wakeDelay = 10000;
-        this.volumeAliceLow = 1;
-        this.volumeAliceHigh = 9;
+        this.volume_alice_previous = 1;
+        this.volume_step = 5;
+        this.volume_low = 5;
+        this.volume_high = 20;
+        this.wake_delay = 10000;
+        this.volume_alice_low = 1;
+        this.volume_alice_high = 9;
         this.black = false;
         this.timeVolume = new HashMap<>(Map.of(
                 0, 3,
@@ -232,7 +232,7 @@ public class Player {
     }
 
     public Player wakeAndSet() {
-        log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wakeDelay);
+        log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wake_delay);
         this
                 .playSilence()
                 .volume("-1")
@@ -261,10 +261,10 @@ public class Player {
     }
 
     public Player waitForWake() {
-        log.info("WAIT " + wakeDelay);
+        log.info("WAIT " + wake_delay);
         log.info(". . . . . .");
         try {
-            Thread.sleep(this.wakeDelay);
+            Thread.sleep(this.wake_delay);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
