@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.HttpResponse;
+import org.apache.http.NoHttpResponseException;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Response;
 import org.knovash.squeezealice.requests.Requests;
@@ -33,9 +34,10 @@ public class Player {
     public Integer volume_alice_low;
     public Integer volume_alice_high;
     public Map<Integer, Integer> timeVolume;
+    public String lastPath;
 
-    public static String lastPath;
-    public static Integer lastChannel;
+    public static String lastStrPath;
+    public static String lastPathGlobal;
 
     public Player(String name, String id) {
         this.name = name;
@@ -52,13 +54,14 @@ public class Player {
                 0, 3,
                 7, 5,
                 8, 10,
-                9,15,
-                20,10,
+                9, 15,
+                20, 10,
                 22, 5));
     }
 
     public static String name(String index) {
         Response response = Fluent.post(Requests.name(index).toString());
+        if (response == null) {return "";}
         Content content;
         try {
             content = response.returnContent();
@@ -72,6 +75,7 @@ public class Player {
 
     public static String id(String index) {
         Response response = Fluent.post(Requests.id(index).toString());
+        if (response == null) {return "";}
         Content content;
         try {
             content = response.returnContent();
@@ -85,6 +89,7 @@ public class Player {
 
     public String mode() {
         Response response = Fluent.post(Requests.mode(this.name).toString());
+        if (response == null) {return "";}
         Content content;
         try {
             content = response.returnContent();
@@ -98,6 +103,7 @@ public class Player {
 
     public String path() {
         Response response = Fluent.post(Requests.path(this.name).toString());
+        if (response == null) {return "";}
         Content content;
         try {
             content = response.returnContent();
@@ -112,20 +118,21 @@ public class Player {
     public Player volume(String value) {
         log.info("PLAYER: " + this.name + " VOLUME: " + value);
         Response response = Fluent.post(Requests.volume(this.name, value).toString());
+        if (response == null) {return this;}
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
         } catch (IOException e) {
-            log.info("ERROR");
             throw new RuntimeException(e);
         }
+        this.saveLastPath();
         log.info("SATUS: " + httpResponse.getStatusLine());
-        this.volume();
         return this;
     }
 
     public String volume() {
         Response response = Fluent.post(Requests.volume(this.name).toString());
+        if (response == null) {return "";}
         Content content;
         try {
             content = response.returnContent();
@@ -140,13 +147,14 @@ public class Player {
     public Player play(Integer channel) {
         log.info("PLAYER: " + this.name + " PLAY CHANNEL: " + channel);
         Response response = Fluent.post(Requests.play(this.name, channel - 1).toString());
+        if (response == null) {return this;}
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        Player.lastChannel = channel;
+        this.saveLastPath();
         log.info("SATUS: " + httpResponse.getStatusLine());
         return this;
     }
@@ -154,13 +162,14 @@ public class Player {
     public Player play(String path) {
         log.info("PLAYER: " + this.name + " PLAY PATH: " + path);
         Response response = Fluent.post(Requests.play(this.name, path).toString());
+        if (response == null) {return this;}
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        Player.lastPath = path;
+        this.saveLastPath();
         log.info("SATUS: " + httpResponse.getStatusLine());
         return this;
     }
@@ -168,6 +177,7 @@ public class Player {
     public Player playSilence() {
         log.info("PLAYER: " + this.name + " PLAY SILINCE: " + SILENCE);
         Response response = Fluent.post(Requests.play(this.name, SILENCE).toString());
+        if (response == null) {return this;}
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
@@ -181,25 +191,51 @@ public class Player {
     public Player play() {
         log.info("PLAYER: " + this.name + " PLAY");
         Response response = Fluent.post(Requests.play(this.name).toString());
+        if (response == null) {return this;}
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        this.saveLastPath();
         log.info("SATUS: " + httpResponse.getStatusLine());
         return this;
     }
 
+    public Player playLast() {
+        if (this.path() != null && !this.path().equals(SILENCE)) {
+            log.info("PLAY: " + this.path());
+            this.play();
+            return this;
+        }
+        if (this.lastPath != null && !this.lastPath.equals(SILENCE)) {
+            log.info("PLAY PLAYER LAST PATH: " + this.lastPath);
+            this.play(this.lastPath);
+            return this;
+        }
+        if (Player.lastPathGlobal != null && !Player.lastPathGlobal.equals(SILENCE)) {
+            log.info("PLAY PLAYER LAST PATH GLOBAL: " + Player.lastPathGlobal);
+            this.play(Player.lastPathGlobal);
+            return this;
+        }
+        this.play(1); // играть первое избранное
+        return this;
+    }
+
+
     public Player pause() {
         log.info("PLAYER: " + this.name + " PAUSE");
         Response response = Fluent.post(Requests.pause(this.name).toString());
+        if (response == null) {return this;}
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        this.lastPath = this.path();
+        lastPathGlobal = this.lastPath;
         log.info("SATUS: " + httpResponse.getStatusLine());
         return this;
     }
@@ -207,6 +243,7 @@ public class Player {
     public Player sync(String toPlayer) {
         log.info("PLAYER: " + this.name + " SYNC TO: " + toPlayer);
         Response response = Fluent.post(Requests.sync(this.name, toPlayer).toString());
+        if (response == null) {return this;}
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
@@ -220,6 +257,7 @@ public class Player {
     public Player unsync() {
         log.info("PLAYER: " + this.name + " UNSYNC");
         Response response = Fluent.post(Requests.unsync(this.name).toString());
+        if (response == null) {return this;}
         HttpResponse httpResponse;
         try {
             httpResponse = response.returnResponse();
@@ -233,7 +271,9 @@ public class Player {
 
     public Player wakeAndSet() {
         log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wake_delay);
+
         this
+                .saveLastPath()
                 .playSilence()
                 .volume("-1")
                 .setVolumeByTime()
@@ -251,7 +291,6 @@ public class Player {
                 timeVolume.entrySet()
                         .stream()
                         .filter(entry -> LocalTime.of(entry.getKey(), 0).isBefore(time))
-                        .peek(entry -> log.info("FILTER " + entry))
                         .max(Comparator.comparing(Map.Entry::getKey))
                         .get()
                         .getValue();
@@ -267,6 +306,15 @@ public class Player {
             Thread.sleep(this.wake_delay);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
+        }
+        return this;
+    }
+
+    public Player saveLastPath() {
+        String path = this.path();
+        if (path != null && !path.equals(SILENCE)) {
+            this.lastPath = path;
+            lastPathGlobal = this.lastPath;
         }
         return this;
     }

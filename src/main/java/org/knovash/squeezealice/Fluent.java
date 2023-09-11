@@ -8,6 +8,8 @@ import org.apache.http.entity.ContentType;
 import java.io.IOException;
 import java.util.ResourceBundle;
 
+import static org.knovash.squeezealice.Main.argsLMS;
+
 @Log4j2
 public class Fluent {
 
@@ -17,14 +19,16 @@ public class Fluent {
     public static Response post(String json) {
         log.info("REQUEST TO LMS: " + json);
         Response postResult;
+        if (argsLMS == null){ argsLMS = LMS;}
         try {
-            postResult = Request.Post(LMS).bodyString(json, ContentType.APPLICATION_JSON)
+            postResult = Request.Post(argsLMS).bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute();
         } catch (IOException e) {
             log.info("ERROR FLUENT POST " + e);
-            throw new RuntimeException(e);
+            postResult = null;
+//            throw new RuntimeException(e);
         }
         return postResult;
     }

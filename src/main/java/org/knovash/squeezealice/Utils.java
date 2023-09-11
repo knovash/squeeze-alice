@@ -13,23 +13,34 @@ import static org.knovash.squeezealice.Main.server;
 public class Utils {
 
     private static ResourceBundle bundle = ResourceBundle.getBundle("config");
+    private static Map<String, String> altNames;
 
-    public static void addPlayerAlterName(){
-        Map<String ,String > alternames = new HashMap<>();
-        alternames = new HashMap<>(Map.of(
-                "homepod","HomePod",
-                "bathroom","Bathroom",
-                "ggmm","GGMM_E2_2650",
-                "mibox","Mi Box"));
-
+    public static void addPlayerAlternativeName() {
+        Map<String, String> altNames = new HashMap<>();
+        altNames = new HashMap<>(Map.of(
+                "homepod", "HomePod",
+                "bathroom", "Bathroom",
+                "ggmm", "GGMM_E2_2650",
+                "mibox", "Mi Box"));
+        JsonUtils.pojoToJsonFile(altNames, "alter.json");
     }
+
+    public static void readAltNames() {
+        altNames = JsonUtils.jsonFileToMap("alt_names.json", String.class, String.class);
+        if (altNames == null) {
+            log.info("!!! ERROR !!! FILE NOT FOUND 'alt_names.json'");
+        } else {
+            log.info("READ ALT NAMES: " + altNames);
+        }
+    }
+
 
     public static void changePlayerValue(HashMap<String, String> parameters) {
         String playerName = parameters.get("player");
         String valueName = parameters.get("value_name");
         Integer newValue = Integer.valueOf(parameters.get("value"));
         Field field = null;
-        playerName = alterName(playerName);
+        playerName = altPlayerName(playerName);
         Player player = Server.playerByName(playerName);
         log.info("PLAYER: " + playerName + " VALUE NAME: " + valueName + " NEW VALUE: " + newValue);
         try {
@@ -48,11 +59,39 @@ public class Utils {
         server.writeFile();
     }
 
-    public static String alterName(String name) {
+    public static String altPlayerName(String name) {
+        altNames.get("dd");
         if (bundle.containsKey(name)) {
             name = bundle.getString(name);
         } else {
-            log.info("NO ALTER NAME FOR " + name);
+            log.info("NO QUERY NAME FOR " + name);
+        }
+        return name;
+    }
+
+    public static void altNameAdd(HashMap<String, String> parameters)  {
+//        http://localhost:8001/cmd?action=alt_name_add&query_name=ggmm&lms_name=4
+        String query_name = parameters.get("player");
+        String lms_name = parameters.get("value_name");
+        Utils.altNames.put(query_name,lms_name);
+        JsonUtils.pojoToJsonFile(altNames,"alt_names.json");
+    }
+
+    public static String altPlayerNameMap(String name) {
+
+        if (!altNames.isEmpty() && altNames.containsKey(name)) {
+            altNames.get(name);
+        } else {
+
+            log.info("ALT NAME ISNT SET FOR " + name);
+            log.info("please add to alt_names.json {\"player_name\" : \"Player Name\"}");
+        }
+
+
+        if (bundle.containsKey(name)) {
+            name = bundle.getString(name);
+        } else {
+            log.info("NO QUERY NAME FOR " + name);
         }
         return name;
     }

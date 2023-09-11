@@ -4,13 +4,13 @@ import lombok.extern.log4j.Log4j2;
 
 import java.util.Objects;
 
-import static org.knovash.squeezealice.Main.SILENCE;
 import static org.knovash.squeezealice.Main.server;
 
 @Log4j2
 public class Action {
 
-    // Алиса музыку громче\тише
+
+     // Алиса, музыку громче\тише
     public static void volume(Player player, String value) {
         Integer volumeAlicePrevious = player.volume_alice_previous;
         Integer volumeAliceCurrent = Integer.valueOf(value);
@@ -57,38 +57,21 @@ public class Action {
         player
                 .unsync()
                 .wakeAndSet();
-
         Player playing = Server.playingPlayer(player.name); // найти играющую - если есть подключиться к ней
-
         if (playing != null) {
             log.info("SYNC TO PLAYING: " + playing.name);
             player.sync(playing.name);
             return;
         }
-        log.info("PATH: " + player.path());
-        log.info("SILENCE: " + SILENCE);
-        log.info("PATH=SILENCE: "+player.path().equals(SILENCE));
-//        if (player.path() != null && player.path() != SILENCE) { // играть путь из плеера если путь не нул и не сайлент
-//            player.play();
-//            return;
-//        }
-        if (Player.lastPath != null) { // играть последнее игравшее
-            log.info("PLAY LAST PATH: " + Player.lastPath);
-            player.play(Player.lastPath);
-            return;
-        }
-        if (Player.lastChannel != null) { // играть последнее игравшее
-            log.info("PLAY LAST CHANNEL: " + Player.lastChannel);
-            player.play(Player.lastChannel);
-            return;
-        }
-
-        player.play(1); // играть первое избранное
+        player.playLast();
     }
 
     // Алиса, выключи музыку - выключиться музыка везде
     public static void turnOffMusic() {
-        server.players.forEach(Player::pause);
+        log.info("TURN OFF MUSIC pause all players");
+        server.players.stream()
+                .peek(p -> log.info(p))
+                .forEach(Player::pause);
     }
 
     // Алиса, включи колонку - подключить к играющей или играть последнее
@@ -110,7 +93,7 @@ public class Action {
             log.info("WAKE PLAY LAST");
             player
                     .wakeAndSet()
-                    .play(Player.lastPath);
+                    .playLast();
         }
         if (!Objects.equals(mode, "play") && playing != null) {
             log.info("WAKE SYNC TO PLAYING");
@@ -127,8 +110,8 @@ public class Action {
                 .pause();
     }
 
-    // Алиса все тихо
-    public static void allLowHigh(String mute) {
+    // Алиса все тихо/громко
+    public static void allLowOrHigh(String mute) {
         switch (mute) {
             case ("1"):
                 log.info("ALL LOW");

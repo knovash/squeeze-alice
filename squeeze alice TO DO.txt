@@ -1,0 +1,24 @@
+время в лог
+добавление плеера в пропетис
+плеер гет пас если не сайлент
+
+
+After=network.target
+After=network-online.target
+
+
+плеер есть в сервере но нет в ЛМС например JBL но есть JBL black
+
+включи музыку. поиск играющего
+если играющий не = каррент
+если играющий не = сайлент
+
+logitechmediaserver.service
+# NOVASH
+Restart=yes
+#Restart=no
+
+change_value
+update_players
+alt_names {}
+alt_name_add name1= name2=

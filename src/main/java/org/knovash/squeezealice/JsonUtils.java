@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class JsonUtils {
 
@@ -68,6 +69,7 @@ public class JsonUtils {
 
     public static <T> T jsonFileToPojo(String fileName, Class<T> clazz) {
         File file = new File(fileName);
+        if (!file.exists()) return null;
         try {
             return objectMapper.readValue(file, clazz);
         } catch (IOException e) {
@@ -82,7 +84,19 @@ public class JsonUtils {
 
     public static <T> List<T> jsonFileToList(String fileName, Class<T> clazz) {
         File file = new File(fileName);
+        if (!file.exists()) return null;
         JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, clazz);
+        try {
+            return objectMapper.readValue(file, type);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static <K, V> Map<K, V> jsonFileToMap(String fileName, Class<K> clazzKey, Class<V> clazzValue) {
+        File file = new File(fileName);
+        if (!file.exists()) return null;
+        JavaType type = objectMapper.getTypeFactory().constructMapType(Map.class, clazzKey, clazzValue);
         try {
             return objectMapper.readValue(file, type);
         } catch (IOException e) {

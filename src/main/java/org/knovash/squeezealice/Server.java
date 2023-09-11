@@ -29,6 +29,10 @@ public class Server {
     public void countPlayers() {
         Response response = Fluent.post(Requests.count().toString());
         Content content;
+        if (response == null) {
+            log.info("NO PLAYERS IN LMS");
+            return;
+        }
         try {
             content = response.returnContent();
         } catch (IOException e) {
@@ -39,10 +43,15 @@ public class Server {
         server.counter = Integer.parseInt(responseFromLms.result._count);
     }
 
-    public static void updatePlayers() {
+    public static boolean updatePlayers() {
         log.info("UPDATE PLAYERS");
         server.countPlayers();
         Integer counter = server.counter;
+        if (counter == null) {
+            log.info("UPDATE SKIPED");
+            log.info("PLAYERS:");
+            log.info(server.players);
+            return false;}
         List<Player> players = new ArrayList<>();
         if (server.players == null) server.players = new ArrayList<>();
         for (Integer index = 0; index < counter; index++) {
@@ -55,6 +64,9 @@ public class Server {
         }
         log.info("PLAYERS:");
         log.info(server.players);
+        log.info("WRITE 'server.json'");
+        JsonUtils.pojoToJsonFile(server, "server.json");
+        return true;
     }
 
     public void writeFile() {
@@ -95,9 +107,14 @@ public class Server {
                 .filter(player -> player.mode().equals("play"))
                 .findFirst()
                 .orElse(null);
-        if (playing == null || playing.path().equals(SILENCE) || playing.name.equals(currentName)) { log.info("NO PLAYING");}
-        else {
-        log.info("PLAYING: " + playing.name);}
+        if (playing == null ||
+                playing.path().equals(SILENCE) ||
+                playing.name.equals(currentName)) {
+            log.info("NO PLAYING");
+            return null;
+        } else {
+            log.info("PLAYING: " + playing.name);
+        }
         return playing;
     }
 }

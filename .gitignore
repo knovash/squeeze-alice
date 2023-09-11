@@ -7,10 +7,8 @@ log
 *.log
 *.jar
 *.iml
-
-*.sh4
-*.tar4
-*.gz4
-*.tar.gz4
+*.tar
+*.gz
+*.tar.gz
 
 server.json
