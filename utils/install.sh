@@ -23,7 +23,7 @@ echo -e ${BGreen}"install squeeze-tunnel.service"${NC}"\n"
 #sudo systemctl start squeeze-tunnel.service
 
 echo -e ${BGreen}"install squeeze-tunnel.service"${NC}"\n"
-#sudo cp squeeze-alice.service /lib/systemd/system/
+sudo cp squeeze-alice.service /lib/systemd/system/
 #sudo systemctl enable squeeze-alice.service
 #sudo systemctl daemon-reload
 #sudo systemctl start squeeze-alice.service

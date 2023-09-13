@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.ResourceBundle;
 
+import static org.knovash.squeezealice.Utils.altNames;
+
 @Log4j2
 public class Handler implements HttpHandler {
 
@@ -17,6 +19,9 @@ public class Handler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) {
+        String actionStatus;
+        String name = null;
+        Player player = null;
         log.info(" ----===[ REQUEST ]===----");
         log.info("URI: " + httpExchange.getRequestURI().getQuery());
         String query = httpExchange.getRequestURI().getQuery();
@@ -25,30 +30,29 @@ public class Handler implements HttpHandler {
                 .map(s -> s.split("="))
                 .forEach(s -> parameters.put(s[0], s[1]));
         String action = parameters.get("action");
-
-        String name = null;
-        Player player = null;
+        log.info("ACTION: " + action);
         if (parameters.get("player") != null) {
             name = parameters.get("player");
+            log.info("NAME: " + name);
             name = Utils.altPlayerName(name);
+            log.info("ALT NAME: " + name);
             player = Server.playerByName(name);
-
             if (player == null) {
-                log.info("NO PLAYER: " + name + " TRY UPDATE FROM SERVER");
+                log.info("NO PLAYER : " + name + " TRY UPDATE FROM LMS AND RETRY");
                 Server.updatePlayers();
                 player = Server.playerByName(name);
                 if (player == null) {
                     log.info("NO PLAYER: " + name + " ON SERVER");
+                    handleResponse(httpExchange, "ERROR: NO PLAYER IN LMS " + name + "Try check alt names: " + altNames);
                     return;
                 }
             }
             if (player.isBlack()) {
                 log.info("PLAYER: " + name + " IN BLACK");
+                handleResponse(httpExchange, "PLAYER IN BLACKLIST " + name);
                 return;
             }
         }
-
-        String actionStatus;
 
         switch (action) {
             case ("channel"):
@@ -64,15 +68,12 @@ public class Handler implements HttpHandler {
                 actionStatus = "ACTION COMPLETE";
                 break;
             case ("turn_on_music"):
-                Action.turnOnMusic(player);
+            case ("turn_on_speaker"):
+                Action.turnOnMusicSpeakers(player);
                 actionStatus = "ACTION COMPLETE";
                 break;
             case ("turn_off_music"):
                 Action.turnOffMusic();
-                actionStatus = "ACTION COMPLETE";
-                break;
-            case ("turn_on_speaker"):
-                Action.turnOnSpeaker(player);
                 actionStatus = "ACTION COMPLETE";
                 break;
             case ("turn_off_speaker"):
@@ -83,9 +84,10 @@ public class Handler implements HttpHandler {
                 Server.updatePlayers();
                 actionStatus = "ACTION COMPLETE";
                 break;
-            case ("update_favorites"):
-                Server.updatePlayers();
-                actionStatus = "ACTION COMPLETE";
+            case ("show_log"):
+            case ("log"):
+                log.info("SHOW LOG");
+                actionStatus = Utils.logLastLines(parameters);
                 break;
             case ("silence"):
                 log.info("SILENCE");
@@ -97,14 +99,23 @@ public class Handler implements HttpHandler {
                 Utils.changePlayerValue(parameters);
                 actionStatus = "ACTION COMPLETE";
                 break;
-
             case ("alt_name_add"):
                 log.info("ALT NAME ADD");
                 Utils.altNameAdd(parameters);
                 actionStatus = "ACTION COMPLETE";
                 break;
+            case ("remove"):
+                log.info("REMOVE PLAYER");
+                player.remove();
+                actionStatus = "ACTION COMPLETE";
+                break;
+            case ("state"):
+                log.info("SEND SERVER STATE");
+                actionStatus = Utils.state();
+                break;
             default:
-                actionStatus = "ACTION NOT FOUND";
+                log.info("ACTION NOT FOUND: " + action);
+                actionStatus = "ACTION NOT FOUND: " + action;
                 break;
         }
         handleResponse(httpExchange, actionStatus);
@@ -112,7 +123,7 @@ public class Handler implements HttpHandler {
 
     private void handleResponse(HttpExchange httpExchange, String actionStatus) {
         OutputStream outputStream = httpExchange.getResponseBody();
-        String htmlResponse = "OK " + actionStatus ;
+        String htmlResponse = actionStatus;
         try {
             httpExchange.sendResponseHeaders(200, htmlResponse.length());
         } catch (IOException e) {
@@ -125,7 +136,5 @@ public class Handler implements HttpHandler {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
-
 }

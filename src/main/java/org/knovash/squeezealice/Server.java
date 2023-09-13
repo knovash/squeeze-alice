@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.http.client.fluent.Content;
-import org.apache.http.client.fluent.Response;
 import org.knovash.squeezealice.requests.Requests;
 import org.knovash.squeezealice.requests.ResponseFromLms;
 
@@ -27,18 +25,8 @@ public class Server {
     public Integer counter;
 
     public void countPlayers() {
-        Response response = Fluent.post(Requests.count().toString());
-        Content content;
-        if (response == null) {
-            log.info("NO PLAYERS IN LMS");
-            return;
-        }
-        try {
-            content = response.returnContent();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        ResponseFromLms responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
+        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.count().toString());
+        if (responseFromLms == null) log.info("ERROR");
         log.info("RESPONSE: " + responseFromLms);
         server.counter = Integer.parseInt(responseFromLms.result._count);
     }
@@ -48,9 +36,7 @@ public class Server {
         server.countPlayers();
         Integer counter = server.counter;
         if (counter == null) {
-            log.info("UPDATE SKIPED");
-            log.info("PLAYERS:");
-            log.info(server.players);
+            log.info("UPDATE SKIPED. NO PLAYERS IN LMS");
             return false;}
         List<Player> players = new ArrayList<>();
         if (server.players == null) server.players = new ArrayList<>();
@@ -60,21 +46,24 @@ public class Server {
             if (!server.players.contains(new Player(name, id))) {
                 log.info("ADD NEW PLAYER: " + name + " " + id);
                 server.players.add(new Player(name, id));
+            } else {
+                log.info("SKIP PLAYER: " + name + " " + id);
             }
         }
         log.info("PLAYERS:");
         log.info(server.players);
         log.info("WRITE 'server.json'");
         JsonUtils.pojoToJsonFile(server, "server.json");
+        Utils.generateAltNamesFile();
         return true;
     }
 
-    public void writeFile() {
+    public void writeServerFile() {
         log.info("WRITE FILE server.json");
         JsonUtils.pojoToJsonFile(server, "server.json");
     }
 
-    public void readFile() {
+    public void readServerFile() {
         log.info("TRY READING FILE server.json");
         File file = new File("server.json");
         if (file.exists()) {
@@ -89,7 +78,7 @@ public class Server {
                 log.info("Previous server state lost :(");
             }
         } else {
-            log.info("NO FILE server.json Previous server state not available");
+            log.info("FILE NOT FOUND server.json Previous server state not available");
         }
     }
 

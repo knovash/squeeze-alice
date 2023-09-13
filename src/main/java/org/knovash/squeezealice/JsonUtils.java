@@ -18,7 +18,7 @@ public class JsonUtils {
 
     public static String pojoToJson(Object pojo) {
         try {
-            return objectMapper.writeValueAsString(pojo);
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -99,6 +99,15 @@ public class JsonUtils {
         JavaType type = objectMapper.getTypeFactory().constructMapType(Map.class, clazzKey, clazzValue);
         try {
             return objectMapper.readValue(file, type);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static <K,V> void mapToJsonFile(Map<K,V> map, String fileName) {
+        File file = new File(fileName);
+        try {
+            objectWriter.writeValue(file, map);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
