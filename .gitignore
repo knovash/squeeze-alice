@@ -2,13 +2,10 @@
 target
 build
 log
+ignor
 
 *.class
 *.log
 *.jar
 *.iml
-*.tar
-*.gz
-*.tar.gz
 
-server.json

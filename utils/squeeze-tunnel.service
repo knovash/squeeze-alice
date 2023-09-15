@@ -8,6 +8,6 @@ Type=simple
 Restart=yes
 Restart=always
 RestartSec=3
-ExecStart= lt --port 8001 --subdomain squeeze
+ExecStart= lt --port 8002 --subdomain squeeze
 [Install]
 WantedBy=multi-user.target

@@ -9,8 +9,7 @@ import static org.knovash.squeezealice.Main.server;
 @Log4j2
 public class Action {
 
-
-     // Алиса, музыку громче\тише
+    // Алиса, музыку громче\тише
     public static void volume(Player player, String value) {
         Integer volumeAlicePrevious = player.volume_alice_previous;
         Integer volumeAliceCurrent = Integer.valueOf(value);
@@ -42,75 +41,56 @@ public class Action {
                 .play(channel);
     }
 
-    // Алиса, включи музыку
-    // если колонка играет - продолжит играть
-    // если колонка не играет - разбудить, установить громкость,
-    // найти играющую - если есть подключиться к ней
-    // если нет играющей - играть последнее, если нет то избранное1
-    public static void turnOnMusic(Player player) {
-        log.info("TURN ON PLAYER: " + player.name);
-        if (player.mode().equals("play")) {
-            log.info("STILL PLAYING");
-            return;
-        }
-        log.info("not play - wake - set preset - search playing - try sync - else play last - else play fav1");
-        player
-                .unsync()
-                .wakeAndSet();
-        Player playing = Server.playingPlayer(player.name); // найти играющую - если есть подключиться к ней
-        if (playing != null) {
-            log.info("SYNC TO PLAYING: " + playing.name);
-            player.sync(playing.name);
-            return;
-        }
-        player.playLast();
-    }
 
-    // Алиса, выключи музыку - выключиться музыка везде
-    public static void turnOffMusic() {
-        log.info("TURN OFF MUSIC pause all players");
-        server.players.stream()
-                .peek(p -> log.info(p))
-                .forEach(Player::pause);
-    }
-
-    // Алиса, включи колонку - подключить к играющей или играть последнее
-    //        играет + нет играющей         =   продолжить играть
-    //        играет + есть играющей        =   подключить к играющей
-    //        не играет + нет играющей      =   вэйк, пресет, ластплэй
-    //        не играет + есть играющей     =   вэйк, пресет, подключить к играющей
-    public static void turnOnSpeaker(Player player) {
+    // Алиса, включи музыку/колонку
+    // играет    +  нет играющей  = продолжить играть
+    // играет    +  есть играющей = подключить к играющей
+    // не играет +  нет играющей  = вэйк, сет, ластплэй
+    // не играет +  есть играющей = вэйк, сет, подключить к играющей
+    public static void turnOnMusicSpeaker(Player player) {
         String mode = player.mode();
         Player playing = Server.playingPlayer(player.name);
+        // играет    +  нет играющей  = продолжить играть
         if (Objects.equals(mode, "play") && playing == null) {
             log.info("STILL PLAYING");
         }
+        // играет    +  есть играющей = подключить к играющей
         if (Objects.equals(mode, "play") && playing != null) {
             log.info("SYNC TO PLAYING");
             player.sync(playing.name);
         }
+        // не играет +  нет играющей  = вэйк, сет, ластплэй
         if (!Objects.equals(mode, "play") && playing == null) {
-            log.info("WAKE PLAY LAST");
+            log.info("WAKE, SET, PLAY LAST");
             player
+                    .unsync()
                     .wakeAndSet()
                     .playLast();
         }
+        // не играет +  есть играющей = вэйк, сет, подключить к играющей
         if (!Objects.equals(mode, "play") && playing != null) {
-            log.info("WAKE SYNC TO PLAYING");
+            log.info("WAKE, SET, SYNC TO PLAYING");
             player
+                    .unsync()
                     .wakeAndSet()
                     .sync(playing.name);
         }
     }
 
-    // Алиса выключи колонку - отключить и остановить колонку
+    // Алиса, выключи музыку - выключиться музыка везде
+    public static void turnOffMusic() {
+        log.info("TURN OFF MUSIC pause all players");
+        server.players.forEach(Player::pause);
+    }
+
+    // Алиса, выключи колонку - отключить и остановить колонку
     public static void turnOffSpeaker(Player player) {
         player
                 .unsync()
                 .pause();
     }
 
-    // Алиса все тихо/громко
+    // Алиса, все тихо/громко
     public static void allLowOrHigh(String mute) {
         switch (mute) {
             case ("1"):
