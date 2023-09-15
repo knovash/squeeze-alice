@@ -41,30 +41,37 @@ public class Action {
                 .play(channel);
     }
 
+
     // Алиса, включи музыку/колонку
     // играет    +  нет играющей  = продолжить играть
     // играет    +  есть играющей = подключить к играющей
     // не играет +  нет играющей  = вэйк, сет, ластплэй
     // не играет +  есть играющей = вэйк, сет, подключить к играющей
-    public static void turnOnMusicSpeakers(Player player) {
+    public static void turnOnMusicSpeaker(Player player) {
         String mode = player.mode();
         Player playing = Server.playingPlayer(player.name);
+        // играет    +  нет играющей  = продолжить играть
         if (Objects.equals(mode, "play") && playing == null) {
             log.info("STILL PLAYING");
         }
+        // играет    +  есть играющей = подключить к играющей
         if (Objects.equals(mode, "play") && playing != null) {
             log.info("SYNC TO PLAYING");
             player.sync(playing.name);
         }
+        // не играет +  нет играющей  = вэйк, сет, ластплэй
         if (!Objects.equals(mode, "play") && playing == null) {
             log.info("WAKE, SET, PLAY LAST");
             player
+                    .unsync()
                     .wakeAndSet()
                     .playLast();
         }
+        // не играет +  есть играющей = вэйк, сет, подключить к играющей
         if (!Objects.equals(mode, "play") && playing != null) {
             log.info("WAKE, SET, SYNC TO PLAYING");
             player
+                    .unsync()
                     .wakeAndSet()
                     .sync(playing.name);
         }

@@ -14,6 +14,15 @@ import static org.knovash.squeezealice.Main.server;
 @Log4j2
 public class Utils {
 
+    public static void getLmsIp(String[] arg) {
+        if (arg.length != 0) {
+            Main.lmsIP = "http://" + arg[0] + ":9000/jsonrpc.js";
+        } else {
+            Main.lmsIP = "http://localhost:9000/jsonrpc.js/";
+        }
+        log.info("LMS IP: " + Main.lmsIP);
+    }
+
     private static ResourceBundle bundle = ResourceBundle.getBundle("config");
     public static Map<String, String> altNames;
 
@@ -27,32 +36,37 @@ public class Utils {
         JsonUtils.pojoToJsonFile(altNames, "alter.json");
     }
 
-    public static void readAltNames() {
+    public static Map<String, String> readfgfdgfdAltNames() {
         altNames = JsonUtils.jsonFileToMap("alt_names.json", String.class, String.class);
         if (altNames == null) {
             log.info("FILE NOT FOUND 'alt_names.json'");
         } else {
             log.info("READ ALT NAMES: " + altNames);
         }
+        return altNames;
     }
 
     public static void generateAltNamesFile() {
-        Map<String, String> newAltNames = new HashMap<>();
-        if (Utils.altNames == null) {Utils.altNames = new HashMap<>();}
+        log.info("GET ALT NAMES");
+        File file = new File("alt_names.json");
+        Map<String, String> namesGenerated = new HashMap<>();
+        Map<String, String> namesFromFile = new HashMap<>();
+        if (Utils.altNames == null) Utils.altNames = new HashMap<>();
+        // generate
         server.players.forEach(player -> {
             String altName = player.name
                     .replace(" ", "")
                     .replace("_", "")
                     .toLowerCase();
-            newAltNames.put(altName, player.name);
+            namesGenerated.put(altName, player.name);
         });
-        Map<String, String> mapRead = new HashMap<>();
-        File file = new File("alt_names.json");
-        if (file.exists()) {mapRead = JsonUtils.jsonFileToMap("alt_names.json", String.class, String.class);}
-        Utils.altNames.putAll(mapRead);
-        Utils.altNames.putAll(newAltNames);
+        // get from file
+        if (file.exists()) namesFromFile = JsonUtils.jsonFileToMap("alt_names.json", String.class, String.class);
+
+        Utils.altNames.putAll(namesFromFile);
+        Utils.altNames.putAll(namesGenerated);
         JsonUtils.mapToJsonFile(Utils.altNames, "alt_names.json");
-        log.info(Utils.altNames);
+        log.info("WRITE alt_names.json " + Utils.altNames);
     }
 
     public static void changePlayerValue(HashMap<String, String> parameters) {
@@ -80,8 +94,7 @@ public class Utils {
     }
 
     public static String altPlayerName(String name) {
-        log.info("NAME: " + name);
-        log.info("ALT NAMES: " + altNames);
+        log.info("NAME: " + name + " ALT NAMES: " + altNames);
         if (altNames.containsKey(name)) {
             name = altNames.get(name);
         } else {
@@ -97,7 +110,6 @@ public class Utils {
         Utils.altNames.put(query_name, lms_name);
         JsonUtils.pojoToJsonFile(altNames, "alt_names.json");
     }
-
 
     public static String logLastLines(HashMap<String, String> parameters) {
         int lastCount = 5;
@@ -126,6 +138,4 @@ public class Utils {
         String json = JsonUtils.pojoToJson(server);
         return json;
     }
-
-
 }

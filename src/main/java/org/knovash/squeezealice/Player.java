@@ -42,10 +42,10 @@ public class Player {
         this.name = name;
         this.id = id;
         this.volume_alice_previous = 1;
-        this.volume_step = 5;
+        this.volume_step = 3;
         this.volume_low = 5;
         this.volume_high = 20;
-        this.wake_delay = 10000;
+        this.wake_delay = 5000;
         this.volume_alice_low = 1;
         this.volume_alice_high = 9;
         this.black = false;
@@ -60,35 +60,35 @@ public class Player {
 
     public static String name(String index) {
         ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.name(index).toString());
-        if (responseFromLms == null) return null;
+        if (responseFromLms == null) return "";
         log.info("NAME: " + responseFromLms.result._name);
         return responseFromLms.result._name;
     }
 
     public static String id(String index) {
         ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.id(index).toString());
-        if (responseFromLms == null) return null;
+        if (responseFromLms == null) return "";
         log.info("ID: " + responseFromLms.result._id);
         return responseFromLms.result._id;
     }
 
     public String mode() {
         ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.mode(this.name).toString());
-        if (responseFromLms == null) return null;
+        if (responseFromLms == null) return "";
         log.info("PLAYER: " + this.name + " MODE: " + responseFromLms.result._mode);
         return responseFromLms.result._mode;
     }
 
     public String path() {
         ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.path(this.name).toString());
-        if (responseFromLms == null) return null;
+        if (responseFromLms == null) return "";
         log.info("PLAYER: " + this.name + " PATH: " + responseFromLms.result._path);
         return responseFromLms.result._path;
     }
 
     public String volume() {
         ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.volume(this.name).toString());
-        if (responseFromLms == null) return null;
+        if (responseFromLms == null) return "";
         log.info("PLAYER: " + this.name + " GET VOLUME: " + responseFromLms.result._volume);
         return responseFromLms.result._volume;
     }
@@ -155,17 +155,46 @@ public class Player {
     }
 
     public Player playLast() {
-        if (this.path() != null && !this.path().equals(SILENCE)) {
+        log.info("PLAY LAST");
+        log.info("TRY PATH: " + this.path());
+        log.info("TRY LAST PATH: " + this.lastPath);
+        log.info("TRY GLOBAL LAST PATH: " + Player.lastPathGlobal);
+
+        if (this.path() == null ||
+                this.path().equals(SILENCE) ||
+                this.path().contains("tishini") ||
+                this.path().contains("silence") ||
+                this.path().contains("korot") ||
+                this.path().contains("spotify")
+        ) {
+            log.info("SKIP PATH: " + this.path());
+        } else {
             log.info("PRESS BUTTON PLAY: " + this.path());
             this.play();
             return this;
         }
-        if (this.lastPath != null && !this.lastPath.equals(SILENCE)) {
+        if (this.lastPath == null ||
+                this.lastPath.equals(SILENCE) ||
+                this.lastPath.contains("tishini") ||
+                this.lastPath.contains("silence") ||
+                this.lastPath.contains("korot") ||
+                this.lastPath.contains("spotify")
+        ) {
+            log.info("SKIP LAST PATH: " + this.lastPath);
+        } else {
             log.info("PLAY PLAYER LAST PATH: " + this.lastPath);
             this.play(this.lastPath);
             return this;
         }
-        if (Player.lastPathGlobal != null && !Player.lastPathGlobal.equals(SILENCE)) {
+        if (Player.lastPathGlobal == null ||
+                Player.lastPathGlobal.equals(SILENCE) ||
+                Player.lastPathGlobal.contains("tishini") ||
+                Player.lastPathGlobal.contains("korot") ||
+                Player.lastPathGlobal.contains("silence") ||
+                Player.lastPathGlobal.contains("spotify")
+        ) {
+            log.info("SKIP GLOBAL PATH: " + Player.lastPathGlobal);
+        } else {
             log.info("PLAY GLOBAL LAST PATH: " + Player.lastPathGlobal);
             this.play(Player.lastPathGlobal);
             return this;
@@ -223,7 +252,7 @@ public class Player {
         return this;
     }
 
-    public void remove(){
+    public void remove() {
         server.players.remove(this);
     }
 

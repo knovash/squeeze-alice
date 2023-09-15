@@ -14,7 +14,7 @@ import static org.knovash.squeezealice.Main.lmsIP;
 public class Fluent {
 
     public static String postGetStatus(String json) {
-        log.info("REQUEST TO LMS: " + lmsIP + " " + json);
+        log.info("REQUEST TO LMS: " + json);
         String status = null;
         try {
             status = Request.Post(lmsIP).bodyString(json, ContentType.APPLICATION_JSON)
@@ -31,7 +31,7 @@ public class Fluent {
     }
 
     public static ResponseFromLms postGetContent(String json) {
-        log.info("REQUEST TO LMS: " + lmsIP + " " + json);
+        log.info("REQUEST TO LMS: " + json);
         Content content = null;
         ResponseFromLms responseFromLms = null;
         try {

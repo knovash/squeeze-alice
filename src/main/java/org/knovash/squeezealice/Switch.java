@@ -8,17 +8,12 @@ import java.util.HashMap;
 import static org.knovash.squeezealice.Utils.altNames;
 
 @Log4j2
-public class SwitchAction {
+public class Switch {
 
-    public static String runAction(String query) {
+    public static String action(String query) {
         String actionStatus;
         String name = null;
         Player player = null;
-//        log.info("");
-//        log.info("      -----====[ REQUEST ]====-----");
-//        log.info("");
-//        log.info("URI: " + query);
-
         HashMap<String, String> parameters = new HashMap<>();
         Arrays.asList(query.split("&")).stream()
                 .map(s -> s.split("="))
@@ -61,7 +56,7 @@ public class SwitchAction {
                 break;
             case ("turn_on_music"):
             case ("turn_on_speaker"):
-                Action.turnOnMusicSpeakers(player);
+                Action.turnOnMusicSpeaker(player);
                 actionStatus = "MUSIC ON COMPLETE";
                 break;
             case ("turn_off_music"):

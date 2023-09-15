@@ -31,13 +31,14 @@ public class Server {
         server.counter = Integer.parseInt(responseFromLms.result._count);
     }
 
-    public static boolean updatePlayers() {
+    public static void updatePlayers() {
         log.info("UPDATE PLAYERS");
         server.countPlayers();
         Integer counter = server.counter;
         if (counter == null) {
             log.info("UPDATE SKIPED. NO PLAYERS IN LMS");
-            return false;}
+            return;
+        }
         List<Player> players = new ArrayList<>();
         if (server.players == null) server.players = new ArrayList<>();
         for (Integer index = 0; index < counter; index++) {
@@ -52,10 +53,9 @@ public class Server {
         }
         log.info("PLAYERS:");
         log.info(server.players);
-        log.info("WRITE 'server.json'");
+        log.info("WRITE server.json");
         JsonUtils.pojoToJsonFile(server, "server.json");
         Utils.generateAltNamesFile();
-        return true;
     }
 
     public void writeServerFile() {
@@ -64,21 +64,19 @@ public class Server {
     }
 
     public void readServerFile() {
-        log.info("TRY READING FILE server.json");
+        log.info("READ server.json");
         File file = new File("server.json");
         if (file.exists()) {
             try {
                 server = JsonUtils.jsonFileToPojoTrows("server.json", Server.class);
-                log.info("FILE READING OK server.json");
-                log.info("READ PLAYERS:");
+                log.info("PLAYERS:");
                 log.info(server.players);
             } catch (IOException e) {
-                log.info("ERROR READING FILE server.json");
+                log.info("ERROR READ server.json");
                 log.info(e);
-                log.info("Previous server state lost :(");
             }
         } else {
-            log.info("FILE NOT FOUND server.json Previous server state not available");
+            log.info("FILE NOT FOUND server.json");
         }
     }
 
@@ -96,6 +94,7 @@ public class Server {
                 .filter(player -> player.mode().equals("play"))
                 .findFirst()
                 .orElse(null);
+        log.info("PLAYING: " + playing);
         if (playing == null ||
                 playing.path().equals(SILENCE) ||
                 playing.name.equals(currentName)) {

@@ -8,21 +8,21 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 @Log4j2
-public class MyHandler implements HttpHandler {
+public class Handler implements HttpHandler {
 
-//    static class MyHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange httpExchange) throws IOException {
-            log.info("REQUEST");
-            String query = httpExchange.getRequestURI().getQuery();
-            log.info("QUERY " + query);
-            String response = RunAction.runAction(query);
-//            String response = "This is the response";
-            httpExchange.sendResponseHeaders(200, response.length());
-            OutputStream os = httpExchange.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-
-        }
+    @Override
+    public void handle(HttpExchange httpExchange) throws IOException {
+        log.info("");
+        log.info(" ---===[ REQUEST ]===---");
+        String query = httpExchange.getRequestURI().getQuery();
+        log.info("QUERY " + query);
+        String response = Switch.action(query);
+        log.info("RESPONSE " + response);
+        httpExchange.sendResponseHeaders(200, response.length());
+        OutputStream outputStream = httpExchange.getResponseBody();
+        outputStream.write(response.getBytes());
+        outputStream.flush();
+        outputStream.close();
     }
+}
 
