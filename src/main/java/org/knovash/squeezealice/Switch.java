@@ -67,7 +67,14 @@ public class Switch {
                 Action.turnOffSpeaker(player);
                 actionStatus = "SPEAKER OFF COMPLETE";
                 break;
+            case ("turn_on_spotify"):
+            case ("spotify"):
+                log.info("SPOTIFY");
+                Action.turnOnSpotify(player);
+                actionStatus = "SPOTIFY COMPLETE";
+                break;
             case ("update_players"):
+            case ("update"):
                 Server.updatePlayers();
                 actionStatus = "UPDATE COMPLETE";
                 break;

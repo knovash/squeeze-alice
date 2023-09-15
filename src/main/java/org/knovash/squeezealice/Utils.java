@@ -16,11 +16,13 @@ public class Utils {
 
     public static void getLmsIp(String[] arg) {
         if (arg.length != 0) {
-            Main.lmsIP = "http://" + arg[0] + ":9000/jsonrpc.js";
+            Main.lmsServer = "http://" + arg[0] + ":9000/jsonrpc.js";
+            Main.lmsIP = arg[0];
         } else {
-            Main.lmsIP = "http://localhost:9000/jsonrpc.js/";
+            Main.lmsServer = "http://localhost:9000/jsonrpc.js/";
+            Main.lmsIP = "localhost";
         }
-        log.info("LMS IP: " + Main.lmsIP);
+        log.info("LMS IP: " + Main.lmsIP + " LMS Server: " + Main.lmsServer);
     }
 
     private static ResourceBundle bundle = ResourceBundle.getBundle("config");

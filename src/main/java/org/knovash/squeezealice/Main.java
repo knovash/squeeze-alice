@@ -13,6 +13,7 @@ public class Main {
     public static final String CONTEXT = bundle.getString("context");
 
     public static Server server = new Server();
+    public static String lmsServer;
     public static String lmsIP;
 
     public static void main(String[] args) {

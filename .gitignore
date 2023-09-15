@@ -3,9 +3,14 @@ target
 build
 log
 ignor
+squeeze-alice-pak
 
 *.class
 *.log
 *.jar
 *.iml
+*.gz
+*.tar
+*.tar.gz
+*.txt
 
