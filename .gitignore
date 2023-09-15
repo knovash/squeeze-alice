@@ -2,12 +2,10 @@
 target
 build
 log
-allure-results
+ignor
 
 *.class
 *.log
 *.jar
 *.iml
-*.sh
-/src/main/resources/result/
-result.json
+
