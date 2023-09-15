@@ -1,31 +1,53 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
+import org.knovash.squeezealice.requests.ResponseFromLms;
 
 import java.io.IOException;
-import java.util.ResourceBundle;
+
+import static org.knovash.squeezealice.Main.lmsIP;
 
 @Log4j2
 public class Fluent {
 
-    private static ResourceBundle bundle = ResourceBundle.getBundle("config");
-    private static final String LMS = bundle.getString("lms");
-
-    public static Response post(String json) {
+    public static String postGetStatus(String json) {
         log.info("REQUEST TO LMS: " + json);
-        Response postResult;
+        String status = null;
         try {
-            postResult = Request.Post(LMS).bodyString(json, ContentType.APPLICATION_JSON)
+            status = Request.Post(lmsIP).bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
-                    .execute();
+                    .execute()
+                    .returnResponse()
+                    .getStatusLine()
+                    .toString();
         } catch (IOException e) {
-            log.info("ERROR FLUENT POST " + e);
-            throw new RuntimeException(e);
+            log.info("ERROR: " + e);
         }
-        return postResult;
+        return status;
+    }
+
+    public static ResponseFromLms postGetContent(String json) {
+        log.info("REQUEST TO LMS: " + json);
+        Content content = null;
+        ResponseFromLms responseFromLms = null;
+        try {
+            content = Request.Post(lmsIP).bodyString(json, ContentType.APPLICATION_JSON)
+                    .connectTimeout(1000)
+                    .socketTimeout(1000)
+                    .execute()
+                    .returnContent();
+        } catch (IOException e) {
+            log.info("ERROR: " + e);
+        }
+        if (content != null) {
+            responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
+        } else {
+            log.info("ERROR");
+        }
+        return responseFromLms;
     }
 }

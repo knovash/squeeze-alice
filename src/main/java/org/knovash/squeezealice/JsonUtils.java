@@ -5,11 +5,11 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import org.apache.http.client.fluent.Content;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class JsonUtils {
 
@@ -18,7 +18,7 @@ public class JsonUtils {
 
     public static String pojoToJson(Object pojo) {
         try {
-            return objectMapper.writeValueAsString(pojo);
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -69,6 +69,7 @@ public class JsonUtils {
 
     public static <T> T jsonFileToPojo(String fileName, Class<T> clazz) {
         File file = new File(fileName);
+        if (!file.exists()) return null;
         try {
             return objectMapper.readValue(file, clazz);
         } catch (IOException e) {
@@ -76,8 +77,14 @@ public class JsonUtils {
         }
     }
 
+    public static <T> T jsonFileToPojoTrows(String fileName, Class<T> clazz) throws IOException {
+        File file = new File(fileName);
+        return objectMapper.readValue(file, clazz);
+    }
+
     public static <T> List<T> jsonFileToList(String fileName, Class<T> clazz) {
         File file = new File(fileName);
+        if (!file.exists()) return null;
         JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, clazz);
         try {
             return objectMapper.readValue(file, type);
@@ -86,9 +93,23 @@ public class JsonUtils {
         }
     }
 
-    public static <T> T jsonFileToPojoEx(String fileName, Class<T> clazz) throws IOException {
+    public static <K, V> Map<K, V> jsonFileToMap(String fileName, Class<K> clazzKey, Class<V> clazzValue) {
         File file = new File(fileName);
-        return objectMapper.readValue(file, clazz);
+        if (!file.exists()) return null;
+        JavaType type = objectMapper.getTypeFactory().constructMapType(Map.class, clazzKey, clazzValue);
+        try {
+            return objectMapper.readValue(file, type);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    public static <K,V> void mapToJsonFile(Map<K,V> map, String fileName) {
+        File file = new File(fileName);
+        try {
+            objectWriter.writeValue(file, map);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
