@@ -8,21 +8,35 @@ import java.util.ResourceBundle;
 public class Main {
 
     private static ResourceBundle bundle = ResourceBundle.getBundle("config");
-    public static final String SILENCE = bundle.getString("silence");
-    public static final int PORT = Integer.parseInt(bundle.getString("port"));
-    public static final String CONTEXT = bundle.getString("context");
-
+    public static String lmsIP = bundle.getString("lmsIP");
+    public static String lmsPort = bundle.getString("lmsPort");
+    public static String lmsServer = bundle.getString("lmsServer");
+    public static String silence = bundle.getString("silence");
+    public static int port = Integer.parseInt(bundle.getString("port"));
+    public static String context = bundle.getString("context");
     public static Server server = new Server();
-    public static String lmsServer;
-    public static String lmsIP;
+
+    // -lmsip 192.168.1.52 -lmsport 9000 -port 8001 -context cmd
+    // LMS ip LMS port SA port SA context
 
     public static void main(String[] args) {
         log.info("  ---+++===[ START ]===+++---");
-        Utils.getLmsIp(args);
+        log.info("lmsIP " + lmsIP);
+        log.info("lmsPort " + lmsPort);
+        log.info("lmsServer " + lmsServer);
+        log.info("port " + port);
+        log.info("context " + context);
+        ArgsParser.parse(args);
+        log.info("lmsIP " + lmsIP);
+        log.info("lmsPort " + lmsPort);
+        log.info("lmsServer " + lmsServer);
+        log.info("port " + port);
+        log.info("context " + context);
+
+//        Utils.getLmsIp(args);
         server = new Server();
         server.readServerFile();
         server.updatePlayers();
-
         ServerController.start();
     }
 }

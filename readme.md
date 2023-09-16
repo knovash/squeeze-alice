@@ -1,7 +1,8 @@
 # SqueezeBox control by Alice
 Bridge for Logitech Media Server players (SqueezeBox) control via Alice voice assistant.
 
-https://dzen.ru/a/ZP0AKcRQ-h8hfwhT
+<a href="https://dzen.ru/a/ZP0AKcRQ-h8hfwhT">Dzen.ru manual</a>
+
 ## Basic features
 * Alice, turn on the music - turn on the last one that played
 * Alice, turn off the music - turn off all players
@@ -17,12 +18,14 @@ Project is created with:
 ## Launch
 to run:
 ```
-java -jar squeeze-alice-1.0.jar
+java -jar squeeze-alice-1.0.jar [LMS ip]
 ```
+if no LMS ip, default use LMS http://localhost:9000/
+
 create access to your computer from the Internetyour url is: https://squeeze.loca.lt
 
 ```
-lt --port 8001 --subdomain squeeze
+lt --port 8002 --subdomain squeeze
 ```
 
 create rules for virtual players here
@@ -34,6 +37,13 @@ https://squeeze.loca.lt/cmd?action=turnoff&player=homepod
 https://squeeze.loca.lt/cmd?action=volume&player=homepod&value={value}
 https://squeeze.loca.lt/cmd?action=channel&player=homepod&value={value}
 ```
+### Tasker UI for configuring settings
+
+<a href="https://taskernet.com/shares/?user=AS35m8kJKYp5977YUIkcjNHTVyukgPWCIFiiEwuSPsUglqHm3bv6bL9D5mme1LtPP5KjRMog1V%2BP&id=Task%3AStateCfg">Tasker XML</a>
+* volume step
+* vloume low
+* volume high
+* wake delay
 ## Links
 * Alex Star
   https://alexstar.ru/smarthome

@@ -18,7 +18,7 @@
       "8" : 10,
       "9" : 15
     },
-    "lastPath" : null
+    "lastPath" : "spotify://track:680EN9jce6iUcCua2NGLte"
   }, {
     "name" : "Mi Box",
     "id" : "cc:cc:be:b5:90:66",
@@ -38,7 +38,7 @@
       "8" : 10,
       "9" : 15
     },
-    "lastPath" : null
+    "lastPath" : "http://api.audioaddict.com/v1/di/listen/premium_high/chilledm.pls?listen_key=780a4f0bfb95c977ceab43a2"
   }, {
     "name" : "ggmm",
     "id" : "bb:bb:6c:b8:26:52",
@@ -58,15 +58,15 @@
       "8" : 10,
       "9" : 15
     },
-    "lastPath" : null
+    "lastPath" : "http://api.audioaddict.com/v1/di/listen/premium_high/chilledm.pls?listen_key=780a4f0bfb95c977ceab43a2"
   }, {
     "name" : "HomePod",
     "id" : "aa:aa:c2:7c:e0:12",
     "volume_step" : 3,
     "volume_alice_previous" : 1,
-    "volume_low" : 5,
+    "volume_low" : 3,
     "volume_high" : 20,
-    "wake_delay" : 5000,
+    "wake_delay" : 3000,
     "black" : false,
     "volume_alice_low" : 1,
     "volume_alice_high" : 9,
@@ -78,7 +78,7 @@
       "8" : 10,
       "9" : 15
     },
-    "lastPath" : null
+    "lastPath" : "spotify://track:1BxfuPKGuaTgP7aM0Bbdwr"
   } ],
   "counter" : 4
 }

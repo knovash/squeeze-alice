@@ -14,17 +14,6 @@ import static org.knovash.squeezealice.Main.server;
 @Log4j2
 public class Utils {
 
-    public static void getLmsIp(String[] arg) {
-        if (arg.length != 0) {
-            Main.lmsServer = "http://" + arg[0] + ":9000/jsonrpc.js";
-            Main.lmsIP = arg[0];
-        } else {
-            Main.lmsServer = "http://localhost:9000/jsonrpc.js/";
-            Main.lmsIP = "localhost";
-        }
-        log.info("LMS IP: " + Main.lmsIP + " LMS Server: " + Main.lmsServer);
-    }
-
     private static ResourceBundle bundle = ResourceBundle.getBundle("config");
     public static Map<String, String> altNames;
 
@@ -36,16 +25,6 @@ public class Utils {
                 "ggmm", "GGMM_E2_2650",
                 "mibox", "Mi Box"));
         JsonUtils.pojoToJsonFile(altNames, "alter.json");
-    }
-
-    public static Map<String, String> readfgfdgfdAltNames() {
-        altNames = JsonUtils.jsonFileToMap("alt_names.json", String.class, String.class);
-        if (altNames == null) {
-            log.info("FILE NOT FOUND 'alt_names.json'");
-        } else {
-            log.info("READ ALT NAMES: " + altNames);
-        }
-        return altNames;
     }
 
     public static void generateAltNamesFile() {
