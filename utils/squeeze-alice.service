@@ -9,8 +9,6 @@ Restart=yes
 WorkingDirectory=/opt/squeeze-alice-1.0/
 Restart=always
 RestartSec=5
-#ExecStart=java -jar /opt/squeeze-alice/squeeze-alice-1.0.jar localhost
-#ExecStart=java -jar /opt/squeeze-alice/squeeze-alice-1.0.jar 192.168.1.52
-ExecStart=java -jar /opt/squeeze-alice-1.0/squeeze-alice-1.0.jar
+ExecStart=java -jar /opt/squeeze-alice-1.0/squeeze-alice-1.0.jar -port 8010
 [Install]
 WantedBy=multi-user.target

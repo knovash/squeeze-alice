@@ -67,7 +67,14 @@ public class Switch {
                 Action.turnOffSpeaker(player);
                 actionStatus = "SPEAKER OFF COMPLETE";
                 break;
+            case ("turn_on_spotify"):
+            case ("spotify"):
+                log.info("SPOTIFY");
+                Action.turnOnSpotify(player);
+                actionStatus = "SPOTIFY COMPLETE";
+                break;
             case ("update_players"):
+            case ("update"):
                 Server.updatePlayers();
                 actionStatus = "UPDATE COMPLETE";
                 break;
@@ -99,6 +106,18 @@ public class Switch {
             case ("state"):
                 log.info("SEND SERVER STATE");
                 actionStatus = Utils.state();
+                break;
+            case ("time_volume_get"):
+                log.info("SEND TIME AND VOLUME");
+                actionStatus = Utils.timeVolumeToFile(player);
+                break;
+            case ("time_volume_set"):
+                log.info("CHANGE TIME AND VOLUME");
+                actionStatus = Utils.timeVolumeAdd(player, parameters);
+                break;
+            case ("time_volume_del"):
+                log.info("DELETE TIME AND VOLUME");
+                actionStatus = Utils.timeVolumeAdd(player, parameters);
                 break;
             default:
                 log.info("ACTION NOT FOUND: " + action);

@@ -1,5 +1,8 @@
 package org.knovash.squeezealice;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 import java.io.*;
@@ -14,15 +17,6 @@ import static org.knovash.squeezealice.Main.server;
 @Log4j2
 public class Utils {
 
-    public static void getLmsIp(String[] arg) {
-        if (arg.length != 0) {
-            Main.lmsIP = "http://" + arg[0] + ":9000/jsonrpc.js";
-        } else {
-            Main.lmsIP = "http://localhost:9000/jsonrpc.js/";
-        }
-        log.info("LMS IP: " + Main.lmsIP);
-    }
-
     private static ResourceBundle bundle = ResourceBundle.getBundle("config");
     public static Map<String, String> altNames;
 
@@ -34,16 +28,6 @@ public class Utils {
                 "ggmm", "GGMM_E2_2650",
                 "mibox", "Mi Box"));
         JsonUtils.pojoToJsonFile(altNames, "alter.json");
-    }
-
-    public static Map<String, String> readfgfdgfdAltNames() {
-        altNames = JsonUtils.jsonFileToMap("alt_names.json", String.class, String.class);
-        if (altNames == null) {
-            log.info("FILE NOT FOUND 'alt_names.json'");
-        } else {
-            log.info("READ ALT NAMES: " + altNames);
-        }
-        return altNames;
     }
 
     public static void generateAltNamesFile() {
@@ -137,5 +121,33 @@ public class Utils {
     public static String state() {
         String json = JsonUtils.pojoToJson(server);
         return json;
+    }
+
+    public static String timeVolumeToFile(Player player) {
+        TimeVolume tv = new TimeVolume();
+        tv.time = player.timeVolume.entrySet().stream().map(Object::toString).collect(Collectors.toList());
+        JsonUtils.pojoToJsonFile(tv, "ttt.json");
+        return JsonUtils.pojoToJson(tv);
+    }
+
+    public static String  timeVolumeAdd(Player player, HashMap<String, String> parameters) {
+        Integer time = Integer.valueOf(parameters.get("time"));
+        Integer volume = Integer.valueOf(parameters.get("volume"));
+        player.timeVolume.put(time, volume);
+        return "--";
+    }
+
+    public static String  timeVolumeDel(Player player, HashMap<String, String> parameters) {
+        Integer time = Integer.valueOf(parameters.get("time"));
+        player.timeVolume.remove(time);
+        return "--";
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TimeVolume {
+
+    public List<String> time;
     }
 }

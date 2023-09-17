@@ -8,7 +8,7 @@ import org.knovash.squeezealice.requests.ResponseFromLms;
 
 import java.io.IOException;
 
-import static org.knovash.squeezealice.Main.lmsIP;
+import static org.knovash.squeezealice.Main.lmsServer;
 
 @Log4j2
 public class Fluent {
@@ -17,7 +17,7 @@ public class Fluent {
         log.info("REQUEST TO LMS: " + json);
         String status = null;
         try {
-            status = Request.Post(lmsIP).bodyString(json, ContentType.APPLICATION_JSON)
+            status = Request.Post(lmsServer).bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -35,7 +35,7 @@ public class Fluent {
         Content content = null;
         ResponseFromLms responseFromLms = null;
         try {
-            content = Request.Post(lmsIP).bodyString(json, ContentType.APPLICATION_JSON)
+            content = Request.Post(lmsServer).bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -49,5 +49,22 @@ public class Fluent {
             log.info("ERROR");
         }
         return responseFromLms;
+    }
+
+    public static String postQueryGetStatus(String uri) {
+        log.info("REQUEST TO LMS: " + uri);
+        String status = null;
+        try {
+            status = Request.Get(uri)
+                    .connectTimeout(1000)
+                    .socketTimeout(1000)
+                    .execute()
+                    .returnResponse()
+                    .getStatusLine()
+                    .toString();
+        } catch (IOException e) {
+            log.info("ERROR: " + e);
+        }
+        return status;
     }
 }

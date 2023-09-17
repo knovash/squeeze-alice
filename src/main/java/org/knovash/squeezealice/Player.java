@@ -8,12 +8,9 @@ import org.knovash.squeezealice.requests.Requests;
 import org.knovash.squeezealice.requests.ResponseFromLms;
 
 import java.time.LocalTime;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
-import static org.knovash.squeezealice.Main.SILENCE;
+import static org.knovash.squeezealice.Main.silence;
 import static org.knovash.squeezealice.Main.server;
 
 @Log4j2
@@ -42,18 +39,17 @@ public class Player {
         this.name = name;
         this.id = id;
         this.volume_alice_previous = 1;
-        this.volume_step = 3;
-        this.volume_low = 5;
-        this.volume_high = 20;
-        this.wake_delay = 5000;
+        this.volume_step = 5;
+        this.volume_low = 10;
+        this.volume_high = 25;
+        this.wake_delay = 10000;
         this.volume_alice_low = 1;
         this.volume_alice_high = 9;
         this.black = false;
         this.timeVolume = new HashMap<>(Map.of(
-                0, 3,
-                7, 5,
-                8, 10,
-                9, 15,
+                0, 5,
+                7, 10,
+                8, 15,
                 20, 10,
                 22, 5));
     }
@@ -119,7 +115,7 @@ public class Player {
 
     public Player playSilence() {
         log.info("PLAYER: " + this.name + " PLAY SILENCE");
-        String status = Fluent.postGetStatus(Requests.play(this.name, SILENCE).toString());
+        String status = Fluent.postGetStatus(Requests.play(this.name, silence).toString());
         log.info("SATUS: " + status);
         return this;
     }
@@ -161,7 +157,7 @@ public class Player {
         log.info("TRY GLOBAL LAST PATH: " + Player.lastPathGlobal);
 
         if (this.path() == null ||
-                this.path().equals(SILENCE) ||
+                this.path().equals(silence) ||
                 this.path().contains("tishini") ||
                 this.path().contains("silence") ||
                 this.path().contains("korot") ||
@@ -174,7 +170,7 @@ public class Player {
             return this;
         }
         if (this.lastPath == null ||
-                this.lastPath.equals(SILENCE) ||
+                this.lastPath.equals(silence) ||
                 this.lastPath.contains("tishini") ||
                 this.lastPath.contains("silence") ||
                 this.lastPath.contains("korot") ||
@@ -187,7 +183,7 @@ public class Player {
             return this;
         }
         if (Player.lastPathGlobal == null ||
-                Player.lastPathGlobal.equals(SILENCE) ||
+                Player.lastPathGlobal.equals(silence) ||
                 Player.lastPathGlobal.contains("tishini") ||
                 Player.lastPathGlobal.contains("korot") ||
                 Player.lastPathGlobal.contains("silence") ||
@@ -221,15 +217,14 @@ public class Player {
     public Player setVolumeByTime() {
         LocalTime timeNow = LocalTime.now();
         log.info("VOLUME BY TIME: " + timeNow + " OF: " + this.timeVolume);
-        int volume =
+        Map.Entry<Integer, Integer> e =
                 timeVolume.entrySet()
                         .stream()
                         .filter(entry -> LocalTime.of(entry.getKey(), 0).isBefore(timeNow))
                         .max(Comparator.comparing(Map.Entry::getKey))
-                        .get()
-                        .getValue();
-        log.info("VOLUME BY TIME IS: " + volume);
-        this.volume(String.valueOf(volume));
+                        .get();
+        log.info("VOLUME: " + e.getValue() + " BY TIME: " + e.getKey());
+        this.volume(String.valueOf(e.getValue()));
         return this;
     }
 
@@ -245,7 +240,7 @@ public class Player {
 
     public Player saveLastPath() {
         String path = this.path();
-        if (path != null && !path.equals(SILENCE)) {
+        if (path != null && !path.equals(silence)) {
             this.lastPath = path;
             lastPathGlobal = this.lastPath;
         }

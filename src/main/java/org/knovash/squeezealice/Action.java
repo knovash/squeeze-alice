@@ -4,7 +4,7 @@ import lombok.extern.log4j.Log4j2;
 
 import java.util.Objects;
 
-import static org.knovash.squeezealice.Main.server;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 public class Action {
@@ -40,7 +40,6 @@ public class Action {
                 .wakeAndSet()
                 .play(channel);
     }
-
 
     // Алиса, включи музыку/колонку
     // играет    +  нет играющей  = продолжить играть
@@ -102,5 +101,14 @@ public class Action {
                 server.players.forEach(player -> player.volume(String.valueOf(player.volume_high)));
                 break;
         }
+    }
+
+    // Алиса, включи Спотифай
+    public static void turnOnSpotify(Player player) {
+        log.info("TURN ON SPOTIFY " + player.name + " MAC " + player.id);
+        String mac = player.id;
+        mac = mac.replace(":", "%3A");
+        String uri = "http://" + lmsIP + ":9000/plugins/spotty/index.html?index=10.1&player=" + mac + "&sess=";
+        Fluent.postQueryGetStatus(uri);
     }
 }

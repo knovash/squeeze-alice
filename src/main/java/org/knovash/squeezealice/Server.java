@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.knovash.squeezealice.Main.SILENCE;
+import static org.knovash.squeezealice.Main.silence;
 import static org.knovash.squeezealice.Main.server;
 
 @Log4j2
@@ -96,7 +96,7 @@ public class Server {
                 .orElse(null);
         log.info("PLAYING: " + playing);
         if (playing == null ||
-                playing.path().equals(SILENCE) ||
+                playing.path().equals(silence) ||
                 playing.name.equals(currentName)) {
             log.info("NO PLAYING");
             return null;
