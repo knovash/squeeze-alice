@@ -41,7 +41,6 @@ public class Action {
                 .play(channel);
     }
 
-
     // Алиса, включи музыку/колонку
     // играет    +  нет играющей  = продолжить играть
     // играет    +  есть играющей = подключить к играющей
@@ -107,15 +106,9 @@ public class Action {
     // Алиса, включи Спотифай
     public static void turnOnSpotify(Player player) {
         log.info("TURN ON SPOTIFY " + player.name + " MAC " + player.id);
-        // %SERVER/plugins/spotty/index.html?index=10.1&player=%mac&sess=
-        // http://localhost:9000/plugins/spotty/index.html?index=10&player=cc%3Acc%3Abe%3Ab5%3A90%3A66&sess=
         String mac = player.id;
-//        String uri = " http://" + lmsIP + ":9000/plugins/spotty/index.html?index=10.1&player=" + mac + "&sess=";
-//        String uri = "http://localhost:9000/plugins/spotty/index.html?index=10.1&player=aa%3Aaa%3Ac2%3A7c%3Ae0%3A12&sess=";
         mac = mac.replace(":", "%3A");
         String uri = "http://" + lmsIP + ":9000/plugins/spotty/index.html?index=10.1&player=" + mac + "&sess=";
-//        String uri = "plugins/spotty/index.html?index=10.1&player=" + mac + "&sess=";
         Fluent.postQueryGetStatus(uri);
-
     }
 }

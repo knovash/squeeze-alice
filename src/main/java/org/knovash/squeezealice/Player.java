@@ -39,18 +39,17 @@ public class Player {
         this.name = name;
         this.id = id;
         this.volume_alice_previous = 1;
-        this.volume_step = 3;
-        this.volume_low = 5;
-        this.volume_high = 20;
+        this.volume_step = 5;
+        this.volume_low = 10;
+        this.volume_high = 25;
         this.wake_delay = 10000;
         this.volume_alice_low = 1;
         this.volume_alice_high = 9;
         this.black = false;
         this.timeVolume = new HashMap<>(Map.of(
-                0, 3,
-                7, 5,
-                8, 10,
-                9, 15,
+                0, 5,
+                7, 10,
+                8, 15,
                 20, 10,
                 22, 5));
     }

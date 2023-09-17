@@ -17,7 +17,7 @@ public class Handler implements HttpHandler {
         String query = httpExchange.getRequestURI().getQuery();
         log.info("QUERY " + query);
         String response = Switch.action(query);
-        log.info("RESPONSE");
+        log.info("RESPONSE" + response);
         httpExchange.sendResponseHeaders(200, response.length());
         OutputStream outputStream = httpExchange.getResponseBody();
         outputStream.write(response.getBytes());

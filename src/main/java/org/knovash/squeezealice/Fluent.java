@@ -52,7 +52,6 @@ public class Fluent {
     }
 
     public static String postQueryGetStatus(String uri) {
-        // %SERVER/plugins/spotty/index.html?index=10.1&player=%mac&sess=
         log.info("REQUEST TO LMS: " + uri);
         String status = null;
         try {

@@ -107,6 +107,18 @@ public class Switch {
                 log.info("SEND SERVER STATE");
                 actionStatus = Utils.state();
                 break;
+            case ("time_volume_get"):
+                log.info("SEND TIME AND VOLUME");
+                actionStatus = Utils.timeVolumeToFile(player);
+                break;
+            case ("time_volume_set"):
+                log.info("CHANGE TIME AND VOLUME");
+                actionStatus = Utils.timeVolumeAdd(player, parameters);
+                break;
+            case ("time_volume_del"):
+                log.info("DELETE TIME AND VOLUME");
+                actionStatus = Utils.timeVolumeAdd(player, parameters);
+                break;
             default:
                 log.info("ACTION NOT FOUND: " + action);
                 actionStatus = "ACTION NOT FOUND: " + action;

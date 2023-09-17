@@ -1,5 +1,8 @@
 package org.knovash.squeezealice;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 import java.io.*;
@@ -118,5 +121,33 @@ public class Utils {
     public static String state() {
         String json = JsonUtils.pojoToJson(server);
         return json;
+    }
+
+    public static String timeVolumeToFile(Player player) {
+        TimeVolume tv = new TimeVolume();
+        tv.time = player.timeVolume.entrySet().stream().map(Object::toString).collect(Collectors.toList());
+        JsonUtils.pojoToJsonFile(tv, "ttt.json");
+        return JsonUtils.pojoToJson(tv);
+    }
+
+    public static String  timeVolumeAdd(Player player, HashMap<String, String> parameters) {
+        Integer time = Integer.valueOf(parameters.get("time"));
+        Integer volume = Integer.valueOf(parameters.get("volume"));
+        player.timeVolume.put(time, volume);
+        return "--";
+    }
+
+    public static String  timeVolumeDel(Player player, HashMap<String, String> parameters) {
+        Integer time = Integer.valueOf(parameters.get("time"));
+        player.timeVolume.remove(time);
+        return "--";
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TimeVolume {
+
+    public List<String> time;
     }
 }

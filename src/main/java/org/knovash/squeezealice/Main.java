@@ -16,9 +16,6 @@ public class Main {
     public static String context = bundle.getString("context");
     public static Server server = new Server();
 
-    // -lmsip 192.168.1.52 -lmsport 9000 -port 8001 -context cmd
-    // LMS ip LMS port SA port SA context
-
     public static void main(String[] args) {
         log.info("  ---+++===[ START ]===+++---");
         log.info("lmsIP " + lmsIP);
@@ -33,7 +30,6 @@ public class Main {
         log.info("port " + port);
         log.info("context " + context);
 
-//        Utils.getLmsIp(args);
         server = new Server();
         server.readServerFile();
         server.updatePlayers();

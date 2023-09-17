@@ -79,6 +79,63 @@
       "9" : 15
     },
     "lastPath" : "spotify://track:1BxfuPKGuaTgP7aM0Bbdwr"
+  }, {
+    "name" : "JBL black",
+    "id" : "cc:cc:0b:33:b5:74",
+    "volume_step" : 5,
+    "volume_alice_previous" : 1,
+    "volume_low" : 10,
+    "volume_high" : 25,
+    "wake_delay" : 10000,
+    "black" : false,
+    "volume_alice_low" : 1,
+    "volume_alice_high" : 9,
+    "timeVolume" : {
+      "0" : 5,
+      "8" : 15,
+      "20" : 10,
+      "22" : 5,
+      "7" : 10
+    },
+    "lastPath" : null
+  }, {
+    "name" : "GGMM",
+    "id" : "bb:bb:6c:b8:26:52",
+    "volume_step" : 5,
+    "volume_alice_previous" : 1,
+    "volume_low" : 10,
+    "volume_high" : 25,
+    "wake_delay" : 10000,
+    "black" : false,
+    "volume_alice_low" : 1,
+    "volume_alice_high" : 9,
+    "timeVolume" : {
+      "0" : 5,
+      "8" : 15,
+      "20" : 10,
+      "22" : 5,
+      "7" : 10
+    },
+    "lastPath" : null
+  }, {
+    "name" : "JBL white",
+    "id" : "cc:cc:08:fe:31:d4",
+    "volume_step" : 5,
+    "volume_alice_previous" : 1,
+    "volume_low" : 10,
+    "volume_high" : 25,
+    "wake_delay" : 10000,
+    "black" : false,
+    "volume_alice_low" : 1,
+    "volume_alice_high" : 9,
+    "timeVolume" : {
+      "0" : 5,
+      "8" : 15,
+      "20" : 10,
+      "22" : 5,
+      "7" : 10
+    },
+    "lastPath" : null
   } ],
-  "counter" : 4
+  "counter" : 5
 }
