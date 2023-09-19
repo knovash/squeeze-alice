@@ -10,5 +10,11 @@ squeeze-alice-pak
 *.jar
 *.iml
 
+*.json
+*.gz
+*.tar
+*.tar.gz
+*.txt
+
 
 
