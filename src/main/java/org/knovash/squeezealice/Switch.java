@@ -109,15 +109,15 @@ public class Switch {
                 break;
             case ("time_volume_get"):
                 log.info("SEND TIME AND VOLUME");
-                actionStatus = Utils.timeVolumeToFile(player);
+                actionStatus = Utils.timeVolumeGet(player);
                 break;
             case ("time_volume_set"):
                 log.info("CHANGE TIME AND VOLUME");
-                actionStatus = Utils.timeVolumeAdd(player, parameters);
+                actionStatus = Utils.timeVolumeSet(player, parameters);
                 break;
             case ("time_volume_del"):
                 log.info("DELETE TIME AND VOLUME");
-                actionStatus = Utils.timeVolumeAdd(player, parameters);
+                actionStatus = Utils.timeVolumeDel(player, parameters);
                 break;
             default:
                 log.info("ACTION NOT FOUND: " + action);

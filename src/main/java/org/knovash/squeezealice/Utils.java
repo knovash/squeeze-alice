@@ -123,24 +123,26 @@ public class Utils {
         return json;
     }
 
-    public static String timeVolumeToFile(Player player) {
-        TimeVolume tv = new TimeVolume();
-        tv.time = player.timeVolume.entrySet().stream().map(Object::toString).collect(Collectors.toList());
-        JsonUtils.pojoToJsonFile(tv, "ttt.json");
-        return JsonUtils.pojoToJson(tv);
+    public static String timeVolumeGet(Player player) {
+//        TimeVolume tv = new TimeVolume();
+//        tv.time = player.timeVolume.entrySet().stream().map(Object::toString).collect(Collectors.toList());
+//        JsonUtils.pojoToJsonFile(tv, "ttt.json");
+//        return JsonUtils.pojoToJson(tv);
+
+        return player.timeVolume.entrySet().toString();
     }
 
-    public static String  timeVolumeAdd(Player player, HashMap<String, String> parameters) {
+    public static String timeVolumeSet(Player player, HashMap<String, String> parameters) {
         Integer time = Integer.valueOf(parameters.get("time"));
         Integer volume = Integer.valueOf(parameters.get("volume"));
         player.timeVolume.put(time, volume);
-        return "--";
+        return "SET " + time + " : " + volume;
     }
 
-    public static String  timeVolumeDel(Player player, HashMap<String, String> parameters) {
+    public static String timeVolumeDel(Player player, HashMap<String, String> parameters) {
         Integer time = Integer.valueOf(parameters.get("time"));
         player.timeVolume.remove(time);
-        return "--";
+        return "REMOVED time:" + time;
     }
 
     @Data
@@ -148,6 +150,6 @@ public class Utils {
     @AllArgsConstructor
     public static class TimeVolume {
 
-    public List<String> time;
+        public List<String> time;
     }
 }
