@@ -11,9 +11,12 @@ public class Action {
 
     // Алиса, музыку громче\тише
     public static void volume(Player player, String value) {
+        Integer playerCurrentVolume;
         Integer volumeAlicePrevious = player.volume_alice_previous;
         Integer volumeAliceCurrent = Integer.valueOf(value);
         Integer step = player.volume_step;
+        playerCurrentVolume = Integer.valueOf(player.volume());
+        if (playerCurrentVolume < 5) step = 2;
         log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name + " current=" + volumeAliceCurrent + " last=" + volumeAlicePrevious + " low=" + player.volume_alice_low + " hi=" + player.volume_alice_high);
         if ((volumeAliceCurrent > volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_high))) {
             player.volume("+" + step);
@@ -22,7 +25,24 @@ public class Action {
             player.volume("-" + step);
         }
         player.volume_alice_previous = volumeAliceCurrent;
+        playerCurrentVolume = Integer.valueOf(player.volume());
+        if (playerCurrentVolume == 0) player.volume("1");
     }
+
+    // Алиса, музыку громче\тише
+//    public static void volume(Player player, String value) {
+//        Integer volumeAlicePrevious = player.volume_alice_previous;
+//        Integer volumeAliceCurrent = Integer.valueOf(value);
+//        Integer step = player.volume_step;
+//        log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name + " current=" + volumeAliceCurrent + " last=" + volumeAlicePrevious + " low=" + player.volume_alice_low + " hi=" + player.volume_alice_high);
+//        if ((volumeAliceCurrent > volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_high))) {
+//            player.volume("+" + step);
+//        }
+//        if ((volumeAliceCurrent < volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_low))) {
+//            player.volume("-" + step);
+//        }
+//        player.volume_alice_previous = volumeAliceCurrent;
+//    }
 
     // Алиса, включи канал
     // Если колонка играла канал включится без изменения громкости и группы,

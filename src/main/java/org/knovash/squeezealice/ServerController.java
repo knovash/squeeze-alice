@@ -21,6 +21,7 @@ public class ServerController {
         server.createContext("/cmd", new Handler());
         server.setExecutor(null);
         server.start();
-        log.info("try access host:"+ port +"/"+ context + "?action=log&value=50");
+        String myIP = MyIP.getIP();
+        log.info("try access http://"+ myIP+":"+ port +"/"+ context + "?action=state");
     }
 }
