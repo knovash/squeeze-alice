@@ -1,5 +1,9 @@
 package org.knovash.squeezealice;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.net.httpserver.HttpExchange;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -151,5 +155,42 @@ public class Utils {
     public static class TimeVolume {
 
         public List<String> time;
+    }
+
+    public static void favoritePrev(Player player, HashMap<String, String> parameters) {
+        Integer time = Integer.valueOf(parameters.get("time"));
+        player.play(1);
+        player.timeVolume.remove(time);
+    }
+
+    public static void favoriteNext(Player player, HashMap<String, String> parameters) {
+        Integer time = Integer.valueOf(parameters.get("time"));
+        player.timeVolume.remove(time);
+    }
+
+    public static String getCommand (HttpExchange httpExchange) throws IOException {
+        String command = null;
+        InputStreamReader isr = new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
+        BufferedReader br = new BufferedReader(isr);
+        int b;
+        StringBuilder buf = new StringBuilder(512);
+        while ((b = br.read()) != -1) {
+            buf.append((char) b);
+        }
+        br.close();
+        isr.close();
+        String json = buf.toString();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = null;
+        try {
+            jsonNode = objectMapper.readTree(json.toString());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        if (jsonNode.findValue("command") ==null) return null;
+        command = String.valueOf(jsonNode.findValue("command"));
+        log.info("COMMAND " + command);
+        return command;
     }
 }
