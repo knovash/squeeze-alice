@@ -119,6 +119,19 @@ public class Switch {
                 log.info("DELETE TIME AND VOLUME");
                 actionStatus = Utils.timeVolumeDel(player, parameters);
                 break;
+            case ("fav_prev"):
+                log.info("FAVORITE PREV");
+                actionStatus = Utils.favoritePrev(player, parameters);
+                break;
+            case ("fav_next"):
+                log.info("FAVORITE NEXT");
+                actionStatus = Utils.favoriteNext(player, parameters);
+                break;
+            case ("spoty"):
+                log.info("SPOTIFY ");
+                Fluent.postSpotify("dd");
+                actionStatus = "SSS";
+                break;
             default:
                 log.info("ACTION NOT FOUND: " + action);
                 actionStatus = "ACTION NOT FOUND: " + action;
