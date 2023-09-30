@@ -3,6 +3,7 @@ package org.knovash.squeezealice;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
@@ -111,5 +112,16 @@ public class JsonUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String jsonGetValue(String json, String value) {
+        JsonNode jsonNode = null;
+        try {
+            jsonNode = objectMapper.readTree(json.toString());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        if (jsonNode.findValue(value) == null) return null;
+        return String.valueOf(jsonNode.findValue(value));
     }
 }
