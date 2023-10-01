@@ -82,6 +82,20 @@ public class Player {
         return responseFromLms.result._path;
     }
 
+    public String playlistname() {
+        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.playlistname(this.name).toString());
+        if (responseFromLms == null) return "";
+        log.info("PLAYER: " + this.name + " PLAYLIST: " + responseFromLms.result._name);
+        return responseFromLms.result._name;
+    }
+
+    public String artistname() {
+        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.artistname(this.name).toString());
+        if (responseFromLms == null) return "";
+        log.info("PLAYER: " + this.name + " PLAYLIST: " + responseFromLms.result._artist);
+        return responseFromLms.result._artist;
+    }
+
     public String volume() {
         ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.volume(this.name).toString());
         if (responseFromLms == null) return "";
@@ -133,6 +147,20 @@ public class Player {
         String status = Fluent.postGetStatus(Requests.pause(this.name).toString());
         log.info("SATUS: " + status);
         this.saveLastPath();
+        return this;
+    }
+
+    public Player shuffleon() {
+        log.info("PLAYER: " + this.name + " SHUFFLE ON");
+        String status = Fluent.postGetStatus(Requests.shuffleon(this.name).toString());
+        log.info("SATUS: " + status);
+        return this;
+    }
+
+    public Player shuffleoff() {
+        log.info("PLAYER: " + this.name + " SHUFFLE OFF");
+        String status = Fluent.postGetStatus(Requests.shuffleoff(this.name).toString());
+        log.info("SATUS: " + status);
         return this;
     }
 

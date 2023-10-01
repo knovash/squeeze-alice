@@ -23,7 +23,6 @@ public class Handler implements HttpHandler {
         log.info("COMMAND " + command);
         String response = "SKIP";
         if (command == null) response = Switch.action(query);
-        log.info("SKIP SWITCH ");
         if (command != null) response = SwitchAlice.action(command);
         if (command != null) response = AliceParser.createResponse(response);
         log.info("RESPONSE " + response);
