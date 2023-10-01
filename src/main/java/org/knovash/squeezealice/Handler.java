@@ -24,10 +24,10 @@ public class Handler implements HttpHandler {
         String response = "SKIP";
         if (command == null) response = Switch.action(query);
         log.info("SKIP SWITCH ");
-        if (command != null) SwitchAlice.action(command);
-        if (command != null) response = AliceParser.getResponse();
+        if (command != null) response = SwitchAlice.action(command);
+        if (command != null) response = AliceParser.createResponse(response);
         log.info("RESPONSE " + response);
-        httpExchange.sendResponseHeaders(200, response.length());
+        httpExchange.sendResponseHeaders(200, response.getBytes().length);
         OutputStream outputStream = httpExchange.getResponseBody();
         outputStream.write(response.getBytes());
         outputStream.flush();

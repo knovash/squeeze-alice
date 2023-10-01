@@ -11,34 +11,16 @@ public class AliceParser {
 
     }
 
-
-    public static String getResponse() {
-
-//        String response = "{\"response\":{\"text\":\"ответ\"}, \"end_session\": false, \"version\":\"1.0\"}";
-//        String response = "{'response':{'text':' '}, 'end_session': 'false', 'version':'1.0'}";
-//        String response = "{\"response\":{\"text\":\"Здравствуйте!\",\"end_session\":false},\"version\":\"1.0\"}";
-//        String response = "ssssssssssssss";
-
+    public static String createResponse(String text) {
         Alice alice = new Alice();
         ResponseAlice responseAlice = new ResponseAlice();
-        responseAlice.text = "1 2 3 ффф 5";
+//        responseAlice.text = "сейчас, мой господин";
+        responseAlice.text = text;
         responseAlice.end_session = false;
         alice.version = "1.0";
         alice.response = responseAlice;
-
         String response = JsonUtils.pojoToJson(alice);
-
         log.info("RESPONSE JSON: " + response);
-
         return response;
-
     }
-
-
 }
-
-//{"response":{"text":"Здравствуйте!","tts":"Здравствуйте!"},"version":"1.0"}
-
-//{ "response":{"text":"Здравствуйте!","end_session":false,"version":"1.0"}}
-
-//{"response":{"text":"Здравствуйте!","end_session":false,"directives":{}},"version":"1.0"}
