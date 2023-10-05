@@ -1,0 +1,13 @@
+[Unit]
+Description=Local Tunnel
+#After=multi-user.target
+After=network.target
+After=network-online.target
+[Service]
+Type=simple
+Restart=yes
+Restart=always
+RestartSec=3
+ExecStart= ssh -R squeeze:80:localhost:8010 serveo.net
+[Install]
+WantedBy=multi-user.target

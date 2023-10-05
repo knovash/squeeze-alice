@@ -8,9 +8,9 @@ import java.util.ResourceBundle;
 public class Main {
 
     private static ResourceBundle bundle = ResourceBundle.getBundle("config");
-    public static String lmsIP = bundle.getString("lmsIP");
-    public static String lmsPort = bundle.getString("lmsPort");
-    public static String lmsServer = bundle.getString("lmsServer");
+    public static String lmsIP = bundle.getString("lmsIP"); // lmsIP=192.168.1.52
+    public static String lmsPort = bundle.getString("lmsPort"); // lmsPort=9000
+    public static String lmsServer = "http://" + lmsIP + ":" + lmsPort + "/jsonrpc.js/";
     public static String silence = bundle.getString("silence");
     public static int port = Integer.parseInt(bundle.getString("port"));
     public static String context = bundle.getString("context");
@@ -18,14 +18,10 @@ public class Main {
 
     public static void main(String[] args) {
         log.info("  ---+++===[ START ]===+++---");
-        log.info("lmsIP " + lmsIP);
-        log.info("lmsPort " + lmsPort);
         log.info("lmsServer " + lmsServer);
         log.info("port " + port);
         log.info("context " + context);
         ArgsParser.parse(args);
-        log.info("lmsIP " + lmsIP);
-        log.info("lmsPort " + lmsPort);
         log.info("lmsServer " + lmsServer);
         log.info("port " + port);
         log.info("context " + context);

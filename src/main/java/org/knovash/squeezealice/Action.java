@@ -109,6 +109,6 @@ public class Action {
         String mac = player.id;
         mac = mac.replace(":", "%3A");
         String uri = "http://" + lmsIP + ":9000/plugins/spotty/index.html?index=10.1&player=" + mac + "&sess=";
-        Fluent.postQueryGetStatus(uri);
+        Fluent.getUriGetStatus(uri);
     }
 }

@@ -8,11 +8,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.pojo.TimeVolume;
 
 import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -128,11 +131,6 @@ public class Utils {
     }
 
     public static String timeVolumeGet(Player player) {
-//        TimeVolume tv = new TimeVolume();
-//        tv.time = player.timeVolume.entrySet().stream().map(Object::toString).collect(Collectors.toList());
-//        JsonUtils.pojoToJsonFile(tv, "ttt.json");
-//        return JsonUtils.pojoToJson(tv);
-
         return player.timeVolume.entrySet().toString();
     }
 
@@ -149,12 +147,18 @@ public class Utils {
         return "REMOVED time:" + time;
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class TimeVolume {
+    public static String credentials(HashMap<String, String> parameters) {
+        String id = parameters.get("id");
+        String secret = parameters.get("secret");
+        if (id == null || secret == null) return "CRED ERROR";
+        Spotify.createCredFile(id, secret);
+        return "CRED SET";
+    }
 
-        public List<String> time;
+    public static String backupServer(HashMap<String, String> parameters) {
+        String stamp = LocalDate.now().toString() + "-" + LocalTime.now().toString();
+        server.writeServerFile("server-backup-" + stamp);
+        return "BACKUP SERVER";
     }
 
     public static void favoritePrev(Player player, HashMap<String, String> parameters) {
@@ -168,7 +172,7 @@ public class Utils {
         player.timeVolume.remove(time);
     }
 
-    public static String getCommand (HttpExchange httpExchange) throws IOException {
+    public static String readBodyJsonCommand(HttpExchange httpExchange) throws IOException {
         String command = null;
         InputStreamReader isr = new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
         BufferedReader br = new BufferedReader(isr);
@@ -180,17 +184,21 @@ public class Utils {
         br.close();
         isr.close();
         String json = buf.toString();
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = null;
-        try {
-            jsonNode = objectMapper.readTree(json.toString());
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        if (jsonNode.findValue("command") ==null) return null;
-        command = String.valueOf(jsonNode.findValue("command"));
+        command = JsonUtils.jsonGetValue(json, "command");
         log.info("COMMAND " + command);
         return command;
     }
+
+
+    public static HashMap<String, String> getQueryParameters(String query) {
+        HashMap<String, String> parameters = new HashMap<>();
+        Optional.ofNullable(Arrays.asList(query.split("&"))).orElseGet(Collections::emptyList)
+                .stream()
+                .filter(s -> s.contains("="))
+                .map(s -> s.split("="))
+                .filter(Objects::nonNull)
+                .forEach(s -> parameters.put(s[0], s[1]));
+        return parameters;
+    }
+
 }

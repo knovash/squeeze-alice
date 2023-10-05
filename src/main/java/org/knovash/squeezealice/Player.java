@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.requests.Requests;
-import org.knovash.squeezealice.requests.ResponseFromLms;
+import org.knovash.squeezealice.pojo.lms.ResponseFromLms;
 
 import java.time.LocalTime;
 import java.util.*;

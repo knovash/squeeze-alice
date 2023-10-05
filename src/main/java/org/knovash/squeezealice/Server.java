@@ -5,15 +5,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.requests.Requests;
-import org.knovash.squeezealice.requests.ResponseFromLms;
+import org.knovash.squeezealice.pojo.lms.ResponseFromLms;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.knovash.squeezealice.Main.silence;
-import static org.knovash.squeezealice.Main.server;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 @Data
@@ -26,7 +25,11 @@ public class Server {
 
     public void countPlayers() {
         ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.count().toString());
-        if (responseFromLms == null) log.info("ERROR");
+        if (responseFromLms == null) {
+            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIP + ":" + lmsPort);
+            server.counter = 0;
+            return;
+        }
         log.info("RESPONSE: " + responseFromLms);
         server.counter = Integer.parseInt(responseFromLms.result._count);
     }
@@ -61,6 +64,11 @@ public class Server {
     public void writeServerFile() {
         log.info("WRITE FILE server.json");
         JsonUtils.pojoToJsonFile(server, "server.json");
+    }
+
+    public void writeServerFile(String fileName) {
+        log.info("WRITE FILE " + fileName);
+        JsonUtils.pojoToJsonFile(server, fileName + ".json");
     }
 
     public void readServerFile() {
