@@ -35,7 +35,7 @@ public class Server {
     }
 
     public static void updatePlayers() {
-        log.info("UPDATE PLAYERS");
+        log.info("UPDATE PLAYERS FROM LMS");
         server.countPlayers();
         Integer counter = server.counter;
         if (counter == null) {
@@ -72,7 +72,7 @@ public class Server {
     }
 
     public void readServerFile() {
-        log.info("READ server.json");
+        log.info("READ PREVIOUS PLAYERS STATE FROM FILE server.json");
         File file = new File("server.json");
         if (file.exists()) {
             try {

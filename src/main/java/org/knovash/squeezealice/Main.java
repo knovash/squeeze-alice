@@ -18,14 +18,34 @@ public class Main {
 
     public static void main(String[] args) {
         log.info("  ---+++===[ START ]===+++---");
-        log.info("lmsServer " + lmsServer);
-        log.info("port " + port);
-        log.info("context " + context);
-        ArgsParser.parse(args);
-        log.info("lmsServer " + lmsServer);
-        log.info("port " + port);
-        log.info("context " + context);
+        log.info("READ CONFIG FROM PROPERTIES");
+        log.info("LMS IP: " + lmsIP);
+        log.info("lmsServer: " + lmsServer);
+        log.info("port: " + port);
+        log.info("context: " + context);
 
+        log.info("READ CONFIG FROM ARGS");
+        ArgsParser.parse(args);
+        log.info("LMS IP: " + lmsIP);
+        log.info("lmsServer: " + lmsServer);
+        log.info("port: " + port);
+        log.info("context: " + context);
+
+        if(!Utils.isLms(lmsIP)) {
+            log.info("CONFIG FROM PROPERTIES AND ARGS NOT VALID LMS SERVER");
+            log.info("TRY SEARCH LMS IN NETWORK...");
+            lmsIP = Utils.searchLmsIp();
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        log.info("LMS IP: " + lmsIP);
+        lmsServer = "http://" + lmsIP + ":" + lmsPort + "/jsonrpc.js/";
+        log.info("LMS SERVER: " + lmsServer);
+        log.info("  ---+++===[ START SERVER ]===+++--- ");
         server = new Server();
         server.readServerFile();
         server.updatePlayers();

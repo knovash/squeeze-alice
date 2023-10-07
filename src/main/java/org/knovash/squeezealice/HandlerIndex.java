@@ -22,11 +22,11 @@ public class HandlerIndex implements HttpHandler {
         log.info("HEAD: " + head);
         log.info("QUERY: " + query);
         response = "Hello!\n" +
-                "/cmd?action=channel&player=homepod&value=1 - Play favorites 1 from LMS on player HomePod\n"+
-                "/cmd?action=turnon&player=homepod - Start play music on HomePod\n" +
-                "/cmd?action=turnoff&player=homepod - Stop play music on HomePod\n" +
-                "/cmd?action=log - Show server log\n" +
-                "/cmd?action=state = Show server state\n";
+                "/cmd?action=channel&player=homepod&value=1  -  Play favorites 1 from LMS on player HomePod\n"+
+                "/cmd?action=turnon&player=homepod  -  Start play music on HomePod\n" +
+                "/cmd?action=turnoff&player=homepod  -  Stop play music on HomePod\n" +
+                "/cmd?action=log  -  Show server log\n" +
+                "/cmd?action=state  -  Show server state\n";
         log.info("RESPONSE: " + response);
         httpExchange.sendResponseHeaders(200, response.getBytes().length);
         OutputStream outputStream = httpExchange.getResponseBody();

@@ -1,6 +1,7 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
@@ -68,5 +69,20 @@ public class Fluent {
             log.info("ERROR: " + e);
         }
         return status;
+    }
+
+    public static HttpResponse uriGetHeader(String uri) {
+//        log.info("REQUEST URI: " + uri);
+        HttpResponse response = null;
+        try {
+            response = Request.Head(uri)
+                    .connectTimeout(1000)
+                    .socketTimeout(1000)
+                    .execute()
+                    .returnResponse();
+        } catch (IOException e) {
+//            throw new RuntimeException(e);
+        }
+        return response;
     }
 }

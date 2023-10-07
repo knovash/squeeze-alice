@@ -1,24 +1,25 @@
 package org.knovash.squeezealice;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.pojo.TimeVolume;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import static org.knovash.squeezealice.Fluent.uriGetHeader;
 import static org.knovash.squeezealice.Main.server;
 
 @Log4j2
@@ -189,7 +190,6 @@ public class Utils {
         return command;
     }
 
-
     public static HashMap<String, String> getQueryParameters(String query) {
         HashMap<String, String> parameters = new HashMap<>();
         Optional.ofNullable(Arrays.asList(query.split("&"))).orElseGet(Collections::emptyList)
@@ -201,4 +201,79 @@ public class Utils {
         return parameters;
     }
 
+    public static boolean isLms(String ip) {
+        log.info("IP: " + ip);
+        String uri = "http://" + ip + ":9000";
+        HttpResponse response = uriGetHeader(uri);
+        if (response == null) {
+//            log.info("NOT LMS IP");
+            return false;}
+        Header[] server = response.getHeaders("Server");
+        String header = server[0].toString();
+        log.info("HEADER: " + header);
+        if (header.contains("Logitech Media Server")) log.info("IS LMS IP");
+        return header.contains("Logitech Media Server");
+    }
+
+    public static String myIp() {
+        String myip = null;
+        Enumeration<NetworkInterface> interfaces = null;
+        try {
+            interfaces = NetworkInterface.getNetworkInterfaces();
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
+        while (interfaces.hasMoreElements()) {
+            NetworkInterface networkInterface = interfaces.nextElement();
+            try {
+                if (!networkInterface.isUp())
+                    continue;
+            } catch (SocketException e) {
+                throw new RuntimeException(e);
+            }
+            Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+            while (addresses.hasMoreElements()) {
+                InetAddress addr = addresses.nextElement();
+//                log.info(networkInterface.getDisplayName() + " " + addr.getHostAddress());
+                if (addr.getHostAddress().contains("192.")) {
+                    myip = addr.getHostAddress();
+                    log.info("MY IP: " + myip);
+                }
+            }
+        }
+        return myip;
+    }
+
+    public static String searchLmsIp(){
+        log.info("SEARCH LMS");
+        String lmsIp = null;
+        log.info("TRY GET IP FROM PREVIOUS SERCH RESULT IN lms_ip.json");
+        lmsIp = JsonUtils.valueFromJsonFile("lms_ip");
+        if (lmsIp != null && isLms(lmsIp)) {
+            log.info("GET IP FROM FILE OK");
+            return lmsIp;}
+        log.info("NO PREVIOUS FILE. START SEARCH NETWORK...");
+        String myip = Utils.myIp();
+//        log.info("MY IP " + myip);
+//        String lmsIp = null;
+        Integer start = 1;
+        while (lmsIp == null && start < 255) {
+//            log.info("START FROM: " + start);
+            lmsIp = IntStream
+                    .range(start, start + 50)
+                    .boxed()
+//                    .peek(s -> log.info("INDEX: " + s))
+                    .map(index -> CompletableFuture.supplyAsync(() -> Ping.ipIsReachable(myip, Integer.valueOf(index))))
+                    .collect(Collectors.collectingAndThen(Collectors.toList(), cfs -> cfs.stream().map(CompletableFuture::join)))
+                    .filter(Objects::nonNull)
+                    .findFirst().orElse(null);
+//            log.info("TRY: " + lmsIp);
+            start = start +50;
+        }
+        log.info("LMS IP: " + lmsIp);
+
+        if (lmsIp != null) JsonUtils.valueToJsonFile("lms_ip",lmsIp);
+
+        return lmsIp;
+    }
 }
