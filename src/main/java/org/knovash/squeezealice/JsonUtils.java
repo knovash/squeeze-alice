@@ -120,19 +120,17 @@ public class JsonUtils {
     }
 
     public static String jsonGetValue(String json, String value) {
-        log.info("JSON: " + json);
-        log.info("VALUE: " + value);
+//        log.info("JSON: " + json);
+//        log.info("VALUE: " + value);
         JsonNode jsonNode = null;
         try {
             jsonNode = objectMapper.readTree(json);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-
         String result = null;
         result = jsonNode.findValue("value").textValue();
-
-        log.info("NODE VALUE: " + result);
+//        log.info("NODE VALUE: " + result);
         return result;
     }
 
@@ -145,12 +143,11 @@ public class JsonUtils {
         ValuePojo valuePojo = new ValuePojo();
         valuePojo = JsonUtils.jsonFileToPojo(fileName, ValuePojo.class);
         if (valuePojo == null) return null;
-        log.info("VALUE POJO: " + valuePojo);
+//        log.info("VALUE POJO: " + valuePojo);
         String json = JsonUtils.pojoToJson(valuePojo);
-
-        log.info("VALUE JSON: " + json);
+//        log.info("VALUE JSON: " + json);
         String value = JsonUtils.jsonGetValue(json, "value");
-        log.info("VALUE : " + value);
+//        log.info("VALUE : " + value);
         return value;
     }
 

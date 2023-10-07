@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.knovash.squeezealice.Fluent.uriGetHeader;
+import static org.knovash.squeezealice.Main.lmsIP;
 import static org.knovash.squeezealice.Main.server;
 
 @Log4j2
@@ -202,7 +203,7 @@ public class Utils {
     }
 
     public static boolean isLms(String ip) {
-        log.info("IP: " + ip);
+        log.info("CHECK IF IP IS LMS: " + ip);
         String uri = "http://" + ip + ":9000";
         HttpResponse response = uriGetHeader(uri);
         if (response == null) {
@@ -211,7 +212,7 @@ public class Utils {
         Header[] server = response.getHeaders("Server");
         String header = server[0].toString();
         log.info("HEADER: " + header);
-        if (header.contains("Logitech Media Server")) log.info("IS LMS IP");
+        if (header.contains("Logitech Media Server")) log.info("IS LMS IP OK");
         return header.contains("Logitech Media Server");
     }
 
@@ -245,12 +246,13 @@ public class Utils {
     }
 
     public static String searchLmsIp(){
-        log.info("SEARCH LMS");
+        log.info("SEARCH LMS IN NETWORK");
         String lmsIp = null;
-        log.info("TRY GET IP FROM PREVIOUS SERCH RESULT IN lms_ip.json");
-        lmsIp = JsonUtils.valueFromJsonFile("lms_ip");
+        log.info("TRY GET IP FROM PREVIOUS SEARCH RESULT IN lms_ip.json");
+        lmsIp = JsonUtils.valueFromJsonFile("lms_ip.json");
+//        log.info("IP FROM FILE: " + lmsIp);
         if (lmsIp != null && isLms(lmsIp)) {
-            log.info("GET IP FROM FILE OK");
+            log.info("IP FROM FILE: " + lmsIp);
             return lmsIp;}
         log.info("NO PREVIOUS FILE. START SEARCH NETWORK...");
         String myip = Utils.myIp();

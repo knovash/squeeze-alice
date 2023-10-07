@@ -33,7 +33,6 @@ public class Main {
 
         if(!Utils.isLms(lmsIP)) {
             log.info("CONFIG FROM PROPERTIES AND ARGS NOT VALID LMS SERVER");
-            log.info("TRY SEARCH LMS IN NETWORK...");
             lmsIP = Utils.searchLmsIp();
             try {
                 Thread.sleep(2000);
