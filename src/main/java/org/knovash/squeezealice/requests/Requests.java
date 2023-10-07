@@ -46,6 +46,14 @@ public class Requests {
         return RequestToLms.create(player, new String[]{"path", "?"});
     }
 
+    public static RequestToLms playlistname(String player) {
+        return RequestToLms.create(player, new String[]{"playlist", "name", "?"});
+    }
+
+    public static RequestToLms artistname(String player) {
+        return RequestToLms.create(player, new String[]{"artist", "?"});
+    }
+
     public static RequestToLms syncgroups() {
         return RequestToLms.create("", new String[]{"syncgroups", "?"});
     }
@@ -56,5 +64,13 @@ public class Requests {
 
     public static RequestToLms sync(String player, String head) {
         return RequestToLms.create(head, new String[]{"sync", player});
+    }
+
+    public static RequestToLms shuffleon(String player) {
+        return RequestToLms.create(player, new String[]{"playlist", "shuffle", "1"});
+    }
+
+    public static RequestToLms shuffleoff(String player) {
+        return RequestToLms.create(player, new String[]{"playlist", "shuffle", "0"});
     }
 }

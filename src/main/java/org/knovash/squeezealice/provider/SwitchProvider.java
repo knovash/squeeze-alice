@@ -1,20 +1,23 @@
-package org.knovash.squeezealice;
+package org.knovash.squeezealice.provider;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.Action;
+import org.knovash.squeezealice.Player;
+import org.knovash.squeezealice.Server;
+import org.knovash.squeezealice.Utils;
 
 import java.util.*;
 
 import static org.knovash.squeezealice.Utils.altNames;
 
 @Log4j2
-public class Switch {
+public class SwitchProvider {
 
     public static String action(String query) {
         log.info("QUERY: " + query);
         String actionStatus;
         String name = null;
         Player player = null;
-
         HashMap<String, String> parameters = new HashMap<>();
         Optional.ofNullable(Arrays.asList(query.split("&"))).orElseGet(Collections::emptyList)
                 .stream()
@@ -22,7 +25,6 @@ public class Switch {
                 .map(s -> s.split("="))
                 .filter(Objects::nonNull)
                 .forEach(s -> parameters.put(s[0], s[1]));
-
         if (!parameters.containsKey("action")) {
             log.info("NO ACTION IN QUERY");
             return query + " BAD REQUEST try /cmd?action=state";

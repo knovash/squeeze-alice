@@ -3,14 +3,20 @@ package org.knovash.squeezealice;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+@Log4j2
 public class JsonUtils {
 
     private static ObjectMapper objectMapper = new ObjectMapper();
@@ -104,12 +110,52 @@ public class JsonUtils {
         }
     }
 
-    public static <K,V> void mapToJsonFile(Map<K,V> map, String fileName) {
+    public static <K, V> void mapToJsonFile(Map<K, V> map, String fileName) {
         File file = new File(fileName);
         try {
             objectWriter.writeValue(file, map);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String jsonGetValue(String json, String value) {
+//        log.info("JSON: " + json);
+//        log.info("VALUE: " + value);
+        JsonNode jsonNode = null;
+        try {
+            jsonNode = objectMapper.readTree(json);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        String result = null;
+        result = jsonNode.findValue("value").textValue();
+//        log.info("NODE VALUE: " + result);
+        return result;
+    }
+
+    public static void valueToJsonFile(String valueName, String value) {
+        ValuePojo valuePojo = new ValuePojo(value);
+        JsonUtils.pojoToJsonFile(valuePojo, valueName + ".json");
+    }
+
+    public static String valueFromJsonFile(String fileName) {
+        ValuePojo valuePojo = new ValuePojo();
+        valuePojo = JsonUtils.jsonFileToPojo(fileName, ValuePojo.class);
+        if (valuePojo == null) return null;
+//        log.info("VALUE POJO: " + valuePojo);
+        String json = JsonUtils.pojoToJson(valuePojo);
+//        log.info("VALUE JSON: " + json);
+        String value = JsonUtils.jsonGetValue(json, "value");
+//        log.info("VALUE : " + value);
+        return value;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    static private class ValuePojo {
+
+        public String value;
     }
 }

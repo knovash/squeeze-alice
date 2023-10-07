@@ -1,17 +1,26 @@
 package org.knovash.squeezealice;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.sun.net.httpserver.HttpExchange;
 import lombok.extern.log4j.Log4j2;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import static org.knovash.squeezealice.Fluent.uriGetHeader;
+import static org.knovash.squeezealice.Main.lmsIP;
 import static org.knovash.squeezealice.Main.server;
 
 @Log4j2
@@ -124,11 +133,6 @@ public class Utils {
     }
 
     public static String timeVolumeGet(Player player) {
-//        TimeVolume tv = new TimeVolume();
-//        tv.time = player.timeVolume.entrySet().stream().map(Object::toString).collect(Collectors.toList());
-//        JsonUtils.pojoToJsonFile(tv, "ttt.json");
-//        return JsonUtils.pojoToJson(tv);
-
         return player.timeVolume.entrySet().toString();
     }
 
@@ -145,11 +149,133 @@ public class Utils {
         return "REMOVED time:" + time;
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class TimeVolume {
+    public static String credentials(HashMap<String, String> parameters) {
+        String id = parameters.get("id");
+        String secret = parameters.get("secret");
+        if (id == null || secret == null) return "CRED ERROR";
+        Spotify.createCredFile(id, secret);
+        return "CRED SET";
+    }
 
-        public List<String> time;
+    public static String backupServer(HashMap<String, String> parameters) {
+        String stamp = LocalDate.now().toString() + "-" + LocalTime.now().toString();
+        server.writeServerFile("server-backup-" + stamp);
+        return "BACKUP SERVER";
+    }
+
+    public static void favoritePrev(Player player, HashMap<String, String> parameters) {
+        Integer time = Integer.valueOf(parameters.get("time"));
+        player.play(1);
+        player.timeVolume.remove(time);
+    }
+
+    public static void favoriteNext(Player player, HashMap<String, String> parameters) {
+        Integer time = Integer.valueOf(parameters.get("time"));
+        player.timeVolume.remove(time);
+    }
+
+    public static String readBodyJsonCommand(HttpExchange httpExchange) throws IOException {
+        String command = null;
+        InputStreamReader isr = new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
+        BufferedReader br = new BufferedReader(isr);
+        int b;
+        StringBuilder buf = new StringBuilder(512);
+        while ((b = br.read()) != -1) {
+            buf.append((char) b);
+        }
+        br.close();
+        isr.close();
+        String json = buf.toString();
+        command = JsonUtils.jsonGetValue(json, "command");
+        log.info("COMMAND " + command);
+        return command;
+    }
+
+    public static HashMap<String, String> getQueryParameters(String query) {
+        HashMap<String, String> parameters = new HashMap<>();
+        Optional.ofNullable(Arrays.asList(query.split("&"))).orElseGet(Collections::emptyList)
+                .stream()
+                .filter(s -> s.contains("="))
+                .map(s -> s.split("="))
+                .filter(Objects::nonNull)
+                .forEach(s -> parameters.put(s[0], s[1]));
+        return parameters;
+    }
+
+    public static boolean isLms(String ip) {
+        log.info("CHECK IF IP IS LMS: " + ip);
+        String uri = "http://" + ip + ":9000";
+        HttpResponse response = uriGetHeader(uri);
+        if (response == null) {
+//            log.info("NOT LMS IP");
+            return false;}
+        Header[] server = response.getHeaders("Server");
+        String header = server[0].toString();
+        log.info("HEADER: " + header);
+        if (header.contains("Logitech Media Server")) log.info("IS LMS IP OK");
+        return header.contains("Logitech Media Server");
+    }
+
+    public static String myIp() {
+        String myip = null;
+        Enumeration<NetworkInterface> interfaces = null;
+        try {
+            interfaces = NetworkInterface.getNetworkInterfaces();
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
+        while (interfaces.hasMoreElements()) {
+            NetworkInterface networkInterface = interfaces.nextElement();
+            try {
+                if (!networkInterface.isUp())
+                    continue;
+            } catch (SocketException e) {
+                throw new RuntimeException(e);
+            }
+            Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+            while (addresses.hasMoreElements()) {
+                InetAddress addr = addresses.nextElement();
+//                log.info(networkInterface.getDisplayName() + " " + addr.getHostAddress());
+                if (addr.getHostAddress().contains("192.")) {
+                    myip = addr.getHostAddress();
+                    log.info("MY IP: " + myip);
+                }
+            }
+        }
+        return myip;
+    }
+
+    public static String searchLmsIp(){
+        log.info("SEARCH LMS IN NETWORK");
+        String lmsIp = null;
+        log.info("TRY GET IP FROM PREVIOUS SEARCH RESULT IN lms_ip.json");
+        lmsIp = JsonUtils.valueFromJsonFile("lms_ip.json");
+//        log.info("IP FROM FILE: " + lmsIp);
+        if (lmsIp != null && isLms(lmsIp)) {
+            log.info("IP FROM FILE: " + lmsIp);
+            return lmsIp;}
+        log.info("NO PREVIOUS FILE. START SEARCH NETWORK...");
+        String myip = Utils.myIp();
+//        log.info("MY IP " + myip);
+//        String lmsIp = null;
+        Integer start = 1;
+        while (lmsIp == null && start < 255) {
+//            log.info("START FROM: " + start);
+            lmsIp = IntStream
+                    .range(start, start + 50)
+                    .boxed()
+//                    .peek(s -> log.info("INDEX: " + s))
+                    .map(index -> CompletableFuture.supplyAsync(() -> Ping.ipIsReachable(myip, Integer.valueOf(index))))
+                    .collect(Collectors.collectingAndThen(Collectors.toList(), cfs -> cfs.stream().map(CompletableFuture::join)))
+                    .filter(Objects::nonNull)
+                    .findFirst().orElse(null);
+//            log.info("TRY: " + lmsIp);
+            start = start +50;
+        }
+        log.info("LMS IP: " + lmsIp);
+
+        if (lmsIp != null) JsonUtils.valueToJsonFile("lms_ip",lmsIp);
+
+        return lmsIp;
     }
 }

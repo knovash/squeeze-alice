@@ -2,12 +2,14 @@
 Bridge for Logitech Media Server players (SqueezeBox) control via Alice voice assistant.
 * <a href="https://dzen.ru/a/ZP0AKcRQ-h8hfwhT">Dzen.ru manual</a>
 * <a href="https://[www.youtube.com/watch?v=1xTXht4AsQk](~~~~)">YouTube demo</a>
-## Basic features
+## Basic LMS features
 * Alice, turn on the music - turn on the last one that played
 * Alice, turn off the music - turn off all players
 * Alice, music louder, quieter - volume control
 * Alice, turn on the channel - play from favorites
 * Alice, turn on Spotify - transfer from Spoty to LMS
+## Basic Spotify features
+* play [artist] - searh Spotify, get playlist "This Is [artist]" and play in LMS 
 ## Technologies
 Project is created with:
 * Java

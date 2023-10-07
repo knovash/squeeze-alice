@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.requests;
+package org.knovash.squeezealice.pojo.lms;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,6 +13,7 @@ public class Result {
     public String _mode;
     public String _path;
     public String _name;
+    public String _artist;
     public String _id;
     public String _syncgroups;
 }
