@@ -13,11 +13,11 @@ public class Html {
             "  <form action=\"/cmd\" method=\"get\">" +
             "   <div>" +
             "     <br><label for=\"id\">spot_client_id</label>" +
-            "     <br><input name=\"id\" id=\"id\" value=\"f45a18e2bcfe456dbd9e7b73e74514af\" />" +
+            "     <br><input name=\"id\" id=\"id\" value=\"f45a******3e74514af\" />" +
             "   </div>" +
             "   <div>" +
             "     <br><label for=\"secret\">spot_client_secret</label>" +
-            "     <br><input name=\"secret\" id=\"secret\" value=\"5c3321b4ae7e43ab93a2ce4ec1b4cf48\" />" +
+            "     <br><input name=\"secret\" id=\"secret\" value=\"5c332*******c1b4cf48\" />" +
             "   </div>" +
             "   <input type=\"hidden\" name=\"action\" id=\"action\" value=\"cred\">"+
             "   <div>" +
