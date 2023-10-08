@@ -3,6 +3,7 @@ package org.knovash.squeezealice;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.requests.Html;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -22,6 +23,7 @@ public class HandlerKuzja implements HttpHandler {
         log.info("HEAD: " + head);
         log.info("QUERY: " + query);
         response = Switch.action(query);
+        response = Html.web(response);
         log.info("RESPONSE: " + response);
         httpExchange.sendResponseHeaders(200, response.getBytes().length);
         OutputStream outputStream = httpExchange.getResponseBody();

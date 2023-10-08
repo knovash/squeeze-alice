@@ -1,5 +1,5 @@
 [Unit]
-Description=Tunnel
+Description=Local Tunnel
 #After=multi-user.target
 After=network.target
 After=network-online.target
@@ -7,9 +7,8 @@ After=network-online.target
 Type=simple
 User=root
 #Restart=yes
-Restart=on-failure
 #Restart=always
 #RestartSec=3
-ExecStart= /root/tunnel.sh
+ExecStart= sudo ngrok http --domain=unicorn-neutral-badly.ngrok-free.app 8010
 [Install]
 WantedBy=multi-user.target

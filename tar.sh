@@ -5,8 +5,7 @@ mkdir squeeze-alice-pak
 mkdir squeeze-alice-pak/squeeze-alice-1.0
 
 cp -r target/* squeeze-alice-pak/squeeze-alice-1.0/
-cp utils/install.sh squeeze-alice-pak/
-cp utils/ssh_install.sh squeeze-alice-pak/
+cp utils/*.sh squeeze-alice-pak/
 cp utils/*.service squeeze-alice-pak/
 
 cd squeeze-alice-pak

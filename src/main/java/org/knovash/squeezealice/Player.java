@@ -89,6 +89,20 @@ public class Player {
         return responseFromLms.result._name;
     }
 
+    public String albumname() {
+        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.albumname(this.name).toString());
+        if (responseFromLms == null) return "";
+        log.info("PLAYER: " + this.name + " ALBUM: " + responseFromLms.result._album);
+        return responseFromLms.result._album;
+    }
+
+    public String trackname() {
+        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.trackname(this.name).toString());
+        if (responseFromLms == null) return "";
+        log.info("PLAYER: " + this.name + " TRACK: " + responseFromLms.result._title);
+        return responseFromLms.result._title;
+    }
+
     public String artistname() {
         ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.artistname(this.name).toString());
         if (responseFromLms == null) return "";
@@ -145,6 +159,22 @@ public class Player {
     public Player pause() {
         log.info("PLAYER: " + this.name + " PAUSE");
         String status = Fluent.postGetStatus(Requests.pause(this.name).toString());
+        log.info("SATUS: " + status);
+        this.saveLastPath();
+        return this;
+    }
+
+    public Player prevtrack() {
+        log.info("PLAYER: " + this.name + " NEXT");
+        String status = Fluent.postGetStatus(Requests.prevtrack(this.name).toString());
+        log.info("SATUS: " + status);
+        this.saveLastPath();
+        return this;
+    }
+
+    public Player nexttrack() {
+        log.info("PLAYER: " + this.name + " NEXT");
+        String status = Fluent.postGetStatus(Requests.nexttrack(this.name).toString());
         log.info("SATUS: " + status);
         this.saveLastPath();
         return this;
