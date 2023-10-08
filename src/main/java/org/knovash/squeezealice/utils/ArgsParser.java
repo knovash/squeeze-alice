@@ -1,7 +1,8 @@
-package org.knovash.squeezealice;
+package org.knovash.squeezealice.utils;
 
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.cli.*;
+import org.knovash.squeezealice.Main;
 
 @Log4j2
 public class ArgsParser {

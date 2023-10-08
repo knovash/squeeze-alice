@@ -1,4 +1,4 @@
-package org.knovash.squeezealice;
+package org.knovash.squeezealice.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
@@ -120,8 +120,8 @@ public class JsonUtils {
     }
 
     public static String jsonGetValue(String json, String value) {
-//        log.info("JSON: " + json);
-//        log.info("VALUE: " + value);
+        log.info("JSON: " + json);
+        log.info("VALUE: " + value);
         JsonNode jsonNode = null;
         try {
             jsonNode = objectMapper.readTree(json);
@@ -129,8 +129,8 @@ public class JsonUtils {
             throw new RuntimeException(e);
         }
         String result = null;
-        result = jsonNode.findValue("value").textValue();
-//        log.info("NODE VALUE: " + result);
+        result = jsonNode.findValue(value).textValue();
+        log.info("NODE VALUE: " + result);
         return result;
     }
 

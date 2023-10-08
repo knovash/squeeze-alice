@@ -50,6 +50,14 @@ public class Requests {
         return RequestToLms.create(player, new String[]{"playlist", "name", "?"});
     }
 
+    public static RequestToLms albumname(String player) {
+        return RequestToLms.create(player, new String[]{"playlist", "album", "?"});
+    }
+
+    public static RequestToLms trackname(String player) {
+        return RequestToLms.create(player, new String[]{"playlist", "title", "?"});
+    }
+
     public static RequestToLms artistname(String player) {
         return RequestToLms.create(player, new String[]{"artist", "?"});
     }
@@ -72,5 +80,13 @@ public class Requests {
 
     public static RequestToLms shuffleoff(String player) {
         return RequestToLms.create(player, new String[]{"playlist", "shuffle", "0"});
+    }
+
+    public static RequestToLms prevtrack(String player) {
+        return RequestToLms.create(player, new String[]{"playlist", "jump", "-1"});
+    }
+
+    public static RequestToLms nexttrack(String player) {
+        return RequestToLms.create(player, new String[]{"playlist", "jump", "+1"});
     }
 }

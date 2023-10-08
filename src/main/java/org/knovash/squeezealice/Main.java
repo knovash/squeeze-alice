@@ -1,6 +1,7 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.utils.ArgsParser;
 
 import java.util.ResourceBundle;
 
@@ -15,6 +16,7 @@ public class Main {
     public static int port = Integer.parseInt(bundle.getString("port"));
     public static String context = bundle.getString("context");
     public static Server server = new Server();
+    public static String myIP;
 
     public static void main(String[] args) {
         log.info("  ---+++===[ START ]===+++---");
@@ -30,6 +32,8 @@ public class Main {
         log.info("lmsServer: " + lmsServer);
         log.info("port: " + port);
         log.info("context: " + context);
+
+//        myIP = Utils.myIp();
 
         if(!Utils.isLms(lmsIP)) {
             log.info("CONFIG FROM PROPERTIES AND ARGS NOT VALID LMS SERVER");

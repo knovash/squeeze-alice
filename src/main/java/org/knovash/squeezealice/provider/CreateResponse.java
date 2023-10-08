@@ -1,7 +1,7 @@
 package org.knovash.squeezealice.provider;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.JsonUtils;
+import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.pojo.alice.Alice;
 import org.knovash.squeezealice.pojo.alice.ResponseAlice;
 

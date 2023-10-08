@@ -11,6 +11,7 @@ import org.knovash.squeezealice.pojo.spotify.spotifyartists.SpotifyArtists;
 import org.knovash.squeezealice.pojo.spotify.spotifyplaylist.Item;
 import org.knovash.squeezealice.pojo.spotify.spotifyplaylist.SpotifyPlaylists;
 import org.knovash.squeezealice.pojo.spotify.spotifytracks.SpotifyResponseTracks;
+import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.Base64;
@@ -109,6 +110,7 @@ public class Spotify {
                 log.info("PLAYLIST");
                 SpotifyPlaylists sp;
                 sp = JsonUtils.jsonToPojo(json, SpotifyPlaylists.class);
+//                log.info("JSON " + json);
                 log.info("ST\n" + sp);
                 Item item = sp.playlists.items
                         .stream()
@@ -117,6 +119,7 @@ public class Spotify {
                                         " OWNER: " + it.owner.display_name +
                                         " URL: " + it.external_urls.spotify.toString()))
                         .filter(it -> it.name.contains("This Is"))
+                        .filter(it -> it.owner.display_name.contains("Spotify"))
                         .findFirst()
                         .orElse(sp.playlists.items.get(0));
 //                if (item == null) item = sp.playlists.items.get(0);

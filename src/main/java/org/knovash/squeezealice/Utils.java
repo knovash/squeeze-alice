@@ -4,23 +4,29 @@ import com.sun.net.httpserver.HttpExchange;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.knovash.squeezealice.utils.JsonUtils;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.knovash.squeezealice.Fluent.uriGetHeader;
-import static org.knovash.squeezealice.Main.lmsIP;
 import static org.knovash.squeezealice.Main.server;
 
 @Log4j2
@@ -174,7 +180,8 @@ public class Utils {
         player.timeVolume.remove(time);
     }
 
-    public static String readBodyJsonCommand(HttpExchange httpExchange) throws IOException {
+    public static String httpExchangeGetJsonBody(HttpExchange httpExchange) throws IOException {
+        log.info("READ JSON BODY");
         String command = null;
         InputStreamReader isr = new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
         BufferedReader br = new BufferedReader(isr);
@@ -186,9 +193,16 @@ public class Utils {
         br.close();
         isr.close();
         String json = buf.toString();
-        command = JsonUtils.jsonGetValue(json, "command");
-        log.info("COMMAND " + command);
-        return command;
+        log.info("BODY JSON: " + json);
+        return json;
+    }
+
+    public static String jsonGetValue(String json, String valueName) throws IOException {
+        String value;
+        log.info("BODY JSON: " + json);
+        value = JsonUtils.jsonGetValue(json, valueName);
+        log.info("COMMAND " + value);
+        return value;
     }
 
     public static HashMap<String, String> getQueryParameters(String query) {
@@ -208,7 +222,8 @@ public class Utils {
         HttpResponse response = uriGetHeader(uri);
         if (response == null) {
 //            log.info("NOT LMS IP");
-            return false;}
+            return false;
+        }
         Header[] server = response.getHeaders("Server");
         String header = server[0].toString();
         log.info("HEADER: " + header);
@@ -245,7 +260,7 @@ public class Utils {
         return myip;
     }
 
-    public static String searchLmsIp(){
+    public static String searchLmsIp() {
         log.info("SEARCH LMS IN NETWORK");
         String lmsIp = null;
         log.info("TRY GET IP FROM PREVIOUS SEARCH RESULT IN lms_ip.json");
@@ -253,7 +268,8 @@ public class Utils {
 //        log.info("IP FROM FILE: " + lmsIp);
         if (lmsIp != null && isLms(lmsIp)) {
             log.info("IP FROM FILE: " + lmsIp);
-            return lmsIp;}
+            return lmsIp;
+        }
         log.info("NO PREVIOUS FILE. START SEARCH NETWORK...");
         String myip = Utils.myIp();
 //        log.info("MY IP " + myip);
@@ -265,17 +281,68 @@ public class Utils {
                     .range(start, start + 50)
                     .boxed()
 //                    .peek(s -> log.info("INDEX: " + s))
-                    .map(index -> CompletableFuture.supplyAsync(() -> Ping.ipIsReachable(myip, Integer.valueOf(index))))
+                    .map(index -> CompletableFuture.supplyAsync(() -> Utils.ipIsReachable(myip, Integer.valueOf(index))))
                     .collect(Collectors.collectingAndThen(Collectors.toList(), cfs -> cfs.stream().map(CompletableFuture::join)))
                     .filter(Objects::nonNull)
                     .findFirst().orElse(null);
 //            log.info("TRY: " + lmsIp);
-            start = start +50;
+            start = start + 50;
         }
         log.info("LMS IP: " + lmsIp);
 
-        if (lmsIp != null) JsonUtils.valueToJsonFile("lms_ip",lmsIp);
+        if (lmsIp != null) JsonUtils.valueToJsonFile("lms_ip", lmsIp);
 
         return lmsIp;
+    }
+
+    public static boolean isCyrillic(String text) {
+        Pattern cyril = Pattern.compile("[а-ябА-Я\\s]*");
+        Matcher matchCyril = cyril.matcher(text);
+        return matchCyril.matches();
+    }
+
+    public static String appIdPlayer(String appId) {
+        String playerName = "HomePod";
+        switch (appId) {
+            case ("CEE4701A73C8D5113DB40E35CDA9ECBDB6FC2CDCFF8CFD73A1ADEB2607C67AD7"):
+                playerName = "JBL black";
+                break;
+            case ("76F751A76299DE71E1E9784E207AFC2BA1AB01361D8F8B9483A857FA87C087FA"):
+                playerName = "HomePod";
+                break;
+        }
+        return playerName;
+    }
+
+    public static String ping(Integer index) {
+        String lmsip = "192.168.1.52";
+        String ip = "192.168.1." + index;
+        log.info("PING " + index);
+        if (lmsip.equals(ip)) return ip;
+        return null;
+    }
+
+    public static String ipIsReachable(String fullIp, Integer index) {
+        InetAddress inetAddress = null;
+        try {
+            inetAddress = InetAddress.getByName(fullIp);
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+        byte[] ip = inetAddress.getAddress();
+        ip[3] = Byte.parseByte(String.valueOf(index));
+        String ipTry = null;
+        try {
+            InetAddress address = InetAddress.getByAddress(ip);
+            ipTry = address.toString().substring(1);
+//            log.info("TRY IP... " + ipTry);
+            if (address.isReachable(1000) && isLms(ipTry)) {
+                log.info("IP IS LMS: " + ipTry);
+                return ipTry;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 @Log4j2
-public class HandlerIndex implements HttpHandler {
+public class HandlerSpotify implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
@@ -22,7 +22,7 @@ public class HandlerIndex implements HttpHandler {
         query = httpExchange.getRequestURI().getQuery();
         log.info("HEAD: " + head);
         log.info("QUERY: " + query);
-        response = Html.index;
+        response = Html.form;
         log.info("RESPONSE: " + response);
         httpExchange.sendResponseHeaders(200, response.getBytes().length);
         OutputStream outputStream = httpExchange.getResponseBody();
