@@ -9,14 +9,12 @@ import java.util.ResourceBundle;
 public class Main {
 
     private static ResourceBundle bundle = ResourceBundle.getBundle("config");
-    public static String lmsIP = bundle.getString("lmsIP"); // lmsIP=192.168.1.52
-    public static String lmsPort = bundle.getString("lmsPort"); // lmsPort=9000
+    public static String lmsIP = bundle.getString("lmsIP");
+    public static String lmsPort = bundle.getString("lmsPort");
     public static String lmsServer = "http://" + lmsIP + ":" + lmsPort + "/jsonrpc.js/";
     public static String silence = bundle.getString("silence");
     public static int port = Integer.parseInt(bundle.getString("port"));
-    public static String context = bundle.getString("context");
     public static Server server = new Server();
-    public static String myIP;
 
     public static void main(String[] args) {
         log.info("  ---+++===[ START ]===+++---");
@@ -24,16 +22,11 @@ public class Main {
         log.info("LMS IP: " + lmsIP);
         log.info("lmsServer: " + lmsServer);
         log.info("port: " + port);
-        log.info("context: " + context);
-
         log.info("READ CONFIG FROM ARGS");
         ArgsParser.parse(args);
         log.info("LMS IP: " + lmsIP);
         log.info("lmsServer: " + lmsServer);
         log.info("port: " + port);
-        log.info("context: " + context);
-
-//        myIP = Utils.myIp();
 
         if(!Utils.isLms(lmsIP)) {
             log.info("CONFIG FROM PROPERTIES AND ARGS NOT VALID LMS SERVER");
