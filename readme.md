@@ -9,7 +9,10 @@ Bridge for Logitech Media Server players (SqueezeBox) control via Alice voice as
 * Alice, turn on the channel - play from favorites
 * Alice, turn on Spotify - transfer from Spoty to LMS
 ## Basic Spotify features
-* play [artist] - searh Spotify, get playlist "This Is [artist]" and play in LMS 
+* search [artist] in Spotify and run playlist "This Is [artist]"
+* next track
+* what's playing?
+* what's the volume?
 ## Technologies
 Project is created with:
 * Java
@@ -18,15 +21,17 @@ Project is created with:
 * JSON parser Jackson
 * Args parser Apache Commons CLI
 * Logitech Media Server API
+* Spotify API
 * AlexStar SmartHome
-* Localtunnel
+* Localtunnel, Serveo
 ## Launch
 to run:
 ```
 java -jar squeeze-alice-1.0.jar [-lmsip 192.168.1.52 -lmsport 9000 -port 8010 -context cmd]
 ```
 if no args, default use LMS http://localhost:9000/ 
-this server http://localhost:8010/cmd
+this server http://localhost:8010/
+if not LMS not on localhost, try auto search LMS ip in network
 
 create access to your computer from the Internet
 
