@@ -1,4 +1,5 @@
-package org.knovash.squeezealice.provider.pojo;
+package org.knovash.squeezealice.provider.pojo.capability;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -6,6 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ResponseProvider {
-    public String request_id;
+public class Mode {
+
+    public String value;
 }
