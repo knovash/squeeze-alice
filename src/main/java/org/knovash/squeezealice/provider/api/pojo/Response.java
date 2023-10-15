@@ -7,10 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ActionResult {
-    public String status = null;
-    public String error_code = null;
-    public String error_message = null;
+public class Response {
+    public String request_id = null;
+    public Payload payload = new Payload();
 }
-
-

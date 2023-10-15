@@ -4,11 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Property {
-    public String volume;
-    public String mode;
-    public String path;
+public class Payload {
+
+    public List<Device> devices = new ArrayList<>();
+    public String user_id = null; // ???
 }

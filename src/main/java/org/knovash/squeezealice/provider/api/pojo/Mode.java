@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.provider.pojo.capability;
+package org.knovash.squeezealice.provider.pojo.device;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Mode {
 
-    public String value;
+    public String value = null;
 }

@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.provider.pojo;
+package org.knovash.squeezealice.provider.api.query;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 public class Capability {
 
     public String type;
-    public Boolean retrievable;
-    public Parameters parameters = null;
+    public State state = new State();
 }
+
 
 
