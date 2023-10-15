@@ -84,7 +84,7 @@ public class Player {
 
     public String playlistname() {
         ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.playlistname(this.name).toString());
-        if (responseFromLms == null) return "";
+        if (responseFromLms == null) return null;
         log.info("PLAYER: " + this.name + " PLAYLIST: " + responseFromLms.result._name);
         return responseFromLms.result._name;
     }
@@ -105,14 +105,14 @@ public class Player {
 
     public String artistname() {
         ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.artistname(this.name).toString());
-        if (responseFromLms == null) return "";
+        if (responseFromLms == null) return null;
         log.info("PLAYER: " + this.name + " PLAYLIST: " + responseFromLms.result._artist);
         return responseFromLms.result._artist;
     }
 
     public String volume() {
         ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.volume(this.name).toString());
-        if (responseFromLms == null) return "";
+        if (responseFromLms == null) return null;
         log.info("PLAYER: " + this.name + " GET VOLUME: " + responseFromLms.result._volume);
         return responseFromLms.result._volume;
     }
@@ -121,7 +121,6 @@ public class Player {
         log.info("PLAYER: " + this.name + " SET VOLUME: " + value);
         String status = Fluent.postGetStatus(Requests.volume(this.name, value).toString());
         log.info("SATUS: " + status);
-        this.volume();
         return this;
     }
 

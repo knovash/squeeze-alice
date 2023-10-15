@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.provider.api.query;
+package org.knovash.squeezealice.provider.pojo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,4 +13,5 @@ import java.util.List;
 public class Payload {
 
     public List<Device> devices = new ArrayList<>();
+    public String user_id;
 }

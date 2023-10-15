@@ -180,10 +180,9 @@ public class Utils {
         player.timeVolume.remove(time);
     }
 
-    public static String httpExchangeGetJsonBody(HttpExchange httpExchange) throws IOException {
-        log.info("READ JSON BODY");
-        String command = null;
+    public static String httpExchafffngeGetBody(HttpExchange httpExchange) throws IOException {
         InputStreamReader isr = new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
+        if (isr == null) return null;
         BufferedReader br = new BufferedReader(isr);
         int b;
         StringBuilder buf = new StringBuilder(512);
@@ -192,28 +191,8 @@ public class Utils {
         }
         br.close();
         isr.close();
-        String json = buf.toString();
-        log.info("BODY JSON: " + json);
-        return json;
-    }
-
-    public static String jsonGetValue(String json, String valueName) throws IOException {
-        String value;
-        log.info("BODY JSON: " + json);
-        value = JsonUtils.jsonGetValue(json, valueName);
-        log.info("COMMAND " + value);
-        return value;
-    }
-
-    public static HashMap<String, String> getQueryParameters(String query) {
-        HashMap<String, String> parameters = new HashMap<>();
-        Optional.ofNullable(Arrays.asList(query.split("&"))).orElseGet(Collections::emptyList)
-                .stream()
-                .filter(s -> s.contains("="))
-                .map(s -> s.split("="))
-                .filter(Objects::nonNull)
-                .forEach(s -> parameters.put(s[0], s[1]));
-        return parameters;
+        String body = buf.toString();
+        return body;
     }
 
     public static boolean isLms(String ip) {

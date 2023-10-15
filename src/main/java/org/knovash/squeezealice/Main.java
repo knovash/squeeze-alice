@@ -1,6 +1,7 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.utils.ArgsParser;
 
 import java.util.ResourceBundle;
@@ -22,13 +23,14 @@ public class Main {
         log.info("LMS IP: " + lmsIP);
         log.info("lmsServer: " + lmsServer);
         log.info("port: " + port);
+
         log.info("READ CONFIG FROM ARGS");
         ArgsParser.parse(args);
         log.info("LMS IP: " + lmsIP);
         log.info("lmsServer: " + lmsServer);
         log.info("port: " + port);
 
-        if(!Utils.isLms(lmsIP)) {
+        if (!Utils.isLms(lmsIP)) {
             log.info("CONFIG FROM PROPERTIES AND ARGS NOT VALID LMS SERVER");
             lmsIP = Utils.searchLmsIp();
             try {
@@ -42,6 +44,14 @@ public class Main {
         lmsServer = "http://" + lmsIP + ":" + lmsPort + "/jsonrpc.js/";
         log.info("LMS SERVER: " + lmsServer);
         log.info("  ---+++===[ START SERVER ]===+++--- ");
+
+        NewDevice.create("колонка", "JBL black", "Спальня");
+//        NewDevice.create("колонка душ", "Bathroom", "Душ");
+
+        log.info("YANDEX DEVICE: " + Yandex.devices.get(0));
+        log.info("YANDEX DEVICE: " + Yandex.devices.get(0).customData);
+        log.info("YANDEX DEVICE: " + Yandex.devices.get(0).capabilities);
+
         server = new Server();
         server.readServerFile();
         server.updatePlayers();

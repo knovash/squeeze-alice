@@ -1,19 +1,21 @@
 package org.knovash.squeezealice;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-
 import com.sun.net.httpserver.HttpServer;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.*;
+import org.knovash.squeezealice.provider.HandlerAction;
+import org.knovash.squeezealice.provider.HandlerQuery;
 
-import static org.knovash.squeezealice.Main.*;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+
+import static org.knovash.squeezealice.Main.port;
 
 @Log4j2
 public class ServerController {
 
     public static void start() {
-        HttpServer server = null;
+        HttpServer server;
         try {
             server = HttpServer.create(new InetSocketAddress(port), 0);
         } catch (IOException e) {
@@ -22,17 +24,21 @@ public class ServerController {
         server.createContext("/", new HandlerIndex());
         server.createContext("/cmd", new HandlerKuzja());
         server.createContext("/alice", new HandlerAlice());
+        server.createContext("/redirect", new HandlerRedirect());
         server.createContext("/spotify", new HandlerSpotify());
+
         server.createContext("/v1.0", new HandlerCheck());
-        server.createContext("/v1.0/user/unlink", new HandlerUnlink());
-        server.createContext("/v1.0/user/devices", new HandlerDevices());
+        server.createContext("/v1.0/user/unlink", new HandlerUserUnlink());
+        server.createContext("/v1.0/user/devices", new HandlerUserDevices());
         server.createContext("/v1.0/user/devices/query", new HandlerQuery());
         server.createContext("/v1.0/user/devices/action", new HandlerAction());
+
         server.createContext("/auth", new HandlerAuth());
         server.createContext("/token", new HandlerToken());
-        server.createContext("/tokenref", new HandlerTokenRef());
+        server.createContext("/refresh", new HandlerTokenRefresh());
+
         server.setExecutor(null);
         server.start();
-        log.info("http://localhost:"+ port);
+        log.info("http://localhost:" + port);
     }
 }

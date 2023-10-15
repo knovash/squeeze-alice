@@ -4,14 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Payload {
+public class ActionResult {
 
-    public List<Device> devices = new ArrayList<>();
-    public String user_id = null; // ???
+    public String status = "DONE";
+    public String error_code = null;
+    public String error_message = null;
 }
+
+

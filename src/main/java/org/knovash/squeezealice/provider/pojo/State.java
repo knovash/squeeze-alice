@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.provider.api.pojo;
+package org.knovash.squeezealice.provider.pojo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

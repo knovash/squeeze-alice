@@ -31,6 +31,7 @@ public class JsonUtils {
     }
 
     public static <T> T jsonToPojo(String json, Class<T> clazz) {
+//        log.info("JSON TO POJO: " + json);
         try {
             return objectMapper.readValue(json, clazz);
         } catch (JsonProcessingException e) {
@@ -110,6 +111,16 @@ public class JsonUtils {
         }
     }
 
+//    public static <K, V> Map<K, V> jsonToMap(String json, Class<K> clazzKey, Class<V> clazzValue) {
+//        log.info("JSON TO MAP");
+//        JavaType type = objectMapper.getTypeFactory().constructMapType(Map.class, clazzKey, clazzValue);
+//        try {
+//            return objectMapper.readValue(json, type);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
     public static <K, V> void mapToJsonFile(Map<K, V> map, String fileName) {
         File file = new File(fileName);
         try {
@@ -119,9 +130,9 @@ public class JsonUtils {
         }
     }
 
-    public static String jsonGetValue(String json, String value) {
-        log.info("JSON: " + json);
-        log.info("VALUE: " + value);
+    public static String jsonGetValue(String json, String valueName) {
+//        log.info("JSON: " + json);
+//        log.info("VALUE NAME: " + valueName);
         JsonNode jsonNode = null;
         try {
             jsonNode = objectMapper.readTree(json);
@@ -129,8 +140,8 @@ public class JsonUtils {
             throw new RuntimeException(e);
         }
         String result = null;
-        result = jsonNode.findValue(value).textValue();
-        log.info("NODE VALUE: " + result);
+        result = jsonNode.findValue(valueName).textValue();
+//        log.info("VALUE: " + result);
         return result;
     }
 

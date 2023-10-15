@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeviceInfo {
-    public String manufacturer = null;
-    public String model = null;
-    public String hw_version = null;
-    public String sw_version = null;
+public class Mode {
+
+    public String value = null;
 }

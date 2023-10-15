@@ -10,46 +10,53 @@ import org.knovash.squeezealice.utils.JsonUtils;
 public class SwitchAlice {
 
     public static String action(String command, String playerName) {
-        String currentPlayer = playerName;
         log.info("COMMAND: " + command);
-
-        log.info("COMMAND: " + playerName);
+        log.info("PLAYER NAME: " + playerName);
         String target;
-        String answer = "слушаю, мой господин";
+        String answer = "повторите";
         if (command.contains("включи")) {
             target = command.replaceAll(".*включи\\S*\\s", "")
                     .replaceAll("\"", "")
                     .replaceAll("\\s\\s", " ");
-            if (target.contains("плэйлист")) {
-
-                answer = "мой господин, на " + playerName + " включаю плэйлист " + target;
-                return answer;
-            }
-
             answer = "сейчас, мой господин, включаю " + target;
             log.info("TARGET: " + target);
             String link = Spotify.search(target, Type.playlist);
             log.info("LINK " + link);
-            Server.playerByName(currentPlayer).shuffleon().play(link);
+            if (link == null && Spotify.bearerToken == null) {
+                answer = "настройте спотифай";
+                return createResponse(answer);
+            }
+            if (link == null) {
+                answer = "ничего не нашла";
+                return createResponse(answer);
+            }
+            Server.playerByName(playerName).shuffleon().play(link);
+            return createResponse(answer);
         }
         if (command.contains("какая") && command.contains("громкость")) {
             log.info("VOLUME");
-            String volume = Server.playerByName(currentPlayer).volume();
+            String volume = Server.playerByName(playerName).volume();
+            if (volume == null)  return createResponse("медиасервер не отвечает");
             answer = "сейчас на " + playerName + " громкость " + volume;
+            return createResponse(answer);
         }
         if (command.contains("что") && command.contains("играет")) {
             log.info("WATS PLAYING");
-            String playlist = Server.playerByName(currentPlayer).playlistname();
-            if (playlist == null) playlist = Server.playerByName(currentPlayer).artistname();
+            String playlist = Server.playerByName(playerName).playlistname();
+            log.info("PLAYLIST: " + playlist);
+            if (playlist == null) playlist = Server.playerByName(playerName).artistname();
+            log.info("PLAYLIST: " + playlist);
+            if (playlist == null)  return createResponse("медиасервер не отвечает");
+            log.info("PLAYLIST: " + playlist);
             answer = "сейчас на " + playerName + " играет " + playlist;
+            return createResponse(answer);
         }
-
         if (command.contains("дальше") || command.contains("следующий")) {
             log.info("NEXT TRACK");
-            Server.playerByName(currentPlayer).nexttrack();
+            Server.playerByName(playerName).nexttrack();
             answer = "включаю следующий";
+            return createResponse(answer);
         }
-
         answer = createResponse(answer);
         return answer;
     }

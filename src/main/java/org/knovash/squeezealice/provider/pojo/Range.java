@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CustomData {
-    public String custom = "custom";
-    public String data = "data";
+public class Range {
+
+    public int max = 100;
+    public int min = 1;
+    public int precision = 1;
 }

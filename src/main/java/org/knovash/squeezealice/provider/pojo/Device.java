@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.knovash.squeezealice.provider.Yandex;
-import org.knovash.squeezealice.provider.pojo.device.Capability;
-import org.knovash.squeezealice.provider.pojo.device.Property;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,21 +13,14 @@ import java.util.List;
 @AllArgsConstructor
 public class Device {
 
-    public String id = "0";
-    public String name = "название";
-    public String type = "тип";
-    public String description = "описание";
-    public String room = "комната";
-    public List<String> aliases = new ArrayList<>();
+    public String id;
+    public String name;
+    public String type;
+    public String description;
+    public String room;
     public List<Capability> capabilities = new ArrayList<>();
     public List<Property> properties = new ArrayList<>();
-//    public CustomData custom_data = new CustomData();
-//    public DeviceInfo device_info = new DeviceInfo();
-    //    public String external_id = null;
-//    public String skill_id = null;
-//    public String household_id = null;
-//    public List<String> groups = new ArrayList<>();
-
+    public CustomData customData = new CustomData();
 
     public Device(String deviceName) {
         this.name = deviceName;
