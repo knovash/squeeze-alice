@@ -3,8 +3,6 @@ package org.knovash.squeezealice.provider;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.HttpUtils;
-import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.provider.pojo.Payload;
 import org.knovash.squeezealice.provider.pojo.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
@@ -43,11 +41,13 @@ public class HandlerUserDevices implements HttpHandler {
         Response response = new Response();
         response.request_id = xRequestId;
         response.payload = new Payload();
-        response.payload.user_id = Yandex.user_id;
-        response.payload.devices = Yandex.devices;
+        response.payload.user_id = Home.user_id;
+        response.payload.devices = Home.devices;
 
         log.info("RESPONSE: " + response);
+
         String json = JsonUtils.pojoToJson(response);
+
         log.info("JSON: " + json);
         httpExchange.sendResponseHeaders(200, json.getBytes().length);
         OutputStream outputStream = httpExchange.getResponseBody();

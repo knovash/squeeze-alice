@@ -3,7 +3,6 @@ package org.knovash.squeezealice.provider;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.Utils;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,7 +32,7 @@ public class HandlerToken implements HttpHandler {
         String query = httpExchange.getRequestURI().getQuery();
         log.info("QUERY: " + query);
 
-        response = " {\"access_token\":\"" + Yandex.bearerToken + "\",\"token_type\":\"bearer\",\"expires_in\":4294967296}";
+        response = " {\"access_token\":\"" + Home.bearerToken + "\",\"token_type\":\"bearer\",\"expires_in\":4294967296}";
 
         log.info("RESPONSE: " + response);
         httpExchange.sendResponseHeaders(200, response.getBytes().length);

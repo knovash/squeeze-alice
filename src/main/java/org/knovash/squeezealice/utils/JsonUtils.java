@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,7 +25,8 @@ public class JsonUtils {
 
     public static String pojoToJson(Object pojo) {
         try {
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo);
+//            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo);
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo).replace("\\", "");// для State переделанного в String
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -139,10 +141,28 @@ public class JsonUtils {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+//        log.info("NODE: " + jsonNode);
         String result = null;
-        result = jsonNode.findValue(valueName).textValue();
+//        log.info("findValue: " + jsonNode.findValue(valueName));
+//        log.info("textValue: " + jsonNode.findValue(valueName).textValue());
+//        log.info("asText: " + jsonNode.findValue(valueName).asText());
+//        log.info("toString: " + jsonNode.findValue(valueName).toString());
+        result = jsonNode.findValue(valueName).asText();
 //        log.info("VALUE: " + result);
         return result;
+    }
+
+    public static String jsonGetNode(String json) {
+        JsonNode jsonNode = null;
+        try {
+            jsonNode = objectMapper.readTree(json);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+//        jsonNode.get("payload").get("devices").get(0).get("capabilities").get(0).get("state").
+
+        return "NODE " + jsonNode.get("payload").get("devices").get(0).get("capabilities").get(0).get("state");
     }
 
     public static void valueToJsonFile(String valueName, String value) {
@@ -168,5 +188,21 @@ public class JsonUtils {
     static private class ValuePojo {
 
         public String value;
+    }
+
+    public static String replaceState(String json, String newState) {
+        JsonNode jsonNode = null;
+        try {
+            jsonNode = objectMapper.readTree(json);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        ((ObjectNode) jsonNode
+                .get("payload")
+                .get("devices").get(0)
+                .get("capabilities").get(0))
+                .put("state", newState);
+        log.info(jsonNode);
+        return String.valueOf(jsonNode);
     }
 }

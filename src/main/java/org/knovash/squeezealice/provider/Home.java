@@ -9,7 +9,7 @@ import java.util.List;
 
 @Log4j2
 @Data
-public class Yandex {
+public class Home {
 
 //    мое приложение
 //    https://oauth.yandex.ru/client/0d17cba2ab254d838ac1ddcedabc4191
@@ -22,5 +22,6 @@ public class Yandex {
     public static String redirectUri = "https://sqtest.loca.lt/redirect";
     public static String user_id = "konstantin";
     public static List<Device> devices = new ArrayList<>();
+    public  static Integer channel;
 
 }

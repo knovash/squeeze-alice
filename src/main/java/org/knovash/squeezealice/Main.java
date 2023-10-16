@@ -1,7 +1,7 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.Yandex;
+import org.knovash.squeezealice.provider.Home;
 import org.knovash.squeezealice.utils.ArgsParser;
 
 import java.util.ResourceBundle;
@@ -45,12 +45,15 @@ public class Main {
         log.info("LMS SERVER: " + lmsServer);
         log.info("  ---+++===[ START SERVER ]===+++--- ");
 
+        NewDevice.create("колонка", "HomePod", "Гостиная");
         NewDevice.create("колонка", "JBL black", "Спальня");
-//        NewDevice.create("колонка душ", "Bathroom", "Душ");
+        NewDevice.create("колонка", "JBL white", "Веранда");
+        NewDevice.create("колонка", "Bathroom", "Душ");
 
-        log.info("YANDEX DEVICE: " + Yandex.devices.get(0));
-        log.info("YANDEX DEVICE: " + Yandex.devices.get(0).customData);
-        log.info("YANDEX DEVICE: " + Yandex.devices.get(0).capabilities);
+
+        log.info("HOME DEVICE: " + Home.devices.get(0));
+        log.info("HOME DEVICE: " + Home.devices.get(0).customData);
+        log.info("HOME DEVICE: " + Home.devices.get(0).capabilities);
 
         server = new Server();
         server.readServerFile();

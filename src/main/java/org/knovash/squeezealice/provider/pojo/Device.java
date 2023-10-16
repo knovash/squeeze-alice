@@ -3,7 +3,7 @@ package org.knovash.squeezealice.provider.pojo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.knovash.squeezealice.provider.Yandex;
+import org.knovash.squeezealice.provider.Home;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,18 +27,18 @@ public class Device {
     }
 
     public static Integer create(String deviceName) {
-        int availableDevices = Yandex.devices.size();
+        int availableDevices = Home.devices.size();
         Device device = new Device();
         device.name = deviceName;
         device.id = String.valueOf(availableDevices);
-        Yandex.devices.add(device);
+        Home.devices.add(device);
         return Integer.valueOf(device.id);
     }
 
     public Integer addToYandex() {
-        int id = Yandex.devices.size();
+        int id = Home.devices.size();
         this.id = String.valueOf(id);
-        Yandex.devices.add(this);
+        Home.devices.add(this);
         return id;
     }
 }

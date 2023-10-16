@@ -163,6 +163,14 @@ public class Player {
         return this;
     }
 
+    public Player play_pause() {
+        log.info("PLAYER: " + this.name + " PLAY/PAUSE");
+        String status = Fluent.postGetStatus(Requests.play_pause(this.name).toString());
+        log.info("SATUS: " + status);
+        this.saveLastPath();
+        return this;
+    }
+
     public Player prevtrack() {
         log.info("PLAYER: " + this.name + " NEXT");
         String status = Fluent.postGetStatus(Requests.prevtrack(this.name).toString());
