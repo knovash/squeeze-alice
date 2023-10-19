@@ -2,6 +2,7 @@ package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.HttpUtils;
+import org.knovash.squeezealice.requests.Html;
 
 import java.util.HashMap;
 
@@ -123,11 +124,27 @@ public class Switch {
                 break;
             case ("cred"):
                 log.info("CREDENTIALS");
-                actionStatus = Utils.credentials(parameters);
+                actionStatus = SpotifyUtils.credentials(parameters);
                 break;
             case ("backup"):
                 log.info("BACKUP SERVER");
                 actionStatus = Utils.backupServer(parameters);
+                break;
+            case ("speaker_create"):
+                log.info("CREATE SPEAKER");
+                NewDevice.create(parameters);
+                actionStatus = Html.formSpeakers();
+                break;
+            case ("speaker_edit"):
+                log.info("EDIT SPEAKER");
+                NewDevice.edit(parameters);
+                log.info("EDIT OK");
+                actionStatus = Html.formSpeakers();
+                break;
+            case ("speaker_remove"):
+                log.info("REMOVE SPEAKER");
+                NewDevice.remove(parameters);
+                actionStatus = Html.formSpeakers();
                 break;
             default:
                 log.info("ACTION NOT FOUND: " + action);

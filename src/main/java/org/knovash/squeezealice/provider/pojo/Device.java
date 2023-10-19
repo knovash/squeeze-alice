@@ -3,18 +3,22 @@ package org.knovash.squeezealice.provider.pojo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.Home;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Log4j2
 public class Device {
 
     public String id;
     public String name;
+    public List<String> aliases = new ArrayList<>();
     public String type;
     public String description;
     public String room;
@@ -26,19 +30,12 @@ public class Device {
         this.name = deviceName;
     }
 
-    public static Integer create(String deviceName) {
-        int availableDevices = Home.devices.size();
-        Device device = new Device();
-        device.name = deviceName;
-        device.id = String.valueOf(availableDevices);
+    public Integer addToHome(Device device) {
+        int id = 0;
+        if (Home.devices.size() != 0) id = Integer.parseInt(Home.devices.getLast().id) + 1;
+        log.info(Home.devices.stream().map(d -> d.room).collect(Collectors.toList()));
+        device.id = String.valueOf(id);
         Home.devices.add(device);
-        return Integer.valueOf(device.id);
-    }
-
-    public Integer addToYandex() {
-        int id = Home.devices.size();
-        this.id = String.valueOf(id);
-        Home.devices.add(this);
         return id;
     }
 }

@@ -3,7 +3,7 @@ package org.knovash.squeezealice;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.pojo.alice.Alice;
 import org.knovash.squeezealice.pojo.alice.ResponseAlice;
-import org.knovash.squeezealice.pojo.spotify.Type;
+import org.knovash.squeezealice.pojo.pojospoty.Type;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 @Log4j2

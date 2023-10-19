@@ -15,9 +15,9 @@ public class HandlerAlice implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         log.info("");
-        log.info(" ---===[ REQUEST /alice ]===---");
-        log.info("PATH: " + httpExchange.getRequestURI().getPath());
-        log.info("PATH: " + httpExchange.getRequestURI().getPath());
+        log.info("REQUEST:" +
+                " method: " + httpExchange.getRequestMethod() +
+                " path: https://squeeze.serveo.net" + httpExchange.getRequestURI().getPath());
         // получить хедеры
         log.info("HEADERS: " + httpExchange.getRequestHeaders().entrySet());
         String xRequestId = HttpUtils.getHeaderValue(httpExchange, "X-request-id");

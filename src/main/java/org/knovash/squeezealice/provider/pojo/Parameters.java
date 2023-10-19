@@ -14,9 +14,9 @@ public class Parameters {
 
     public String instance;
     public List<Mode> modes = new ArrayList<>();
-    public boolean random_access = true;
+//    public boolean random_access = true;
     public Range range = null;
-    public boolean split = false; // Параметр используется совместно с retrievable:false и показывает, что за включение/выключение устройства у провайдера отвечают разные команды
+//    public boolean split = false; // Параметр используется совместно с retrievable:false и показывает, что за включение/выключение устройства у провайдера отвечают разные команды
 }
 
 

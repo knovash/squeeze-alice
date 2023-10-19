@@ -3,7 +3,6 @@ package org.knovash.squeezealice.provider;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.Utils;
 
 import java.io.IOException;
 import java.io.OutputStream;

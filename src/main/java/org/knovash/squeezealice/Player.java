@@ -32,6 +32,12 @@ public class Player {
     public Map<Integer, Integer> timeVolume;
     public String lastPath;
 
+    public Integer fakeVolume;
+    public Integer fakeChannel;
+    public boolean fakePlayPause;
+    public boolean fakeMute;
+    public boolean on_off;
+
     public static String lastStrPath;
     public static String lastPathGlobal;
 

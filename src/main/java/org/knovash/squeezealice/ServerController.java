@@ -26,6 +26,7 @@ public class ServerController {
         server.createContext("/alice", new HandlerAlice());
         server.createContext("/redirect", new HandlerRedirect());
         server.createContext("/spotify", new HandlerSpotify());
+        server.createContext("/speakers", new HandlerSpeakers());
 
         server.createContext("/v1.0", new HandlerCheck());
         server.createContext("/v1.0/user/unlink", new HandlerUserUnlink());

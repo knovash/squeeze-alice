@@ -14,6 +14,7 @@ public class HttpUtils {
 
 
     public static String httpExchangeGetBody(HttpExchange httpExchange) throws IOException {
+        log.info(httpExchange);
         InputStreamReader isr = new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
         if (isr == null) return null;
         BufferedReader br = new BufferedReader(isr);
@@ -25,6 +26,7 @@ public class HttpUtils {
         br.close();
         isr.close();
         String body = buf.toString();
+        if (body.equals("")) return null;
         return body;
     }
 

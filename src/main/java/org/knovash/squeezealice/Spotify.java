@@ -4,13 +4,13 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
-import org.knovash.squeezealice.pojo.spotify.SpotifyCredentials;
-import org.knovash.squeezealice.pojo.spotify.Type;
-import org.knovash.squeezealice.pojo.spotify.spotifyalbums.SpotifyAlbums;
-import org.knovash.squeezealice.pojo.spotify.spotifyartists.SpotifyArtists;
-import org.knovash.squeezealice.pojo.spotify.spotifyplaylist.Item;
-import org.knovash.squeezealice.pojo.spotify.spotifyplaylist.SpotifyPlaylists;
-import org.knovash.squeezealice.pojo.spotify.spotifytracks.SpotifyResponseTracks;
+import org.knovash.squeezealice.pojo.pojospoty.SpotifyCredentials;
+import org.knovash.squeezealice.pojo.pojospoty.Type;
+import org.knovash.squeezealice.pojo.pojospoty.spotifyalbums.SpotifyAlbums;
+import org.knovash.squeezealice.pojo.pojospoty.spotifyartists.SpotifyArtists;
+import org.knovash.squeezealice.pojo.pojospoty.spotifyplaylist.Item;
+import org.knovash.squeezealice.pojo.pojospoty.spotifyplaylist.SpotifyPlaylists;
+import org.knovash.squeezealice.pojo.pojospoty.spotifytracks.SpotifyResponseTracks;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
@@ -21,6 +21,7 @@ import java.util.Base64;
 public class Spotify {
 
     public static String bearerToken;
+    public static SpotifyCredentials sc = new SpotifyCredentials();
 
     public static String getBearerToken(String clientId, String clientSecret) {
         log.info("clientId: " + clientId + " clientSecret: " + clientSecret);
@@ -65,7 +66,7 @@ public class Spotify {
     }
 
     public static String search(String q, Type type) {
-        SpotifyCredentials sc = null;
+
         try {
             sc = JsonUtils.jsonFileToPojoTrows("spotify.json", SpotifyCredentials.class);
         } catch (IOException e) {

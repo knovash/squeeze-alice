@@ -1,45 +1,50 @@
 package org.knovash.squeezealice.requests;
 
+import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.Spotify;
+import org.knovash.squeezealice.provider.Home;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.knovash.squeezealice.Main.server;
+
+@Log4j2
 public class Html {
 
+    public static String name = "музыка";
 
+    public static String index() {
 
-    public static String sss = "{\n" +
-            "  \"request_id\": \"EE109B31-FF6C-48BD-80DB-4D07A9AFEBB3\",\n" +
-            "  \"payload\": {\n" +
-            "      \"devices\": [{\n" +
-            "          \"id\": \"abc-123\",\n" +
-            "          \"capabilities\": [{\n" +
-            "              \"type\": \"devices.capabilities.color_setting\",\n" +
-            "              \"state\": {\n" +
-            "                  \"instance\": \"hsv\",\n" +
-            "                  \"action_result\": {\n" +
-            "                      \"status\": \"ERROR\",\n" +
-            "                      \"error_code\": \"INVALID_ACTION\",\n" +
-            "                      \"error_message\": \"the human readable error message\"\n" +
-            "                  }\n" +
-            "              }\n" +
-            "          },\n" +
-            "          {\n" +
-            "              \"type\": \"devices.capabilities.on_off\",\n" +
-            "              \"state\": {\n" +
-            "                  \"instance\": \"on\",\n" +
-            "                  \"action_result\": {\n" +
-            "                      \"status\": \"DONE\"\n" +
-            "                  }\n" +
-            "              }\n" +
-            "          }]\n" +
-            "     },\n" +
-            "     {\n" +
-            "        \"id\": \"sock-56GF-3\",\n" +
-            "        \"action_result\": {\n" +
-            "          \"status\": \"ERROR\",\n" +
-            "          \"error_code\": \"DEVICE_UNREACHABLE\"\n" +
-            "        }\n" +
-            "     }]\n" +
-            "  }\n" +
-            "}";
-
+        String iii =
+                "<!DOCTYPE html>" +
+                        "<html lang=\"en\"><head>" +
+                        "<!doctype html>" +
+                        "<html lang=\"ru\">" +
+                        "<head>" +
+                        "<meta charSet=\"utf-8\" />" +
+                        "<meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, shrink-to-fit=no, viewport-fit=cover'>" +
+                        "<meta http-equiv='X-UA-Compatible' content='ie=edge'>" +
+                        "<style>" +
+                        "   html," +
+                        "   body {" +
+                        "      background: #eee;" +
+                        "   }" +
+                        "</style>" +
+                        "</head>" +
+                        "<body>" +
+                        "<p><strong>Hellow! its LMS control</strong></p>" +
+                        "<p><a href=\"/speakers\">Колонки LMS в Умном доме с Алисой</a></p>" +
+                        "<p><a href=\"/spotify\">Spotify логин</a></p>" +
+                        "<p><a href=\"/cmd?action=log\">/cmd?action=log - Show log</a></p>" +
+                        "<p><a href=\"/cmd?action=update\">/cmd?action=update - Update players</a></p>" +
+                        "<p><a href=\"/cmd?action=backup\">/cmd?action=backup - Backup server state</a></p>" +
+                        "<p><a href=\"/cmd?action=state\">/cmd?action=state - Show state</a></p>" +
+                        "</body>" +
+                        "</html>";
+return iii;
+    }
 
     public static String formSpotifyLogin = "<!DOCTYPE html><html lang=\"en\">" +
             "<head><meta charset=\"UTF-8\" />" +
@@ -48,15 +53,20 @@ public class Html {
             "  <title>Browser</title>" +
             "</head>" +
             "<body>" +
+            "<p><a href=\"/\">Home</a></p>" +
             "  <h1>Spotify credentials</h1>" +
             "  <form action=\"/cmd\" method=\"get\">" +
             "   <div>" +
             "     <br><label for=\"id\">spot_client_id</label>" +
-            "     <br><input name=\"id\" id=\"id\" value=\"f45a******3e74514af\" />" +
+            "     <br><input name=\"id\" id=\"id\" value=\"" +
+            Spotify.sc.clientId.substring(0,4) + "*****"+
+            "\" />" +
             "   </div>" +
             "   <div>" +
             "     <br><label for=\"secret\">spot_client_secret</label>" +
-            "     <br><input name=\"secret\" id=\"secret\" value=\"5c332*******c1b4cf48\" />" +
+            "     <br><input name=\"secret\" id=\"secret\" value=\"" +
+            Spotify.sc.clientSecret.substring(0,4) + "*****"+
+            "\" />" +
             "   </div>" +
             "   <input type=\"hidden\" name=\"action\" id=\"action\" value=\"cred\">" +
             "   <div>" +
@@ -66,30 +76,6 @@ public class Html {
             "<p><a href=\"/\">Home</a></p>" +
             "<script src=\"script.js\"></script>" +
             "</body></html>";
-
-    public static String index = "<!DOCTYPE html>" +
-            "<html lang=\"en\"><head>" +
-            "<!doctype html>" +
-            "<html lang=\"ru\">" +
-            "<head>" +
-            "<meta charSet=\"utf-8\" />" +
-            "<meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, shrink-to-fit=no, viewport-fit=cover'>" +
-            "<meta http-equiv='X-UA-Compatible' content='ie=edge'>" +
-            "<style>" +
-            "   html," +
-            "   body {" +
-            "      background: #eee;" +
-            "   }" +
-            "</style>" +
-            "</head>" +
-            "<body>" +
-            "<p><strong>Hellow! its LMS control</strong></p>" + "<p><a href=\"/spotify\">Spotify credentials</a></p>" +
-            "<p><a href=\"/cmd?action=log\">/cmd?action=log - Show log</a></p>" +
-            "<p><a href=\"/cmd?action=update\">/cmd?action=update - Update players</a></p>" +
-            "<p><a href=\"/cmd?action=backup\">/cmd?action=backup - Backup server state</a></p>" +
-            "<p><a href=\"/cmd?action=state\">/cmd?action=state - Show state</a></p>" +
-            "</body>" +
-            "</html>";
 
     public static String auth = "<!DOCTYPE html>" +
             "<html lang=\"en\"><head>" +
@@ -142,6 +128,9 @@ public class Html {
 
     public static String web(String text) {
         text = text.replace("\n", "<br>");
+
+
+
         String page = "<!DOCTYPE html>" +
                 "<html lang=\"en\"><head>" +
                 "  <meta charset=\"UTF-8\" />" +
@@ -155,4 +144,84 @@ public class Html {
                 "</body></html>";
         return page;
     }
+
+    public static String join(List<String> list) {
+
+        final String[] join = {""};
+        list.stream()
+                .map(l -> "<p>" + l + "</p>")
+                .map(l -> join[0] = join[0] + l).collect(Collectors.toList());
+        log.info(join[0]);
+        return join[0];
+    }
+
+
+    public static String formSpeakers() {
+        String page = "<!DOCTYPE html><html lang=\"en\">" +
+                "<head><meta charset=\"UTF-8\" />" +
+                "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" +
+                "  <link rel=\"stylesheet\" href=\"style.css\" />" +
+                "  <title>Browser</title></head><body>" +
+                "<p><a href=\"/\">Home</a></p>" +
+                "  <h2>Колонки Logitech Media Server в Умном доме с Алисой</h2>" +
+                "<p>всего колонок подключено в Умный дом с Алисой: " +
+                Home.devices.size() +
+                "</p>" +
+                "<p>" +
+                Home.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList()) +
+                "</p>" +
+
+                join(Home.devices.stream()
+                        .map(d ->
+                                "<form action=\"/cmd\" method=\"get\">" +
+                                        "<input type=\"hidden\" name=\"speaker_name_alice\" id=\"speaker_name_alice\" value=\"" + name + "\">" +
+                                        "<br><input name=\"speaker_name_lms\" id=\"speaker_name_lms\" value=\"" + d.customData.lmsName + "\" />" +
+                                        "<label for=\"speaker_name_lms\">Название колонки в Logitech Media Server</label>" +
+                                        "<br><input name=\"room\" id=\"room\" value=\"" + d.room + "\" />" +
+                                        "<label for=\"room\">Комната</label>" +
+                                        "<input type=\"hidden\" name=\"id\" id=\"id\" value=\"" + d.id + "\">" +
+                                        "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"speaker_edit\">" +
+                                        "<br><button>save</button></form>" +
+                                        "<form action=\"/cmd\" method=\"get\">" +
+                                        "<input type=\"hidden\" name=\"id\" id=\"id\" value=\"" + d.id + "\">" +
+                                        "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"speaker_remove\">" +
+                                        "<button>remove</button></form>"
+                        ).collect(Collectors.toList())) +
+
+                "<h2>Добавить колонку</h2>" +
+                "<p>рекомендую добавить колонки найденные в LMS: " +
+                getNotInHome() +
+                "</p>" +
+                "<form action=\"/cmd\" method=\"get\">" +
+                "<input type=\"hidden\" name=\"speaker_name_alice\" id=\"speaker_name_alice\" value=\"" + name + "\">" +
+                "<br><input name=\"speaker_name_lms\" id=\"speaker_name_lms\" value=\"" +
+                getNotInHomeFirst() +
+                "\" />" +
+                "<label for=\"speaker_name_lms\">Название колонки в Logitech Media Server</label>" +
+                "<br><input name=\"room\" id=\"room\" value=\"Комната\" />" +
+                "<label for=\"room\">Название комнаты в Умном доме</label>" +
+                "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"speaker_create\">" +
+                "<br><button>add</button></form>" +
+
+                "<p><a href=\"/\">Home</a></p>" +
+                "<script src=\"script.js\"></script>" +
+                "</body></html>";
+        return page;
+    }
+
+    public static String getNotInHome() {
+        List<String> inLms = server.players.stream().map(p -> p.name).collect(Collectors.toList());
+        List<String> inHome = Home.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
+        inLms.removeAll(inHome);
+        return inLms.toString();
+    }
+
+    public static String getNotInHomeFirst() {
+        List<String> inLms = server.players.stream().map(p -> p.name).collect(Collectors.toList());
+        List<String> inHome = Home.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
+        inLms.removeAll(inHome);
+        if (inLms.size() == 0 ) return "--";
+        else return inLms.get(0).toString();
+    }
+
 }

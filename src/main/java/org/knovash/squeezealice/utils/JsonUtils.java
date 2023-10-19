@@ -1,5 +1,6 @@
 package org.knovash.squeezealice.utils;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JavaType;
@@ -24,6 +25,9 @@ public class JsonUtils {
     private static ObjectWriter objectWriter = objectMapper.writer(new DefaultPrettyPrinter());
 
     public static String pojoToJson(Object pojo) {
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         try {
 //            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo);
             return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo).replace("\\", "");// для State переделанного в String
@@ -135,6 +139,9 @@ public class JsonUtils {
     public static String jsonGetValue(String json, String valueName) {
 //        log.info("JSON: " + json);
 //        log.info("VALUE NAME: " + valueName);
+
+        if (!json.contains(valueName)) return null;
+
         JsonNode jsonNode = null;
         try {
             jsonNode = objectMapper.readTree(json);
@@ -147,6 +154,8 @@ public class JsonUtils {
 //        log.info("textValue: " + jsonNode.findValue(valueName).textValue());
 //        log.info("asText: " + jsonNode.findValue(valueName).asText());
 //        log.info("toString: " + jsonNode.findValue(valueName).toString());
+
+
         result = jsonNode.findValue(valueName).asText();
 //        log.info("VALUE: " + result);
         return result;
