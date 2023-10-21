@@ -31,12 +31,7 @@ public class Player {
     public Integer volume_alice_high;
     public Map<Integer, Integer> timeVolume;
     public String lastPath;
-
-    public Integer fakeVolume;
-    public Integer fakeChannel;
-    public boolean fakePlayPause;
-    public boolean fakeMute;
-    public boolean on_off;
+    public LocalTime lastPlayTime;
 
     public static String lastStrPath;
     public static String lastPathGlobal;
@@ -166,6 +161,7 @@ public class Player {
         String status = Fluent.postGetStatus(Requests.pause(this.name).toString());
         log.info("SATUS: " + status);
         this.saveLastPath();
+        this.saveLastTimeIfPlay();
         return this;
     }
 
@@ -320,6 +316,16 @@ public class Player {
 
     public void remove() {
         server.players.remove(this);
+    }
+
+    public Player saveLastTime() {
+        this.lastPlayTime = LocalTime.now();
+        return this;
+    }
+
+    public Player saveLastTimeIfPlay() {
+        if (this.mode().equals("play")) this.lastPlayTime = LocalTime.now();
+        return this;
     }
 
     @Override

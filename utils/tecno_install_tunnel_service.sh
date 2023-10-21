@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # sudo chmod +x *.sh
 sudo systemctl stop squeeze-tunnel.service
-cd /root
+#cd /root
 sudo cp squeeze-tunnel.service /lib/systemd/system/
+sudo systemctl daemon-reload
 sudo systemctl enable squeeze-tunnel.service
 sudo systemctl daemon-reload
 sudo systemctl start squeeze-tunnel.service

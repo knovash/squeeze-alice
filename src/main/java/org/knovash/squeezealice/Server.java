@@ -10,6 +10,7 @@ import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InaccessibleObjectException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,10 +81,11 @@ public class Server {
                 server = JsonUtils.jsonFileToPojoTrows("server.json", Server.class);
                 log.info("PLAYERS:");
                 log.info(server.players);
-            } catch (IOException e) {
+            } catch (IOException | InaccessibleObjectException e) {
                 log.info("ERROR READ server.json");
                 log.info(e);
             }
+
         } else {
             log.info("FILE NOT FOUND server.json");
         }
