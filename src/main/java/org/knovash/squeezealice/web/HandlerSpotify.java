@@ -3,7 +3,7 @@ package org.knovash.squeezealice.web;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.requests.Html;
+import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.utils.HttpUtils;
 
 import java.io.IOException;
@@ -20,8 +20,10 @@ public class HandlerSpotify implements HttpHandler {
         String path = httpExchange.getRequestURI().getPath();
         String host = HttpUtils.getHeaderValue(httpExchange, "Host");
         log.info("REQUEST " + method + " " + "http://" + host + path);
+        log.info(Spotify.client_id);
+        log.info(Spotify.client_secret);
 
-        response = Html.formSpotifyLogin;
+        response = Html.formSpotifyLogin();
 
         log.info("WEB RESPONSE OK");
         httpExchange.sendResponseHeaders(200, response.getBytes().length);

@@ -21,6 +21,8 @@ import java.util.Base64;
 public class Spotify {
 
     public static String bearerToken;
+    public static String client_id = "---------------------";
+    public static String client_secret = "---------------------";
     public static SpotifyCredentials sc = new SpotifyCredentials();
 
     public static String getBearerToken(String clientId, String clientSecret) {

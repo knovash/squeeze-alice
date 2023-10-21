@@ -4,7 +4,7 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.NewDevice;
 import org.knovash.squeezealice.spotify.SpotifyUtils;
 import org.knovash.squeezealice.utils.HttpUtils;
-import org.knovash.squeezealice.requests.Html;
+import org.knovash.squeezealice.web.Html;
 import org.knovash.squeezealice.utils.Utils;
 
 import java.util.HashMap;
@@ -127,7 +127,8 @@ public class Switch {
                 break;
             case ("cred"):
                 log.info("CREDENTIALS");
-                actionStatus = SpotifyUtils.credentials(parameters);
+                SpotifyUtils.credentials(parameters);
+                actionStatus = Html.formSpotifyLogin();
                 break;
             case ("backup"):
                 log.info("BACKUP SERVER");

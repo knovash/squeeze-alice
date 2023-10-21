@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.requests;
+package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.spotify.Spotify;
@@ -45,36 +45,41 @@ public class Html {
 return iii;
     }
 
-    public static String formSpotifyLogin = "<!DOCTYPE html><html lang=\"en\">" +
-            "<head><meta charset=\"UTF-8\" />" +
-            "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" +
-            "  <link rel=\"stylesheet\" href=\"style.css\" />" +
-            "  <title>Browser</title>" +
-            "</head>" +
-            "<body>" +
-            "<p><a href=\"/\">Home</a></p>" +
-            "  <h1>Spotify credentials</h1>" +
-            "  <form action=\"/cmd\" method=\"get\">" +
-            "   <div>" +
-            "     <br><label for=\"id\">spot_client_id</label>" +
-            "     <br><input name=\"id\" id=\"id\" value=\"" +
-            Spotify.sc.clientId.substring(0,4) + "*****"+
-            "\" />" +
-            "   </div>" +
-            "   <div>" +
-            "     <br><label for=\"secret\">spot_client_secret</label>" +
-            "     <br><input name=\"secret\" id=\"secret\" value=\"" +
-            Spotify.sc.clientSecret.substring(0,4) + "*****"+
-            "\" />" +
-            "   </div>" +
-            "   <input type=\"hidden\" name=\"action\" id=\"action\" value=\"cred\">" +
-            "   <div>" +
-            "     <br><button>submit</button>" +
-            "   </div>" +
-            " </form>" +
-            "<p><a href=\"/\">Home</a></p>" +
-            "<script src=\"script.js\"></script>" +
-            "</body></html>";
+
+    public static String  formSpotifyLogin() {
+        String page = "<!DOCTYPE html><html lang=\"en\">" +
+                "<head><meta charset=\"UTF-8\" />" +
+                "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" +
+                "  <link rel=\"stylesheet\" href=\"style.css\" />" +
+                "  <title>Browser</title>" +
+                "</head>" +
+                "<body>" +
+                "<p><a href=\"/\">Home</a></p>" +
+                "  <h1>Spotify credentials</h1>" +
+                "  <form action=\"/cmd\" method=\"get\">" +
+                "   <div>" +
+                "     <br><label for=\"id\">spot_client_id</label>" +
+                "     <br><input name=\"id\" id=\"id\" value=\"" +
+            Spotify.client_id.substring(0,4) + "*****"+
+                "\" />" +
+                "   </div>" +
+                "   <div>" +
+                "     <br><label for=\"secret\">spot_client_secret</label>" +
+                "     <br><input name=\"secret\" id=\"secret\" value=\"" +
+                Spotify.client_secret.substring(0, 4) + "*****" +
+                "\" />" +
+                "   </div>" +
+                "   <input type=\"hidden\" name=\"action\" id=\"action\" value=\"cred\">" +
+                "   <div>" +
+                "     <br><button>submit</button>" +
+                "   </div>" +
+                " </form>" +
+                "<p><a href=\"/\">Home</a></p>" +
+                "<script src=\"script.js\"></script>" +
+                "</body></html>";
+
+return page;
+    }
 
     public static String testCommands = "<!DOCTYPE html><html lang=\"en\">" +
             "<head><meta charset=\"UTF-8\" />" +
