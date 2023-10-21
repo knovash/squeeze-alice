@@ -11,14 +11,21 @@ public class Action {
 
     // Алиса, музыку громче\тише
     public static void volume(Player player, String value) {
+        Integer step;
         Integer volumeAlicePrevious = player.volume_alice_previous;
         Integer volumeAliceCurrent = Integer.valueOf(value);
-        Integer step = player.volume_step;
+        Integer playerCurrentVolume = Integer.valueOf(player.volume());
+        if (playerCurrentVolume == null) {
+            log.info("LMS NO RESPONSE");
+            return;
+        }
+        step = player.volume_step;
+        if (playerCurrentVolume < 10) step = 1 + Math.round(playerCurrentVolume / 2);
         log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name + " current=" + volumeAliceCurrent + " last=" + volumeAlicePrevious + " low=" + player.volume_alice_low + " hi=" + player.volume_alice_high);
         if ((volumeAliceCurrent > volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_high))) {
             player.volume("+" + step);
         }
-        if ((volumeAliceCurrent < volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_low))) {
+        if (playerCurrentVolume > 1 && ((volumeAliceCurrent < volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_low)))) {
             player.volume("-" + step);
         }
         player.volume_alice_previous = volumeAliceCurrent;
@@ -31,14 +38,15 @@ public class Action {
         log.info("CHANNEL: " + channel + " PLAYER: " + player.name);
         if (player.mode().equals("play")) {
             log.info("PLAYER: " + player.name + " PLAY CHANNEL: " + channel);
-            player.play(channel);
+            player.play(channel).saveLastTimeIfPlay();
             return;
         }
         log.info("PLAYER: " + player.name + " UNSYNC, WAKE, PLAY CHANNEL: " + channel);
         player
                 .unsync()
                 .wakeAndSet()
-                .play(channel);
+                .play(channel)
+                .saveLastTimeIfPlay();
     }
 
     // Алиса, включи музыку/колонку
@@ -56,7 +64,7 @@ public class Action {
         // играет    +  есть играющей = подключить к играющей
         if (Objects.equals(mode, "play") && playing != null) {
             log.info("SYNC TO PLAYING");
-            player.sync(playing.name);
+            player.sync(playing.name).saveLastTime();
         }
         // не играет +  нет играющей  = вэйк, сет, ластплэй
         if (!Objects.equals(mode, "play") && playing == null) {
@@ -64,7 +72,8 @@ public class Action {
             player
                     .unsync()
                     .wakeAndSet()
-                    .playLast();
+                    .playLast()
+                    .saveLastTime();
         }
         // не играет +  есть играющей = вэйк, сет, подключить к играющей
         if (!Objects.equals(mode, "play") && playing != null) {
@@ -72,8 +81,10 @@ public class Action {
             player
                     .unsync()
                     .wakeAndSet()
-                    .sync(playing.name);
+                    .sync(playing.name)
+                    .saveLastTime();
         }
+        player.saveLastTimeIfPlay();
     }
 
     // Алиса, выключи музыку - выключиться музыка везде

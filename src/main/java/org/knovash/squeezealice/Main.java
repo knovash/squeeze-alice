@@ -1,9 +1,15 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.provider.Home;
+import org.knovash.squeezealice.provider.pojo.Device;
 import org.knovash.squeezealice.utils.ArgsParser;
+import org.knovash.squeezealice.utils.JsonUtils;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 @Log4j2
 public class Main {
@@ -22,13 +28,14 @@ public class Main {
         log.info("LMS IP: " + lmsIP);
         log.info("lmsServer: " + lmsServer);
         log.info("port: " + port);
+
         log.info("READ CONFIG FROM ARGS");
         ArgsParser.parse(args);
         log.info("LMS IP: " + lmsIP);
         log.info("lmsServer: " + lmsServer);
         log.info("port: " + port);
 
-        if(!Utils.isLms(lmsIP)) {
+        if (!Utils.isLms(lmsIP)) {
             log.info("CONFIG FROM PROPERTIES AND ARGS NOT VALID LMS SERVER");
             lmsIP = Utils.searchLmsIp();
             try {
@@ -41,6 +48,17 @@ public class Main {
         log.info("LMS IP: " + lmsIP);
         lmsServer = "http://" + lmsIP + ":" + lmsPort + "/jsonrpc.js/";
         log.info("LMS SERVER: " + lmsServer);
+
+        log.info("READ ALICE SMART HOME DEVICES from file home_devices.json");
+        List<Device> devices = JsonUtils.jsonFileToList("home_devices.json", Device.class);
+        Home.devices = new LinkedList<>();
+        if (devices != null) Home.devices.addAll(devices);
+        log.info("HOME DEVICE: " + Home.devices.size());
+        log.info("HOME DEVICE: " + Home.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList()));
+//        NewDevice.create("колонка", "HomePod", "Гостиная");
+//        NewDevice.create("колонка", "JBL black", "Спальня");
+//        NewDevice.create("колонка", "JBL white", "Веранда");
+
         log.info("  ---+++===[ START SERVER ]===+++--- ");
         server = new Server();
         server.readServerFile();

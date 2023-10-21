@@ -1,8 +1,10 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.provider.HttpUtils;
+import org.knovash.squeezealice.requests.Html;
 
-import java.util.*;
+import java.util.HashMap;
 
 import static org.knovash.squeezealice.Utils.altNames;
 
@@ -14,15 +16,7 @@ public class Switch {
         String actionStatus;
         String name = null;
         Player player = null;
-
-        HashMap<String, String> parameters = new HashMap<>();
-        Optional.ofNullable(Arrays.asList(query.split("&"))).orElseGet(Collections::emptyList)
-                .stream()
-                .filter(s -> s.contains("="))
-                .map(s -> s.split("="))
-                .filter(Objects::nonNull)
-                .forEach(s -> parameters.put(s[0], s[1]));
-
+        HashMap<String, String> parameters = HttpUtils.getQueryParameters(query);
         if (!parameters.containsKey("action")) {
             log.info("NO ACTION IN QUERY");
             return query + " BAD REQUEST try /cmd?action=state";
@@ -130,11 +124,27 @@ public class Switch {
                 break;
             case ("cred"):
                 log.info("CREDENTIALS");
-                actionStatus = Utils.credentials(parameters);
+                actionStatus = SpotifyUtils.credentials(parameters);
                 break;
             case ("backup"):
                 log.info("BACKUP SERVER");
                 actionStatus = Utils.backupServer(parameters);
+                break;
+            case ("speaker_create"):
+                log.info("CREATE SPEAKER");
+                NewDevice.create(parameters);
+                actionStatus = Html.formSpeakers();
+                break;
+            case ("speaker_edit"):
+                log.info("EDIT SPEAKER");
+                NewDevice.edit(parameters);
+                log.info("EDIT OK");
+                actionStatus = Html.formSpeakers();
+                break;
+            case ("speaker_remove"):
+                log.info("REMOVE SPEAKER");
+                NewDevice.remove(parameters);
+                actionStatus = Html.formSpeakers();
                 break;
             default:
                 log.info("ACTION NOT FOUND: " + action);

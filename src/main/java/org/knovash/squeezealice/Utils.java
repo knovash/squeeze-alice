@@ -1,15 +1,12 @@
 package org.knovash.squeezealice;
 
-import com.sun.net.httpserver.HttpExchange;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.knovash.squeezealice.utils.JsonUtils;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -155,14 +152,6 @@ public class Utils {
         return "REMOVED time:" + time;
     }
 
-    public static String credentials(HashMap<String, String> parameters) {
-        String id = parameters.get("id");
-        String secret = parameters.get("secret");
-        if (id == null || secret == null) return "CRED ERROR";
-        Spotify.createCredFile(id, secret);
-        return "CRED SET";
-    }
-
     public static String backupServer(HashMap<String, String> parameters) {
         String stamp = LocalDate.now().toString() + "-" + LocalTime.now().toString();
         server.writeServerFile("server-backup-" + stamp);
@@ -178,42 +167,6 @@ public class Utils {
     public static void favoriteNext(Player player, HashMap<String, String> parameters) {
         Integer time = Integer.valueOf(parameters.get("time"));
         player.timeVolume.remove(time);
-    }
-
-    public static String httpExchangeGetJsonBody(HttpExchange httpExchange) throws IOException {
-        log.info("READ JSON BODY");
-        String command = null;
-        InputStreamReader isr = new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
-        BufferedReader br = new BufferedReader(isr);
-        int b;
-        StringBuilder buf = new StringBuilder(512);
-        while ((b = br.read()) != -1) {
-            buf.append((char) b);
-        }
-        br.close();
-        isr.close();
-        String json = buf.toString();
-        log.info("BODY JSON: " + json);
-        return json;
-    }
-
-    public static String jsonGetValue(String json, String valueName) throws IOException {
-        String value;
-        log.info("BODY JSON: " + json);
-        value = JsonUtils.jsonGetValue(json, valueName);
-        log.info("COMMAND " + value);
-        return value;
-    }
-
-    public static HashMap<String, String> getQueryParameters(String query) {
-        HashMap<String, String> parameters = new HashMap<>();
-        Optional.ofNullable(Arrays.asList(query.split("&"))).orElseGet(Collections::emptyList)
-                .stream()
-                .filter(s -> s.contains("="))
-                .map(s -> s.split("="))
-                .filter(Objects::nonNull)
-                .forEach(s -> parameters.put(s[0], s[1]));
-        return parameters;
     }
 
     public static boolean isLms(String ip) {
@@ -291,7 +244,6 @@ public class Utils {
         log.info("LMS IP: " + lmsIp);
 
         if (lmsIp != null) JsonUtils.valueToJsonFile("lms_ip", lmsIp);
-
         return lmsIp;
     }
 

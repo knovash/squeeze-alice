@@ -1,15 +1,17 @@
 [Unit]
 Description=Tunnel
 #After=multi-user.target
-After=network.target
-After=network-online.target
+#After=network.target
+#After=network-online.target
 [Service]
 Type=simple
 User=root
 #Restart=yes
-Restart=on-failure
-#Restart=always
-#RestartSec=3
-ExecStart= /root/tunnel.sh
+#Restart=on-failure
+Restart=always
+RestartSec=2
+#ExecStart = lt --port 8010 --subdomain squeeze
+ExecStart = ngrok http --domain=unicorn-neutral-badly.ngrok-free.app 8010
+#ExecStart= /home/konstantin/tunnel.sh
 [Install]
 WantedBy=multi-user.target

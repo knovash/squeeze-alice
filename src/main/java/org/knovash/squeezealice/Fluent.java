@@ -86,4 +86,60 @@ public class Fluent {
         }
         return response;
     }
+
+
+    public static HttpResponse httpPostJsondToUriGetResponse(String uri) {
+//        log.info("REQUEST URI: " + uri);
+        HttpResponse response = null;
+        try {
+            response = Request.Head(uri)
+                    .connectTimeout(1000)
+                    .socketTimeout(1000)
+                    .execute()
+                    .returnResponse();
+        } catch (IOException e) {
+//            throw new RuntimeException(e);
+        }
+        return response;
+    }
+
+
+    public static Content httpPostJsonToUriGetContent(String uri, int rCode, String json) {
+        log.info("REQUEST POST JSON TO URI: " + uri);
+        log.info("JSON: " + json);
+        Content content = null;
+        try {
+            content = Request.Post(uri).bodyString(json, ContentType.APPLICATION_JSON)
+                    .connectTimeout(2000)
+                    .socketTimeout(2000)
+                    .execute()
+                    .returnContent();
+        } catch (IOException e) {
+            log.info("ERROR " + e);
+        }
+        return content;
+    }
+
+    public static Content httpGetQueryToUri(String uri, String query) {
+        log.info("REQUEST POST JSON TO URI: " + uri);
+        log.info("JSON: " + query);
+        uri = uri + query;
+        Content content = null;
+        try {
+            content = Request.Get(uri).bodyString(query, ContentType.APPLICATION_JSON)
+                    .connectTimeout(2000)
+                    .socketTimeout(2000)
+                    .execute()
+                    .returnContent();
+        } catch (IOException e) {
+            log.info("ERROR " + e);
+        }
+        return content;
+    }
 }
+
+//  response = Request.Post("https://accounts.spotify.com/api/token?grant_type=client_credentials")
+//          .setHeader("Authorization", "Basic " + base64)
+//          .setHeader("Content-Type", "application/x-www-form-urlencoded")
+//          .execute();
+//          json = response.returnContent().asString();

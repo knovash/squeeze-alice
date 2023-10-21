@@ -1,11 +1,13 @@
 package org.knovash.squeezealice.utils;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,14 +25,19 @@ public class JsonUtils {
     private static ObjectWriter objectWriter = objectMapper.writer(new DefaultPrettyPrinter());
 
     public static String pojoToJson(Object pojo) {
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         try {
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo);
+//            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo);
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo).replace("\\", "");// для State переделанного в String
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static <T> T jsonToPojo(String json, Class<T> clazz) {
+//        log.info("JSON TO POJO: " + json);
         try {
             return objectMapper.readValue(json, clazz);
         } catch (JsonProcessingException e) {
@@ -110,6 +117,16 @@ public class JsonUtils {
         }
     }
 
+//    public static <K, V> Map<K, V> jsonToMap(String json, Class<K> clazzKey, Class<V> clazzValue) {
+//        log.info("JSON TO MAP");
+//        JavaType type = objectMapper.getTypeFactory().constructMapType(Map.class, clazzKey, clazzValue);
+//        try {
+//            return objectMapper.readValue(json, type);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
     public static <K, V> void mapToJsonFile(Map<K, V> map, String fileName) {
         File file = new File(fileName);
         try {
@@ -119,19 +136,42 @@ public class JsonUtils {
         }
     }
 
-    public static String jsonGetValue(String json, String value) {
-        log.info("JSON: " + json);
-        log.info("VALUE: " + value);
+    public static String jsonGetValue(String json, String valueName) {
+//        log.info("JSON: " + json);
+//        log.info("VALUE NAME: " + valueName);
+
+        if (!json.contains(valueName)) return null;
+
         JsonNode jsonNode = null;
         try {
             jsonNode = objectMapper.readTree(json);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+//        log.info("NODE: " + jsonNode);
         String result = null;
-        result = jsonNode.findValue(value).textValue();
-        log.info("NODE VALUE: " + result);
+//        log.info("findValue: " + jsonNode.findValue(valueName));
+//        log.info("textValue: " + jsonNode.findValue(valueName).textValue());
+//        log.info("asText: " + jsonNode.findValue(valueName).asText());
+//        log.info("toString: " + jsonNode.findValue(valueName).toString());
+
+
+        result = jsonNode.findValue(valueName).asText();
+//        log.info("VALUE: " + result);
         return result;
+    }
+
+    public static String jsonGetNode(String json) {
+        JsonNode jsonNode = null;
+        try {
+            jsonNode = objectMapper.readTree(json);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+//        jsonNode.get("payload").get("devices").get(0).get("capabilities").get(0).get("state").
+
+        return "NODE " + jsonNode.get("payload").get("devices").get(0).get("capabilities").get(0).get("state");
     }
 
     public static void valueToJsonFile(String valueName, String value) {
@@ -157,5 +197,21 @@ public class JsonUtils {
     static private class ValuePojo {
 
         public String value;
+    }
+
+    public static String replaceState(String json, String newState) {
+        JsonNode jsonNode = null;
+        try {
+            jsonNode = objectMapper.readTree(json);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        ((ObjectNode) jsonNode
+                .get("payload")
+                .get("devices").get(0)
+                .get("capabilities").get(0))
+                .put("state", newState);
+        log.info(jsonNode);
+        return String.valueOf(jsonNode);
     }
 }

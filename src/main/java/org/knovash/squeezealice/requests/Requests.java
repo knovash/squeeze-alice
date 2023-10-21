@@ -22,6 +22,10 @@ public class Requests {
         return RequestToLms.create(player, new String[]{"pause", "1"});
     }
 
+    public static RequestToLms play_pause(String player) {
+        return RequestToLms.create(player, new String[]{"pause"});
+    }
+
     public static RequestToLms play(String player) {
         return RequestToLms.create(player, new String[]{"pause", "0"});
     }

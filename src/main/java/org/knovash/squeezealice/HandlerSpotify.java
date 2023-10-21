@@ -13,17 +13,12 @@ public class HandlerSpotify implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        String head;
-        String query;
         String response;
         log.info("");
-        log.info(" ---===[ REQUEST FROM Kuzja ]===---");
-        head = httpExchange.getRequestHeaders().values().toString();
-        query = httpExchange.getRequestURI().getQuery();
-        log.info("HEAD: " + head);
-        log.info("QUERY: " + query);
-        response = Html.form;
-        log.info("RESPONSE: " + response);
+        log.info(" ---===[ REQUEST /spotify ]===---");
+        log.info("PATH: " + httpExchange.getRequestURI().getPath());
+        response = Html.formSpotifyLogin;
+        log.info("OK");
         httpExchange.sendResponseHeaders(200, response.getBytes().length);
         OutputStream outputStream = httpExchange.getResponseBody();
         outputStream.write(response.getBytes());
