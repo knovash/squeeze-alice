@@ -3,6 +3,7 @@ package org.knovash.squeezealice.provider;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.utils.HttpUtils;
 
 import java.io.IOException;
 
@@ -12,8 +13,10 @@ public class HandlerCheck implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         log.info("");
-        log.info(" ---===[ REQUEST HEAD https://example.com/v1.0 ]===---");
-        log.info("PATH: " + httpExchange.getRequestURI().getPath());
+        String method = httpExchange.getRequestMethod();
+        String path = httpExchange.getRequestURI().getPath();
+        String host = HttpUtils.getHeaderValue(httpExchange, "Host");
+        log.info("REQUEST " + method + " " + "http://" + host + path);
         // получить хедеры
         log.info("HEADERS: " + httpExchange.getRequestHeaders().entrySet());
         String xRequestId = HttpUtils.getHeaderValue(httpExchange, "X-request-id");

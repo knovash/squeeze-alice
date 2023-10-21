@@ -5,7 +5,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
-import org.knovash.squeezealice.pojo.lms.ResponseFromLms;
+import org.knovash.squeezealice.pojo.lms_pojo.ResponseFromLms;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;

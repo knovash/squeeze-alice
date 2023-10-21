@@ -5,11 +5,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.requests.Requests;
-import org.knovash.squeezealice.pojo.lms.ResponseFromLms;
+import org.knovash.squeezealice.pojo.lms_pojo.ResponseFromLms;
 
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.knovash.squeezealice.Main.silence;
 import static org.knovash.squeezealice.Main.server;
 
@@ -219,47 +221,50 @@ public class Player {
 
     public Player playLast() {
         log.info("PLAY LAST");
-        log.info("TRY PATH: " + this.path());
-        log.info("TRY LAST PATH: " + this.lastPath);
-        log.info("TRY GLOBAL LAST PATH: " + Player.lastPathGlobal);
+        String thisPath = this.path();
+        log.info("TRY PATH: " + thisPath);
+        String thisLastPath = this.lastPath;
+        log.info("TRY LAST PATH: " + thisLastPath);
+        String globalLastPath = Player.lastPathGlobal;
+        log.info("TRY GLOBAL LAST PATH: " + globalLastPath);
 
-        if (this.path() == null ||
-                this.path().equals(silence) ||
-                this.path().contains("tishini") ||
-                this.path().contains("silence") ||
-                this.path().contains("korot") ||
-                this.path().contains("spotify")
+        if (thisPath == null ||
+                thisPath.equals(silence) ||
+                thisPath.contains("tishini") ||
+                thisPath.contains("silence") ||
+                thisPath.contains("korot") ||
+                thisPath.contains("spotify")
         ) {
-            log.info("SKIP PATH: " + this.path());
+            log.info("SKIP PATH: " + thisPath);
         } else {
-            log.info("PRESS BUTTON PLAY: " + this.path());
+            log.info("PRESS BUTTON PLAY: " + thisPath);
             this.play();
             return this;
         }
-        if (this.lastPath == null ||
-                this.lastPath.equals(silence) ||
-                this.lastPath.contains("tishini") ||
-                this.lastPath.contains("silence") ||
-                this.lastPath.contains("korot") ||
-                this.lastPath.contains("spotify")
+        if (thisLastPath == null ||
+                thisLastPath.equals(silence) ||
+                thisLastPath.contains("tishini") ||
+                thisLastPath.contains("silence") ||
+                thisLastPath.contains("korot") ||
+                thisLastPath.contains("spotify")
         ) {
-            log.info("SKIP LAST PATH: " + this.lastPath);
+            log.info("SKIP LAST PATH: " + thisLastPath);
         } else {
-            log.info("PLAY PLAYER LAST PATH: " + this.lastPath);
-            this.play(this.lastPath);
+            log.info("PLAY PLAYER LAST PATH: " + thisLastPath);
+            this.play(thisLastPath);
             return this;
         }
         if (Player.lastPathGlobal == null ||
-                Player.lastPathGlobal.equals(silence) ||
-                Player.lastPathGlobal.contains("tishini") ||
-                Player.lastPathGlobal.contains("korot") ||
-                Player.lastPathGlobal.contains("silence") ||
-                Player.lastPathGlobal.contains("spotify")
+                globalLastPath.equals(silence) ||
+                globalLastPath.contains("tishini") ||
+                globalLastPath.contains("korot") ||
+                globalLastPath.contains("silence") ||
+                globalLastPath.contains("spotify")
         ) {
-            log.info("SKIP GLOBAL PATH: " + Player.lastPathGlobal);
+            log.info("SKIP GLOBAL PATH: " + globalLastPath);
         } else {
-            log.info("PLAY GLOBAL LAST PATH: " + Player.lastPathGlobal);
-            this.play(Player.lastPathGlobal);
+            log.info("PLAY GLOBAL LAST PATH: " + globalLastPath);
+            this.play(globalLastPath);
             return this;
         }
         log.info("PLAY FIRST FAVORITE");
@@ -268,16 +273,23 @@ public class Player {
     }
 
     public Player wakeAndSet() {
-        log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wake_delay);
-        this
-                .saveLastPath()
-                .playSilence()
-                .volume("-1")
-                .setVolumeByTime()
-                .waitForWake()
-                .volume("-1")
-                .setVolumeByTime()
-                .pause();
+        log.info("WAKE");
+
+        if (Action.timeExpired(this)) {
+            log.info("WAKE RUN");
+            log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wake_delay);
+            this
+                    .saveLastPath()
+                    .playSilence()
+                    .volume("-1")
+                    .setVolumeByTime()
+                    .waitForWake()
+                    .volume("-1")
+                    .setVolumeByTime()
+                    .pause();
+        } else {
+            log.info("WAKE SKIP");
+        }
         return this;
     }
 
@@ -319,12 +331,22 @@ public class Player {
     }
 
     public Player saveLastTime() {
-        this.lastPlayTime = LocalTime.now();
+        log.info("SAVE TIME");
+        this.lastPlayTime = LocalTime.now().truncatedTo(MINUTES);
+        log.info("LAST TIME: " + this.lastPlayTime.truncatedTo(MINUTES) + " " +
+                this.lastPlayTime.truncatedTo(MINUTES).equals(LocalTime.now().truncatedTo(MINUTES)) +
+                " TIME NOW: " + LocalTime.now().truncatedTo(MINUTES));
+        log.info("SAVE TIME OK");
         return this;
     }
 
     public Player saveLastTimeIfPlay() {
+        log.info("SAVE TIME");
+        log.info("PLAYER MODE " + this.mode());
+        log.info("PLAYER LAST TIME " + this.lastPlayTime);
+        this.lastPlayTime = LocalTime.now();
         if (this.mode().equals("play")) this.lastPlayTime = LocalTime.now();
+        log.info("PLAYER NOW TIME " + this.lastPlayTime);
         return this;
     }
 

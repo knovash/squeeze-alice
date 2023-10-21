@@ -1,10 +1,9 @@
 package org.knovash.squeezealice.requests;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.Spotify;
-import org.knovash.squeezealice.provider.Home;
+import org.knovash.squeezealice.spotify.Spotify;
+import org.knovash.squeezealice.provider.SmartHome;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,6 +46,37 @@ return iii;
     }
 
     public static String formSpotifyLogin = "<!DOCTYPE html><html lang=\"en\">" +
+            "<head><meta charset=\"UTF-8\" />" +
+            "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" +
+            "  <link rel=\"stylesheet\" href=\"style.css\" />" +
+            "  <title>Browser</title>" +
+            "</head>" +
+            "<body>" +
+            "<p><a href=\"/\">Home</a></p>" +
+            "  <h1>Spotify credentials</h1>" +
+            "  <form action=\"/cmd\" method=\"get\">" +
+            "   <div>" +
+            "     <br><label for=\"id\">spot_client_id</label>" +
+            "     <br><input name=\"id\" id=\"id\" value=\"" +
+            Spotify.sc.clientId.substring(0,4) + "*****"+
+            "\" />" +
+            "   </div>" +
+            "   <div>" +
+            "     <br><label for=\"secret\">spot_client_secret</label>" +
+            "     <br><input name=\"secret\" id=\"secret\" value=\"" +
+            Spotify.sc.clientSecret.substring(0,4) + "*****"+
+            "\" />" +
+            "   </div>" +
+            "   <input type=\"hidden\" name=\"action\" id=\"action\" value=\"cred\">" +
+            "   <div>" +
+            "     <br><button>submit</button>" +
+            "   </div>" +
+            " </form>" +
+            "<p><a href=\"/\">Home</a></p>" +
+            "<script src=\"script.js\"></script>" +
+            "</body></html>";
+
+    public static String testCommands = "<!DOCTYPE html><html lang=\"en\">" +
             "<head><meta charset=\"UTF-8\" />" +
             "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" +
             "  <link rel=\"stylesheet\" href=\"style.css\" />" +
@@ -165,13 +195,13 @@ return iii;
                 "<p><a href=\"/\">Home</a></p>" +
                 "  <h2>Колонки Logitech Media Server в Умном доме с Алисой</h2>" +
                 "<p>всего колонок подключено в Умный дом с Алисой: " +
-                Home.devices.size() +
+                SmartHome.devices.size() +
                 "</p>" +
                 "<p>" +
-                Home.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList()) +
+                SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList()) +
                 "</p>" +
 
-                join(Home.devices.stream()
+                join(SmartHome.devices.stream()
                         .map(d ->
                                 "<form action=\"/cmd\" method=\"get\">" +
                                         "<input type=\"hidden\" name=\"speaker_name_alice\" id=\"speaker_name_alice\" value=\"" + name + "\">" +
@@ -211,14 +241,14 @@ return iii;
 
     public static String getNotInHome() {
         List<String> inLms = server.players.stream().map(p -> p.name).collect(Collectors.toList());
-        List<String> inHome = Home.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
+        List<String> inHome = SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
         inLms.removeAll(inHome);
         return inLms.toString();
     }
 
     public static String getNotInHomeFirst() {
         List<String> inLms = server.players.stream().map(p -> p.name).collect(Collectors.toList());
-        List<String> inHome = Home.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
+        List<String> inHome = SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
         inLms.removeAll(inHome);
         if (inLms.size() == 0 ) return "--";
         else return inLms.get(0).toString();

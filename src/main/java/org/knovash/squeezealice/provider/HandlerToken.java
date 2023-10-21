@@ -3,6 +3,7 @@ package org.knovash.squeezealice.provider;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.utils.HttpUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -15,8 +16,10 @@ public class HandlerToken implements HttpHandler {
 
         String response;
         log.info("");
-        log.info(" ---===[ REQUEST /token ]===---");
-        log.info("PATH: " + httpExchange.getRequestURI().getPath());
+        String method = httpExchange.getRequestMethod();
+        String path = httpExchange.getRequestURI().getPath();
+        String host = HttpUtils.getHeaderValue(httpExchange, "Host");
+        log.info("REQUEST " + method + " " + "http://" + host + path);
         // получить хедеры
         log.info("HEADERS: " + httpExchange.getRequestHeaders().entrySet());
         String xRequestId = HttpUtils.getHeaderValue(httpExchange, "X-request-id");
@@ -32,7 +35,7 @@ public class HandlerToken implements HttpHandler {
         String query = httpExchange.getRequestURI().getQuery();
         log.info("QUERY: " + query);
 
-        response = " {\"access_token\":\"" + Home.bearerToken + "\",\"token_type\":\"bearer\",\"expires_in\":4294967296}";
+        response = " {\"access_token\":\"" + SmartHome.bearerToken + "\",\"token_type\":\"bearer\",\"expires_in\":4294967296}";
 
         log.info("RESPONSE: " + response);
         httpExchange.sendResponseHeaders(200, response.getBytes().length);

@@ -3,6 +3,7 @@ package org.knovash.squeezealice.provider;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.utils.HttpUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -14,8 +15,10 @@ public class HandlerTokenRefresh implements HttpHandler {
     public void handle(HttpExchange httpExchange) throws IOException {
         String response;
         log.info("");
-        log.info(" ---===[ REQUEST /refresh ]===---");
-        log.info("PATH: " + httpExchange.getRequestURI().getPath());
+        String method = httpExchange.getRequestMethod();
+        String path = httpExchange.getRequestURI().getPath();
+        String host = HttpUtils.getHeaderValue(httpExchange, "Host");
+        log.info("REQUEST " + method + " " + "http://" + host + path);
         // получить хедеры
         log.info("HEADERS: " + httpExchange.getRequestHeaders().entrySet());
         String xRequestId = HttpUtils.getHeaderValue(httpExchange, "X-request-id");

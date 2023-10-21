@@ -2,8 +2,11 @@ package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
 
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
+import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
@@ -36,9 +39,12 @@ public class Action {
     // Если колонка не играла установить громкость приемлемой для данного времени,
     public static void channel(Player player, Integer channel) {
         log.info("CHANNEL: " + channel + " PLAYER: " + player.name);
+//        timeExpired(player);
         if (player.mode().equals("play")) {
             log.info("PLAYER: " + player.name + " PLAY CHANNEL: " + channel);
-            player.play(channel).saveLastTimeIfPlay();
+            player
+                    .play(channel)
+                    .saveLastTimeIfPlay();
             return;
         }
         log.info("PLAYER: " + player.name + " UNSYNC, WAKE, PLAY CHANNEL: " + channel);
@@ -55,19 +61,21 @@ public class Action {
     // не играет +  нет играющей  = вэйк, сет, ластплэй
     // не играет +  есть играющей = вэйк, сет, подключить к играющей
     public static void turnOnMusicSpeaker(Player player) {
+        log.info("TURN ON SPEAKER");
         String mode = player.mode();
+        timeExpired(player);
         Player playing = Server.playingPlayer(player.name);
         // играет    +  нет играющей  = продолжить играть
-        if (Objects.equals(mode, "play") && playing == null) {
+        if (mode.equals("play") && playing == null) {
             log.info("STILL PLAYING");
         }
         // играет    +  есть играющей = подключить к играющей
-        if (Objects.equals(mode, "play") && playing != null) {
+        if (mode.equals("play") && playing != null) {
             log.info("SYNC TO PLAYING");
             player.sync(playing.name).saveLastTime();
         }
         // не играет +  нет играющей  = вэйк, сет, ластплэй
-        if (!Objects.equals(mode, "play") && playing == null) {
+        if (!mode.equals("play") && playing == null) {
             log.info("WAKE, SET, PLAY LAST");
             player
                     .unsync()
@@ -95,6 +103,7 @@ public class Action {
 
     // Алиса, выключи колонку - отключить и остановить колонку
     public static void turnOffSpeaker(Player player) {
+        log.info("TURN OFF SPEAKER");
         player
                 .unsync()
                 .pause();
@@ -121,5 +130,21 @@ public class Action {
         mac = mac.replace(":", "%3A");
         String uri = "http://" + lmsIP + ":9000/plugins/spotty/index.html?index=10.1&player=" + mac + "&sess=";
         Fluent.getUriGetStatus(uri);
+    }
+
+    public static boolean timeExpired(Player player) {
+//        return false;
+        log.info("CHECK IF TIME EXPIRED");
+        long delay = 10;
+        if (player.lastPlayTime == null) return true;
+        LocalTime playerTime = player.lastPlayTime.truncatedTo(MINUTES);
+        LocalTime nowTime = LocalTime.now().truncatedTo(MINUTES);
+        log.info("PLAYER LAST TIME: " + playerTime);
+        log.info("NOW TIME: " + nowTime);
+        log.info("TIME DIFFERENCE: " + playerTime.until(nowTime, MINUTES));
+        long diff = playerTime.until(nowTime, MINUTES);
+        log.info("LONG DIFFERENCE: " + diff);
+        log.info("EXP BOOL: " + (diff>delay));
+        return (diff>delay);
     }
 }
