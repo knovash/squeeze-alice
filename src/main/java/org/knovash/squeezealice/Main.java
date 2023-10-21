@@ -1,10 +1,11 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.Home;
+import org.knovash.squeezealice.provider.SmartHome;
 import org.knovash.squeezealice.provider.pojo.Device;
 import org.knovash.squeezealice.utils.ArgsParser;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.utils.Utils;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -51,10 +52,10 @@ public class Main {
 
         log.info("READ ALICE SMART HOME DEVICES from file home_devices.json");
         List<Device> devices = JsonUtils.jsonFileToList("home_devices.json", Device.class);
-        Home.devices = new LinkedList<>();
-        if (devices != null) Home.devices.addAll(devices);
-        log.info("HOME DEVICE: " + Home.devices.size());
-        log.info("HOME DEVICE: " + Home.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList()));
+        SmartHome.devices = new LinkedList<>();
+        if (devices != null) SmartHome.devices.addAll(devices);
+        log.info("HOME DEVICE: " + SmartHome.devices.size());
+        log.info("HOME DEVICE: " + SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList()));
 //        NewDevice.create("колонка", "HomePod", "Гостиная");
 //        NewDevice.create("колонка", "JBL black", "Спальня");
 //        NewDevice.create("колонка", "JBL white", "Веранда");

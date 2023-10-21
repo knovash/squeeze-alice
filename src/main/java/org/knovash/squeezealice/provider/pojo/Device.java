@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.Home;
+import org.knovash.squeezealice.provider.SmartHome;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +32,10 @@ public class Device {
 
     public Integer addToHome(Device device) {
         int id = 0;
-        if (Home.devices.size() != 0) id = Integer.parseInt(Home.devices.getLast().id) + 1;
-        log.info(Home.devices.stream().map(d -> d.room).collect(Collectors.toList()));
+        if (SmartHome.devices.size() != 0) id = Integer.parseInt(SmartHome.devices.getLast().id) + 1;
+        log.info(SmartHome.devices.stream().map(d -> d.room).collect(Collectors.toList()));
         device.id = String.valueOf(id);
-        Home.devices.add(device);
+        SmartHome.devices.add(device);
         return id;
     }
 }

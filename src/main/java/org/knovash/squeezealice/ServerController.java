@@ -2,6 +2,9 @@ package org.knovash.squeezealice;
 
 import com.sun.net.httpserver.HttpServer;
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.handler.HandlerAlice;
+import org.knovash.squeezealice.handler.HandlerKuzja;
+import org.knovash.squeezealice.web.*;
 import org.knovash.squeezealice.provider.*;
 import org.knovash.squeezealice.provider.HandlerAction;
 import org.knovash.squeezealice.provider.HandlerQuery;
@@ -27,6 +30,7 @@ public class ServerController {
         server.createContext("/redirect", new HandlerRedirect());
         server.createContext("/spotify", new HandlerSpotify());
         server.createContext("/speakers", new HandlerSpeakers());
+        server.createContext("/testcmd", new HandlerTestCommands());
 
         server.createContext("/v1.0", new HandlerCheck());
         server.createContext("/v1.0/user/unlink", new HandlerUserUnlink());

@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.pojo.Payload;
 import org.knovash.squeezealice.provider.pojo.Response;
+import org.knovash.squeezealice.utils.HttpUtils;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
@@ -16,9 +17,10 @@ public class HandlerUserDevices implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         log.info("");
-        log.info(" ---===[ REQUEST GET https://example.com/v1.0/user/devices ]===---");
-        log.info("PATH: " + httpExchange.getRequestURI().getPath());
-        log.info("PATH: " + httpExchange.getRequestURI().getPath());
+        String method = httpExchange.getRequestMethod();
+        String path = httpExchange.getRequestURI().getPath();
+        String host = HttpUtils.getHeaderValue(httpExchange, "Host");
+        log.info("REQUEST " + method + " " + "http://" + host + path);
         // получить хедеры
         log.info("HEADERS: " + httpExchange.getRequestHeaders().entrySet());
         String xRequestId = HttpUtils.getHeaderValue(httpExchange, "X-request-id");
@@ -41,8 +43,8 @@ public class HandlerUserDevices implements HttpHandler {
         Response response = new Response();
         response.request_id = xRequestId;
         response.payload = new Payload();
-        response.payload.user_id = Home.user_id;
-        response.payload.devices = Home.devices;
+        response.payload.user_id = SmartHome.user_id;
+        response.payload.devices = SmartHome.devices;
 
         log.info("RESPONSE: " + response);
 
