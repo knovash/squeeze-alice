@@ -109,6 +109,13 @@ public class Action {
                 .pause();
     }
 
+    public static String toggleMusic(Player player) {
+        String mode = player.mode();
+        if (mode.equals("play")) turnOffSpeaker(player);
+        else turnOnMusicSpeaker(player);
+        return "MUSIC TOGGLE: " + mode;
+    }
+
     // Алиса, все тихо/громко
     public static void allLowOrHigh(String mute) {
         switch (mute) {
@@ -144,7 +151,7 @@ public class Action {
         log.info("TIME DIFFERENCE: " + playerTime.until(nowTime, MINUTES));
         long diff = playerTime.until(nowTime, MINUTES);
         log.info("LONG DIFFERENCE: " + diff);
-        log.info("EXP BOOL: " + (diff>delay));
-        return (diff>delay);
+        log.info("EXP BOOL: " + (diff > delay));
+        return (diff > delay);
     }
 }
