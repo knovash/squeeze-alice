@@ -13,12 +13,13 @@ public class DeviceActions {
         int id = Integer.parseInt(device.id);
         String value = device.capabilities.get(0).state.value;
         String name = SmartHome.getByDeviceId(id).customData.lmsName;
-        String relative = String.valueOf(device.capabilities.get(0).state.relative);
+//        String relative = String.valueOf(device.capabilities.get(0).state.relative);
+        Boolean relative = device.capabilities.get(0).state.relative;
         String type = device.capabilities.get(0).type;
         String instance = device.capabilities.get(0).state.instance;
         log.info("ID: " + id);
         log.info("VALUE: " + value);
-        log.info("RELATIVE: " + relative);
+        log.info("RELATIVE: " + relative); // boolean
         log.info("TYPE: " + type);
         log.info("INSTANCE: " + instance);
         log.info("NAME " + name);
@@ -26,16 +27,22 @@ public class DeviceActions {
         // обратиться к девайсу и изменить его состояние
         Player player = Server.playerByName(name);
         log.info("PLAYER: " + player);
+        log.info(relative);
         switch (instance) {
             case ("volume"):
                 log.info("VOLUME: " + value + " RELATIVE " + relative);
                 if (relative != null && relative.equals(true)) {
-                    log.info("VOLUME +" + value);
+                    log.info("VOLUME rel: +" + value);
                     player.volume("+" + value);
-                } else {
-                    log.info("VOLUME " + value);
+                }
+                if (relative != null && relative.equals(false)) {
+                    log.info("VOLUME abs: " + value);
                     player.volume(String.valueOf(value));
                 }
+//                else {
+//                    log.info("VOLUME " + value);
+//                    player.volume(String.valueOf(value));
+//                }
                 break;
             case ("channel"):
                 log.info("CHANNEL: " + value + " LAST CHANNEL: " + SmartHome.lastChannel);
