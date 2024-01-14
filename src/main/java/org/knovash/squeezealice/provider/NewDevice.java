@@ -1,11 +1,14 @@
 package org.knovash.squeezealice.provider;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.pojo.Capability;
-import org.knovash.squeezealice.provider.pojo.Device;
-import org.knovash.squeezealice.provider.pojo.Range;
+import org.knovash.squeezealice.provider.pojoUserDevices.Capability;
+import org.knovash.squeezealice.provider.pojoUserDevices.Device;
+import org.knovash.squeezealice.provider.pojoUserDevices.Range;
 import org.knovash.squeezealice.utils.JsonUtils;
 
+import java.text.Collator;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
@@ -23,13 +26,15 @@ public class NewDevice {
 
     public static String edit(HashMap<String, String> parameters) {
         log.info("PARAMETERS: " + parameters);
-        String speaker_name_alice = parameters.get("speaker_name_alice");
-        String speaker_name_lms = parameters.get("speaker_name_lms");
-        Integer id = Integer.valueOf(parameters.get("id"));
-        String room = parameters.get("room");
-        SmartHome.devices.get(id).name=speaker_name_alice;
-        SmartHome.devices.get(id).customData.lmsName=speaker_name_lms;
-        SmartHome.devices.get(id).room=room;
+        int index_old = Integer.parseInt(parameters.get("id_old"));
+        Device deviceNew = SmartHome.devices.get(index_old);
+        deviceNew.name = parameters.get("speaker_name_alice");
+        deviceNew.id = parameters.get("id");
+        deviceNew.room = parameters.get("room");
+        deviceNew.customData.lmsName = parameters.get("speaker_name_lms");
+        SmartHome.devices.remove(index_old);
+        SmartHome.devices.add(deviceNew);
+        SmartHome.devices.sort((d1, d2) -> d1.id.compareTo(d2.id));
         JsonUtils.listToJsonFile(SmartHome.devices, "home_devices.json");
         return "EDITED";
     }

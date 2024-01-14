@@ -3,7 +3,6 @@ package org.knovash.squeezealice;
 import lombok.extern.log4j.Log4j2;
 
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -39,7 +38,6 @@ public class Action {
     // Если колонка не играла установить громкость приемлемой для данного времени,
     public static void channel(Player player, Integer channel) {
         log.info("CHANNEL: " + channel + " PLAYER: " + player.name);
-//        timeExpired(player);
         if (player.mode().equals("play")) {
             log.info("PLAYER: " + player.name + " PLAY CHANNEL: " + channel);
             player
@@ -132,8 +130,8 @@ public class Action {
 
     // Алиса, включи Спотифай
     public static void turnOnSpotify(Player player) {
-        log.info("TURN ON SPOTIFY " + player.name + " MAC " + player.id);
-        String mac = player.id;
+        log.info("TURN ON SPOTIFY " + player.name + " MAC " + player.mac);
+        String mac = player.mac;
         mac = mac.replace(":", "%3A");
         String uri = "http://" + lmsIP + ":9000/plugins/spotty/index.html?index=10.1&player=" + mac + "&sess=";
         Fluent.getUriGetStatus(uri);

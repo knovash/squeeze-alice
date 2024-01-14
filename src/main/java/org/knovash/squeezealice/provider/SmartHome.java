@@ -2,7 +2,7 @@ package org.knovash.squeezealice.provider;
 
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.pojo.Device;
+import org.knovash.squeezealice.provider.pojoUserDevices.Device;
 
 import java.util.LinkedList;
 
@@ -29,4 +29,9 @@ public class SmartHome {
     public static boolean fakePlayPause = true;
     public static boolean fakeMute = false;
     public static boolean fakeOnOff = true;
+
+    public static Device getByDeviceId(int deviceId) {
+        String index = String.valueOf(deviceId);
+        return devices.stream().filter(d -> d.id.equals(index)).findFirst().get();
+    }
 }

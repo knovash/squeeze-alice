@@ -8,7 +8,6 @@ import org.knovash.squeezealice.requests.Requests;
 import org.knovash.squeezealice.pojo.lms_pojo.ResponseFromLms;
 
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -22,7 +21,7 @@ import static org.knovash.squeezealice.Main.server;
 public class Player {
 
     public String name;
-    public String id;
+    public String mac;
     public Integer volume_step;
     public Integer volume_alice_previous;
     public Integer volume_low;
@@ -38,9 +37,9 @@ public class Player {
     public static String lastStrPath;
     public static String lastPathGlobal;
 
-    public Player(String name, String id) {
+    public Player(String name, String mac) {
         this.name = name;
-        this.id = id;
+        this.mac = mac;
         this.volume_alice_previous = 1;
         this.volume_step = 5;
         this.volume_low = 10;
@@ -354,7 +353,7 @@ public class Player {
     public String toString() {
         return "\nPlayer{" +
                 "name='" + name + '\'' +
-                ", id='" + id + '\'' +
+                ", id='" + mac + '\'' +
                 '}';
     }
 
@@ -363,11 +362,11 @@ public class Player {
         if (this == o) return true;
         if (!(o instanceof Player)) return false;
         Player player = (Player) o;
-        return Objects.equals(getName(), player.getName()) && Objects.equals(getId(), player.getId());
+        return Objects.equals(getName(), player.getName()) && Objects.equals(getMac(), player.getMac());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getId());
+        return Objects.hash(getName(), getMac());
     }
 }

@@ -115,6 +115,9 @@ public class Switch {
             case ("state"):
                 log.info("SEND SERVER STATE");
                 actionStatus = Utils.state();
+            case ("home"):
+                log.info("SEND SERVER HOME");
+                actionStatus = Utils.home();
                 break;
             case ("time_volume_get"):
                 log.info("SEND TIME AND VOLUME");

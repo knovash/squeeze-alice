@@ -5,6 +5,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.Server;
+import org.knovash.squeezealice.provider.SmartHome;
 
 import java.io.File;
 import java.io.IOException;
@@ -100,6 +101,17 @@ public class Utils {
         return name;
     }
 
+    public static String getPlayerName(String name) {
+        log.info(name);
+        String finalName = name;
+        Optional<String> result = altNames.entrySet()
+                .stream()
+                .filter(entry -> finalName.equals(entry.getValue()))
+                .map(Map.Entry::getKey)
+                .findFirst();
+        return result.get();
+    }
+
     public static void altNameAdd(HashMap<String, String> parameters) {
 //        http://localhost:8001/cmd?action=alt_name_add&query_name=ggmm&lms_name=4
         String query_name = parameters.get("player");
@@ -133,6 +145,11 @@ public class Utils {
 
     public static String state() {
         String json = JsonUtils.pojoToJson(server);
+        return json;
+    }
+
+    public static String home() {
+        String json = JsonUtils.pojoToJson(SmartHome.devices);
         return json;
     }
 

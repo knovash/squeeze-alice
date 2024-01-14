@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.provider.pojo;
+package org.knovash.squeezealice.pojo.pojoActions;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CustomData {
-    public String lmsName;
+public class Capability {
+    public String type;
+    public State state;
 }

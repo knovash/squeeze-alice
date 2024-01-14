@@ -86,7 +86,6 @@ public class Server {
                 log.info("ERROR READ server.json");
                 log.info(e);
             }
-
         } else {
             log.info("FILE NOT FOUND server.json");
         }

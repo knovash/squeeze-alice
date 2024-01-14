@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.provider.pojo;
+package org.knovash.squeezealice.provider.pojoUserDevices;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
