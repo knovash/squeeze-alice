@@ -24,25 +24,25 @@ public class DeviceActions {
         log.info("INSTANCE: " + instance);
         log.info("NAME " + name);
 
+
         // обратиться к девайсу и изменить его состояние
         Player player = Server.playerByName(name);
         log.info("PLAYER: " + player);
         log.info(relative);
         switch (instance) {
             case ("volume"):
-                log.info("VOLUME: " + value + " RELATIVE " + relative);
                 if (relative != null && relative.equals(true)) {
-                    log.info("VOLUME rel: +" + value);
-                    player.volume("+" + value);
+                    log.info("VOLUME rel: " + value);
+                    if (value.contains("-")) {
+                        player.volume(value);
+                    } else {
+                        player.volume("+" + value);
+                    }
                 }
                 if (relative != null && relative.equals(false)) {
                     log.info("VOLUME abs: " + value);
-                    player.volume(String.valueOf(value));
+                    player.volume(value);
                 }
-//                else {
-//                    log.info("VOLUME " + value);
-//                    player.volume(String.valueOf(value));
-//                }
                 break;
             case ("channel"):
                 log.info("CHANNEL: " + value + " LAST CHANNEL: " + SmartHome.lastChannel);
