@@ -31,9 +31,7 @@ public class HandlerCheck implements HttpHandler {
         // получить кюри
         String query = httpExchange.getRequestURI().getQuery();
         log.info("QUERY: " + query);
-
         // ответить 200 OK
-
         httpExchange.sendResponseHeaders(200, 0);
         log.info("END");
     }

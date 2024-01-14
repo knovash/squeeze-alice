@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.provider.pojo;
+package org.knovash.squeezealice.provider.pojoUserDevices;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -38,4 +38,5 @@ public class Device {
         SmartHome.devices.add(device);
         return id;
     }
+
 }

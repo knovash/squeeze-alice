@@ -36,7 +36,6 @@ public class HandlerAlice implements HttpHandler {
         String query = httpExchange.getRequestURI().getQuery();
         log.info("QUERY: " + query);
 
-
         String response = "повторите";
         String command = JsonUtils.jsonGetValue(body, "command");
         log.info("COMMAND: " + command); // текст из диалога

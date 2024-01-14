@@ -3,6 +3,7 @@ package org.knovash.squeezealice.web;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.provider.SmartHome;
+import org.knovash.squeezealice.utils.Utils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,11 +43,11 @@ public class Html {
                         "<p><a href=\"/cmd?action=state\">/cmd?action=state - Show state</a></p>" +
                         "</body>" +
                         "</html>";
-return iii;
+        return iii;
     }
 
 
-    public static String  formSpotifyLogin() {
+    public static String formSpotifyLogin() {
         String page = "<!DOCTYPE html><html lang=\"en\">" +
                 "<head><meta charset=\"UTF-8\" />" +
                 "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" +
@@ -60,7 +61,7 @@ return iii;
                 "   <div>" +
                 "     <br><label for=\"id\">spot_client_id</label>" +
                 "     <br><input name=\"id\" id=\"id\" value=\"" +
-            Spotify.client_id.substring(0,4) + "*****"+
+                Spotify.client_id.substring(0, 4) + "*****" +
                 "\" />" +
                 "   </div>" +
                 "   <div>" +
@@ -78,7 +79,7 @@ return iii;
                 "<script src=\"script.js\"></script>" +
                 "</body></html>";
 
-return page;
+        return page;
     }
 
     public static String testCommands = "<!DOCTYPE html><html lang=\"en\">" +
@@ -94,13 +95,13 @@ return page;
             "   <div>" +
             "     <br><label for=\"id\">spot_client_id</label>" +
             "     <br><input name=\"id\" id=\"id\" value=\"" +
-            Spotify.sc.clientId.substring(0,4) + "*****"+
+            Spotify.sc.clientId.substring(0, 4) + "*****" +
             "\" />" +
             "   </div>" +
             "   <div>" +
             "     <br><label for=\"secret\">spot_client_secret</label>" +
             "     <br><input name=\"secret\" id=\"secret\" value=\"" +
-            Spotify.sc.clientSecret.substring(0,4) + "*****"+
+            Spotify.sc.clientSecret.substring(0, 4) + "*****" +
             "\" />" +
             "   </div>" +
             "   <input type=\"hidden\" name=\"action\" id=\"action\" value=\"cred\">" +
@@ -165,7 +166,6 @@ return page;
         text = text.replace("\n", "<br>");
 
 
-
         String page = "<!DOCTYPE html>" +
                 "<html lang=\"en\"><head>" +
                 "  <meta charset=\"UTF-8\" />" +
@@ -210,13 +210,22 @@ return page;
                         .map(d ->
                                 "<form action=\"/cmd\" method=\"get\">" +
                                         "<input type=\"hidden\" name=\"speaker_name_alice\" id=\"speaker_name_alice\" value=\"" + name + "\">" +
-                                        "<br><input name=\"speaker_name_lms\" id=\"speaker_name_lms\" value=\"" + d.customData.lmsName + "\" />" +
+                                        "<br>" +
+                                        "<input name=\"speaker_name_lms\" id=\"speaker_name_lms\" value=\"" + d.customData.lmsName + "\" />" +
                                         "<label for=\"speaker_name_lms\">Название колонки в Logitech Media Server</label>" +
-                                        "<br><input name=\"room\" id=\"room\" value=\"" + d.room + "\" />" +
-                                        "<label for=\"room\">Комната</label>" +
-                                        "<input type=\"hidden\" name=\"id\" id=\"id\" value=\"" + d.id + "\">" +
+                                        "<br>" +
+                                        "<input name=\"speaker_name_query\" id=\"speaker_name_query\" value=\"" + Utils.getPlayerName(d.customData.lmsName) + "\" />" +
+                                        "<label for=\"speaker_name_query\">Название колонки в query лучше не менять</label>" +
+                                        "<br>" +
+                                        "<input name=\"room\" id=\"room\" value=\"" + d.room + "\" />" +
+                                        "<label for=\"room\">Комната в УД Яндекс</label>" +
+                                        "<br>" +
+                                        "<input name=\"id\" id=\"id\" value=\"" + d.id + "\" />" +
+                                        "<label for=\"id\">ID колонки в УД Яндекс</label>" +
+                                        "<input type=\"hidden\" name=\"id_old\" id=\"id_old\" value=\"" + SmartHome.devices.indexOf(d) + "\" />" +
                                         "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"speaker_edit\">" +
-                                        "<br><button>save</button></form>" +
+                                        "<br>" +
+                                        "<button>save</button></form>" +
                                         "<form action=\"/cmd\" method=\"get\">" +
                                         "<input type=\"hidden\" name=\"id\" id=\"id\" value=\"" + d.id + "\">" +
                                         "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"speaker_remove\">" +
@@ -255,7 +264,7 @@ return page;
         List<String> inLms = server.players.stream().map(p -> p.name).collect(Collectors.toList());
         List<String> inHome = SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
         inLms.removeAll(inHome);
-        if (inLms.size() == 0 ) return "--";
+        if (inLms.size() == 0) return "--";
         else return inLms.get(0).toString();
     }
 
