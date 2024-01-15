@@ -30,6 +30,7 @@ public class ServerController {
         server.createContext("/redirect", new HandlerRedirect());
         server.createContext("/spotify", new HandlerSpotify());
         server.createContext("/speakers", new HandlerSpeakers());
+        server.createContext("/players", new HandlerPlayers());
         server.createContext("/testcmd", new HandlerTestCommands());
 
         server.createContext("/v1.0", new HandlerCheck());

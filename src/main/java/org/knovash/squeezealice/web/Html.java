@@ -16,8 +16,7 @@ public class Html {
     public static String name = "музыка";
 
     public static String index() {
-
-        String iii =
+        String page =
                 "<!DOCTYPE html>" +
                         "<html lang=\"en\"><head>" +
                         "<!doctype html>" +
@@ -36,14 +35,16 @@ public class Html {
                         "<body>" +
                         "<p><strong>Hellow! its LMS control</strong></p>" +
                         "<p><a href=\"/speakers\">Колонки LMS в Умном доме с Алисой</a></p>" +
+                        "<p><a href=\"/players\">Настройки колонок</a></p>" +
                         "<p><a href=\"/spotify\">Spotify логин</a></p>" +
                         "<p><a href=\"/cmd?action=log\">/cmd?action=log - Show log</a></p>" +
                         "<p><a href=\"/cmd?action=update\">/cmd?action=update - Update players</a></p>" +
                         "<p><a href=\"/cmd?action=backup\">/cmd?action=backup - Backup server state</a></p>" +
                         "<p><a href=\"/cmd?action=state\">/cmd?action=state - Show state</a></p>" +
+                        "<p><a href=\"/cmd?action=players\">/cmd?action=players - Show players</a></p>" +
                         "</body>" +
                         "</html>";
-        return iii;
+        return page;
     }
 
 
@@ -81,37 +82,6 @@ public class Html {
 
         return page;
     }
-
-    public static String testCommands = "<!DOCTYPE html><html lang=\"en\">" +
-            "<head><meta charset=\"UTF-8\" />" +
-            "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" +
-            "  <link rel=\"stylesheet\" href=\"style.css\" />" +
-            "  <title>Browser</title>" +
-            "</head>" +
-            "<body>" +
-            "<p><a href=\"/\">Home</a></p>" +
-            "  <h1>Spotify credentials</h1>" +
-            "  <form action=\"/cmd\" method=\"get\">" +
-            "   <div>" +
-            "     <br><label for=\"id\">spot_client_id</label>" +
-            "     <br><input name=\"id\" id=\"id\" value=\"" +
-            Spotify.sc.clientId.substring(0, 4) + "*****" +
-            "\" />" +
-            "   </div>" +
-            "   <div>" +
-            "     <br><label for=\"secret\">spot_client_secret</label>" +
-            "     <br><input name=\"secret\" id=\"secret\" value=\"" +
-            Spotify.sc.clientSecret.substring(0, 4) + "*****" +
-            "\" />" +
-            "   </div>" +
-            "   <input type=\"hidden\" name=\"action\" id=\"action\" value=\"cred\">" +
-            "   <div>" +
-            "     <br><button>submit</button>" +
-            "   </div>" +
-            " </form>" +
-            "<p><a href=\"/\">Home</a></p>" +
-            "<script src=\"script.js\"></script>" +
-            "</body></html>";
 
     public static String auth = "<!DOCTYPE html>" +
             "<html lang=\"en\"><head>" +
@@ -161,24 +131,6 @@ public class Html {
             "   </script>" +
             "</body>" +
             "</html>";
-
-    public static String web(String text) {
-        text = text.replace("\n", "<br>");
-
-
-        String page = "<!DOCTYPE html>" +
-                "<html lang=\"en\"><head>" +
-                "  <meta charset=\"UTF-8\" />" +
-                "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" +
-                "  <link rel=\"stylesheet\" href=\"style.css\" />" +
-                "  <title>Browser</title>" +
-                "</head><body>" +
-                "<p><a href=\"/\">home</a></p>" +
-                "<p>" + text + "</p>" +
-                "<p><a href=\"/\">home</a></p>" +
-                "</body></html>";
-        return page;
-    }
 
     public static String join(List<String> list) {
 
@@ -246,6 +198,48 @@ public class Html {
                 "<label for=\"room\">Название комнаты в Умном доме</label>" +
                 "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"speaker_create\">" +
                 "<br><button>add</button></form>" +
+
+                "<p><a href=\"/\">Home</a></p>" +
+                "<script src=\"script.js\"></script>" +
+                "</body></html>";
+        return page;
+    }
+
+
+    public static String formPlayers() {
+        String page = "<!DOCTYPE html><html lang=\"en\">" +
+                "<head><meta charset=\"UTF-8\" />" +
+                "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" +
+                "  <link rel=\"stylesheet\" href=\"style.css\" />" +
+                "  <title>Browser</title></head><body>" +
+                "<p><a href=\"/\">Home</a></p>" +
+                "  <h2>Настройка колонок</h2>" +
+                join(server.players.stream()
+                        .map(p ->
+                                "<form action=\"/cmd\" method=\"get\">" +
+                                        p.name +
+                                        "<br>" +
+                                        "<input name=\"step\" id=\"step\" value=\"" + p.volume_step + "\" />" +
+                                        "<label for=\"step\">шаг громкости</label>" +
+                                        "<br>" +
+                                        "<input name=\"delay\" id=\"delay\" value=\"" + p.wake_delay + "\" />" +
+                                        "<label for=\"delay\">задержка включения</label>" +
+                                        "<br>" +
+                                        "<input name=\"black\" id=\"black\" value=\"" + p.black + "\" />" +
+                                        "<label for=\"black\">в черном списке</label>" +
+                                        "<br>" +
+                                        "<input name=\"schedule\" id=\"schedule\" value=\"" + Utils.mapToString(p.timeVolume) + "\" />" +
+                                        "<label for=\"schedule\">время:громкость</label>" +
+                                        "<br>" +
+
+                                        "<input type=\"hidden\" name=\"name\" id=\"name\" value=\"" + p.name + "\">" +
+                                        "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"player_edit\">" +
+
+                                        "<button>save</button></form>" +
+                                        "<form action=\"/cmd\" method=\"get\">"
+
+                        ).collect(Collectors.toList())) +
+
 
                 "<p><a href=\"/\">Home</a></p>" +
                 "<script src=\"script.js\"></script>" +

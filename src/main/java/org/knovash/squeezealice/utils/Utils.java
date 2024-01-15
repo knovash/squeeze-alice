@@ -3,6 +3,7 @@ package org.knovash.squeezealice.utils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.Server;
 import org.knovash.squeezealice.provider.SmartHome;
@@ -145,6 +146,11 @@ public class Utils {
 
     public static String state() {
         String json = JsonUtils.pojoToJson(server);
+        return json;
+    }
+
+    public static String players() {
+        String json = JsonUtils.pojoToJson(Main.server.players);
         return json;
     }
 
@@ -314,5 +320,25 @@ public class Utils {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static Map<String, String> stringToMap(String text) {
+        return Arrays.stream(text.split(","))
+                .map(s -> s.replace(" ",""))
+                .map(s -> s.split(":"))
+                .collect(Collectors.toMap(s -> s[0], s -> s[1]));
+    }
+
+    public static Map<Integer, Integer> stringToIntMap(String text) {
+        return Arrays.stream(text.split(","))
+                .map(s -> s.split(":"))
+                .collect(Collectors.toMap(s -> s[0], s -> s[1]))
+                .entrySet().stream()
+                .collect(Collectors.toMap(entry -> Integer.valueOf(entry.getKey()), entry -> Integer.valueOf(entry.getValue())));
+    }
+
+    public static String mapToString(Map<Integer, Integer> headerMap) {
+        return headerMap.entrySet().stream().map(e -> e.getKey() + ":" + e.getValue())
+                .collect(Collectors.joining(","));
     }
 }
