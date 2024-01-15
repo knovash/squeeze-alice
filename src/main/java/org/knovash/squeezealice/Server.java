@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InaccessibleObjectException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.knovash.squeezealice.Main.*;
@@ -115,5 +116,24 @@ public class Server {
             log.info("PLAYING: " + playing.name);
         }
         return playing;
+    }
+
+    public static String editPlayerSettings(HashMap<String, String> parameters) {
+        log.info("PARAMETERS: " + parameters);
+        String name = parameters.get("name");
+        Player player = Server.playerByName(name);
+        log.info("PLAYER FOR EDIT: " + player);
+        log.info("name: "+parameters.get("name"));
+        log.info("delay: "+parameters.get("delay"));
+        log.info("step: "+parameters.get("step"));
+        log.info("black: "+parameters.get("black"));
+        log.info("schedule: "+parameters.get("schedule"));
+        log.info(Utils.stringToIntMap(parameters.get("schedule")));
+        player.wake_delay = Integer.valueOf(parameters.get("delay"));
+        player.volume_step = Integer.valueOf(parameters.get("step"));
+        player.black = Boolean.parseBoolean(parameters.get("black"));
+        player.timeVolume = Utils.stringToIntMap(parameters.get("schedule"));
+        JsonUtils.listToJsonFile(server.players, "players.json");
+        return "EDITED";
     }
 }

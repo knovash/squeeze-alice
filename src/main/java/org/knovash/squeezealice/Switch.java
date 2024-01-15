@@ -115,6 +115,11 @@ public class Switch {
             case ("state"):
                 log.info("SEND SERVER STATE");
                 actionStatus = Utils.state();
+                break;
+            case ("players"):
+                log.info("SEND PLAYERS");
+                actionStatus = Utils.players();
+                break;
             case ("home"):
                 log.info("SEND SERVER HOME");
                 actionStatus = Utils.home();
@@ -150,6 +155,11 @@ public class Switch {
                 NewDevice.edit(parameters);
                 log.info("EDIT OK");
                 actionStatus = Html.formSpeakers();
+            case ("player_edit"):
+                log.info("EDIT PLAYER");
+                Server.editPlayerSettings(parameters);
+                log.info("EDIT OK");
+                actionStatus = Html.formPlayers();
                 break;
             case ("speaker_remove"):
                 log.info("REMOVE SPEAKER");
