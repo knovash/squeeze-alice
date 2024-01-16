@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 public class ActionResult {
 
     public String status = "DONE";
-    public String error_code = null;
-    public String error_message = null;
+    public String error_code;
+    public String error_message;
 }
 
 

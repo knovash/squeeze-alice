@@ -10,4 +10,5 @@ import java.util.ArrayList;
 @AllArgsConstructor
 public class Payload {
     public ArrayList<Device> devices;
+    public String user_id;
 }

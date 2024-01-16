@@ -116,4 +116,10 @@ public class NewDevice {
         JsonUtils.listToJsonFile(SmartHome.devices, "home_devices.json");
         return id;
     }
+    
+    
+    
+    
+    
+    
 }

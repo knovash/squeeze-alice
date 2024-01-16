@@ -155,6 +155,7 @@ public class Switch {
                 NewDevice.edit(parameters);
                 log.info("EDIT OK");
                 actionStatus = Html.formSpeakers();
+                break;
             case ("player_edit"):
                 log.info("EDIT PLAYER");
                 Server.editPlayerSettings(parameters);
