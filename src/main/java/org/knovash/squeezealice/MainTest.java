@@ -13,6 +13,14 @@ public class MainTest {
         log.info("  ---+++===[ START ]===+++---");
 
 
+//         "value" : "4",
+        String str = " \"value\" : \"4\",";
+
+        log.info(str);
+
+       str =  str.replaceAll("(\"value\" :) \"([0-9a-z]+)\"", "$1_$2_");
+
+        log.info(str);
 
     }
 

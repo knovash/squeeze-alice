@@ -42,6 +42,7 @@ public class ServerController {
         server.createContext("/auth", new HandlerAuth());
         server.createContext("/token", new HandlerToken());
         server.createContext("/refresh", new HandlerTokenRefresh());
+        server.createContext("/redirecturi", new HandlerRedirectUri());
 
         server.setExecutor(null);
         server.start();

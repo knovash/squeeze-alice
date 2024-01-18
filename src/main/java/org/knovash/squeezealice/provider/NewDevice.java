@@ -82,12 +82,12 @@ public class NewDevice {
         channel.parameters.range.precision = 1;
         myDevice.capabilities.add(channel);
 
-//        Capability pause = new Capability();
-//        pause.type = "devices.capabilities.toggle"; // Тип умения. channel     volume
-//        pause.retrievable = true; // Доступен ли для данного умения устройства запрос состояния
-//        pause.reportable = false; // Признак включенного оповещения об изменении состояния умения
-//        pause.parameters.instance = "pause"; // Название функции для данного умения. volume channel ...
-////        pause.parameters.random_access = true;
+        Capability pause = new Capability();
+        pause.type = "devices.capabilities.toggle"; // Тип умения. channel     volume
+        pause.retrievable = true; // Доступен ли для данного умения устройства запрос состояния
+        pause.reportable = false; // Признак включенного оповещения об изменении состояния умения
+        pause.parameters.instance = "pause"; // Название функции для данного умения. volume channel ...
+//        pause.parameters.random_access = true;
 //        myDevice.capabilities.add(pause);
 
         Capability on_of = new Capability();

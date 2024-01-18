@@ -15,7 +15,9 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -324,7 +326,7 @@ public class Utils {
 
     public static Map<String, String> stringToMap(String text) {
         return Arrays.stream(text.split(","))
-                .map(s -> s.replace(" ",""))
+                .map(s -> s.replace(" ", ""))
                 .map(s -> s.split(":"))
                 .collect(Collectors.toMap(s -> s[0], s -> s[1]));
     }
@@ -341,4 +343,13 @@ public class Utils {
         return headerMap.entrySet().stream().map(e -> e.getKey() + ":" + e.getValue())
                 .collect(Collectors.joining(","));
     }
+
+
+    public static String readFile(String path) throws IOException {
+        Path filePath = Path.of(path);
+        String content = Files.readString(filePath);
+        return content;
+    }
+
+
 }

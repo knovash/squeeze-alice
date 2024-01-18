@@ -11,18 +11,18 @@ import java.io.OutputStream;
 import static org.knovash.squeezealice.utils.Utils.readFile;
 
 @Log4j2
-public class HandlerAuth implements HttpHandler {
+public class HandlerRedirectUri implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         String response;
-        log.info("--- AUTH ---");
+        log.info("");
         String method = httpExchange.getRequestMethod();
         String path = httpExchange.getRequestURI().getPath();
         String host = HttpUtils.getHeaderValue(httpExchange, "Host");
         log.info("REQUEST " + method + " " + "http://" + host + path);
 
-        response = readFile("auth.html");
+        response = readFile("redirecturi.html");
 
         log.info("WEB RESPONSE OK");
         httpExchange.sendResponseHeaders(200, response.getBytes().length);
