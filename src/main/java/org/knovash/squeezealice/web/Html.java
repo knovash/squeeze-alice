@@ -80,50 +80,6 @@ public class Html {
         return page;
     }
 
-//    public static String auth =
-//            "<!DOCTYPE html>" +
-//                    "<html lang=\"en\"><head>" +
-//                    "<!doctype html>" +
-//                    "<html lang=\"ru\">" +
-////                    "<head>" +
-////                    "<meta charSet=\"utf-8\" />" +
-////                    "<meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, shrink-to-fit=no, viewport-fit=cover'>" +
-////                    "<meta http-equiv='X-UA-Compatible' content='ie=edge'>" +
-////                    "<style>" +
-////                    "   html," +
-////                    "   body {" +
-////                    "      background: #eee;" +
-////                    "   }" +
-////                    "</style>" +
-////                    "</head>" +
-//
-//                    "<head>\n" +
-//                    "   <script src=\"https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-with-polyfills-latest.js\"></script>\n" +
-//                    "</head>"+
-//
-//                    "<body>" +
-//                    "<p><strong>Squeeze-Alice</strong></p>" +
-//
-//                    "YaAuthSuggest.init(\n" +
-//                    "      {\n" +
-//                    "         client_id: 'c46f0c53093440c39f12eff95a9f2f93',\n" +
-//                    "         response_type: 'token',\n" +
-//                    "         redirect_uri: 'https://examplesite.com/suggest/token'\n" +
-//                    "      },\n" +
-//                    "      'https://examplesite.com'\n" +
-//                    "   )\n" +
-//                    "   .then(({\n" +
-//                    "      handler\n" +
-//                    "   }) => handler())\n" +
-//                    "   .then(data => console.log('Сообщение с токеном', data))\n" +
-//                    "   .catch(error => console.log('Обработка ошибки', error));"+
-//
-//                    "<p><a href=\"/cmd?action=state\">Посмотреть настройки</a></p>" +
-//                    "<p><a href=\"/cmd?action=backup\">Сохранить настройки</a></p>" +
-//                    "<p><a href=\"/cmd?action=log\">Посмотреть лог</a></p>" +
-//                    "</body>" +
-//                    "</html>";
-
     public static String auth = "<!DOCTYPE html>" +
             "<html lang=\"en\"><head>" +
             "<!doctype html>" +
@@ -148,8 +104,7 @@ public class Html {
             "                  response_type: 'token'," +
             "                  redirect_uri: 'https://social.yandex.net/broker/redirect'" +
             "               }," +
-            // TODO
-            "               'https://unicorn-neutral-badly.ngrok-free.app', {" +
+            "               'https://sqtest.loca.lt', {" +
             "                  view: 'button'," +
             "                  parentId: 'container'," +
             "                  buttonView: 'main'," +

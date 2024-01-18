@@ -7,25 +7,54 @@ import org.knovash.squeezealice.utils.HttpUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
-
-import static org.knovash.squeezealice.utils.Utils.readFile;
+import java.util.*;
 
 @Log4j2
 public class HandlerAuth implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        String response;
-        log.info("--- AUTH ---");
+        log.info("");
         String method = httpExchange.getRequestMethod();
         String path = httpExchange.getRequestURI().getPath();
         String host = HttpUtils.getHeaderValue(httpExchange, "Host");
         log.info("REQUEST " + method + " " + "http://" + host + path);
+        // получить хедеры
+        log.info("HEADERS: " + httpExchange.getRequestHeaders().entrySet());
+        String xRequestId = HttpUtils.getHeaderValue(httpExchange, "X-request-id");
+        String authorization = HttpUtils.getHeaderValue(httpExchange, "Authorization");
+        String contentType = HttpUtils.getHeaderValue(httpExchange, "Content-Type");
+        log.info("HEADER X-request-id : " + xRequestId);
+        log.info("HEADER Authorization : " + authorization);
+        log.info("HEADER Content-Type : " + contentType);
+        String body = HttpUtils.httpExchangeGetBody(httpExchange);
+        log.info("BODY: " + body);
+        String query = httpExchange.getRequestURI().getQuery();
+        log.info("QUERY: " + query);
 
-        response = readFile("auth.html");
+        String scope = null;
+        String state = null;
+        String redirect_uri = null;
+        String client_id = null;
+        if (query != null) {
+            HashMap<String, String> parameters = HttpUtils.getQueryParameters(query);
+            scope = HttpUtils.getParameter(parameters, "scope");
+            state = HttpUtils.getParameter(parameters, "state");
+            redirect_uri = HttpUtils.getParameter(parameters, "redirect_uri");
+            client_id = HttpUtils.getParameter(parameters, "client_id");
+            log.info("scope: " + scope);
+            log.info("state: " + state);
+            log.info("redirect_uri: " + redirect_uri);
+            log.info("client_id: " + client_id);
+        }
 
-        log.info("WEB RESPONSE OK");
-        httpExchange.sendResponseHeaders(200, response.getBytes().length);
+        String response = "REDIRECT";
+        String code = "12345";
+        String location = redirect_uri + "?client_id=" + client_id + "&state=" + state + "&code=" + code;
+        log.info("redirectUri: " + location);
+
+        httpExchange.getResponseHeaders().add("Location", location);
+        httpExchange.sendResponseHeaders(302, response.getBytes().length);
         OutputStream outputStream = httpExchange.getResponseBody();
         outputStream.write(response.getBytes());
         outputStream.flush();
