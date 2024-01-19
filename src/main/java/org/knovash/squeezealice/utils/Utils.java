@@ -351,5 +351,11 @@ public class Utils {
         return content;
     }
 
+    //        String xRequestId = headers.get("X-request-id").toString();
+//        String xRequestId = headers.entrySet().stream()
+//                .filter(h -> h.getKey().contains("X-request-id"))
+//                .findFirst()
+//                .get().getValue().get(0);
+
 
 }

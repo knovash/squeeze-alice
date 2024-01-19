@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
-import org.knovash.squeezealice.pojo.spotify_pojo.SpotifyCredentials;
+import org.knovash.squeezealice.pojo.spotify_pojo.Credentials;
 import org.knovash.squeezealice.pojo.spotify_pojo.Type;
 import org.knovash.squeezealice.pojo.spotify_pojo.spotifyalbums.SpotifyAlbums;
 import org.knovash.squeezealice.pojo.spotify_pojo.spotifyartists.SpotifyArtists;
@@ -23,7 +23,7 @@ public class Spotify {
     public static String bearerToken;
     public static String client_id = "---------------------";
     public static String client_secret = "---------------------";
-    public static SpotifyCredentials sc = new SpotifyCredentials();
+    public static Credentials sc = new Credentials();
 
     public static String getBearerToken(String clientId, String clientSecret) {
         log.info("clientId: " + clientId + " clientSecret: " + clientSecret);
@@ -70,7 +70,7 @@ public class Spotify {
     public static String search(String q, Type type) {
 
         try {
-            sc = JsonUtils.jsonFileToPojoTrows("spotify.json", SpotifyCredentials.class);
+            sc = JsonUtils.jsonFileToPojoTrows("spotify.json", Credentials.class);
         } catch (IOException e) {
             log.info("NO FILE");
             Spotify.createCredFile();
@@ -139,14 +139,14 @@ public class Spotify {
     }
 
     public static void createCredFile() {
-        SpotifyCredentials sc = new SpotifyCredentials();
+        Credentials sc = new Credentials();
         sc.setClientId("ClientId");
         sc.setClientSecret("ClientSecret");
         JsonUtils.pojoToJsonFile(sc, "spotify.json");
     }
 
     public static void createCredFile(String id, String secret) {
-        SpotifyCredentials sc = new SpotifyCredentials();
+        Credentials sc = new Credentials();
         sc.setClientId(id);
         sc.setClientSecret(secret);
         JsonUtils.pojoToJsonFile(sc, "spotify.json");

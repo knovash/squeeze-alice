@@ -7,8 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SpotifyCredentials {
+public class Credentials {
 
     public String clientId = "no ********************";
     public String clientSecret = "no *****************";
+    public String bearer = "no *****************";
 }

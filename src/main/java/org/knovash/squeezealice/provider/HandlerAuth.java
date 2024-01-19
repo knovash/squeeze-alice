@@ -19,19 +19,9 @@ public class HandlerAuth implements HttpHandler {
         String path = httpExchange.getRequestURI().getPath();
         String host = HttpUtils.getHeaderValue(httpExchange, "Host");
         log.info("REQUEST " + method + " " + "http://" + host + path);
-        // получить хедеры
         log.info("HEADERS: " + httpExchange.getRequestHeaders().entrySet());
-        String xRequestId = HttpUtils.getHeaderValue(httpExchange, "X-request-id");
-        String authorization = HttpUtils.getHeaderValue(httpExchange, "Authorization");
-        String contentType = HttpUtils.getHeaderValue(httpExchange, "Content-Type");
-        log.info("HEADER X-request-id : " + xRequestId);
-        log.info("HEADER Authorization : " + authorization);
-        log.info("HEADER Content-Type : " + contentType);
-        String body = HttpUtils.httpExchangeGetBody(httpExchange);
-        log.info("BODY: " + body);
         String query = httpExchange.getRequestURI().getQuery();
         log.info("QUERY: " + query);
-
         String scope = null;
         String state = null;
         String redirect_uri = null;
@@ -47,12 +37,10 @@ public class HandlerAuth implements HttpHandler {
             log.info("redirect_uri: " + redirect_uri);
             log.info("client_id: " + client_id);
         }
-
         String response = "REDIRECT";
         String code = "12345";
         String location = redirect_uri + "?client_id=" + client_id + "&state=" + state + "&code=" + code;
         log.info("redirectUri: " + location);
-
         httpExchange.getResponseHeaders().add("Location", location);
         httpExchange.sendResponseHeaders(302, response.getBytes().length);
         OutputStream outputStream = httpExchange.getResponseBody();

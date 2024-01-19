@@ -17,8 +17,8 @@ public class SmartHome {
 
     public static String bearerToken = "y0_AgAAAAAYbWLzAAqd-QAAAADuroaJKlTGViNIS5KOAPmaK7spjdDQCBw";
     //  идентификатор приложения для получения OAuth token
-    public static String clientId = "0d17cba2ab254d838ac1ddcedabc4191";
-    public static String clientSecret = "b0966cd53b9647b9989bd20a3c9140d8";
+    public static String client_id = "0d17cba2ab254d838ac1ddcedabc4191";
+    public static String client_secret = "b0966cd53b9647b9989bd20a3c9140d8";
     //  направить пользователя после авторизации сюда
     public static String redirectUri = "https://unicorn-neutral-badly.ngrok-free.app/redirect";
     public static String user_id = "konstantin";

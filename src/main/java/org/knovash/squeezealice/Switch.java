@@ -2,6 +2,7 @@ package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.NewDevice;
+import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.spotify.SpotifyUtils;
 import org.knovash.squeezealice.utils.HttpUtils;
 import org.knovash.squeezealice.web.Html;
@@ -136,10 +137,15 @@ public class Switch {
                 log.info("DELETE TIME AND VOLUME");
                 actionStatus = Utils.timeVolumeDel(player, parameters);
                 break;
-            case ("cred"):
-                log.info("CREDENTIALS");
-                SpotifyUtils.credentials(parameters);
+            case ("cred_spotify"):
+                log.info("CREDENTIALS SPOTIFY");
+                SpotifyUtils.credentialsSpotify(parameters);
                 actionStatus = Html.formSpotifyLogin();
+                break;
+            case ("cred_yandex"):
+                log.info("CREDENTIALS YANDEX");
+                Yandex.getBearerToken();
+                actionStatus = Html.formYandexLogin();
                 break;
             case ("backup"):
                 log.info("BACKUP SERVER");

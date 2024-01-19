@@ -2,6 +2,7 @@ package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.SmartHome;
+import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.provider.pojoUserDevices.Device;
 import org.knovash.squeezealice.utils.ArgsParser;
 import org.knovash.squeezealice.utils.JsonUtils;
@@ -29,6 +30,12 @@ public class Main {
         log.info("LMS IP: " + lmsIP);
         log.info("lmsServer: " + lmsServer);
         log.info("port: " + port);
+
+        Yandex.credentialsYandex.clientId = "0d17cba2ab254d838ac1ddcedabc4191";
+        Yandex.credentialsYandex.clientSecret = "b0966cd53b9647b9989bd20a3c9140d8";
+//        "client_id=0d17cba2ab254d838ac1ddcedabc4191&" +
+//                "client_secret=b0966cd53b9647b9989bd20a3c9140d8&" +
+//                "grant_type=client_credentials";
 
         log.info("READ CONFIG FROM ARGS");
         ArgsParser.parse(args);
