@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.responseUserDevices.Device;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 
 @Log4j2
@@ -31,6 +32,10 @@ public class SmartHome {
     public static boolean fakePlayPause = true;
     public static boolean fakeMute = false;
     public static boolean fakeOnOff = true;
+
+//    public static HashMap<String,String> rooms = new HashMap<>();
+//    комната:"application_id"
+public static HashMap<String,String> applicationIdAndPlayerName = new HashMap<>();
 
     public static Device getByDeviceId(int deviceId) {
         String index = String.valueOf(deviceId);

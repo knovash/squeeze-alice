@@ -67,6 +67,13 @@ public class Main {
 //        NewDevice.create("колонка", "JBL black", "Спальня");
 //        NewDevice.create("колонка", "JBL white", "Веранда");
 
+
+        SmartHome.applicationIdAndPlayerName.put("76F751A76299DE71E1E9784E207AFC2BA1AB01361D8F8B9483A857FA87C087FA", "HomePod");
+        SmartHome.applicationIdAndPlayerName.put("CEE4701A73C8D5113DB40E35CDA9ECBDB6FC2CDCFF8CFD73A1ADEB2607C67AD7", "JBL black");
+        SmartHome.applicationIdAndPlayerName.put("B9AC4386E4621FE3F21AC35537D5F52CA9028F5406F599788E0F328329E2E02F","HomePod2");
+
+        log.info(SmartHome.applicationIdAndPlayerName.get("CEE4701A73C8D5113DB40E35CDA9ECBDB6FC2CDCFF8CFD73A1ADEB2607C67AD7"));
+
         log.info("  ---+++===[ START SERVER ]===+++--- ");
         lmsPlayers = new LmsPlayers();
         lmsPlayers.readServerFile();

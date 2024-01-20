@@ -11,13 +11,9 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class State {
 
-
     public String instance = null;
-    public boolean relative = false;
     public int value;
+    public boolean relative = false;
     public ActionResult action_result = new ActionResult();
-
-//    private static ObjectMapper objectMapper = new ObjectMapper();
-//    private static ObjectWriter objectWriter = objectMapper.writer(new DefaultPrettyPrinter());
 
 }

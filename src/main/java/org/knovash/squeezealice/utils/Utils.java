@@ -267,19 +267,6 @@ public class Utils {
         return matchCyril.matches();
     }
 
-    public static String appIdPlayer(String appId) {
-        String playerName = "HomePod";
-        switch (appId) {
-            case ("CEE4701A73C8D5113DB40E35CDA9ECBDB6FC2CDCFF8CFD73A1ADEB2607C67AD7"):
-                playerName = "JBL black";
-                break;
-            case ("76F751A76299DE71E1E9784E207AFC2BA1AB01361D8F8B9483A857FA87C087FA"):
-                playerName = "HomePod";
-                break;
-        }
-        return playerName;
-    }
-
     public static String ping(Integer index) {
         String lmsip = "192.168.1.52";
         String ip = "192.168.1." + index;
