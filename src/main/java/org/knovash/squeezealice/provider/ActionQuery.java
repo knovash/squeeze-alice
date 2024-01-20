@@ -1,10 +1,12 @@
 package org.knovash.squeezealice.provider;
 
-import com.sun.net.httpserver.Headers;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.Server;
-import org.knovash.squeezealice.provider.pojoQuery.Query;
+//import org.knovash.squeezealice.provider.pojoQueryResponse.*;
 import org.knovash.squeezealice.provider.pojoQueryResponse.*;
 import org.knovash.squeezealice.utils.JsonUtils;
 
@@ -16,21 +18,20 @@ import java.util.stream.Collectors;
 public class ActionQuery {
 
     public static Context action(Context context) {
-        log.info("START -------------------------------");
+        log.info("1");
         String body = context.body;
-        Headers headers = context.headers;
-        String path = context.path;
         String xRequestId = context.xRequestId;
-
-        Query query = JsonUtils.jsonToPojo(body, Query.class);
-
+        Root bodyPojo = JsonUtils.jsonToPojo(body, Root.class);
         String json;
+        log.info("2");
         if (body == null) {
             json = "{\"request_id\":\"" + xRequestId + "\",\"payload\":{\"devices\":[]}}";
         } else {
-
+            log.info("3");
+            log.info("bodyPojo" + bodyPojo);
+            log.info("bodyPojo" + bodyPojo.devices.size());
             // запрос о состоянии девайса id=0
-            int device_id = Integer.parseInt(query.devices.get(0).id);
+            int device_id = Integer.parseInt(bodyPojo.devices.get(0).id);
             log.info("STATE FOR DEVICE ID: " + device_id +
                     " NAME: " + SmartHome.devices.get(device_id).name +
                     " NAME: " + SmartHome.getByDeviceId(device_id).name +
@@ -38,10 +39,8 @@ public class ActionQuery {
 
             Response response = new Response();
             response.request_id = xRequestId;
-
-            List<Device> jsonDevices = query.devices.stream().map(d -> updateDevice(Integer.valueOf(d.id))).collect(Collectors.toList());
+            List<Device> jsonDevices = bodyPojo.devices.stream().map(d -> updateDevice(Integer.valueOf(d.id))).collect(Collectors.toList());
             log.info("LIST DEV: " + jsonDevices);
-
             response.payload = new Payload();
             response.payload.devices = jsonDevices;
             log.info("LIST DEV: " + jsonDevices);
@@ -105,6 +104,21 @@ public class ActionQuery {
         device.id = String.valueOf(device_id);
         log.info("device: " + device);
         return device;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Log4j2
+    public static class Root{
+        public ArrayList<Device4> devices;
+    }
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Log4j2
+    public static class Device4{
+        public String id;
     }
 
 

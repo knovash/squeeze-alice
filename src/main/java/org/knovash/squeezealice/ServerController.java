@@ -2,7 +2,6 @@ package org.knovash.squeezealice;
 
 import com.sun.net.httpserver.HttpServer;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.handler.HandlerKuzja;
 import org.knovash.squeezealice.provider.*;
 
 import java.io.IOException;
@@ -22,28 +21,28 @@ public class ServerController {
         }
 
 
-        server.createContext("/cmd", new HandlerUniversal());
-        server.createContext("/alice", new HandlerUniversal());
+        server.createContext("/cmd", new Handler());
+        server.createContext("/alice", new Handler());
 
 
-        server.createContext("/v1.0/user/unlink", new HandlerUserUnlink());
-        server.createContext("/v1.0/user/devices", new HandlerUserDevices());
+        server.createContext("/v1.0/user/unlink", new Handler());
+        server.createContext("/v1.0/user/devices", new Handler());
 
 
-        server.createContext("/", new HandlerUniversal());
-        server.createContext("/spotify", new HandlerUniversal());
-        server.createContext("/yandex", new HandlerUniversal());
-        server.createContext("/speakers", new HandlerUniversal());
-        server.createContext("/players", new HandlerUniversal());
+        server.createContext("/", new Handler());
+        server.createContext("/spotify", new Handler());
+        server.createContext("/yandex", new Handler());
+        server.createContext("/speakers", new Handler());
+        server.createContext("/players", new Handler());
 
-        server.createContext("/v1.0", new HandlerUniversal());
-        server.createContext("/v1.0/user/devices/query", new HandlerUniversal());
-        server.createContext("/v1.0/user/devices/action", new HandlerAction());
+        server.createContext("/v1.0", new Handler());
+        server.createContext("/v1.0/user/devices/query", new Handler());
+        server.createContext("/v1.0/user/devices/action", new Handler());
 
-        server.createContext("/auth", new HandlerAuth());
-        server.createContext("/token", new HandlerToken());
-        server.createContext("/refresh", new HandlerUniversal());
-        server.createContext("/bearer", new HandlerUniversal());
+        server.createContext("/auth", new Handler());
+        server.createContext("/token", new Handler());
+        server.createContext("/refresh", new Handler());
+        server.createContext("/bearer", new Handler());
 
         server.setExecutor(null);
         server.start();

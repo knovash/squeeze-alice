@@ -13,7 +13,7 @@ public class ActionIndex {
     public static Context action(Context context) {
         String json = null;
         try {
-            json = readFile("index.html");
+            json = readFile("src/main/resources/index.html");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -37,17 +37,19 @@ public class JsonUtils {
     }
 
     public static <T> T jsonToPojo(String json, Class<T> clazz) {
-//        log.info("JSON TO POJO: " + json);
+        log.info("JSON TO POJO: " + json);
         json = json.replace("\\","");
-//        log.info("JSON TO POJO: " + json);
+        log.info("JSON TO POJO: " + json);
         try {
             return objectMapper.readValue(json, clazz);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+
+            log.info("ERROR " + e);
         }
-//        finally {
-//            log.info("END jsonToPojo");
-//        }
+        finally {
+            log.info("END jsonToPojo");
+        }
+        return null;
     }
 
     public static <T> String listToJson(List<T> list) {

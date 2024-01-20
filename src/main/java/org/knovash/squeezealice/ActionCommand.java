@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.handler;
+package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.SwitchAlice;
@@ -7,7 +7,7 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 
 @Log4j2
-public class ActionAlice {
+public class ActionCommand {
 
     public static Context action(Context context) {
         log.info("");

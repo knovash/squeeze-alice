@@ -6,6 +6,7 @@ mkdir squeeze-alice-pak/squeeze-alice-1.0
 
 cp -r target/* squeeze-alice-pak/squeeze-alice-1.0/
 cp utils/*.sh squeeze-alice-pak/
+cp utils/*.html squeeze-alice-pak/
 cp utils/*.service squeeze-alice-pak/
 
 cd squeeze-alice-pak

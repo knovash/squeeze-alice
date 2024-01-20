@@ -1,12 +1,12 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.provider.Context;
 import org.knovash.squeezealice.provider.NewDevice;
 import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.spotify.SpotifyUtils;
-import org.knovash.squeezealice.utils.HttpUtils;
-import org.knovash.squeezealice.web.Html;
 import org.knovash.squeezealice.utils.Utils;
+import org.knovash.squeezealice.web.Html;
 
 import java.util.HashMap;
 
@@ -15,18 +15,23 @@ import static org.knovash.squeezealice.utils.Utils.altNames;
 @Log4j2
 public class Switch {
 
-    public static String action(String query) {
+    public static Context action(String query, Context context) {
         log.info("QUERY: " + query);
         String actionStatus;
         String name = null;
         Player player = null;
-        HashMap<String, String> parameters = HttpUtils.getQueryParameters(query);
+
+//        HashMap<String, String> parameters = HttpUtils.getQueryParameters(query);
+        HashMap<String, String> parameters = context.queryMap;
         if (!parameters.containsKey("action")) {
             log.info("NO ACTION IN QUERY");
-            return query + " BAD REQUEST try /cmd?action=state";
+            context.json = " BAD REQUEST try /cmd?action=state";
+            context.code = 200;
+            return context;
         }
         String action = parameters.get("action");
         log.info("ACTION: " + action);
+
         if (parameters.get("player") != null) {
             name = parameters.get("player");
             log.info("NAME: " + name);
@@ -39,12 +44,16 @@ public class Switch {
                 player = Server.playerByName(name);
                 if (player == null) {
                     log.info("NO PLAYER: " + name + " ON SERVER");
-                    return ("ERROR: NO PLAYER IN LMS " + name + "Try check alt names: " + altNames);
+                    context.json = "ERROR: NO PLAYER IN LMS " + name + "Try check alt names: " + altNames;
+                    context.code = 200;
+                    return context;
                 }
             }
             if (player.isBlack()) {
                 log.info("PLAYER: " + name + " IN BLACK");
-                return ("PLAYER IN BLACKLIST " + name);
+                context.json = "PLAYER IN BLACKLIST " + name;
+                context.code = 200;
+                return context;
             }
         }
 
@@ -178,6 +187,9 @@ public class Switch {
                 actionStatus = "ACTION NOT FOUND: " + action;
                 break;
         }
-        return actionStatus;
+
+        context.json = actionStatus;
+        context.code = 200;
+        return context;
     }
 }
