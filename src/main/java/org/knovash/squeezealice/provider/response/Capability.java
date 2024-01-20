@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.provider.responseAction;
+package org.knovash.squeezealice.provider.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,3 +15,5 @@ public class Capability {
     public Boolean reportable = false; // Признак включенного оповещения об изменении состояния умения при помощи сервиса уведомлений
     public Parameters parameters = new Parameters();
 }
+
+

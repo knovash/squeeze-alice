@@ -1,9 +1,9 @@
 package org.knovash.squeezealice.provider;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.responseUserDevices.Capability;
-import org.knovash.squeezealice.provider.responseUserDevices.Device;
-import org.knovash.squeezealice.provider.responseUserDevices.Range;
+import org.knovash.squeezealice.provider.response.Capability;
+import org.knovash.squeezealice.provider.response.Device;
+import org.knovash.squeezealice.provider.response.Range;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.util.HashMap;

@@ -7,7 +7,7 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.LmsPlayers;
-import org.knovash.squeezealice.provider.responseAction.*;
+import org.knovash.squeezealice.provider.response.*;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.util.ArrayList;

@@ -2,8 +2,8 @@ package org.knovash.squeezealice.provider;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
-import org.knovash.squeezealice.provider.responseUserDevices.Payload;
-import org.knovash.squeezealice.provider.responseUserDevices.Response;
+import org.knovash.squeezealice.provider.response.Payload;
+import org.knovash.squeezealice.provider.response.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 @Log4j2

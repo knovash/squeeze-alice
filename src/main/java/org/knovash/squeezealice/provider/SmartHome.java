@@ -2,7 +2,7 @@ package org.knovash.squeezealice.provider;
 
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.responseUserDevices.Device;
+import org.knovash.squeezealice.provider.response.Device;
 
 import java.util.HashMap;
 import java.util.LinkedList;

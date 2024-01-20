@@ -3,7 +3,7 @@ package org.knovash.squeezealice;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.SmartHome;
 import org.knovash.squeezealice.provider.Yandex;
-import org.knovash.squeezealice.provider.responseUserDevices.Device;
+import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.utils.ArgsParser;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
