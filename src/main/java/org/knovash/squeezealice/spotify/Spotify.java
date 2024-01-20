@@ -4,13 +4,13 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
-import org.knovash.squeezealice.spotify.spotify_pojo.Credentials;
+import org.knovash.squeezealice.spotify.spotify_pojo.SpotifyCredentials;
 import org.knovash.squeezealice.spotify.spotify_pojo.Type;
-import org.knovash.squeezealice.spotify.spotify_pojo.spotifyalbums.SpotifyAlbums;
-import org.knovash.squeezealice.spotify.spotify_pojo.spotifyartists.SpotifyArtists;
-import org.knovash.squeezealice.spotify.spotify_pojo.spotifyplaylist.Item;
-import org.knovash.squeezealice.spotify.spotify_pojo.spotifyplaylist.SpotifyPlaylists;
-import org.knovash.squeezealice.spotify.spotify_pojo.spotifytracks.SpotifyResponseTracks;
+import org.knovash.squeezealice.spotify.spotify_pojo.spotify_albums.SpotifyAlbums;
+import org.knovash.squeezealice.spotify.spotify_pojo.spotify_artists.SpotifyArtists;
+import org.knovash.squeezealice.spotify.spotify_pojo.spotify_playlist.Item;
+import org.knovash.squeezealice.spotify.spotify_pojo.spotify_playlist.SpotifyPlaylists;
+import org.knovash.squeezealice.spotify.spotify_pojo.spotify_tracks.SpotifyResponseTracks;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
@@ -24,7 +24,7 @@ public class Spotify {
     public static String bearerToken;
     public static String client_id = "---------------------";
     public static String client_secret = "---------------------";
-    public static Credentials sc = new Credentials();
+    public static SpotifyCredentials sc = new SpotifyCredentials();
 
     public static String getBearerToken(String clientId, String clientSecret) {
         log.info("clientId: " + clientId + " clientSecret: " + clientSecret);
@@ -71,7 +71,7 @@ public class Spotify {
     public static String search(String q, Type type) {
 
         try {
-            sc = JsonUtils.jsonFileToPojoTrows("spotify.json", Credentials.class);
+            sc = JsonUtils.jsonFileToPojoTrows("spotify.json", SpotifyCredentials.class);
         } catch (IOException e) {
             log.info("NO FILE");
             Spotify.createCredFile();
@@ -140,14 +140,14 @@ public class Spotify {
     }
 
     public static void createCredFile() {
-        Credentials sc = new Credentials();
+        SpotifyCredentials sc = new SpotifyCredentials();
         sc.setClientId("ClientId");
         sc.setClientSecret("ClientSecret");
         JsonUtils.pojoToJsonFile(sc, "spotify.json");
     }
 
     public static void createCredFile(String id, String secret) {
-        Credentials sc = new Credentials();
+        SpotifyCredentials sc = new SpotifyCredentials();
         sc.setClientId(id);
         sc.setClientSecret(secret);
         JsonUtils.pojoToJsonFile(sc, "spotify.json");

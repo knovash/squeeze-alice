@@ -3,7 +3,7 @@ package org.knovash.squeezealice;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.SmartHome;
 import org.knovash.squeezealice.provider.Yandex;
-import org.knovash.squeezealice.provider.pojoUserDevices.Device;
+import org.knovash.squeezealice.provider.responseUserDevices.Device;
 import org.knovash.squeezealice.utils.ArgsParser;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
@@ -43,7 +43,7 @@ public class Main {
         log.info("lmsServer: " + lmsServer);
         log.info("port: " + port);
 
-        if (!Utils.isLms(lmsIP)) {
+        if (!Utils.checkIpIsLms(lmsIP)) {
             log.info("CONFIG FROM PROPERTIES AND ARGS NOT VALID LMS SERVER");
             lmsIP = Utils.searchLmsIp();
             try {

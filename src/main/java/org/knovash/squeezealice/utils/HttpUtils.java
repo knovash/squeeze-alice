@@ -46,7 +46,7 @@ public class HttpUtils {
         return query;
     }
 
-    public static HashMap<String, String> getQueryParameters(String query) {
+    public static HashMap<String, String> getQueryMap(String query) {
         if (query == null) return new HashMap<>();
         HashMap<String, String> parameters = new HashMap<>();
         Optional.ofNullable(Arrays.asList(query.split("&"))).orElseGet(Collections::emptyList)
@@ -58,14 +58,14 @@ public class HttpUtils {
         return parameters;
     }
 
-    public static String getParameter(HashMap<String, String> parameters, String name) {
+    public static String getValueFromMap(HashMap<String, String> parameters, String name) {
         String value=null;
         if (parameters.containsKey(name)) value = parameters.get(name);
         return value;
     }
 
-    public static String getParameter(String query, String name) {
-        HashMap<String, String> parameters =  HttpUtils.getQueryParameters(query);
+    public static String getValueFromMap(String query, String name) {
+        HashMap<String, String> parameters =  HttpUtils.getQueryMap(query);
         String value=null;
         if (parameters.containsKey(name)) value = parameters.get(name);
         return value;

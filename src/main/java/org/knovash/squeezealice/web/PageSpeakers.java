@@ -1,7 +1,7 @@
 package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.Context;
+import org.knovash.squeezealice.Context;
 
 @Log4j2
 public class PageSpeakers {

@@ -30,7 +30,7 @@ public class Handler implements HttpHandler {
         log.info("BODY: " + body);
         String query = httpExchange.getRequestURI().getQuery();
         log.info("QUERY: " + query);
-        HashMap<String, String> queryMap = HttpUtils.getQueryParameters(query);
+        HashMap<String, String> queryMap = HttpUtils.getQueryMap(query);
         log.info("OK");
         Context context = new Context();
         context.body = body;
@@ -42,16 +42,16 @@ public class Handler implements HttpHandler {
 
         switch (path) {
             case ("/v1.0/user/devices/query"):
-                context = ActionQuery.action(context);
+                context = ProviderQuery.action(context);
                 break;
             case ("/v1.0"):
-                context = ActionCheck.action(context);
+                context = ProviderCheck.action(context);
                 break;
             case ("/bearer"):
-                context = ActionTokenBearer.action(context);
+                context = YandexTokenBearer.action(context);
                 break;
             case ("/refresh"):
-                context = ActionTokenBearer.action(context);
+                context = YandexTokenBearer.action(context);
                 break;
             case ("/"):
                 context = PageIndex.action(context);
@@ -76,16 +76,16 @@ public class Handler implements HttpHandler {
                 context = SwitchQueryCommand.action(query,context);
                 break;
             case ("/v1.0/user/unlink"):
-                context = ActionUserUnlink.action(context);
+                context = ProviderUserUnlink.action(context);
                 break;
             case ("/token"):
-                context = ActionToken.action(context);
+                context = YandexToken.action(context);
                 break;
             case ("/v1.0/user/devices/action"):
-                context = ActionAction.action(context);
+                context = ProviderAction.action(context);
                 break;
             case ("/v1.0/user/devices"):
-                context = ActionUserDevices.action(context);
+                context = ProviderUserDevices.action(context);
                 break;
             case ("/auth"):
                 log.info("CASE AUTH !!!!!!!!!");

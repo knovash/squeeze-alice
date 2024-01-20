@@ -1,10 +1,9 @@
 package org.knovash.squeezealice.voice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.Context;
+import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
-import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 
 @Log4j2
 public class VoiceCommand {

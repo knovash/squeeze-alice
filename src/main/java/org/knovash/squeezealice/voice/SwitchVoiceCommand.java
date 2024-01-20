@@ -2,10 +2,8 @@ package org.knovash.squeezealice.voice;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.LmsPlayers;
-//import org.knovash.squeezealice.pojo.alice_pojo.Alice;
-//import org.knovash.squeezealice.pojo.alice_pojo.ResponseAlice;
-import org.knovash.squeezealice.spotify.spotify_pojo.Type;
 import org.knovash.squeezealice.spotify.Spotify;
+import org.knovash.squeezealice.spotify.spotify_pojo.Type;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 @Log4j2
@@ -38,7 +36,7 @@ public class SwitchVoiceCommand {
         if (command.contains("какая") && command.contains("громкость")) {
             log.info("VOLUME");
             String volume = LmsPlayers.playerByName(playerName).volume();
-            if (volume == null)  return createResponse("медиасервер не отвечает");
+            if (volume == null) return createResponse("медиасервер не отвечает");
             answer = "сейчас на " + playerName + " громкость " + volume;
             return createResponse(answer);
         }
@@ -48,7 +46,7 @@ public class SwitchVoiceCommand {
             log.info("PLAYLIST: " + playlist);
             if (playlist == null) playlist = LmsPlayers.playerByName(playerName).artistname();
             log.info("PLAYLIST: " + playlist);
-            if (playlist == null)  return createResponse("медиасервер не отвечает");
+            if (playlist == null) return createResponse("медиасервер не отвечает");
             log.info("PLAYLIST: " + playlist);
             answer = "сейчас на " + playerName + " играет " + playlist;
             return createResponse(answer);

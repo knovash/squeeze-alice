@@ -1,7 +1,6 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.Context;
 import org.knovash.squeezealice.provider.DeviceUtils;
 import org.knovash.squeezealice.provider.Yandex;
 //import org.knovash.squeezealice.spotify.SpotifyUtils;
@@ -36,7 +35,7 @@ public class SwitchQueryCommand {
         if (parameters.get("player") != null) {
             name = parameters.get("player");
             log.info("NAME: " + name);
-            name = Utils.altPlayerName(name);
+            name = Utils.getAltPlayerNameByName(name);
             log.info("ALT NAME: " + name);
             player = LmsPlayers.playerByName(name);
             if (player == null) {
@@ -115,7 +114,7 @@ public class SwitchQueryCommand {
                 break;
             case ("alt_name_add"):
                 log.info("ALT NAME ADD");
-                Utils.altNameAdd(parameters);
+                Utils.addPlayerAltName(parameters);
                 actionStatus = "ALT NAME COMPLETE";
                 break;
             case ("remove"):

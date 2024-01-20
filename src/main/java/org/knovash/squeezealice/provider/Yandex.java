@@ -5,7 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
-import org.knovash.squeezealice.spotify.spotify_pojo.Credentials;
+import org.knovash.squeezealice.spotify.spotify_pojo.SpotifyCredentials;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
@@ -16,7 +16,7 @@ import java.util.Base64;
 public class Yandex {
 
     public static String bearerToken;
-    public static Credentials credentialsYandex = new Credentials();
+    public static SpotifyCredentials credentialsYandex = new SpotifyCredentials();
 
     public static String getBearerToken() {
         String client_id = SmartHome.client_id;
@@ -60,14 +60,14 @@ public class Yandex {
 
 
     public static void createCredFile() {
-        Credentials sc = new Credentials();
+        SpotifyCredentials sc = new SpotifyCredentials();
         credentialsYandex.setClientId("ClientId");
         credentialsYandex.setClientSecret("ClientSecret");
         JsonUtils.pojoToJsonFile(sc, "yandex.json");
     }
 
     public static void createCredFile(String id, String secret) {
-        Credentials sc = new Credentials();
+        SpotifyCredentials sc = new SpotifyCredentials();
         credentialsYandex.setClientId(id);
         credentialsYandex.setClientSecret(secret);
         credentialsYandex.setClientSecret(secret);

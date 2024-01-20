@@ -62,7 +62,7 @@ public class LmsPlayers {
         log.info(lmsPlayers.players);
         log.info("WRITE server.json");
         JsonUtils.pojoToJsonFile(lmsPlayers, "server.json");
-        Utils.generateAltNamesFile();
+        Utils.generatePlayersAltNamesToFile();
     }
 
     public void writeServerFile() {
@@ -128,11 +128,11 @@ public class LmsPlayers {
         log.info("step: "+parameters.get("step"));
         log.info("black: "+parameters.get("black"));
         log.info("schedule: "+parameters.get("schedule"));
-        log.info(Utils.stringToIntMap(parameters.get("schedule")));
+        log.info(Utils.stringSplitToIntMap(parameters.get("schedule"), ",", ":"));
         player.wake_delay = Integer.valueOf(parameters.get("delay"));
         player.volume_step = Integer.valueOf(parameters.get("step"));
         player.black = Boolean.parseBoolean(parameters.get("black"));
-        player.timeVolume = Utils.stringToIntMap(parameters.get("schedule"));
+        player.timeVolume = Utils.stringSplitToIntMap(parameters.get("schedule"), ",", ":");
         JsonUtils.listToJsonFile(lmsPlayers.players, "players.json");
         return "EDITED";
     }

@@ -30,6 +30,7 @@ public class Server {
 //        Диалог Squeezebox LMS
 //        Backend WebHook URL
 //        https://dialogs.yandex.ru/developer/skills/53f7314b-b845-4ec3-9a09-49aaff2e5198/settings/main
+//        https://yandex.ru/dev/dialogs/smart-home/doc/reference/resources.html
 //        server.createContext("/v1.0", new Handler());
 //        server.createContext("/v1.0/user/devices/query", new Handler());
 //        server.createContext("/v1.0/user/devices/action", new Handler());

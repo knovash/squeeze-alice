@@ -4,7 +4,7 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.SwitchAliceCommand;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.LmsPlayers;
-import org.knovash.squeezealice.pojo.pojoActions.Device;
+import org.knovash.squeezealice.provider.responseAction.Device;
 
 @Log4j2
 public class DeviceActions {

@@ -155,16 +155,8 @@ public class JsonUtils {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-//        log.info("NODE: " + jsonNode);
         String result = null;
-//        log.info("findValue: " + jsonNode.findValue(valueName));
-//        log.info("textValue: " + jsonNode.findValue(valueName).textValue());
-//        log.info("asText: " + jsonNode.findValue(valueName).asText());
-//        log.info("toString: " + jsonNode.findValue(valueName).toString());
-
-
         result = jsonNode.findValue(valueName).asText();
-//        log.info("VALUE: " + result);
         return result;
     }
 
@@ -175,9 +167,6 @@ public class JsonUtils {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-
-//        jsonNode.get("payload").get("devices").get(0).get("capabilities").get(0).get("state").
-
         return "NODE " + jsonNode.get("payload").get("devices").get(0).get("capabilities").get(0).get("state");
     }
 
@@ -190,11 +179,8 @@ public class JsonUtils {
         ValuePojo valuePojo = new ValuePojo();
         valuePojo = JsonUtils.jsonFileToPojo(fileName, ValuePojo.class);
         if (valuePojo == null) return null;
-//        log.info("VALUE POJO: " + valuePojo);
         String json = JsonUtils.pojoToJson(valuePojo);
-//        log.info("VALUE JSON: " + json);
         String value = JsonUtils.jsonGetValue(json, "value");
-//        log.info("VALUE : " + value);
         return value;
     }
 
@@ -202,23 +188,6 @@ public class JsonUtils {
     @NoArgsConstructor
     @AllArgsConstructor
     static private class ValuePojo {
-
         public String value;
-    }
-
-    public static String replaceState(String json, String newState) {
-        JsonNode jsonNode = null;
-        try {
-            jsonNode = objectMapper.readTree(json);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        ((ObjectNode) jsonNode
-                .get("payload")
-                .get("devices").get(0)
-                .get("capabilities").get(0))
-                .put("state", newState);
-        log.info(jsonNode);
-        return String.valueOf(jsonNode);
     }
 }
