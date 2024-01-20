@@ -1,139 +1,56 @@
 package org.knovash.squeezealice;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.sun.net.httpserver.HttpServer;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.requests.Requests;
-import org.knovash.squeezealice.pojo.lms_pojo.ResponseFromLms;
-import org.knovash.squeezealice.utils.JsonUtils;
-import org.knovash.squeezealice.utils.Utils;
 
-import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InaccessibleObjectException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.net.InetSocketAddress;
 
-import static org.knovash.squeezealice.Main.*;
+import static org.knovash.squeezealice.Main.port;
 
 @Log4j2
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Server {
 
-    public List<Player> players;
-    public Integer counter;
-
-    public void countPlayers() {
-        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.count().toString());
-        if (responseFromLms == null) {
-            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIP + ":" + lmsPort);
-            server.counter = 0;
-            return;
+    public static void start() {
+        HttpServer server;
+        try {
+            server = HttpServer.create(new InetSocketAddress(port), 0);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        log.info("RESPONSE: " + responseFromLms);
-        server.counter = Integer.parseInt(responseFromLms.result._count);
-    }
 
-    public static void updatePlayers() {
-        log.info("UPDATE PLAYERS FROM LMS");
-        server.countPlayers();
-        Integer counter = server.counter;
-        if (counter == null) {
-            log.info("UPDATE SKIPED. NO PLAYERS IN LMS");
-            return;
-        }
-        List<Player> players = new ArrayList<>();
-        if (server.players == null) server.players = new ArrayList<>();
-        for (Integer index = 0; index < counter; index++) {
-            String name = Player.name(index.toString());
-            String id = Player.id(index.toString());
-            if (!server.players.contains(new Player(name, id))) {
-                log.info("ADD NEW PLAYER: " + name + " " + id);
-                server.players.add(new Player(name, id));
-            } else {
-                log.info("SKIP PLAYER: " + name + " " + id);
-            }
-        }
-        log.info("PLAYERS:");
-        log.info(server.players);
-        log.info("WRITE server.json");
-        JsonUtils.pojoToJsonFile(server, "server.json");
-        Utils.generateAltNamesFile();
-    }
+        server.createContext("/", new Handler());
 
-    public void writeServerFile() {
-        log.info("WRITE FILE server.json");
-        JsonUtils.pojoToJsonFile(server, "server.json");
-    }
+//        Диалог Раз Два
+//        https://dialogs.yandex.ru/developer/skills/f2c654d9-d4e7-42c8-94d5-1b058e1d5afe/settings/main
+//        Backend WebHook URL
+//        https://unicorn-neutral-badly.ngrok-free.app/alice/
+//        server.createContext("/alice", new Handler());
 
-    public void writeServerFile(String fileName) {
-        log.info("WRITE FILE " + fileName);
-        JsonUtils.pojoToJsonFile(server, fileName + ".json");
-    }
+//        Диалог Squeezebox LMS
+//        Backend WebHook URL
+//        https://dialogs.yandex.ru/developer/skills/53f7314b-b845-4ec3-9a09-49aaff2e5198/settings/main
+//        server.createContext("/v1.0", new Handler());
+//        server.createContext("/v1.0/user/devices/query", new Handler());
+//        server.createContext("/v1.0/user/devices/action", new Handler());
+//        server.createContext("/v1.0/user/unlink", new Handler());
+//        server.createContext("/v1.0/user/devices", new Handler());
+//        server.createContext("/auth", new Handler());
+//        server.createContext("/token", new Handler());
+//        server.createContext("/refresh", new Handler());
+//        server.createContext("/bearer", new Handler());
 
-    public void readServerFile() {
-        log.info("READ PREVIOUS PLAYERS STATE FROM FILE server.json");
-        File file = new File("server.json");
-        if (file.exists()) {
-            try {
-                server = JsonUtils.jsonFileToPojoTrows("server.json", Server.class);
-                log.info("PLAYERS:");
-                log.info(server.players);
-            } catch (IOException | InaccessibleObjectException e) {
-                log.info("ERROR READ server.json");
-                log.info(e);
-            }
-        } else {
-            log.info("FILE NOT FOUND server.json");
-        }
-    }
+//        Управление через http query запросы
+//        server.createContext("/cmd", new Handler());
 
-    public static Player playerByName(String name) {
-        return server.players.stream()
-                .filter(player -> player.getName().equals(name))
-                .findFirst()
-                .orElse(null);
-    }
+//        Веб интерфейс настроек
+//        server.createContext("/spotify", new Handler());
+//        server.createContext("/yandex", new Handler());
+//        server.createContext("/speakers", new Handler());
+//        server.createContext("/players", new Handler());
 
-    public static Player playingPlayer(String currentName) {
-        log.info("Search for playing player...");
-        Player playing = server.players
-                .stream()
-                .filter(player -> player.mode().equals("play"))
-                .findFirst()
-                .orElse(null);
-        log.info("PLAYING: " + playing);
-        if (playing == null ||
-                playing.path().equals(silence) ||
-                playing.name.equals(currentName)) {
-            log.info("NO PLAYING");
-            return null;
-        } else {
-            log.info("PLAYING: " + playing.name);
-        }
-        return playing;
-    }
-
-    public static String editPlayerSettings(HashMap<String, String> parameters) {
-        log.info("PARAMETERS: " + parameters);
-        String name = parameters.get("name");
-        Player player = Server.playerByName(name);
-        log.info("PLAYER FOR EDIT: " + player);
-        log.info("name: "+parameters.get("name"));
-        log.info("delay: "+parameters.get("delay"));
-        log.info("step: "+parameters.get("step"));
-        log.info("black: "+parameters.get("black"));
-        log.info("schedule: "+parameters.get("schedule"));
-        log.info(Utils.stringToIntMap(parameters.get("schedule")));
-        player.wake_delay = Integer.valueOf(parameters.get("delay"));
-        player.volume_step = Integer.valueOf(parameters.get("step"));
-        player.black = Boolean.parseBoolean(parameters.get("black"));
-        player.timeVolume = Utils.stringToIntMap(parameters.get("schedule"));
-        JsonUtils.listToJsonFile(server.players, "players.json");
-        return "EDITED";
+        server.setExecutor(null);
+        server.start();
+        log.info("http://localhost:" + port);
     }
 }

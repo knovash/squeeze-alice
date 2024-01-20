@@ -4,17 +4,18 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
-import org.knovash.squeezealice.pojo.spotify_pojo.Credentials;
-import org.knovash.squeezealice.pojo.spotify_pojo.Type;
-import org.knovash.squeezealice.pojo.spotify_pojo.spotifyalbums.SpotifyAlbums;
-import org.knovash.squeezealice.pojo.spotify_pojo.spotifyartists.SpotifyArtists;
-import org.knovash.squeezealice.pojo.spotify_pojo.spotifyplaylist.Item;
-import org.knovash.squeezealice.pojo.spotify_pojo.spotifyplaylist.SpotifyPlaylists;
-import org.knovash.squeezealice.pojo.spotify_pojo.spotifytracks.SpotifyResponseTracks;
+import org.knovash.squeezealice.spotify.spotify_pojo.Credentials;
+import org.knovash.squeezealice.spotify.spotify_pojo.Type;
+import org.knovash.squeezealice.spotify.spotify_pojo.spotifyalbums.SpotifyAlbums;
+import org.knovash.squeezealice.spotify.spotify_pojo.spotifyartists.SpotifyArtists;
+import org.knovash.squeezealice.spotify.spotify_pojo.spotifyplaylist.Item;
+import org.knovash.squeezealice.spotify.spotify_pojo.spotifyplaylist.SpotifyPlaylists;
+import org.knovash.squeezealice.spotify.spotify_pojo.spotifytracks.SpotifyResponseTracks;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.HashMap;
 
 @Log4j2
 @Data
@@ -150,5 +151,17 @@ public class Spotify {
         sc.setClientId(id);
         sc.setClientSecret(secret);
         JsonUtils.pojoToJsonFile(sc, "spotify.json");
+    }
+
+    public static String credentialsSpotify(HashMap<String, String> parameters) {
+        String id = parameters.get("id");
+        String secret = parameters.get("secret");
+        Spotify.client_id = id;
+        Spotify.client_secret = secret;
+        log.info(Spotify.client_id);
+        log.info(Spotify.client_secret);
+        if (id == null || secret == null) return "CRED ERROR";
+        Spotify.createCredFile(id, secret);
+        return "CRED SET";
     }
 }

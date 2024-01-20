@@ -5,7 +5,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.Server;
+import org.knovash.squeezealice.LmsPlayers;
 import org.knovash.squeezealice.provider.SmartHome;
 
 import java.io.File;
@@ -15,7 +15,6 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,8 +27,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.knovash.squeezealice.Fluent.uriGetHeader;
-import static org.knovash.squeezealice.Main.server;
+import static org.knovash.squeezealice.Requests.headByUriForResponse;
+import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 public class Utils {
@@ -54,7 +53,7 @@ public class Utils {
         Map<String, String> namesFromFile = new HashMap<>();
         if (Utils.altNames == null) Utils.altNames = new HashMap<>();
         // generate
-        server.players.forEach(player -> {
+        lmsPlayers.players.forEach(player -> {
             String altName = player.name
                     .replace(" ", "")
                     .replace("_", "")
@@ -76,7 +75,7 @@ public class Utils {
         Integer newValue = Integer.valueOf(parameters.get("value"));
         Field field = null;
         playerName = altPlayerName(playerName);
-        Player player = Server.playerByName(playerName);
+        Player player = LmsPlayers.playerByName(playerName);
         log.info("PLAYER: " + playerName + " VALUE NAME: " + valueName + " NEW VALUE: " + newValue);
         try {
             field = Player.class.getField(valueName);
@@ -91,7 +90,7 @@ public class Utils {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        server.writeServerFile();
+        lmsPlayers.writeServerFile();
     }
 
     public static String altPlayerName(String name) {
@@ -147,12 +146,12 @@ public class Utils {
     }
 
     public static String state() {
-        String json = JsonUtils.pojoToJson(server);
+        String json = JsonUtils.pojoToJson(lmsPlayers);
         return json;
     }
 
     public static String players() {
-        String json = JsonUtils.pojoToJson(Main.server.players);
+        String json = JsonUtils.pojoToJson(Main.lmsPlayers.players);
         return json;
     }
 
@@ -180,7 +179,7 @@ public class Utils {
 
     public static String backupServer(HashMap<String, String> parameters) {
         String stamp = LocalDate.now().toString() + "-" + LocalTime.now().toString();
-        server.writeServerFile("server-backup-" + stamp);
+        lmsPlayers.writeServerFile("server-backup-" + stamp);
         return "BACKUP SERVER";
     }
 
@@ -198,7 +197,7 @@ public class Utils {
     public static boolean isLms(String ip) {
         log.info("CHECK IF IP IS LMS: " + ip);
         String uri = "http://" + ip + ":9000";
-        HttpResponse response = uriGetHeader(uri);
+        HttpResponse response = headByUriForResponse(uri);
         if (response == null) {
 //            log.info("NOT LMS IP");
             return false;

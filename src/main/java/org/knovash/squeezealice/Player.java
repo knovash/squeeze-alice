@@ -4,15 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.requests.Requests;
-import org.knovash.squeezealice.pojo.lms_pojo.ResponseFromLms;
+import org.knovash.squeezealice.lms.RequestParameters;
+import org.knovash.squeezealice.lms.ResponseFromLms;
 
 import java.time.LocalTime;
 import java.util.*;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.knovash.squeezealice.Main.silence;
-import static org.knovash.squeezealice.Main.server;
+import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 @Data
@@ -57,63 +57,63 @@ public class Player {
     }
 
     public static String name(String index) {
-        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.name(index).toString());
+        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.name(index).toString());
         if (responseFromLms == null) return "";
         log.info("NAME: " + responseFromLms.result._name);
         return responseFromLms.result._name;
     }
 
     public static String id(String index) {
-        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.id(index).toString());
+        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.id(index).toString());
         if (responseFromLms == null) return "";
         log.info("ID: " + responseFromLms.result._id);
         return responseFromLms.result._id;
     }
 
     public String mode() {
-        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.mode(this.name).toString());
+        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.mode(this.name).toString());
         if (responseFromLms == null) return "";
         log.info("PLAYER: " + this.name + " MODE: " + responseFromLms.result._mode);
         return responseFromLms.result._mode;
     }
 
     public String path() {
-        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.path(this.name).toString());
+        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.path(this.name).toString());
         if (responseFromLms == null) return "";
         log.info("PLAYER: " + this.name + " PATH: " + responseFromLms.result._path);
         return responseFromLms.result._path;
     }
 
     public String playlistname() {
-        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.playlistname(this.name).toString());
+        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.playlistname(this.name).toString());
         if (responseFromLms == null) return null;
         log.info("PLAYER: " + this.name + " PLAYLIST: " + responseFromLms.result._name);
         return responseFromLms.result._name;
     }
 
     public String albumname() {
-        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.albumname(this.name).toString());
+        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.albumname(this.name).toString());
         if (responseFromLms == null) return "";
         log.info("PLAYER: " + this.name + " ALBUM: " + responseFromLms.result._album);
         return responseFromLms.result._album;
     }
 
     public String trackname() {
-        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.trackname(this.name).toString());
+        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.trackname(this.name).toString());
         if (responseFromLms == null) return "";
         log.info("PLAYER: " + this.name + " TRACK: " + responseFromLms.result._title);
         return responseFromLms.result._title;
     }
 
     public String artistname() {
-        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.artistname(this.name).toString());
+        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.artistname(this.name).toString());
         if (responseFromLms == null) return null;
         log.info("PLAYER: " + this.name + " PLAYLIST: " + responseFromLms.result._artist);
         return responseFromLms.result._artist;
     }
 
     public String volume() {
-        ResponseFromLms responseFromLms = Fluent.postGetContent(Requests.volume(this.name).toString());
+        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.volume(this.name).toString());
         if (responseFromLms == null) return null;
         log.info("PLAYER: " + this.name + " GET VOLUME: " + responseFromLms.result._volume);
         return responseFromLms.result._volume;
@@ -121,14 +121,14 @@ public class Player {
 
     public Player volume(String value) {
         log.info("PLAYER: " + this.name + " SET VOLUME: " + value);
-        String status = Fluent.postGetStatus(Requests.volume(this.name, value).toString());
+        String status = Requests.postByJsonForStatus(RequestParameters.volume(this.name, value).toString());
         log.info("SATUS: " + status);
         return this;
     }
 
     public Player play(Integer channel) {
         log.info("PLAYER: " + this.name + " PLAY CHANNEL: " + channel);
-        String status = Fluent.postGetStatus(Requests.play(this.name, channel - 1).toString());
+        String status = Requests.postByJsonForStatus(RequestParameters.play(this.name, channel - 1).toString());
         log.info("SATUS: " + status);
         this.saveLastPath();
         return this;
@@ -136,7 +136,7 @@ public class Player {
 
     public Player play(String path) {
         log.info("PLAYER: " + this.name + " PLAY PATH: " + path);
-        String status = Fluent.postGetStatus(Requests.play(this.name, path).toString());
+        String status = Requests.postByJsonForStatus(RequestParameters.play(this.name, path).toString());
         log.info("SATUS: " + status);
         this.saveLastPath();
         return this;
@@ -144,14 +144,14 @@ public class Player {
 
     public Player playSilence() {
         log.info("PLAYER: " + this.name + " PLAY SILENCE");
-        String status = Fluent.postGetStatus(Requests.play(this.name, silence).toString());
+        String status = Requests.postByJsonForStatus(RequestParameters.play(this.name, silence).toString());
         log.info("SATUS: " + status);
         return this;
     }
 
     public Player play() {
         log.info("PLAYER: " + this.name + " PLAY");
-        String status = Fluent.postGetStatus(Requests.play(this.name).toString());
+        String status = Requests.postByJsonForStatus(RequestParameters.play(this.name).toString());
         log.info("SATUS: " + status);
         this.saveLastPath();
         return this;
@@ -159,7 +159,7 @@ public class Player {
 
     public Player pause() {
         log.info("PLAYER: " + this.name + " PAUSE");
-        String status = Fluent.postGetStatus(Requests.pause(this.name).toString());
+        String status = Requests.postByJsonForStatus(RequestParameters.pause(this.name).toString());
         log.info("SATUS: " + status);
         this.saveLastPath();
         this.saveLastTimeIfPlay();
@@ -168,7 +168,7 @@ public class Player {
 
     public Player play_pause() {
         log.info("PLAYER: " + this.name + " PLAY/PAUSE");
-        String status = Fluent.postGetStatus(Requests.play_pause(this.name).toString());
+        String status = Requests.postByJsonForStatus(RequestParameters.play_pause(this.name).toString());
         log.info("SATUS: " + status);
         this.saveLastPath();
         return this;
@@ -176,7 +176,7 @@ public class Player {
 
     public Player prevtrack() {
         log.info("PLAYER: " + this.name + " NEXT");
-        String status = Fluent.postGetStatus(Requests.prevtrack(this.name).toString());
+        String status = Requests.postByJsonForStatus(RequestParameters.prevtrack(this.name).toString());
         log.info("SATUS: " + status);
         this.saveLastPath();
         return this;
@@ -184,7 +184,7 @@ public class Player {
 
     public Player nexttrack() {
         log.info("PLAYER: " + this.name + " NEXT");
-        String status = Fluent.postGetStatus(Requests.nexttrack(this.name).toString());
+        String status = Requests.postByJsonForStatus(RequestParameters.nexttrack(this.name).toString());
         log.info("SATUS: " + status);
         this.saveLastPath();
         return this;
@@ -192,28 +192,28 @@ public class Player {
 
     public Player shuffleon() {
         log.info("PLAYER: " + this.name + " SHUFFLE ON");
-        String status = Fluent.postGetStatus(Requests.shuffleon(this.name).toString());
+        String status = Requests.postByJsonForStatus(RequestParameters.shuffleon(this.name).toString());
         log.info("SATUS: " + status);
         return this;
     }
 
     public Player shuffleoff() {
         log.info("PLAYER: " + this.name + " SHUFFLE OFF");
-        String status = Fluent.postGetStatus(Requests.shuffleoff(this.name).toString());
+        String status = Requests.postByJsonForStatus(RequestParameters.shuffleoff(this.name).toString());
         log.info("SATUS: " + status);
         return this;
     }
 
     public Player sync(String toPlayer) {
         log.info("PLAYER: " + this.name + " SYNC TO: " + toPlayer);
-        String status = Fluent.postGetStatus(Requests.sync(this.name, toPlayer).toString());
+        String status = Requests.postByJsonForStatus(RequestParameters.sync(this.name, toPlayer).toString());
         log.info("SATUS: " + status);
         return this;
     }
 
     public Player unsync() {
         log.info("PLAYER UNSYNC: " + this.name);
-        String status = Fluent.postGetStatus(Requests.unsync(this.name).toString());
+        String status = Requests.postByJsonForStatus(RequestParameters.unsync(this.name).toString());
         log.info("SATUS: " + status);
         return this;
     }
@@ -274,7 +274,7 @@ public class Player {
     public Player wakeAndSet() {
         log.info("WAKE");
 
-        if (Action.timeExpired(this)) {
+        if (SwitchAliceCommand.timeExpired(this)) {
             log.info("WAKE RUN");
             log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wake_delay);
             this
@@ -326,7 +326,7 @@ public class Player {
     }
 
     public void remove() {
-        server.players.remove(this);
+        lmsPlayers.players.remove(this);
     }
 
     public Player saveLastTime() {

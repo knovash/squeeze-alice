@@ -9,7 +9,7 @@ import org.knovash.squeezealice.utils.Utils;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.knovash.squeezealice.Main.server;
+import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 public class Html {
@@ -153,7 +153,7 @@ public class Html {
                 "  <title>Browser</title></head><body>" +
                 "<p><a href=\"/\">Home</a></p>" +
                 "  <h2>Настройка колонок</h2>" +
-                join(server.players.stream()
+                join(lmsPlayers.players.stream()
                         .map(p ->
                                 "<form action=\"/cmd\" method=\"get\">" +
                                         p.name +
@@ -182,14 +182,14 @@ public class Html {
     }
 
     public static String getNotInHome() {
-        List<String> inLms = server.players.stream().map(p -> p.name).collect(Collectors.toList());
+        List<String> inLms = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
         List<String> inHome = SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
         inLms.removeAll(inHome);
         return inLms.toString();
     }
 
     public static String getNotInHomeFirst() {
-        List<String> inLms = server.players.stream().map(p -> p.name).collect(Collectors.toList());
+        List<String> inLms = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
         List<String> inHome = SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
         inLms.removeAll(inHome);
         if (inLms.size() == 0) return "--";

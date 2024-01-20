@@ -5,12 +5,11 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
-import org.knovash.squeezealice.pojo.spotify_pojo.Credentials;
+import org.knovash.squeezealice.spotify.spotify_pojo.Credentials;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.Base64;
-import java.util.HashMap;
 
 @Log4j2
 @Data

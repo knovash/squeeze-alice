@@ -1,9 +1,9 @@
 package org.knovash.squeezealice.provider;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.Action;
+import org.knovash.squeezealice.SwitchAliceCommand;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.Server;
+import org.knovash.squeezealice.LmsPlayers;
 import org.knovash.squeezealice.pojo.pojoActions.Device;
 
 @Log4j2
@@ -26,7 +26,7 @@ public class DeviceActions {
 
 
         // обратиться к девайсу и изменить его состояние
-        Player player = Server.playerByName(name);
+        Player player = LmsPlayers.playerByName(name);
         log.info("PLAYER: " + player);
         log.info(relative);
         switch (instance) {
@@ -52,13 +52,13 @@ public class DeviceActions {
                 } else {
                     channel = Integer.parseInt(value);
                 }
-                Action.channel(player, channel);
+                SwitchAliceCommand.channel(player, channel);
                 SmartHome.lastChannel = channel;
                 break;
             case ("on"):
                 log.info("ON/OFF PLAY/PAUSE " + value);
-                if (value.equals("true")) Action.turnOnMusicSpeaker(player);
-                if (value.equals("false")) Action.turnOffSpeaker(player);
+                if (value.equals("true")) SwitchAliceCommand.turnOnMusicSpeaker(player);
+                if (value.equals("false")) SwitchAliceCommand.turnOffSpeaker(player);
                 break;
         }
         log.info("OK");

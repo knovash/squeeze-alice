@@ -22,7 +22,7 @@ public class Main {
     public static String lmsServer = "http://" + lmsIP + ":" + lmsPort + "/jsonrpc.js/";
     public static String silence = bundle.getString("silence");
     public static int port = Integer.parseInt(bundle.getString("port"));
-    public static Server server = new Server();
+    public static LmsPlayers lmsPlayers = new LmsPlayers();
 
     public static void main(String[] args) {
         log.info("  ---+++===[ START ]===+++---");
@@ -68,9 +68,9 @@ public class Main {
 //        NewDevice.create("колонка", "JBL white", "Веранда");
 
         log.info("  ---+++===[ START SERVER ]===+++--- ");
-        server = new Server();
-        server.readServerFile();
-        server.updatePlayers();
-        ServerController.start();
+        lmsPlayers = new LmsPlayers();
+        lmsPlayers.readServerFile();
+        lmsPlayers.updatePlayers();
+        Server.start();
     }
 }
