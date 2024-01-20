@@ -7,10 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ActionResult {
+public class Range {
 
-    public String status;
-    public String error_code;
-    public String error_message;
+    public int max = 100;
+    public int min = 1;
+    public int precision = 1;
 }
-

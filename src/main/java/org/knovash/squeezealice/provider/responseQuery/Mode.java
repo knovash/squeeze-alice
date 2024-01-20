@@ -7,10 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ActionResult {
+public class Mode {
 
-    public String status;
-    public String error_code;
-    public String error_message;
+    public String value;
 }
-

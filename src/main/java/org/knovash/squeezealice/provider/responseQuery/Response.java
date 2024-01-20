@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Response {
     public String request_id;
-    public Payload payload;
+    public Payload payload = new Payload();
 }

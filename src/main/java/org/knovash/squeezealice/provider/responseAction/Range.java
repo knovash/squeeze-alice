@@ -4,13 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Device {
+public class Range {
 
-    public String id;
-    public ArrayList<Capability> capabilities;
+    public int max = 100;
+    public int min = 1;
+    public int precision = 1;
 }

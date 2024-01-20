@@ -13,4 +13,5 @@ import java.util.List;
 public class Payload {
 
     public List<Device> devices = new ArrayList<>();
+    public String user_id;
 }

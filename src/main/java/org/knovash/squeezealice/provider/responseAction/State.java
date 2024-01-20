@@ -11,6 +11,6 @@ public class State {
 
     public String instance;
     public String value;
-    public boolean relative;
+    public boolean relative = false;
     public ActionResult action_result = new ActionResult();
 }

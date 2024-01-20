@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Response {
-    public String request_id = null;
+    public String request_id;
     public Payload payload = new Payload();
 }

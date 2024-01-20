@@ -3,12 +3,12 @@ package org.knovash.squeezealice.provider.responseAction;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.knovash.squeezealice.provider.responseUserDevices.Parameters;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Capability {
+
     public String type;
     public State state;
     public Boolean retrievable = true; // Доступен ли для данного умения устройства запрос состояния

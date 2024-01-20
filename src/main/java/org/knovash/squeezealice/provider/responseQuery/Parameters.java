@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.provider.responseUserDevices;
+package org.knovash.squeezealice.provider.responseQuery;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

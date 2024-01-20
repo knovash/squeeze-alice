@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ActionResult {
+
     public String status;
     public String error_code;
     public String error_message;

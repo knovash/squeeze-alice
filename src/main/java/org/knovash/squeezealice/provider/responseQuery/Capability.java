@@ -3,7 +3,6 @@ package org.knovash.squeezealice.provider.responseQuery;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.knovash.squeezealice.provider.responseUserDevices.Parameters;
 
 @Data
 @NoArgsConstructor

@@ -5,10 +5,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Payload {
-    public ArrayList<Device> devices;
-//    public String user_id;
+
+    public List<Device> devices = new ArrayList<>();
+    public String user_id;
 }
