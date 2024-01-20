@@ -12,6 +12,15 @@ import java.util.stream.Collectors;
 @Log4j2
 public class DeviceUtils {
 
+    public static Integer addToHome(Device device) {
+        int id = 0;
+        if (SmartHome.devices.size() != 0) id = Integer.parseInt(SmartHome.devices.getLast().id) + 1;
+        log.info(SmartHome.devices.stream().map(d -> d.room).collect(Collectors.toList()));
+        device.id = String.valueOf(id);
+        SmartHome.devices.add(device);
+        return id;
+    }
+
     public static String create(HashMap<String, String> parameters) {
         String speaker_name_alice = parameters.get("speaker_name_alice");
         String speaker_name_lms = parameters.get("speaker_name_lms");
@@ -106,7 +115,8 @@ public class DeviceUtils {
 
         log.info("NEW DEVICE: " + myDevice);
         log.info("HOME SIZE BEFORE ADD: " + SmartHome.devices.size());
-        Integer id = myDevice.addToHome(myDevice);
+        Integer id =DeviceUtils.addToHome(myDevice);
+//        Integer id = myDevice.addToHome(myDevice);
         log.info("NEW DEVICE ID: " + id);
         log.info("HOME SIZE AFTER ADD: " + SmartHome.devices.size());
         log.info("HOME DEVICES: " + SmartHome.devices.stream().map(d -> d.customData.lmsName + " id=" + d.id).collect(Collectors.toList()));
