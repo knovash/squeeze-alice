@@ -18,13 +18,13 @@ public class Device {
 
     public String id;
     public String name;
-    public List<String> aliases = new ArrayList<>();
-    public String type;
     public String description;
     public String room;
+    public String type;
+    public CustomData customData = new CustomData();
     public List<Capability> capabilities = new ArrayList<>();
     public List<Property> properties = new ArrayList<>();
-    public CustomData customData = new CustomData();
+    public List<String> aliases = new ArrayList<>();
 
     public Device(String deviceName) {
         this.name = deviceName;

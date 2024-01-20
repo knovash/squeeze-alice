@@ -14,6 +14,35 @@ import static org.knovash.squeezealice.Main.lmsPlayers;
 @Log4j2
 public class Html {
 
+    public static String index() {
+        String page = "" +
+                "<!doctype html>\n" +
+                "<html lang=\"ru\">\n" +
+                "\n" +
+                "<head>\n" +
+                "<meta charSet=\"utf-8\" />\n" +
+                "<meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, shrink-to-fit=no, viewport-fit=cover'>\n" +
+                "<meta http-equiv='X-UA-Compatible' content='ie=edge'>\n" +
+                "<style>\n" +
+                "   html, body {background: #eee;}\n" +
+                "</style>\n" +
+                " </head>\n" +
+                "\n" +
+                " <body> \n" +
+                " <p><strong>Squeeze-Alice</strong></p> \n" +
+                " <p><a href=\\speakers>Подключение колонок в УД с Алисой</a></p> \n" +
+                " <p><a href=\\players>Настройка колонок</a></p> \n" +
+                " <p><a href=\\spotify>Настройка Spotify</a></p> \n" +
+                " <p><a href=\\yandex>Настройка Yandex</a></p> \n" +
+                " <p><a href=\\cmd?action=state>Посмотреть настройки</a></p> \n" +
+                " <p><a href=\\cmd?action=backup>Сохранить настройки</a></p> \n" +
+                " <p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
+                " </body>\n" +
+                "\n" +
+                " </html>";
+        return page;
+    }
+
     public static String formSpotifyLogin() {
         String page = "<!DOCTYPE html><html lang=\"en\">" +
                 "<head><meta charset=\"UTF-8\" />" +

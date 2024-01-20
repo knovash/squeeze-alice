@@ -37,17 +37,17 @@ public class JsonUtils {
     }
 
     public static <T> T jsonToPojo(String json, Class<T> clazz) {
-        log.info("JSON TO POJO: " + json);
-        json = json.replace("\\","");
-        log.info("JSON TO POJO: " + json);
+        log.info("START");
+//        log.info("JSON TO POJO: " + json);
+        json = json.replace("\\", "");
+//        log.info("JSON TO POJO: " + json);
         try {
             return objectMapper.readValue(json, clazz);
         } catch (JsonProcessingException e) {
 
             log.info("ERROR " + e);
-        }
-        finally {
-            log.info("END jsonToPojo");
+        } finally {
+            log.info("END");
         }
         return null;
     }
@@ -188,6 +188,7 @@ public class JsonUtils {
     @NoArgsConstructor
     @AllArgsConstructor
     static private class ValuePojo {
+
         public String value;
     }
 }

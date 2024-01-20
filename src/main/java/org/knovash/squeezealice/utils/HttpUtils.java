@@ -48,6 +48,7 @@ public class HttpUtils {
 
     public static HashMap<String, String> getQueryMap(String query) {
         if (query == null) return new HashMap<>();
+        query = query.replace("+"," ");
         HashMap<String, String> parameters = new HashMap<>();
         Optional.ofNullable(Arrays.asList(query.split("&"))).orElseGet(Collections::emptyList)
                 .stream()

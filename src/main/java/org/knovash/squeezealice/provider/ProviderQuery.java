@@ -7,7 +7,6 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.LmsPlayers;
-//import org.knovash.squeezealice.provider.pojoQueryResponse.*;
 import org.knovash.squeezealice.provider.responseQuery.*;
 import org.knovash.squeezealice.utils.JsonUtils;
 
@@ -19,25 +18,23 @@ import java.util.stream.Collectors;
 public class ProviderQuery {
 
     public static Context action(Context context) {
-        log.info("1");
         String body = context.body;
         String xRequestId = context.xRequestId;
         Root bodyPojo = JsonUtils.jsonToPojo(body, Root.class);
         String json;
-        log.info("2");
         if (body == null) {
             json = "{\"request_id\":\"" + xRequestId + "\",\"payload\":{\"devices\":[]}}";
         } else {
-            log.info("3");
-            log.info("bodyPojo" + bodyPojo);
-            log.info("bodyPojo" + bodyPojo.devices.size());
             // запрос о состоянии девайса id=0
             int device_id = Integer.parseInt(bodyPojo.devices.get(0).id);
-            log.info("STATE FOR DEVICE ID: " + device_id +
+
+            if (SmartHome.devices.size() == 0) log.info("ERROR - no registered LMS players in Alice home");
+
+            log.info("QUERY FOR STATE DEVICE ID: " + device_id +
                     " NAME: " + SmartHome.devices.get(device_id).name +
                     " NAME: " + SmartHome.getByDeviceId(device_id).name +
                     " LMS NAME: " + SmartHome.getByDeviceId(device_id).customData.lmsName);
-
+            log.info("5");
             Response response = new Response();
             response.request_id = xRequestId;
             List<Device> jsonDevices = bodyPojo.devices.stream().map(d -> updateDevice(Integer.valueOf(d.id))).collect(Collectors.toList());

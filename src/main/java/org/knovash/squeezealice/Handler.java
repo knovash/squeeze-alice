@@ -30,8 +30,9 @@ public class Handler implements HttpHandler {
         log.info("BODY: " + body);
         String query = httpExchange.getRequestURI().getQuery();
         log.info("QUERY: " + query);
+
         HashMap<String, String> queryMap = HttpUtils.getQueryMap(query);
-        log.info("OK");
+
         Context context = new Context();
         context.body = body;
         context.headers = headers;

@@ -11,14 +11,19 @@ import static org.knovash.squeezealice.utils.Utils.readFile;
 public class PageIndex {
 
     public static Context action(Context context) {
-        String json = null;
-        try {
-            json = readFile("src/main/resources/index.html");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        String json = Html.index();
         context.json = json;
         context.code = 200;
         return context;
+
+//        String json = null;
+//        try {
+//            json = readFile("src/main/resources/index.html");
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//        context.json = json;
+//        context.code = 200;
+//        return context;
     }
 }
