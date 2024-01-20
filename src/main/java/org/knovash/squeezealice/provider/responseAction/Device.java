@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -12,5 +13,5 @@ import java.util.ArrayList;
 public class Device {
 
     public String id;
-    public ArrayList<Capability> capabilities;
+    public List<Capability> capabilities = new ArrayList<>();
 }
