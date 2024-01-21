@@ -5,23 +5,33 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
-import org.knovash.squeezealice.spotify.spotify_pojo.SpotifyCredentials;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.HashMap;
 
 @Log4j2
 @Data
 public class Yandex {
 
-    public static String bearerToken;
-    public static SpotifyCredentials credentialsYandex = new SpotifyCredentials();
+    //    public static String bearerToken;
+    public  String clientId = "no-------------------";
+    public  String clientSecret = "no---------------";
+    public  String bearer = "no---------------";
+    public static Yandex yandex = new Yandex();
+
+    public static void credentialsYandex(HashMap<String, String> parameters) {
+        yandex.clientId = parameters.get("client_id");
+        yandex.clientSecret = parameters.get("client_secret");
+        yandex.bearer = getBearerToken();
+        JsonUtils.pojoToJsonFile(yandex, "yandex.json");
+    }
 
     public static String getBearerToken() {
-        String client_id = SmartHome.client_id;
-        String client_secret = SmartHome.client_secret;
-//        Credentials sc = new Credentials();
+        if (yandex.clientId == null) JsonUtils.jsonFileToPojo("yandex.json", Yandex.class);
+        String client_id = yandex.clientId;
+        String client_secret = yandex.clientSecret;
         log.info("clientId: " + client_id + " clientSecret: " + client_secret);
         Response response;
         String token;
@@ -31,9 +41,9 @@ public class Yandex {
         String json = null;
 
         String urlParameters =
-                "client_id=" + Yandex.credentialsYandex.clientId +
+                "client_id=" + client_id +
                         "&" +
-                        "client_secret=" + Yandex.credentialsYandex.clientSecret +
+                        "client_secret=" + client_secret +
                         "&" +
                         "grant_type=client_credentials";
         try {
@@ -53,24 +63,8 @@ public class Yandex {
         token = JsonUtils.jsonGetValue(json, "access_token");
         log.info("token: " + token);
         String bearer = "Bearer " + token.replace("\"", "");
-        log.info("bearerToken: " + bearer);
-        bearerToken = bearer;
-        return bearer;
-    }
-
-
-    public static void createCredFile() {
-        SpotifyCredentials sc = new SpotifyCredentials();
-        credentialsYandex.setClientId("ClientId");
-        credentialsYandex.setClientSecret("ClientSecret");
-        JsonUtils.pojoToJsonFile(sc, "yandex.json");
-    }
-
-    public static void createCredFile(String id, String secret) {
-        SpotifyCredentials sc = new SpotifyCredentials();
-        credentialsYandex.setClientId(id);
-        credentialsYandex.setClientSecret(secret);
-        credentialsYandex.setClientSecret(secret);
-        JsonUtils.pojoToJsonFile(sc, "yandex.json");
+        log.info("bearerToken: " + token);
+        yandex.bearer = token;
+        return token;
     }
 }

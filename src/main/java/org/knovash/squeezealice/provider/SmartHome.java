@@ -4,26 +4,15 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.response.Device;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 
 @Log4j2
 @Data
 public class SmartHome {
 
-//    мое приложение
-//    https://oauth.yandex.ru/client/0d17cba2ab254d838ac1ddcedabc4191
-
-//    y0_AgAAAAAYbWLzAAqd-QAAAADuroaJKlTGViNIS5KOAPmaK7spjdDQCBw
-
-    public static String bearerToken = "y0_AgAAAAAYbWLzAAqd-QAAAADuroaJKlTGViNIS5KOAPmaK7spjdDQCBw";
-    //  идентификатор приложения для получения OAuth token
-    public static String client_id = "0d17cba2ab254d838ac1ddcedabc4191";
-    public static String client_secret = "b0966cd53b9647b9989bd20a3c9140d8";
     //  направить пользователя после авторизации сюда
     public static String redirectUri = "https://unicorn-neutral-badly.ngrok-free.app/redirect";
     public static String user_id = "konstantin";
-    //    public static List<Device> devices = new ArrayList<>();
     public static LinkedList<Device> devices = new LinkedList<>();
     public static Integer channel;
 
@@ -32,10 +21,6 @@ public class SmartHome {
     public static boolean fakePlayPause = true;
     public static boolean fakeMute = false;
     public static boolean fakeOnOff = true;
-
-//    public static HashMap<String,String> rooms = new HashMap<>();
-//    комната:"application_id"
-public static HashMap<String,String> applicationIdAndPlayerName = new HashMap<>();
 
     public static Device getByDeviceId(int deviceId) {
         String index = String.valueOf(deviceId);

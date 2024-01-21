@@ -18,10 +18,8 @@ public class SwitchQueryCommand {
     public static Context action(String query, Context context) {
         log.info("QUERY: " + query);
         String actionStatus;
-        String name = null;
+        String name;
         Player player = null;
-
-//        HashMap<String, String> parameters = HttpUtils.getQueryParameters(query);
         HashMap<String, String> parameters = context.queryMap;
         if (!parameters.containsKey("action")) {
             log.info("NO ACTION IN QUERY");
@@ -153,7 +151,7 @@ public class SwitchQueryCommand {
                 break;
             case ("cred_yandex"):
                 log.info("CREDENTIALS YANDEX");
-                Yandex.getBearerToken();
+                Yandex.credentialsYandex(parameters);
                 actionStatus = Html.formYandexLogin();
                 break;
             case ("backup"):

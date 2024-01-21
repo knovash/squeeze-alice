@@ -2,22 +2,21 @@ package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.provider.Yandex;
-import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.provider.SmartHome;
+import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.utils.Utils;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.provider.Yandex.yandex;
 
 @Log4j2
 public class Html {
 
     public static String index() {
-        String page = "" +
-                "<!doctype html>\n" +
+        String page = "<!doctype html>\n" +
                 "<html lang=\"ru\">\n" +
                 "\n" +
                 "<head>\n" +
@@ -34,7 +33,7 @@ public class Html {
                 " <p><a href=\\speakers>Подключение колонок в УД с Алисой</a></p> \n" +
                 " <p><a href=\\players>Настройка колонок</a></p> \n" +
                 " <p><a href=\\spotify>Настройка Spotify</a></p> \n" +
-                " <p><a href=\\yandex>Настройка Yandex</a></p> \n" +
+//                " <p><a href=\\yandex>Настройка Yandex</a></p> \n" +
                 " <p><a href=\\cmd?action=state>Посмотреть настройки</a></p> \n" +
                 " <p><a href=\\cmd?action=backup>Сохранить настройки</a></p> \n" +
                 " <p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
@@ -57,12 +56,12 @@ public class Html {
                 "<br>" +
                 "<form action=\"/cmd\" method=\"get\">" +
                 "<div>" +
-                "<input name=\"id\" id=\"id\" value=\"" + Spotify.client_id.substring(0, 4) + "*****" + "\"/>" +
+                "<input name=\"id\" id=\"id\" value=\"" + Spotify.client_id + "\"/>" +
                 "<label for=\"id\"> client id</label>" +
                 "</div>" +
                 "<div>" +
                 "<br>" +
-                "<input name=\"secret\" id=\"secret\" value=\"" + Spotify.client_secret.substring(0, 4) + "*****" + "\"/>" +
+                "<input name=\"secret\" id=\"secret\" value=\"" + Spotify.client_secret + "*****" + "\"/>" +
                 "<label for=\"secret\"> client secret</label>" +
                 "</div>" +
                 "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"cred_spotify\">" +
@@ -89,15 +88,15 @@ public class Html {
                 "<br>" +
                 "<form action=\"/cmd\" method=\"get\">" +
                 "<div>" +
-                "<input name=\"id\" id=\"id\" value=\"" + SmartHome.client_id.substring(0, 4) + "*****" + "\"/>" +
-                "<label for=\"id\"> client id</label>" +
+                "<input name=\"client_id\" id=\"client_id\" value=\"" + yandex.clientId + "\"/>" +
+                "<label for=\"client_id\"> client id</label>" +
                 "</div>" +
                 "<div>" +
                 "<br>" +
-                "<input name=\"secret\" id=\"secret\" value=\"" + SmartHome.client_secret.substring(0, 4) + "*****" + "\"/>" +
-                "<label for=\"secret\"> client secret</label>" +
+                "<input name=\"client_secret\" id=\"client_secret\" value=\"" + yandex.clientSecret + "\"/>" +
+                "<label for=\"client_secret\"> client secret</label>" +
                 "</div>" +
-                "<p>Yandex bearer token: " + Yandex.bearerToken +
+                "<p>Yandex bearer token: " + yandex.bearer +
                 "</p>" +
                 "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"cred_yandex\">" +
                 "<div>" +
@@ -209,7 +208,7 @@ public class Html {
                                         "<form action=\"/cmd\" method=\"get\">"
                         ).collect(Collectors.toList())) +
                 "<p>последний запрос от Алисы id: " + Player.lastAliceId + "</p>" +
-                "<p>чтобы узнать id Алисы, спросите Алиса что сейчас играет? и обновите страницу</p>" +
+                "<p>чтобы узнать id Алисы, спросите Алиса скажи раз два, что сейчас играет? и обновите страницу</p>" +
                 "<p><a href=\"/\">Home</a></p>" +
                 "<script src=\"script.js\"></script>" +
                 "</body></html>";
