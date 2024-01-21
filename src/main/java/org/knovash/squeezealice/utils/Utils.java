@@ -32,11 +32,10 @@ import static org.knovash.squeezealice.Main.lmsPlayers;
 @Log4j2
 public class Utils {
 
-    private static ResourceBundle bundle = ResourceBundle.getBundle("config");
     public static Map<String, String> altNames;
 
     public static void generatePlayersAltNamesToFile() {
-        log.info("GET ALT NAMES");
+        log.info("ALT NAMES");
         File file = new File("alt_names.json");
         Map<String, String> namesGenerated = new HashMap<>();
         Map<String, String> namesFromFile = new HashMap<>();
@@ -111,11 +110,11 @@ public class Utils {
     }
 
     public static String logLastLines(HashMap<String, String> parameters) {
-        int lastCount = 5;
+        int lastCount = 50;
         if (parameters.containsKey("value")) {
             lastCount = Integer.parseInt(parameters.get("value"));
         }
-        log.info("lastCount " + lastCount);
+        log.info("LOG LINES " + lastCount);
         String filePath = "log/log.txt";
         File file = new File(filePath);
         List<String> readfromFile = null;
