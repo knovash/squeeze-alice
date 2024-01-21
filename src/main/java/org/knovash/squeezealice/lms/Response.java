@@ -1,4 +1,5 @@
 package org.knovash.squeezealice.lms;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,17 +9,18 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ResponseFromLms {
+public class Response {
+
     public List<Object> params;
     public Result result;
     public String id;
     public String method;
 
-
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Result {
+
         public String _volume;
         public String _count;
         public String _mode;

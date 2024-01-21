@@ -5,7 +5,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
-import org.knovash.squeezealice.lms.ResponseFromLms;
+import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
@@ -33,10 +33,10 @@ public class Requests {
         return status;
     }
 
-    public static ResponseFromLms postByJsonForResponse(String json) {
+    public static Response postByJsonForResponse(String json) {
         log.info("REQUEST TO LMS: " + json);
         Content content = null;
-        ResponseFromLms responseFromLms = null;
+        Response response = null;
         try {
             content = Request.Post(lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
@@ -48,11 +48,11 @@ public class Requests {
             log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIP + ":" + lmsPort);
         }
         if (content != null) {
-            responseFromLms = JsonUtils.jsonToPojo(content.asString(), ResponseFromLms.class);
+            response = JsonUtils.jsonToPojo(content.asString(), Response.class);
         } else {
             log.info("ERROR RESPONSE IS EMPTY");
         }
-        return responseFromLms;
+        return response;
     }
 
     public static String getByUriForStatus(String uri) {

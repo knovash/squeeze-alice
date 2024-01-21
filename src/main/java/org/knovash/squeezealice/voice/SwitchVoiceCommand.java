@@ -1,10 +1,11 @@
 package org.knovash.squeezealice.voice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.LmsPlayers;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.spotify_pojo.Type;
 import org.knovash.squeezealice.utils.JsonUtils;
+
+import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 public class SwitchVoiceCommand {
@@ -32,23 +33,23 @@ public class SwitchVoiceCommand {
                 answer = "ничего не нашла";
                 return createResponse(answer);
             }
-            LmsPlayers.playerByName(playerName).shuffleon().play(link);
+            lmsPlayers.getPlayerByName(playerName).shuffleon().play(link);
             return createResponse(answer);
         }
         if (command.contains("какая") && command.contains("громкость")) {
             log.info("VOLUME");
-            String volume = LmsPlayers.playerByName(playerName).volume();
+            String volume = lmsPlayers.getPlayerByName(playerName).volume();
             if (volume == null) return createResponse("медиасервер не отвечает");
             answer = "сейчас на " + playerName + " громкость " + volume;
             return createResponse(answer);
         }
         if (command.contains("что") && command.contains("играет")) {
             log.info("WATS PLAYING");
-            String playlist = LmsPlayers.playerByName(playerName).playlistname();
+            String playlist = lmsPlayers.getPlayerByName(playerName).playlistname();
 
-            String mode = LmsPlayers.playerByName(playerName).mode();
+            String mode = lmsPlayers.getPlayerByName(playerName).mode();
             log.info("PLAYLIST: " + playlist);
-            if (playlist == null) playlist = LmsPlayers.playerByName(playerName).artistname();
+            if (playlist == null) playlist = lmsPlayers.getPlayerByName(playerName).artistname();
             log.info("PLAYLIST: " + playlist);
             if (playlist == null) return createResponse("медиасервер не отвечает");
             log.info("PLAYLIST: " + playlist);
@@ -61,7 +62,7 @@ public class SwitchVoiceCommand {
         }
         if (command.contains("дальше") || command.contains("следующий")) {
             log.info("NEXT TRACK");
-            LmsPlayers.playerByName(playerName).nexttrack();
+            lmsPlayers.getPlayerByName(playerName).nexttrack();
             answer = "включаю следующий";
             return createResponse(answer);
         }

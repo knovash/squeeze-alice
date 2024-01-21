@@ -2,9 +2,7 @@ package org.knovash.squeezealice.voice;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
-import org.knovash.squeezealice.LmsPlayers;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.provider.SmartHome;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
@@ -23,7 +21,7 @@ public class VoiceCommand {
         String alice_id = JsonUtils.jsonGetValue(body, "application_id");
         Player.lastAliceId = alice_id;
         log.info("alice_id: " + alice_id);
-        String playerName = LmsPlayers.playerNameByAliceId(alice_id);
+        String playerName = lmsPlayers.getPlayerNameByAliceId(alice_id);
         log.info("playerName: " + playerName);
 
         response = SwitchVoiceCommand.action(command, playerName);

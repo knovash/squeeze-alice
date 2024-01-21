@@ -6,5 +6,4 @@ sudo cp squeeze-alice.service /lib/systemd/system/
 sudo systemctl enable squeeze-alice.service
 sudo systemctl daemon-reload
 sudo systemctl start squeeze-alice.service
-#$SHELL
 

@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 # sudo chmod +x *.sh
+systemctl stop squeeze-tunnel.service
+systemctl stop squeeze-alice.service
+
+rm -r /opt/squeeze-alice*
+
 cd /root
+
 sudo tar xzvf squeeze-alice*.tar.gz -C /opt/
 
-sudo systemctl stop squeeze-alice.service
-sudo systemctl daemon-reload
-sudo systemctl enable squeeze-alice.service
-sudo systemctl start squeeze-alice.service
-#$SHELL
+systemctl enable squeeze-alice.service
+systemctl enable squeeze-tunnel.service
+systemctl daemon-reload
+systemctl restart squeeze-alice.service
+systemctl restart squeeze-tunnel.service
 

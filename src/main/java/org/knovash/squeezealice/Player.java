@@ -5,10 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.lms.RequestParameters;
-import org.knovash.squeezealice.lms.ResponseFromLms;
+import org.knovash.squeezealice.lms.Response;
 
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -61,66 +60,66 @@ public class Player {
     }
 
     public static String name(String index) {
-        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.name(index).toString());
-        if (responseFromLms == null) return "";
-        log.info("NAME: " + responseFromLms.result._name);
-        return responseFromLms.result._name;
+        Response response = Requests.postByJsonForResponse(RequestParameters.name(index).toString());
+        if (response == null) return "";
+        log.info("NAME: " + response.result._name);
+        return response.result._name;
     }
 
     public static String id(String index) {
-        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.id(index).toString());
-        if (responseFromLms == null) return "";
-        log.info("ID: " + responseFromLms.result._id);
-        return responseFromLms.result._id;
+        Response response = Requests.postByJsonForResponse(RequestParameters.id(index).toString());
+        if (response == null) return "";
+        log.info("ID: " + response.result._id);
+        return response.result._id;
     }
 
     public String mode() {
-        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.mode(this.name).toString());
-        if (responseFromLms == null) return "";
-        log.info("PLAYER: " + this.name + " MODE: " + responseFromLms.result._mode);
-        return responseFromLms.result._mode;
+        Response response = Requests.postByJsonForResponse(RequestParameters.mode(this.name).toString());
+        if (response == null) return "";
+        log.info("PLAYER: " + this.name + " MODE: " + response.result._mode);
+        return response.result._mode;
     }
 
     public String path() {
-        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.path(this.name).toString());
-        if (responseFromLms == null) return "";
-        log.info("PLAYER: " + this.name + " PATH: " + responseFromLms.result._path);
-        return responseFromLms.result._path;
+        Response response = Requests.postByJsonForResponse(RequestParameters.path(this.name).toString());
+        if (response == null) return "";
+        log.info("PLAYER: " + this.name + " PATH: " + response.result._path);
+        return response.result._path;
     }
 
     public String playlistname() {
-        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.playlistname(this.name).toString());
-        if (responseFromLms == null) return null;
-        log.info("PLAYER: " + this.name + " PLAYLIST: " + responseFromLms.result._name);
-        return responseFromLms.result._name;
+        Response response = Requests.postByJsonForResponse(RequestParameters.playlistname(this.name).toString());
+        if (response == null) return null;
+        log.info("PLAYER: " + this.name + " PLAYLIST: " + response.result._name);
+        return response.result._name;
     }
 
     public String albumname() {
-        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.albumname(this.name).toString());
-        if (responseFromLms == null) return "";
-        log.info("PLAYER: " + this.name + " ALBUM: " + responseFromLms.result._album);
-        return responseFromLms.result._album;
+        Response response = Requests.postByJsonForResponse(RequestParameters.albumname(this.name).toString());
+        if (response == null) return "";
+        log.info("PLAYER: " + this.name + " ALBUM: " + response.result._album);
+        return response.result._album;
     }
 
     public String trackname() {
-        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.trackname(this.name).toString());
-        if (responseFromLms == null) return "";
-        log.info("PLAYER: " + this.name + " TRACK: " + responseFromLms.result._title);
-        return responseFromLms.result._title;
+        Response response = Requests.postByJsonForResponse(RequestParameters.trackname(this.name).toString());
+        if (response == null) return "";
+        log.info("PLAYER: " + this.name + " TRACK: " + response.result._title);
+        return response.result._title;
     }
 
     public String artistname() {
-        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.artistname(this.name).toString());
-        if (responseFromLms == null) return null;
-        log.info("PLAYER: " + this.name + " PLAYLIST: " + responseFromLms.result._artist);
-        return responseFromLms.result._artist;
+        Response response = Requests.postByJsonForResponse(RequestParameters.artistname(this.name).toString());
+        if (response == null) return null;
+        log.info("PLAYER: " + this.name + " PLAYLIST: " + response.result._artist);
+        return response.result._artist;
     }
 
     public String volume() {
-        ResponseFromLms responseFromLms = Requests.postByJsonForResponse(RequestParameters.volume(this.name).toString());
-        if (responseFromLms == null) return null;
-        log.info("PLAYER: " + this.name + " GET VOLUME: " + responseFromLms.result._volume);
-        return responseFromLms.result._volume;
+        Response response = Requests.postByJsonForResponse(RequestParameters.volume(this.name).toString());
+        if (response == null) return null;
+        log.info("PLAYER: " + this.name + " GET VOLUME: " + response.result._volume);
+        return response.result._volume;
     }
 
     public Player volume(String value) {

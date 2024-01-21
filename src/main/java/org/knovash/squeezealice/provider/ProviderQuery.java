@@ -6,13 +6,14 @@ import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.LmsPlayers;
 import org.knovash.squeezealice.provider.response.*;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 public class ProviderQuery {
@@ -53,7 +54,7 @@ public class ProviderQuery {
 
     public static Device updateDevice(Integer device_id) {
         // обратиться к девайсу и обновить все его значения
-        Player player = LmsPlayers.playerByName(SmartHome.getByDeviceId(device_id).customData.lmsName);
+        Player player = lmsPlayers.getPlayerByName(SmartHome.getByDeviceId(device_id).customData.lmsName);
         Integer volume = 0;
         Boolean power = false;
         if (player != null) {

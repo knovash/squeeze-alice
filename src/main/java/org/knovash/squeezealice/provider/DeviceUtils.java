@@ -13,22 +13,16 @@ import java.util.stream.Collectors;
 public class DeviceUtils {
 
     public static Integer addToHome(Device device) {
-        int id = 0;
-        if (SmartHome.devices.size() != 0) id = Integer.parseInt(SmartHome.devices.getLast().id) + 1;
-        log.info(SmartHome.devices.stream().map(d -> d.room).collect(Collectors.toList()));
+//        int id = 0;
+//        if (SmartHome.devices.size() != 0) id = Integer.parseInt(SmartHome.devices.getLast().id) + 1;
+//        log.info(SmartHome.devices.stream().map(d -> d.room).collect(Collectors.toList()));
+
+        int id = SmartHome.devices.size() + 1;
         device.id = String.valueOf(id);
         SmartHome.devices.add(device);
         return id;
     }
 
-    public static String create(HashMap<String, String> parameters) {
-        String speaker_name_alice = parameters.get("speaker_name_alice");
-        String speaker_name_lms = parameters.get("speaker_name_lms");
-        String room = parameters.get("room");
-        Integer id = create(speaker_name_alice, speaker_name_lms, room);
-//        JsonUtils.listToJsonFile(Home.devices, "alice_devices.json"); // сделано в create
-        return "CREATED " + id + " HOME: " + SmartHome.devices.size();
-    }
 
     public static String edit(HashMap<String, String> parameters) {
         log.info("PARAMETERS: " + parameters);
@@ -53,15 +47,30 @@ public class DeviceUtils {
         return "REMOVED " + idd + " HOME: " + SmartHome.devices.size();
     }
 
-    public static Integer create(String name, String lmsName, String room) {
+//    public static String credate(HashMap<String, String> parameters) {
+//        String speaker_name_alice = parameters.get("speaker_name_alice");
+//        String speaker_name_lms = parameters.get("speaker_name_lms");
+//        String room = parameters.get("room");
+//        Integer id = create(speaker_name_alice, speaker_name_lms, room);
+//        JsonUtils.listToJsonFile(SmartHome.devices, "alice_devices.json");
+//        return "CREATED " + id + " HOME: " + SmartHome.devices.size();
+//    }
+
+    //    public static Integer create(String name, String lmsName, String room) {
+    public static Integer create(HashMap<String, String> parameters) {
+        String name = parameters.get("speaker_name_alice");
+        String lmsName = parameters.get("speaker_name_lms");
+        String room = parameters.get("room");
+//            Integer id = create(speaker_name_alice, speaker_name_lms, room);
+//            JsonUtils.listToJsonFile(SmartHome.devices, "alice_devices.json");
+
+
         Device myDevice = new Device(name);
         myDevice.description = lmsName;
         myDevice.type = "devices.types.media_device.receiver";
         myDevice.room = room;
         myDevice.customData.lmsName = lmsName;
-
         myDevice.aliases.add("радио");
-//        myDevice.aliases.add("музыка");
 
         Capability volume = new Capability();
         volume.type = "devices.capabilities.range"; // Тип умения. channel     volume
@@ -105,28 +114,15 @@ public class DeviceUtils {
 //        on_of.parameters.split = false;
         myDevice.capabilities.add(on_of);
 
-//        Capability mute = new Capability();
-//        mute.type = "devices.capabilities.toggle"; // Тип умения. channel     volume
-//        mute.retrievable = true; // Доступен ли для данного умения устройства запрос состояния
-//        mute.reportable = false; // Признак включенного оповещения об изменении состояния умения
-//        mute.parameters.instance = "mute"; // Название функции для данного умения. volume channel ...
-//        mute.parameters.random_access = true;
-//        myDevice.capabilities.add(mute);
-
         log.info("NEW DEVICE: " + myDevice);
         log.info("HOME SIZE BEFORE ADD: " + SmartHome.devices.size());
-        Integer id =DeviceUtils.addToHome(myDevice);
-//        Integer id = myDevice.addToHome(myDevice);
-        log.info("NEW DEVICE ID: " + id);
+        int id = DeviceUtils.addToHome(myDevice);
+        log.info("NEW DEVICE ID: ");
         log.info("HOME SIZE AFTER ADD: " + SmartHome.devices.size());
         log.info("HOME DEVICES: " + SmartHome.devices.stream().map(d -> d.customData.lmsName + " id=" + d.id).collect(Collectors.toList()));
         JsonUtils.listToJsonFile(SmartHome.devices, "alice_devices.json");
         return id;
     }
-    
-    
-    
-    
-    
-    
+
+
 }

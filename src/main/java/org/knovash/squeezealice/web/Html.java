@@ -16,30 +16,21 @@ import static org.knovash.squeezealice.provider.Yandex.yandex;
 public class Html {
 
     public static String index() {
-        String page = "<!doctype html>\n" +
-                "<html lang=\"ru\">\n" +
-                "\n" +
+        String page = "<!doctype html><html lang=\"ru\">\n" +
                 "<head>\n" +
                 "<meta charSet=\"utf-8\" />\n" +
-                "<meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, shrink-to-fit=no, viewport-fit=cover'>\n" +
-                "<meta http-equiv='X-UA-Compatible' content='ie=edge'>\n" +
-                "<style>\n" +
-                "   html, body {background: #eee;}\n" +
-                "</style>\n" +
-                " </head>\n" +
-                "\n" +
-                " <body> \n" +
-                " <p><strong>Squeeze-Alice</strong></p> \n" +
-                " <p><a href=\\speakers>Подключение колонок в УД с Алисой</a></p> \n" +
-                " <p><a href=\\players>Настройка колонок</a></p> \n" +
-                " <p><a href=\\spotify>Настройка Spotify</a></p> \n" +
-//                " <p><a href=\\yandex>Настройка Yandex</a></p> \n" +
-                " <p><a href=\\cmd?action=state>Посмотреть настройки</a></p> \n" +
-                " <p><a href=\\cmd?action=backup>Сохранить настройки</a></p> \n" +
-                " <p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
-                " </body>\n" +
-                "\n" +
-                " </html>";
+                "  <title>Squeeze-Alice</title>" +
+                "</head>\n" +
+                "<body> \n" +
+                "<p><strong>Squeeze-Alice</strong></p> \n" +
+                "<p><a href=\\speakers>Подключение колонок в УД с Алисой</a></p> \n" +
+                "<p><a href=\\players>Настройка колонок</a></p> \n" +
+                "<p><a href=\\spotify>Настройка Spotify</a></p> \n" +
+                "<p><a href=\\cmd?action=state>Посмотреть настройки</a></p> \n" +
+                "<p><a href=\\cmd?action=backup>Сохранить настройки</a></p> \n" +
+                "<p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
+                "</body>\n" +
+                "</html>";
         return page;
     }
 
@@ -48,7 +39,7 @@ public class Html {
                 "<head><meta charset=\"UTF-8\" />" +
                 "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" +
                 "  <link rel=\"stylesheet\" href=\"style.css\" />" +
-                "  <title>Browser</title>" +
+                "  <title>Spotify credentials</title>" +
                 "</head>" +
                 "<body>" +
                 "<p><a href=\"/\">Home</a></p>" +
@@ -70,7 +61,6 @@ public class Html {
                 "</div>" +
                 "</form>" +
                 "<p><a href=\"/\">Home</a></p>" +
-                "<script src=\"script.js\"></script>" +
                 "</body></html>";
         return page;
     }
@@ -78,8 +68,6 @@ public class Html {
     public static String formYandexLogin() {
         String page = "<!DOCTYPE html><html lang=\"en\">" +
                 "<head><meta charset=\"UTF-8\" />" +
-                "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" +
-                "  <link rel=\"stylesheet\" href=\"style.css\" />" +
                 "  <title>Yandex credentials</title>" +
                 "</head>" +
                 "<body>" +
@@ -104,7 +92,6 @@ public class Html {
                 "</div>" +
                 "</form>" +
                 "<p><a href=\"/\">Home</a></p>" +
-                "<script src=\"script.js\"></script>" +
                 "</body></html>";
         return page;
     }
@@ -121,9 +108,7 @@ public class Html {
     public static String formSpeakers() {
         String page = "<!DOCTYPE html><html lang=\"en\">" +
                 "<head><meta charset=\"UTF-8\" />" +
-                "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" +
-                "  <link rel=\"stylesheet\" href=\"style.css\" />" +
-                "  <title>Browser</title></head><body>" +
+                "  <title>Подключение колонок LMS в Умный дом с Алисой</title></head><body>" +
                 "<p><a href=\"/\">Home</a></p>" +
                 "  <h2>Подключение колонок LMS в Умный дом с Алисой</h2>" +
                 "<p>всего колонок подключено: " +
@@ -169,7 +154,6 @@ public class Html {
                 "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"speaker_create\">" +
                 "<br><button>add</button></form>" +
                 "<p><a href=\"/\">Home</a></p>" +
-                "<script src=\"script.js\"></script>" +
                 "</body></html>";
         return page;
     }
@@ -177,9 +161,7 @@ public class Html {
     public static String formPlayers() {
         String page = "<!DOCTYPE html><html lang=\"en\">" +
                 "<head><meta charset=\"UTF-8\" />" +
-                "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />" +
-                "  <link rel=\"stylesheet\" href=\"style.css\" />" +
-                "  <title>Browser</title></head><body>" +
+                "  <title>Настройка колонок</title></head><body>" +
                 "<p><a href=\"/\">Home</a></p>" +
                 "  <h2>Настройка колонок</h2>" +
                 join(lmsPlayers.players.stream()
@@ -210,7 +192,6 @@ public class Html {
                 "<p>последний запрос от Алисы id: " + Player.lastAliceId + "</p>" +
                 "<p>чтобы узнать id Алисы, спросите Алиса скажи раз два, что сейчас играет? и обновите страницу</p>" +
                 "<p><a href=\"/\">Home</a></p>" +
-                "<script src=\"script.js\"></script>" +
                 "</body></html>";
         return page;
     }
