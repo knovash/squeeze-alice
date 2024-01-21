@@ -32,11 +32,14 @@ public class Player {
     public Integer volume_alice_low;
     public Integer volume_alice_high;
     public Map<Integer, Integer> timeVolume;
-    public String lastPath = "";
+    public String lastPath;
     public String lastPlayTimeStr;
+    public String alice_id;
 
     public static String lastStrPath;
     public static String lastPathGlobal;
+
+    public static String lastAliceId;
 
     public Player(String name, String mac) {
         this.name = name;

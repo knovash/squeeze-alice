@@ -19,7 +19,7 @@ public class Requests {
         log.info("REQUEST TO LMS: " + json);
         String status = null;
         try {
-            status = Request.Post(lmsServer).bodyString(json, ContentType.APPLICATION_JSON)
+            status = Request.Post(lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -38,7 +38,7 @@ public class Requests {
         Content content = null;
         ResponseFromLms responseFromLms = null;
         try {
-            content = Request.Post(lmsServer).bodyString(json, ContentType.APPLICATION_JSON)
+            content = Request.Post(lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()

@@ -99,6 +99,23 @@ public class LmsPlayers {
                 .orElse(null);
     }
 
+    public static Player playerByAliceId(String alice_id) {
+        return lmsPlayers.players.stream()
+                .filter(player -> player.getAlice_id().equals(alice_id))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public static String playerNameByAliceId(String alice_id) {
+        if (alice_id == null) return null;
+        Player player = lmsPlayers.players.stream()
+                .filter(p -> p.getAlice_id().equals(alice_id))
+                .findFirst()
+                .orElse(null);
+        if (player == null) return null;
+        return player.name;
+    }
+
     public static Player playingPlayer(String currentName) {
         log.info("Search for playing player...");
         Player playing = lmsPlayers.players
@@ -123,15 +140,17 @@ public class LmsPlayers {
         String name = parameters.get("name");
         Player player = LmsPlayers.playerByName(name);
         log.info("PLAYER FOR EDIT: " + player);
-        log.info("name: "+parameters.get("name"));
-        log.info("delay: "+parameters.get("delay"));
-        log.info("step: "+parameters.get("step"));
-        log.info("black: "+parameters.get("black"));
-        log.info("schedule: "+parameters.get("schedule"));
+        log.info("name: " + parameters.get("name"));
+        log.info("alice_id: " + parameters.get("alice_id"));
+        log.info("delay: " + parameters.get("delay"));
+        log.info("step: " + parameters.get("step"));
+        log.info("black: " + parameters.get("black"));
+        log.info("schedule: " + parameters.get("schedule"));
         log.info(Utils.stringSplitToIntMap(parameters.get("schedule"), ",", ":"));
         player.wake_delay = Integer.valueOf(parameters.get("delay"));
         player.volume_step = Integer.valueOf(parameters.get("step"));
         player.black = Boolean.parseBoolean(parameters.get("black"));
+        player.alice_id = parameters.get("alice_id");
         player.timeVolume = Utils.stringSplitToIntMap(parameters.get("schedule"), ",", ":");
         JsonUtils.pojoToJsonFile(lmsPlayers, "lms_players.json");
         return "EDITED";

@@ -1,6 +1,7 @@
 package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.provider.SmartHome;
@@ -96,7 +97,7 @@ public class Html {
                 "<input name=\"secret\" id=\"secret\" value=\"" + SmartHome.client_secret.substring(0, 4) + "*****" + "\"/>" +
                 "<label for=\"secret\"> client secret</label>" +
                 "</div>" +
-                "<p>Yandex bearer token: " + Yandex.bearerToken+
+                "<p>Yandex bearer token: " + Yandex.bearerToken +
                 "</p>" +
                 "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"cred_yandex\">" +
                 "<div>" +
@@ -135,25 +136,25 @@ public class Html {
 
                 join(SmartHome.devices.stream()
                         .map(d ->
+                                "<form action=\"/cmd\" method=\"get\">" +
+                                        "<input type=\"hidden\" name=\"speaker_name_alice\" id=\"speaker_name_alice\" value=\"" + "музыка" + "\">" +
+                                        "<br>" +
+                                        "<input name=\"speaker_name_lms\" id=\"speaker_name_lms\" value=\"" + d.customData.lmsName + "\" />" +
+                                        "<label for=\"speaker_name_lms\">Название колонки в LMS</label>" +
+                                        "<br>" +
+                                        "<input name=\"room\" id=\"room\" value=\"" + d.room + "\" />" +
+                                        "<label for=\"room\">Комната в УД Яндекс</label>" +
+                                        "<br>" +
+                                        "<input name=\"id\" id=\"id\" value=\"" + d.id + "\" />" +
+                                        "<label for=\"id\">ID колонки в УД Яндекс</label>" +
+                                        "<input type=\"hidden\" name=\"id_old\" id=\"id_old\" value=\"" + SmartHome.devices.indexOf(d) + "\" />" +
+                                        "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"speaker_edit\">" +
+                                        "<br>" +
+                                        "<button>save</button></form>" +
                                         "<form action=\"/cmd\" method=\"get\">" +
-                                                "<input type=\"hidden\" name=\"speaker_name_alice\" id=\"speaker_name_alice\" value=\"" + "музыка" + "\">" +
-                                                "<br>" +
-                                                "<input name=\"speaker_name_lms\" id=\"speaker_name_lms\" value=\"" + d.customData.lmsName + "\" />" +
-                                                "<label for=\"speaker_name_lms\">Название колонки в LMS</label>" +
-                                                "<br>" +
-                                                "<input name=\"room\" id=\"room\" value=\"" + d.room + "\" />" +
-                                                "<label for=\"room\">Комната в УД Яндекс</label>" +
-                                                "<br>" +
-                                                "<input name=\"id\" id=\"id\" value=\"" + d.id + "\" />" +
-                                                "<label for=\"id\">ID колонки в УД Яндекс</label>" +
-                                                "<input type=\"hidden\" name=\"id_old\" id=\"id_old\" value=\"" + SmartHome.devices.indexOf(d) + "\" />" +
-                                                "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"speaker_edit\">" +
-                                                "<br>" +
-                                                "<button>save</button></form>" +
-                                                "<form action=\"/cmd\" method=\"get\">" +
-                                                "<input type=\"hidden\" name=\"id\" id=\"id\" value=\"" + d.id + "\">" +
-                                                "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"speaker_remove\">" +
-                                                "<button>remove</button></form>"
+                                        "<input type=\"hidden\" name=\"id\" id=\"id\" value=\"" + d.id + "\">" +
+                                        "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"speaker_remove\">" +
+                                        "<button>remove</button></form>"
                         ).collect(Collectors.toList())) +
                 "<h2>Добавить колонку</h2>" +
                 "<p>Колонки найденные в LMS: " +
@@ -187,6 +188,9 @@ public class Html {
                                 "<form action=\"/cmd\" method=\"get\">" +
                                         p.name +
                                         "<br>" +
+                                        "<input name=\"alice_id\" id=\"alice_id\" value=\"" + p.alice_id + "\" />" +
+                                        "<label for=\"alice_id\">id Алисы управляющей колонкой</label>" +
+                                        "<br>" +
                                         "<input name=\"step\" id=\"step\" value=\"" + p.volume_step + "\" />" +
                                         "<label for=\"step\">шаг громкости</label>" +
                                         "<br>" +
@@ -204,6 +208,8 @@ public class Html {
                                         "<button>save</button></form>" +
                                         "<form action=\"/cmd\" method=\"get\">"
                         ).collect(Collectors.toList())) +
+                "<p>последний запрос от Алисы id: " + Player.lastAliceId + "</p>" +
+                "<p>чтобы узнать id Алисы, спросите Алиса что сейчас играет? и обновите страницу</p>" +
                 "<p><a href=\"/\">Home</a></p>" +
                 "<script src=\"script.js\"></script>" +
                 "</body></html>";

@@ -14,6 +14,8 @@ public class SwitchVoiceCommand {
         log.info("PLAYER NAME: " + playerName);
         String target;
         String answer = "повторите";
+        if (playerName == null) return createResponse("настройте id алисы");
+        if (command == null) return createResponse("не поняла");
         if (command.contains("включи")) {
             target = command.replaceAll(".*включи\\S*\\s", "")
                     .replaceAll("\"", "")
@@ -43,12 +45,18 @@ public class SwitchVoiceCommand {
         if (command.contains("что") && command.contains("играет")) {
             log.info("WATS PLAYING");
             String playlist = LmsPlayers.playerByName(playerName).playlistname();
+
+            String mode = LmsPlayers.playerByName(playerName).mode();
             log.info("PLAYLIST: " + playlist);
             if (playlist == null) playlist = LmsPlayers.playerByName(playerName).artistname();
             log.info("PLAYLIST: " + playlist);
             if (playlist == null) return createResponse("медиасервер не отвечает");
             log.info("PLAYLIST: " + playlist);
-            answer = "сейчас на " + playerName + " играет " + playlist;
+            if (mode.equals("play")) {
+                answer = "сейчас на " + playerName + " играет " + playlist;
+            } else {
+                answer = "сейчас на " + playerName + " не играет " + playlist;
+            }
             return createResponse(answer);
         }
         if (command.contains("дальше") || command.contains("следующий")) {
