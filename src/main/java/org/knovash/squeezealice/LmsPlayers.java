@@ -60,14 +60,14 @@ public class LmsPlayers {
         }
         log.info("PLAYERS:");
         log.info(lmsPlayers.players);
-        log.info("WRITE server.json");
-        JsonUtils.pojoToJsonFile(lmsPlayers, "server.json");
+        log.info("WRITE lms_players.json");
+        JsonUtils.pojoToJsonFile(lmsPlayers, "lms_players.json");
         Utils.generatePlayersAltNamesToFile();
     }
 
     public void writeServerFile() {
-        log.info("WRITE FILE server.json");
-        JsonUtils.pojoToJsonFile(lmsPlayers, "server.json");
+        log.info("WRITE FILE lms_players.json");
+        JsonUtils.pojoToJsonFile(lmsPlayers, "lms_players.json");
     }
 
     public void writeServerFile(String fileName) {
@@ -76,19 +76,19 @@ public class LmsPlayers {
     }
 
     public void readServerFile() {
-        log.info("READ PREVIOUS PLAYERS STATE FROM FILE server.json");
-        File file = new File("server.json");
+        log.info("READ PREVIOUS PLAYERS STATE FROM FILE lms_players.json");
+        File file = new File("lms_players.json");
         if (file.exists()) {
             try {
-                lmsPlayers = JsonUtils.jsonFileToPojoTrows("server.json", LmsPlayers.class);
+                lmsPlayers = JsonUtils.jsonFileToPojoTrows("lms_players.json", LmsPlayers.class);
                 log.info("PLAYERS:");
                 log.info(lmsPlayers.players);
             } catch (IOException | InaccessibleObjectException e) {
-                log.info("ERROR READ server.json");
+                log.info("ERROR READ lms_players.json");
                 log.info(e);
             }
         } else {
-            log.info("FILE NOT FOUND server.json");
+            log.info("FILE NOT FOUND lms_players.json");
         }
     }
 
@@ -133,7 +133,7 @@ public class LmsPlayers {
         player.volume_step = Integer.valueOf(parameters.get("step"));
         player.black = Boolean.parseBoolean(parameters.get("black"));
         player.timeVolume = Utils.stringSplitToIntMap(parameters.get("schedule"), ",", ":");
-        JsonUtils.listToJsonFile(lmsPlayers.players, "players.json");
+        JsonUtils.pojoToJsonFile(lmsPlayers, "lms_players.json");
         return "EDITED";
     }
 }

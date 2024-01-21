@@ -26,7 +26,7 @@ public class DeviceUtils {
         String speaker_name_lms = parameters.get("speaker_name_lms");
         String room = parameters.get("room");
         Integer id = create(speaker_name_alice, speaker_name_lms, room);
-//        JsonUtils.listToJsonFile(Home.devices, "home_devices.json"); // сделано в create
+//        JsonUtils.listToJsonFile(Home.devices, "alice_devices.json"); // сделано в create
         return "CREATED " + id + " HOME: " + SmartHome.devices.size();
     }
 
@@ -41,7 +41,7 @@ public class DeviceUtils {
         SmartHome.devices.remove(index_old);
         SmartHome.devices.add(deviceNew);
         SmartHome.devices.sort((d1, d2) -> d1.id.compareTo(d2.id));
-        JsonUtils.listToJsonFile(SmartHome.devices, "home_devices.json");
+        JsonUtils.listToJsonFile(SmartHome.devices, "alice_devices.json");
         return "EDITED";
     }
 
@@ -49,7 +49,7 @@ public class DeviceUtils {
         String idd = parameters.get("id");
         Device device = SmartHome.devices.stream().filter(d -> d.id.equals(idd)).findFirst().get();
         SmartHome.devices.remove(device);
-        JsonUtils.listToJsonFile(SmartHome.devices, "home_devices.json");
+        JsonUtils.listToJsonFile(SmartHome.devices, "alice_devices.json");
         return "REMOVED " + idd + " HOME: " + SmartHome.devices.size();
     }
 
@@ -120,7 +120,7 @@ public class DeviceUtils {
         log.info("NEW DEVICE ID: " + id);
         log.info("HOME SIZE AFTER ADD: " + SmartHome.devices.size());
         log.info("HOME DEVICES: " + SmartHome.devices.stream().map(d -> d.customData.lmsName + " id=" + d.id).collect(Collectors.toList()));
-        JsonUtils.listToJsonFile(SmartHome.devices, "home_devices.json");
+        JsonUtils.listToJsonFile(SmartHome.devices, "alice_devices.json");
         return id;
     }
     

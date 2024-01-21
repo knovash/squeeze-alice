@@ -141,8 +141,9 @@ public class SwitchAliceCommand {
 //        return false;
         log.info("CHECK IF TIME EXPIRED");
         long delay = 10;
-        if (player.lastPlayTime == null) return true;
-        LocalTime playerTime = player.lastPlayTime.truncatedTo(MINUTES);
+        if (player.lastPlayTimeStr == null) return true;
+
+        LocalTime playerTime = LocalTime.parse(player.lastPlayTimeStr).truncatedTo(MINUTES);
         LocalTime nowTime = LocalTime.now().truncatedTo(MINUTES);
         log.info("PLAYER LAST TIME: " + playerTime);
         log.info("NOW TIME: " + nowTime);

@@ -8,6 +8,7 @@ import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.ResponseFromLms;
 
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -31,8 +32,8 @@ public class Player {
     public Integer volume_alice_low;
     public Integer volume_alice_high;
     public Map<Integer, Integer> timeVolume;
-    public String lastPath;
-    public LocalTime lastPlayTime;
+    public String lastPath = "";
+    public String lastPlayTimeStr;
 
     public static String lastStrPath;
     public static String lastPathGlobal;
@@ -331,9 +332,9 @@ public class Player {
 
     public Player saveLastTime() {
         log.info("SAVE TIME");
-        this.lastPlayTime = LocalTime.now().truncatedTo(MINUTES);
-        log.info("LAST TIME: " + this.lastPlayTime.truncatedTo(MINUTES) + " " +
-                this.lastPlayTime.truncatedTo(MINUTES).equals(LocalTime.now().truncatedTo(MINUTES)) +
+        this.lastPlayTimeStr = LocalTime.now().truncatedTo(MINUTES).toString();
+        log.info("LAST TIME: " + this.lastPlayTimeStr + " " +
+                this.lastPlayTimeStr.equals(LocalTime.now().truncatedTo(MINUTES).toString()) +
                 " TIME NOW: " + LocalTime.now().truncatedTo(MINUTES));
         log.info("SAVE TIME OK");
         return this;
@@ -342,10 +343,10 @@ public class Player {
     public Player saveLastTimeIfPlay() {
         log.info("SAVE TIME");
         log.info("PLAYER MODE " + this.mode());
-        log.info("PLAYER LAST TIME " + this.lastPlayTime);
-        this.lastPlayTime = LocalTime.now();
-        if (this.mode().equals("play")) this.lastPlayTime = LocalTime.now();
-        log.info("PLAYER NOW TIME " + this.lastPlayTime);
+        log.info("PLAYER LAST TIME " + this.lastPlayTimeStr);
+        this.lastPlayTimeStr = LocalTime.now().truncatedTo(MINUTES).toString();
+        if (this.mode().equals("play")) this.lastPlayTimeStr = LocalTime.now().truncatedTo(MINUTES).toString();
+        log.info("PLAYER NOW TIME " + this.lastPlayTimeStr);
         return this;
     }
 

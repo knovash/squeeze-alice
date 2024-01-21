@@ -57,8 +57,8 @@ public class Main {
         lmsServer = "http://" + lmsIP + ":" + lmsPort + "/jsonrpc.js/";
         log.info("LMS SERVER: " + lmsServer);
 
-        log.info("READ ALICE SMART HOME DEVICES from file home_devices.json");
-        List<Device> devices = JsonUtils.jsonFileToList("home_devices.json", Device.class);
+        log.info("READ ALICE SMART HOME DEVICES from file alice_devices.json");
+        List<Device> devices = JsonUtils.jsonFileToList("alice_devices.json", Device.class);
         SmartHome.devices = new LinkedList<>();
         if (devices != null) SmartHome.devices.addAll(devices);
         log.info("HOME DEVICE: " + SmartHome.devices.size());

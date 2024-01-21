@@ -324,4 +324,14 @@ public class Utils {
         String content = Files.readString(filePath);
         return content;
     }
+
+    public static String timeToString(LocalTime time){
+        String timeStr = time.toString();
+        return timeStr;
+    }
+
+    public static LocalTime stringToTime(String  timeStr){
+        LocalTime time = LocalTime.parse(timeStr);
+        return time;
+    }
 }
