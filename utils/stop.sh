@@ -14,5 +14,3 @@ sudo systemctl disable squeeze-serveo.service
 sudo systemctl disable squeeze-ngrok.service
 
 sudo systemctl daemon-reload
-$SHELL
-
