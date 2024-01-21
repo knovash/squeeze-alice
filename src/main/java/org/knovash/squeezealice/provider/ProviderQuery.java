@@ -19,6 +19,7 @@ import static org.knovash.squeezealice.Main.lmsPlayers;
 public class ProviderQuery {
 
     public static Context action(Context context) {
+        log.info("1");
         String body = context.body;
         String xRequestId = context.xRequestId;
         Root bodyPojo = JsonUtils.jsonToPojo(body, Root.class);
@@ -29,12 +30,13 @@ public class ProviderQuery {
             // запрос о состоянии девайса id=0
             int device_id = Integer.parseInt(bodyPojo.devices.get(0).id);
 
+            log.info("2");
             if (SmartHome.devices.size() == 0) log.info("ERROR - no registered LMS players in Alice home");
 
-            log.info("QUERY FOR STATE DEVICE ID: " + device_id +
-                    " NAME: " + SmartHome.devices.get(device_id).name +
-                    " NAME: " + SmartHome.getByDeviceId(device_id).name +
-                    " LMS NAME: " + SmartHome.getByDeviceId(device_id).customData.lmsName);
+            log.info("3");
+            log.info("QUERY FOR STATE DEVICE ID: " + device_id);
+            log.info(" NAME: " + SmartHome.getByDeviceId(device_id).name);
+            log.info(" LMS NAME: " + SmartHome.getByDeviceId(device_id).customData.lmsName);
             log.info("5");
             Response response = new Response();
             response.request_id = xRequestId;
@@ -109,14 +111,17 @@ public class ProviderQuery {
     @NoArgsConstructor
     @AllArgsConstructor
     @Log4j2
-    public static class Root{
+    public static class Root {
+
         public ArrayList<Device4> devices;
     }
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     @Log4j2
-    public static class Device4{
+    public static class Device4 {
+
         public String id;
     }
 

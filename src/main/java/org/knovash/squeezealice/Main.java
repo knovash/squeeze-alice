@@ -57,6 +57,7 @@ public class Main {
         log.info("PLAYERS: " + lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList()));
         log.info("UPDATE LMS PLAYERS FROM LMS");
         lmsPlayers.update();
+        log.info("PLAYERS: " + lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList()));
         lmsPlayers.write();
         log.info("--- SERVER START ---");
         Server.start();

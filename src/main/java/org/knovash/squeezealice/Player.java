@@ -44,6 +44,7 @@ public class Player {
         this.name = name;
         this.mac = mac;
         this.volume_alice_previous = 1;
+        this.alice_id = "-";
         this.volume_step = 5;
         this.volume_low = 10;
         this.volume_high = 25;
