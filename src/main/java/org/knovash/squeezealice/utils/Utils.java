@@ -5,7 +5,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.Server;
+import org.knovash.squeezealice.LmsPlayers;
 import org.knovash.squeezealice.provider.SmartHome;
 
 import java.io.File;
@@ -16,6 +16,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -26,8 +27,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.knovash.squeezealice.Fluent.uriGetHeader;
-import static org.knovash.squeezealice.Main.server;
+import static org.knovash.squeezealice.Requests.headByUriForResponse;
+import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 public class Utils {
@@ -35,24 +36,14 @@ public class Utils {
     private static ResourceBundle bundle = ResourceBundle.getBundle("config");
     public static Map<String, String> altNames;
 
-    public static void addPlayerAlternativeName() {
-        Map<String, String> altNames = new HashMap<>();
-        altNames = new HashMap<>(Map.of(
-                "homepod", "HomePod",
-                "bathroom", "Bathroom",
-                "ggmm", "GGMM_E2_2650",
-                "mibox", "Mi Box"));
-        JsonUtils.pojoToJsonFile(altNames, "alter.json");
-    }
-
-    public static void generateAltNamesFile() {
+    public static void generatePlayersAltNamesToFile() {
         log.info("GET ALT NAMES");
         File file = new File("alt_names.json");
         Map<String, String> namesGenerated = new HashMap<>();
         Map<String, String> namesFromFile = new HashMap<>();
         if (Utils.altNames == null) Utils.altNames = new HashMap<>();
         // generate
-        server.players.forEach(player -> {
+        lmsPlayers.players.forEach(player -> {
             String altName = player.name
                     .replace(" ", "")
                     .replace("_", "")
@@ -61,7 +52,6 @@ public class Utils {
         });
         // get from file
         if (file.exists()) namesFromFile = JsonUtils.jsonFileToMap("alt_names.json", String.class, String.class);
-
         Utils.altNames.putAll(namesFromFile);
         Utils.altNames.putAll(namesGenerated);
         JsonUtils.mapToJsonFile(Utils.altNames, "alt_names.json");
@@ -73,8 +63,8 @@ public class Utils {
         String valueName = parameters.get("value_name");
         Integer newValue = Integer.valueOf(parameters.get("value"));
         Field field = null;
-        playerName = altPlayerName(playerName);
-        Player player = Server.playerByName(playerName);
+        playerName = getAltPlayerNameByName(playerName);
+        Player player = LmsPlayers.playerByName(playerName);
         log.info("PLAYER: " + playerName + " VALUE NAME: " + valueName + " NEW VALUE: " + newValue);
         try {
             field = Player.class.getField(valueName);
@@ -89,10 +79,10 @@ public class Utils {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        server.writeServerFile();
+        lmsPlayers.writeServerFile();
     }
 
-    public static String altPlayerName(String name) {
+    public static String getAltPlayerNameByName(String name) {
         log.info("NAME: " + name + " ALT NAMES: " + altNames);
         if (altNames.containsKey(name)) {
             name = altNames.get(name);
@@ -113,7 +103,7 @@ public class Utils {
         return result.get();
     }
 
-    public static void altNameAdd(HashMap<String, String> parameters) {
+    public static void addPlayerAltName(HashMap<String, String> parameters) {
 //        http://localhost:8001/cmd?action=alt_name_add&query_name=ggmm&lms_name=4
         String query_name = parameters.get("player");
         String lms_name = parameters.get("value_name");
@@ -145,12 +135,12 @@ public class Utils {
     }
 
     public static String state() {
-        String json = JsonUtils.pojoToJson(server);
+        String json = JsonUtils.pojoToJson(lmsPlayers);
         return json;
     }
 
     public static String players() {
-        String json = JsonUtils.pojoToJson(Main.server.players);
+        String json = JsonUtils.pojoToJson(Main.lmsPlayers.players);
         return json;
     }
 
@@ -178,7 +168,7 @@ public class Utils {
 
     public static String backupServer(HashMap<String, String> parameters) {
         String stamp = LocalDate.now().toString() + "-" + LocalTime.now().toString();
-        server.writeServerFile("server-backup-" + stamp);
+        lmsPlayers.writeServerFile("server-backup-" + stamp);
         return "BACKUP SERVER";
     }
 
@@ -193,10 +183,10 @@ public class Utils {
         player.timeVolume.remove(time);
     }
 
-    public static boolean isLms(String ip) {
+    public static boolean checkIpIsLms(String ip) {
         log.info("CHECK IF IP IS LMS: " + ip);
         String uri = "http://" + ip + ":9000";
-        HttpResponse response = uriGetHeader(uri);
+        HttpResponse response = headByUriForResponse(uri);
         if (response == null) {
 //            log.info("NOT LMS IP");
             return false;
@@ -208,7 +198,7 @@ public class Utils {
         return header.contains("Logitech Media Server");
     }
 
-    public static String myIp() {
+    public static String getMyIpAddres() {
         String myip = null;
         Enumeration<NetworkInterface> interfaces = null;
         try {
@@ -243,12 +233,12 @@ public class Utils {
         log.info("TRY GET IP FROM PREVIOUS SEARCH RESULT IN lms_ip.json");
         lmsIp = JsonUtils.valueFromJsonFile("lms_ip.json");
 //        log.info("IP FROM FILE: " + lmsIp);
-        if (lmsIp != null && isLms(lmsIp)) {
+        if (lmsIp != null && checkIpIsLms(lmsIp)) {
             log.info("IP FROM FILE: " + lmsIp);
             return lmsIp;
         }
         log.info("NO PREVIOUS FILE. START SEARCH NETWORK...");
-        String myip = Utils.myIp();
+        String myip = Utils.getMyIpAddres();
 //        log.info("MY IP " + myip);
 //        String lmsIp = null;
         Integer start = 1;
@@ -258,7 +248,7 @@ public class Utils {
                     .range(start, start + 50)
                     .boxed()
 //                    .peek(s -> log.info("INDEX: " + s))
-                    .map(index -> CompletableFuture.supplyAsync(() -> Utils.ipIsReachable(myip, Integer.valueOf(index))))
+                    .map(index -> CompletableFuture.supplyAsync(() -> Utils.checkIpIsReachable(myip, Integer.valueOf(index))))
                     .collect(Collectors.collectingAndThen(Collectors.toList(), cfs -> cfs.stream().map(CompletableFuture::join)))
                     .filter(Objects::nonNull)
                     .findFirst().orElse(null);
@@ -277,19 +267,6 @@ public class Utils {
         return matchCyril.matches();
     }
 
-    public static String appIdPlayer(String appId) {
-        String playerName = "HomePod";
-        switch (appId) {
-            case ("CEE4701A73C8D5113DB40E35CDA9ECBDB6FC2CDCFF8CFD73A1ADEB2607C67AD7"):
-                playerName = "JBL black";
-                break;
-            case ("76F751A76299DE71E1E9784E207AFC2BA1AB01361D8F8B9483A857FA87C087FA"):
-                playerName = "HomePod";
-                break;
-        }
-        return playerName;
-    }
-
     public static String ping(Integer index) {
         String lmsip = "192.168.1.52";
         String ip = "192.168.1." + index;
@@ -298,7 +275,7 @@ public class Utils {
         return null;
     }
 
-    public static String ipIsReachable(String fullIp, Integer index) {
+    public static String checkIpIsReachable(String fullIp, Integer index) {
         InetAddress inetAddress = null;
         try {
             inetAddress = InetAddress.getByName(fullIp);
@@ -312,7 +289,7 @@ public class Utils {
             InetAddress address = InetAddress.getByAddress(ip);
             ipTry = address.toString().substring(1);
 //            log.info("TRY IP... " + ipTry);
-            if (address.isReachable(1000) && isLms(ipTry)) {
+            if (address.isReachable(1000) && checkIpIsLms(ipTry)) {
                 log.info("IP IS LMS: " + ipTry);
                 return ipTry;
             }
@@ -322,16 +299,16 @@ public class Utils {
         return null;
     }
 
-    public static Map<String, String> stringToMap(String text) {
-        return Arrays.stream(text.split(","))
-                .map(s -> s.replace(" ",""))
-                .map(s -> s.split(":"))
-                .collect(Collectors.toMap(s -> s[0], s -> s[1]));
-    }
+//    public static Map<String, String> stringToMap(String text) {
+//        return Arrays.stream(text.split(","))
+//                .map(s -> s.replace(" ", ""))
+//                .map(s -> s.split(":"))
+//                .collect(Collectors.toMap(s -> s[0], s -> s[1]));
+//    }
 
-    public static Map<Integer, Integer> stringToIntMap(String text) {
-        return Arrays.stream(text.split(","))
-                .map(s -> s.split(":"))
+    public static Map<Integer, Integer> stringSplitToIntMap(String text, String split1, String split2) {
+        return Arrays.stream(text.split(split1))
+                .map(s -> s.split(split2))
                 .collect(Collectors.toMap(s -> s[0], s -> s[1]))
                 .entrySet().stream()
                 .collect(Collectors.toMap(entry -> Integer.valueOf(entry.getKey()), entry -> Integer.valueOf(entry.getValue())));
@@ -340,5 +317,21 @@ public class Utils {
     public static String mapToString(Map<Integer, Integer> headerMap) {
         return headerMap.entrySet().stream().map(e -> e.getKey() + ":" + e.getValue())
                 .collect(Collectors.joining(","));
+    }
+
+    public static String readFile(String path) throws IOException {
+        Path filePath = Path.of(path);
+        String content = Files.readString(filePath);
+        return content;
+    }
+
+    public static String timeToString(LocalTime time){
+        String timeStr = time.toString();
+        return timeStr;
+    }
+
+    public static LocalTime stringToTime(String  timeStr){
+        LocalTime time = LocalTime.parse(timeStr);
+        return time;
     }
 }

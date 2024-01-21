@@ -25,6 +25,6 @@ public class ArgsParser {
         if (commandLine.getOptionValue("lmsip") != null) Main.lmsIP = commandLine.getOptionValue("lmsip");
         if (commandLine.getOptionValue("lmsport") != null) Main.lmsPort = commandLine.getOptionValue("lmsport");
         if (commandLine.getOptionValue("port") != null) Main.port = Integer.parseInt(commandLine.getOptionValue("port"));
-        Main.lmsServer = "http://" + Main.lmsIP + ":"+Main.lmsPort+"/jsonrpc.js";
+        Main.lmsUrl = "http://" + Main.lmsIP + ":"+Main.lmsPort+"/jsonrpc.js";
     }
 }
