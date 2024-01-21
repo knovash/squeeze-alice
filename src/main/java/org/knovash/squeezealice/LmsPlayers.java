@@ -9,6 +9,7 @@ import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -66,7 +67,12 @@ public class LmsPlayers {
 
     public void read() {
         log.info("READ");
-        lmsPlayers = JsonUtils.jsonFileToPojo("lms_players.json", LmsPlayers.class);
+        LmsPlayers lp = JsonUtils.jsonFileToPojo("lms_players.json", LmsPlayers.class);
+        if (lp == null) {
+            log.info("NO PLAYERS lms_players.json");
+        } else {
+            lmsPlayers = lp;
+        }
     }
 
     public Player getPlayerByName(String name) {

@@ -12,10 +12,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.LmsPlayers;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InaccessibleObjectException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -96,7 +98,6 @@ public class JsonUtils {
             return null;
         }
         try {
-//            log.info(objectMapper.readValue(file, clazz));
             return objectMapper.readValue(file, clazz);
         } catch (IOException | InaccessibleObjectException e) {
             log.info("ERROR READ lms_players.json" + e);
