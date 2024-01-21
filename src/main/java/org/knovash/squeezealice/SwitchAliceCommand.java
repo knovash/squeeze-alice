@@ -62,7 +62,7 @@ public class SwitchAliceCommand {
         log.info("TURN ON SPEAKER");
         String mode = player.mode();
         timeExpired(player);
-        Player playing = LmsPlayers.playingPlayer(player.name);
+        Player playing = lmsPlayers.getPlayingPlayer(player.name);
         // играет    +  нет играющей  = продолжить играть
         if (mode.equals("play") && playing == null) {
             log.info("STILL PLAYING");

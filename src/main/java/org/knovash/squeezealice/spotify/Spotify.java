@@ -70,13 +70,14 @@ public class Spotify {
 
     public static String search(String q, Type type) {
 
-        try {
-            sc = JsonUtils.jsonFileToPojoTrows("spotify.json", SpotifyCredentials.class);
-        } catch (IOException e) {
+
+            sc = JsonUtils.jsonFileToPojo("spotify.json", SpotifyCredentials.class);
+
             log.info("NO FILE");
-            Spotify.createCredFile();
-//            throw new RuntimeException(e);
-        }
+            if (sc == null) Spotify.createCredFile();
+
+
+
         String bt = null;
         if (sc != null) bt = Spotify.getBearerToken(sc.clientId, sc.clientSecret);
         if (bt == null) return null;

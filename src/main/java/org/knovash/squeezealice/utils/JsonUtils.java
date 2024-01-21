@@ -15,6 +15,7 @@ import lombok.extern.log4j.Log4j2;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InaccessibleObjectException;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +38,7 @@ public class JsonUtils {
     }
 
     public static <T> T jsonToPojo(String json, Class<T> clazz) {
-        log.info("START");
+//        log.info("START");
 //        log.info("JSON TO POJO: " + json);
         json = json.replace("\\", "");
 //        log.info("JSON TO POJO: " + json);
@@ -46,9 +47,10 @@ public class JsonUtils {
         } catch (JsonProcessingException e) {
 
             log.info("ERROR " + e);
-        } finally {
-            log.info("END");
         }
+//        finally {
+//            log.info("END");
+//        }
         return null;
     }
 
@@ -89,18 +91,31 @@ public class JsonUtils {
 
     public static <T> T jsonFileToPojo(String fileName, Class<T> clazz) {
         File file = new File(fileName);
-        if (!file.exists()) return null;
-        try {
-            return objectMapper.readValue(file, clazz);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (!file.exists()) {
+            log.info("FILE NOT FOUND " + fileName);
+            return null;
         }
+        try {
+//            log.info(objectMapper.readValue(file, clazz));
+            return objectMapper.readValue(file, clazz);
+        } catch (IOException | InaccessibleObjectException e) {
+            log.info("ERROR READ lms_players.json" + e);
+//            throw new RuntimeException(e);
+        }
+        return null;
     }
 
-    public static <T> T jsonFileToPojoTrows(String fileName, Class<T> clazz) throws IOException {
-        File file = new File(fileName);
-        return objectMapper.readValue(file, clazz);
-    }
+//    public static <T> T jsonFileToPojoTrows(String fileName, Class<T> clazz) {
+//        File file = new File(fileName);
+//        if (file.exists()) {
+//            try {
+//                return objectMapper.readValue(file, clazz);
+//            } catch (IOException | InaccessibleObjectException e) {
+//                log.info("ERROR READ lms_players.json" + e);
+//            }
+//        }
+//        return null;
+//    }
 
     public static <T> List<T> jsonFileToList(String fileName, Class<T> clazz) {
         File file = new File(fileName);

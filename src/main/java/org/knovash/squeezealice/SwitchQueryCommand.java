@@ -10,6 +10,7 @@ import org.knovash.squeezealice.web.Html;
 
 import java.util.HashMap;
 
+import static org.knovash.squeezealice.Main.lmsPlayers;
 import static org.knovash.squeezealice.utils.Utils.altNames;
 
 @Log4j2
@@ -35,11 +36,11 @@ public class SwitchQueryCommand {
             log.info("NAME: " + name);
             name = Utils.getAltPlayerNameByName(name);
             log.info("ALT NAME: " + name);
-            player = LmsPlayers.playerByName(name);
+            player = lmsPlayers.getPlayerByName(name);
             if (player == null) {
                 log.info("NO PLAYER : " + name + " TRY UPDATE FROM LMS AND RETRY");
-                LmsPlayers.updatePlayers();
-                player = LmsPlayers.playerByName(name);
+                lmsPlayers.update();
+                player = lmsPlayers.getPlayerByName(name);
                 if (player == null) {
                     log.info("NO PLAYER: " + name + " ON SERVER");
                     context.json = "ERROR: NO PLAYER IN LMS " + name + "Try check alt names: " + altNames;
@@ -92,7 +93,7 @@ public class SwitchQueryCommand {
                 break;
             case ("update_players"):
             case ("update"):
-                LmsPlayers.updatePlayers();
+                lmsPlayers.update();
                 actionStatus = "UPDATE COMPLETE";
                 break;
             case ("show_log"):
@@ -171,7 +172,7 @@ public class SwitchQueryCommand {
                 break;
             case ("player_edit"):
                 log.info("EDIT PLAYER");
-                LmsPlayers.editPlayerSettings(parameters);
+                lmsPlayers.editPlayer(parameters);
                 log.info("EDIT OK");
                 actionStatus = Html.formPlayers();
                 break;

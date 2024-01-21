@@ -1,34 +1,32 @@
 package org.knovash.squeezealice.provider;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.SwitchAliceCommand;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.LmsPlayers;
+import org.knovash.squeezealice.SwitchAliceCommand;
 import org.knovash.squeezealice.provider.response.Device;
+
+import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 public class DeviceActions {
 
     public static void runInstance(Device device) {
         int id = Integer.parseInt(device.id);
-        String value = device.capabilities.get(0).state.value;
         String name = SmartHome.getByDeviceId(id).customData.lmsName;
-//        String relative = String.valueOf(device.capabilities.get(0).state.relative);
-        Boolean relative = device.capabilities.get(0).state.relative;
         String type = device.capabilities.get(0).type;
         String instance = device.capabilities.get(0).state.instance;
+        String value = device.capabilities.get(0).state.value;
+        Boolean relative = device.capabilities.get(0).state.relative;
         log.info("ID: " + id);
-        log.info("VALUE: " + value);
-        log.info("RELATIVE: " + relative); // boolean
+        log.info("NAME " + name);
         log.info("TYPE: " + type);
         log.info("INSTANCE: " + instance);
-        log.info("NAME " + name);
-
+        log.info("VALUE: " + value);
+        log.info("RELATIVE: " + relative);
 
         // обратиться к девайсу и изменить его состояние
-        Player player = LmsPlayers.playerByName(name);
+        Player player = lmsPlayers.getPlayerByName(name);
         log.info("PLAYER: " + player);
-        log.info(relative);
         switch (instance) {
             case ("volume"):
                 if (relative != null && relative.equals(true)) {

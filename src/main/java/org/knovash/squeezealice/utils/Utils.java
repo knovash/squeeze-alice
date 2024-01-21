@@ -5,7 +5,6 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.LmsPlayers;
 import org.knovash.squeezealice.provider.SmartHome;
 
 import java.io.File;
@@ -64,7 +63,7 @@ public class Utils {
         Integer newValue = Integer.valueOf(parameters.get("value"));
         Field field = null;
         playerName = getAltPlayerNameByName(playerName);
-        Player player = LmsPlayers.playerByName(playerName);
+        Player player = lmsPlayers.getPlayerByName(playerName);
         log.info("PLAYER: " + playerName + " VALUE NAME: " + valueName + " NEW VALUE: " + newValue);
         try {
             field = Player.class.getField(valueName);
@@ -79,7 +78,7 @@ public class Utils {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        lmsPlayers.writeServerFile();
+        lmsPlayers.write();
     }
 
     public static String getAltPlayerNameByName(String name) {
@@ -168,7 +167,7 @@ public class Utils {
 
     public static String backupServer(HashMap<String, String> parameters) {
         String stamp = LocalDate.now().toString() + "-" + LocalTime.now().toString();
-        lmsPlayers.writeServerFile("server-backup-" + stamp);
+        lmsPlayers.write("server-backup-" + stamp);
         return "BACKUP SERVER";
     }
 
@@ -325,13 +324,21 @@ public class Utils {
         return content;
     }
 
-    public static String timeToString(LocalTime time){
+    public static String timeToString(LocalTime time) {
         String timeStr = time.toString();
         return timeStr;
     }
 
-    public static LocalTime stringToTime(String  timeStr){
+    public static LocalTime stringToTime(String timeStr) {
         LocalTime time = LocalTime.parse(timeStr);
         return time;
+    }
+
+    public static void sleep(int time) {
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
