@@ -19,9 +19,9 @@ import static org.knovash.squeezealice.Main.lmsPlayers;
 public class ProviderQuery {
 
     public static Context action(Context context) {
-        log.info("1");
         String body = context.body;
         String xRequestId = context.xRequestId;
+
         Root bodyPojo = JsonUtils.jsonToPojo(body, Root.class);
         String json;
         if (body == null) {
@@ -29,28 +29,21 @@ public class ProviderQuery {
         } else {
             // запрос о состоянии девайса id=0
             int device_id = Integer.parseInt(bodyPojo.devices.get(0).id);
-
-            log.info("2");
             if (SmartHome.devices.size() == 0) log.info("ERROR - no registered LMS players in Alice home");
-
-            log.info("3");
-            log.info("QUERY FOR STATE DEVICE ID: " + device_id);
-            log.info(" NAME: " + SmartHome.getByDeviceId(device_id).name);
-            log.info(" LMS NAME: " + SmartHome.getByDeviceId(device_id).customData.lmsName);
-            log.info("5");
+            log.info("ID: " + device_id);
+            log.info("NAME: " + SmartHome.getByDeviceId(device_id).customData.lmsName);
+            log.info("ROOM: " + SmartHome.getByDeviceId(device_id).room);
             Response response = new Response();
             response.request_id = xRequestId;
             List<Device> jsonDevices = bodyPojo.devices.stream().map(d -> updateDevice(Integer.valueOf(d.id))).collect(Collectors.toList());
-            log.info("LIST DEV: " + jsonDevices);
             response.payload = new Payload();
             response.payload.devices = jsonDevices;
-            log.info("LIST DEV: " + jsonDevices);
             json = JsonUtils.pojoToJson(response);
             json = json.replaceAll("(\"value\" :) \"([0-9a-z]+)\"", "$1 $2");
-
-            context.json = json;
-            context.code = 200;
         }
+
+        context.json = json;
+        context.code = 200;
         return context;
     }
 
@@ -63,12 +56,11 @@ public class ProviderQuery {
             volume = Integer.valueOf(player.volume());
             String playerMode = player.mode();
             // TODO get channel saved in player
-            player.mode();
+//            player.mode();
             if (playerMode.equals("play")) power = true;
             log.info("POWER: " + playerMode + " power " + power);
         }
         Device device = new Device();
-        log.info("device: " + device);
 
         Capability capability1 = new Capability();
         Capability capability2 = new Capability();
@@ -78,7 +70,6 @@ public class ProviderQuery {
         capability1.state = new State();
         capability1.state.instance = "volume";
         capability1.state.value = String.valueOf(volume);
-        log.info("device: " + capability1);
 
         capability2.type = "devices.capabilities.range";
         capability2.state = new State();
@@ -103,7 +94,6 @@ public class ProviderQuery {
         device.capabilities.add(capability3);
 //        device.capabilities.add(capability4);
         device.id = String.valueOf(device_id);
-        log.info("device: " + device);
         return device;
     }
 

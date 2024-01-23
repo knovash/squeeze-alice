@@ -40,10 +40,7 @@ public class JsonUtils {
     }
 
     public static <T> T jsonToPojo(String json, Class<T> clazz) {
-//        log.info("START");
-//        log.info("JSON TO POJO: " + json);
         json = json.replace("\\", "");
-//        log.info("JSON TO POJO: " + json);
         try {
             return objectMapper.readValue(json, clazz);
         } catch (JsonProcessingException e) {
@@ -51,7 +48,7 @@ public class JsonUtils {
             log.info("ERROR " + e);
         }
 //        finally {
-//            log.info("END");
+//            log.info("OK");
 //        }
         return null;
     }
