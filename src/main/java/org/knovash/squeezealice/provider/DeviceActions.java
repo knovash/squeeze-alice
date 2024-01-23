@@ -26,7 +26,6 @@ public class DeviceActions {
 
         // обратиться к девайсу и изменить его состояние
         Player player = lmsPlayers.getPlayerByName(name);
-        log.info("PLAYER: " + player);
         switch (instance) {
             case ("volume"):
                 if (relative != null && relative.equals(true)) {

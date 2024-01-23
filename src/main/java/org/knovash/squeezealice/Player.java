@@ -126,14 +126,14 @@ public class Player {
     public Player volume(String value) {
         log.info("PLAYER: " + this.name + " SET VOLUME: " + value);
         String status = Requests.postByJsonForStatus(RequestParameters.volume(this.name, value).toString());
-        log.info("SATUS: " + status);
+        log.info("STATUS: " + status);
         return this;
     }
 
     public Player play(Integer channel) {
         log.info("PLAYER: " + this.name + " PLAY CHANNEL: " + channel);
         String status = Requests.postByJsonForStatus(RequestParameters.play(this.name, channel - 1).toString());
-        log.info("SATUS: " + status);
+        log.info("STATUS: " + status);
         this.saveLastPath();
         return this;
     }
@@ -141,7 +141,7 @@ public class Player {
     public Player play(String path) {
         log.info("PLAYER: " + this.name + " PLAY PATH: " + path);
         String status = Requests.postByJsonForStatus(RequestParameters.play(this.name, path).toString());
-        log.info("SATUS: " + status);
+        log.info("STATUS: " + status);
         this.saveLastPath();
         return this;
     }
@@ -149,14 +149,14 @@ public class Player {
     public Player playSilence() {
         log.info("PLAYER: " + this.name + " PLAY SILENCE");
         String status = Requests.postByJsonForStatus(RequestParameters.play(this.name, silence).toString());
-        log.info("SATUS: " + status);
+        log.info("STATUS: " + status);
         return this;
     }
 
     public Player play() {
         log.info("PLAYER: " + this.name + " PLAY");
         String status = Requests.postByJsonForStatus(RequestParameters.play(this.name).toString());
-        log.info("SATUS: " + status);
+        log.info("STATUS: " + status);
         this.saveLastPath();
         return this;
     }
@@ -164,7 +164,7 @@ public class Player {
     public Player pause() {
         log.info("PLAYER: " + this.name + " PAUSE");
         String status = Requests.postByJsonForStatus(RequestParameters.pause(this.name).toString());
-        log.info("SATUS: " + status);
+        log.info("STATUS: " + status);
         this.saveLastPath();
         this.saveLastTimeIfPlay();
         return this;
@@ -173,7 +173,7 @@ public class Player {
     public Player play_pause() {
         log.info("PLAYER: " + this.name + " PLAY/PAUSE");
         String status = Requests.postByJsonForStatus(RequestParameters.play_pause(this.name).toString());
-        log.info("SATUS: " + status);
+        log.info("STATUS: " + status);
         this.saveLastPath();
         return this;
     }
@@ -181,7 +181,7 @@ public class Player {
     public Player prevtrack() {
         log.info("PLAYER: " + this.name + " NEXT");
         String status = Requests.postByJsonForStatus(RequestParameters.prevtrack(this.name).toString());
-        log.info("SATUS: " + status);
+        log.info("STATUS: " + status);
         this.saveLastPath();
         return this;
     }
@@ -189,7 +189,7 @@ public class Player {
     public Player nexttrack() {
         log.info("PLAYER: " + this.name + " NEXT");
         String status = Requests.postByJsonForStatus(RequestParameters.nexttrack(this.name).toString());
-        log.info("SATUS: " + status);
+        log.info("STATUS: " + status);
         this.saveLastPath();
         return this;
     }
@@ -197,28 +197,28 @@ public class Player {
     public Player shuffleon() {
         log.info("PLAYER: " + this.name + " SHUFFLE ON");
         String status = Requests.postByJsonForStatus(RequestParameters.shuffleon(this.name).toString());
-        log.info("SATUS: " + status);
+        log.info("STATUS: " + status);
         return this;
     }
 
     public Player shuffleoff() {
         log.info("PLAYER: " + this.name + " SHUFFLE OFF");
         String status = Requests.postByJsonForStatus(RequestParameters.shuffleoff(this.name).toString());
-        log.info("SATUS: " + status);
+        log.info("STATUS: " + status);
         return this;
     }
 
     public Player sync(String toPlayer) {
         log.info("PLAYER: " + this.name + " SYNC TO: " + toPlayer);
         String status = Requests.postByJsonForStatus(RequestParameters.sync(this.name, toPlayer).toString());
-        log.info("SATUS: " + status);
+        log.info("STATUS: " + status);
         return this;
     }
 
     public Player unsync() {
         log.info("PLAYER UNSYNC: " + this.name);
         String status = Requests.postByJsonForStatus(RequestParameters.unsync(this.name).toString());
-        log.info("SATUS: " + status);
+        log.info("STATUS: " + status);
         return this;
     }
 

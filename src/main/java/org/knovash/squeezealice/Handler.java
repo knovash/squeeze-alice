@@ -48,12 +48,6 @@ public class Handler implements HttpHandler {
             case ("/v1.0"):
                 context = ProviderCheck.action(context);
                 break;
-            case ("/bearer"):
-                context = YandexTokenBearer.action(context);
-                break;
-            case ("/refresh"):
-                context = YandexTokenBearer.action(context);
-                break;
             case ("/"):
                 context = PageIndex.action(context);
                 break;
@@ -73,14 +67,10 @@ public class Handler implements HttpHandler {
                 context = VoiceCommand.action(context);
                 break;
             case ("/cmd"):
-//                context = ActionKuzja.action(context);
-                context = SwitchQueryCommand.action(query,context);
+                context = SwitchQueryCommand.action(query, context);
                 break;
             case ("/v1.0/user/unlink"):
                 context = ProviderUserUnlink.action(context);
-                break;
-            case ("/token"):
-                context = YandexToken.action(context);
                 break;
             case ("/v1.0/user/devices/action"):
                 context = ProviderAction.action(context);
@@ -89,17 +79,10 @@ public class Handler implements HttpHandler {
                 context = ProviderUserDevices.action(context);
                 break;
             case ("/auth"):
-                log.info("CASE AUTH !!!!!!!!!");
-                String scope = context.queryMap.get("scope");
-                String state = context.queryMap.get("state");
-                String redirect_uri = context.queryMap.get("redirect_uri");
-                String client_id = context.queryMap.get("client_id");
-                context.json = "REDIRECT";
-                context.code = 302;
-//                String cs = "12345";
-                String location = redirect_uri + "?client_id=" + client_id + "&state=" + state + "&code=" + scope;
-                log.info("redirectUri: " + location);
-                httpExchange.getResponseHeaders().add("Location", location);
+                context = YandexAuth.action(context);
+                break;
+            case ("/token"):
+                context = YandexToken.action(context);
                 break;
             default:
                 log.info("PATH ERROR " + path);
@@ -109,12 +92,15 @@ public class Handler implements HttpHandler {
 
         String json = context.json;
         int code = context.code;
+        log.info("CODE: " + code);
+        httpExchange.getResponseHeaders().putAll(context.headers);
+        log.info("HEADERS: " + httpExchange.getResponseHeaders().entrySet());
         log.info("RESPONSE: " + json);
         httpExchange.sendResponseHeaders(code, json.getBytes().length);
         OutputStream outputStream = httpExchange.getResponseBody();
         outputStream.write(json.getBytes());
         outputStream.flush();
         outputStream.close();
-        log.info("QUERY OK");
+        log.info("OK");
     }
 }

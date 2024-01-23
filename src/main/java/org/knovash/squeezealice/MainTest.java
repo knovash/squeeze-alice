@@ -1,5 +1,6 @@
 package org.knovash.squeezealice;
 
+import com.sun.net.httpserver.Headers;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.Yandex;
 
@@ -15,34 +16,26 @@ public class MainTest {
     public static void main(String[] args) {
         log.info("  ---+++===[ START ]===+++---");
 
-        String str = " \"value\" : \"4\",";
-        log.info(str);
-       str =  str.replaceAll("(\"value\" :) \"([0-9a-z]+)\"", "$1_$2_");
-        log.info(str);
+        Headers headers1 = new Headers();
+        headers1.add("fsfd","fsd GFDG");
+        headers1.add("ffff","33333");
 
-        LocalTime ttt = LocalTime.now().truncatedTo(MINUTES);
-        log.info(ttt);
-//        String ts = ttt.toString();
-        String ts = timeToString(ttt);
-                log.info(ts);
+        log.info(headers1);
 
-        LocalTime tn = stringToTime(ts);
+        Headers headers2 = new Headers();
+        headers2.add("GFDGDFG","4444");
+        headers2.add("BBBB","7777");
 
-        log.info(tn);
+        headers2.add("zzzz","777ddd7 SS");
+
+        log.info(headers2);
+
+        headers2.putAll(headers1);
+
+        log.info(headers2);
 
 
 
     }
-
-    public static String timeToString(LocalTime time){
-        String timeStr = time.toString();
-        return timeStr;
-    }
-
-    public static LocalTime stringToTime(String  timeStr){
-        LocalTime time = LocalTime.parse(timeStr);
-        return time;
-    }
-
 
 }

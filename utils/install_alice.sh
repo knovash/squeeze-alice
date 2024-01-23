@@ -3,7 +3,7 @@
 systemctl stop squeeze-tunnel.service
 systemctl stop squeeze-alice.service
 
-rm -r /opt/squeeze-alice*
+#rm -r /opt/squeeze-alice*
 
 cd /root
 

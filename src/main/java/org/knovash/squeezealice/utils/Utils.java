@@ -241,7 +241,6 @@ public class Utils {
 //        String lmsIp = null;
         Integer start = 1;
         while (lmsIp == null && start < 255) {
-//            log.info("START FROM: " + start);
             lmsIp = IntStream
                     .range(start, start + 50)
                     .boxed()
