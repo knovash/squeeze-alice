@@ -2,5 +2,5 @@
 rm -r log
 rm -r squeeze-alice-pak
 rm -r target
-rm *.json
+#rm *.json
 rm *.gz
