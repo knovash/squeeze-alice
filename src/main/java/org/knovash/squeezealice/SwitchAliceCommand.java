@@ -102,12 +102,19 @@ public class SwitchAliceCommand {
     // Алиса, выключи колонку - отключить и остановить колонку
     public static void turnOffSpeaker(Player player) {
         log.info("TURN OFF SPEAKER");
-        player
-                .unsync()
-                .pause();
+        if (player.mode().equals("play")) {
+    // если колонка играет - выклю чить её
+            player
+                    .unsync()
+                    .pause();
+        } else {
+        }
+        // если колонка не играет - выключить все остальные
+        turnOffMusic();
     }
 
     public static String toggleMusic(Player player) {
+        // переключить play/pause для кнопки на пульте
         String mode = player.mode();
         if (mode.equals("play")) turnOffSpeaker(player);
         else turnOnMusicSpeaker(player);

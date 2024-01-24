@@ -71,11 +71,10 @@ public class Spotify {
     public static String search(String q, Type type) {
 
 
-            sc = JsonUtils.jsonFileToPojo("spotify.json", SpotifyCredentials.class);
+        sc = JsonUtils.jsonFileToPojo("spotify.json", SpotifyCredentials.class);
 
-            log.info("NO FILE");
-            if (sc == null) Spotify.createCredFile();
-
+        log.info("NO FILE");
+        if (sc == null) Spotify.createCredFile();
 
 
         String bt = null;

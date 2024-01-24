@@ -26,7 +26,8 @@ public class Html {
                 "<p><a href=\\speakers>Подключение колонок в УД с Алисой</a></p> \n" +
                 "<p><a href=\\players>Настройка колонок</a></p> \n" +
                 "<p><a href=\\spotify>Настройка Spotify</a></p> \n" +
-                "<p><a href=\\cmd?action=state>Посмотреть настройки</a></p> \n" +
+                "<p><a href=\\cmd?action=state_devices>Посмотреть настройки Devices</a></p> \n" +
+                "<p><a href=\\cmd?action=state_players>Посмотреть настройки Players</a></p> \n" +
                 "<p><a href=\\cmd?action=backup>Сохранить настройки</a></p> \n" +
                 "<p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
                 "</body>\n" +
