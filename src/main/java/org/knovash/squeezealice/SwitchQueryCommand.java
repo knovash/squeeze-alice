@@ -3,7 +3,6 @@ package org.knovash.squeezealice;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.DeviceUtils;
 import org.knovash.squeezealice.provider.Yandex;
-//import org.knovash.squeezealice.spotify.SpotifyUtils;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.web.Html;
@@ -120,17 +119,13 @@ public class SwitchQueryCommand {
                 player.remove();
                 response = "REMOVE COMPLETE";
                 break;
-            case ("state"):
-                log.info("SEND SERVER STATE");
-                response = Utils.state();
+            case ("state_devices"):
+                log.info("STATE ALICE DEVICES");
+                response = Utils.stateDevices();
                 break;
-            case ("players"):
-                log.info("SEND PLAYERS");
-                response = Utils.players();
-                break;
-            case ("home"):
-                log.info("SEND SERVER HOME");
-                response = Utils.home();
+            case ("state_players"):
+                log.info("STATE LMS PLAYERS");
+                response = Utils.statePlayers();
                 break;
             case ("time_volume_get"):
                 log.info("SEND TIME AND VOLUME");

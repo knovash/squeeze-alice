@@ -24,6 +24,11 @@ public class SmartHome {
 
     public static Device getByDeviceId(int deviceId) {
         String index = String.valueOf(deviceId);
-        return devices.stream().filter(d -> d.id.equals(index)).findFirst().get();
+        return devices.stream().filter(d -> d.id.equals(index)).findFirst().orElse(null);
+    }
+
+    public static Device getByDeviceRoom(String room) {
+//        devices.stream().forEach(device -> log.info(device.room));
+        return devices.stream().filter(d -> d.room.toLowerCase().equals(room.toLowerCase())).findFirst().orElse(null);
     }
 }

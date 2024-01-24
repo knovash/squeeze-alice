@@ -132,7 +132,7 @@ public class Utils {
         return result;
     }
 
-    public static String state() {
+    public static String statePlayers() {
         String json = JsonUtils.pojoToJson(lmsPlayers);
         return json;
     }
@@ -142,7 +142,7 @@ public class Utils {
         return json;
     }
 
-    public static String home() {
+    public static String stateDevices() {
         String json = JsonUtils.pojoToJson(SmartHome.devices);
         return json;
     }

@@ -1,6 +1,10 @@
 package org.knovash.squeezealice.voice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.Context;
+import org.knovash.squeezealice.Player;
+import org.knovash.squeezealice.provider.SmartHome;
+import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.spotify_pojo.Type;
 import org.knovash.squeezealice.utils.JsonUtils;
@@ -10,13 +14,40 @@ import static org.knovash.squeezealice.Main.lmsPlayers;
 @Log4j2
 public class SwitchVoiceCommand {
 
-    public static String action(String command, String playerName) {
+    public static String action(String command, String playerName, Context context) {
         log.info("COMMAND: " + command);
         log.info("PLAYER NAME: " + playerName);
         String target;
         String answer = "повторите";
-        if (playerName == null) return createResponse("настройте id алисы");
         if (command == null) return createResponse("не поняла");
+
+        // привязка Алисы к колоке в комнате
+        if (command.contains("комната")) {
+            log.info("ACTION ROOM CONNECT");
+            target = command.replaceAll(".*комната\\S*\\s", "")
+                    .replaceAll("\"", "")
+                    .replaceAll("\\s\\s", " ");
+            log.info("room request: " + target);
+            // найти девайс с комнатой полученой от Алисы
+            Device device = SmartHome.getByDeviceRoom(target);
+            log.info("ROOM DEVICE: " + device);
+            if (device == null) {
+                // ненайдена
+                log.info("NOT FOUND ROOM: " + target);
+                answer = "ой, не найдена комната " + target;
+            } else {
+                // найдена
+                log.info("ROOM: " + device.room);
+                log.info("ALICE ID:" + Player.lastAliceId);
+                playerName = device.customData.lmsName;
+                Player player = lmsPlayers.getPlayerByName(playerName);
+                player.alice_id = Player.lastAliceId;
+                answer = "это комната " + device.room + " с колонкой" + playerName;
+            }
+            return createResponse(answer);
+        }
+
+        if (playerName == null) return createResponse("настройте id алисы");
         if (command.contains("включи")) {
             target = command.replaceAll(".*включи\\S*\\s", "")
                     .replaceAll("\"", "")
@@ -43,6 +74,7 @@ public class SwitchVoiceCommand {
             answer = "сейчас на " + playerName + " громкость " + volume;
             return createResponse(answer);
         }
+
         if (command.contains("что") && command.contains("играет")) {
             log.info("WATS PLAYING");
             String playlist = lmsPlayers.getPlayerByName(playerName).playlistname();

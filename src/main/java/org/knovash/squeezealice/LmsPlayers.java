@@ -78,7 +78,7 @@ public class LmsPlayers {
     public Player getPlayerByName(String name) {
         if (lmsPlayers.players == null) return null;
         return lmsPlayers.players.stream()
-                .filter(player -> player.getName().equals(name))
+                .filter(player -> player.getName().toLowerCase().equals(name.toLowerCase()))
                 .findFirst()
                 .orElse(null);
     }

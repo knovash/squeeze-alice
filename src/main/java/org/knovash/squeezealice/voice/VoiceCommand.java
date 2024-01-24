@@ -24,7 +24,7 @@ public class VoiceCommand {
         String playerName = lmsPlayers.getPlayerNameByAliceId(alice_id);
         log.info("playerName: " + playerName);
 
-        response = SwitchVoiceCommand.action(command, playerName);
+        response = SwitchVoiceCommand.action(command, playerName, context);
 
         context.json = response;
         context.code = 200;
