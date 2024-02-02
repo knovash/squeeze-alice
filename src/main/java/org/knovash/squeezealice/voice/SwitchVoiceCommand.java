@@ -8,6 +8,10 @@ import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.spotify_pojo.Type;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.utils.Levenstein;
+import org.knovash.squeezealice.utils.Utils;
+
+import java.util.List;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
 
@@ -43,12 +47,16 @@ public class SwitchVoiceCommand {
                 Player player = lmsPlayers.getPlayerByName(playerName);
                 player.alice_id = Player.lastAliceId;
                 answer = "это комната " + device.room + " с колонкой" + playerName;
+                lmsPlayers.write();
+
             }
             return createResponse(answer);
         }
 
-        if (playerName == null) return createResponse("настройте id алисы");
-        if (command.contains("включи")) {
+        if (playerName == null) return createResponse("повторите и скажите: это комната - название");
+
+//        включи Spotify <name playlist it is ...>
+        if (command.contains("включи") && !command.contains("канал")) {
             target = command.replaceAll(".*включи\\S*\\s", "")
                     .replaceAll("\"", "")
                     .replaceAll("\\s\\s", " ");
@@ -67,6 +75,24 @@ public class SwitchVoiceCommand {
             lmsPlayers.getPlayerByName(playerName).shuffleon().play(link);
             return createResponse(answer);
         }
+//        включи канал <number> or <name>
+        if (command.contains("включи") && command.contains("канал")) {
+            target = command.replaceAll(".*канал\\S*\\s", "")
+                    .replaceAll("\"", "")
+                    .replaceAll("\\s\\s", " ");
+            log.info("TARGET: " + target);
+            List<String> pl = lmsPlayers.favorites();
+            pl.forEach(n -> log.info(n));
+            String favName = Levenstein.searchInList(target, pl);
+            log.info("FAVNAME: " + favName);
+            answer = "сейчас, мой господин, включаю " + favName;
+            int index = pl.indexOf(favName);
+            log.info("FAVINDEX: " + index);
+            lmsPlayers.getPlayerByName(playerName).play(index+1);
+            return createResponse(answer);
+        }
+
+//        какая громкость
         if (command.contains("какая") && command.contains("громкость")) {
             log.info("VOLUME");
             String volume = lmsPlayers.getPlayerByName(playerName).volume();

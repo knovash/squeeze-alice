@@ -7,11 +7,12 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.utils.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
 
@@ -32,6 +33,13 @@ public class LmsPlayers {
             return;
         }
         lmsPlayers.counter = Integer.parseInt(response.result._count);
+    }
+
+    public List<String> favorites() {
+        String playerName = lmsPlayers.players.get(0).name;
+        Response response = Requests.postByJsonForResponse(RequestParameters.favorites("HomePod").toString());
+        List<String> playlist = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
+        return playlist;
     }
 
     public void update() {

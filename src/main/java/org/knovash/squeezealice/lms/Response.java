@@ -31,5 +31,23 @@ public class Response {
         public String _artist;
         public String _id;
         public String _syncgroups;
+        public String count;
+        public String title;
+        public List<Loop_loop> loop_loop;
+
+
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Loop_loop {
+
+        public String id;
+        public String name;
+        public String type;
+        public String image;
+        public int isaudio;
+        public int hasitems;
     }
 }

@@ -1,13 +1,11 @@
 package org.knovash.squeezealice;
 
-import com.sun.net.httpserver.Headers;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.Yandex;
+import org.knovash.squeezealice.utils.Levenstein;
+import org.knovash.squeezealice.utils.Utils;
 
-import java.io.IOException;
-import java.time.LocalTime;
-
-import static java.time.temporal.ChronoUnit.MINUTES;
+import java.util.ArrayList;
+import java.util.List;
 
 @Log4j2
 public class MainTest {
@@ -16,26 +14,52 @@ public class MainTest {
     public static void main(String[] args) {
         log.info("  ---+++===[ START ]===+++---");
 
-        Headers headers1 = new Headers();
-        headers1.add("fsfd","fsd GFDG");
-        headers1.add("ffff","33333");
 
-        log.info(headers1);
+        String orig1 = "jazz";
+        String orig2 = "techno";
+        String orig3 = "chillout";
+        String name1 = "jaz";
+        String name2 = "jazz";
+        String name3 = "tecno";
+        String name4 = "techno";
+        String name5 = "chill";
 
-        Headers headers2 = new Headers();
-        headers2.add("GFDGDFG","4444");
-        headers2.add("BBBB","7777");
+        List<String> playlist = new ArrayList<>();
+        playlist.add("Deep Organic House");
+        playlist.add("Smooth Jazz");
+        playlist.add("Chillout");
+        playlist.add("LoFi Hip-Hop");
+        playlist.add("Atmospheric Breaks");
+        playlist.add("Future Garage");
+        playlist.add("Deep Progressive House");
+        playlist.add("Melodic Progressive");
+        playlist.add("Chillout Dreams");
+        playlist.add("Drum and Bass");
+        playlist.add("Deep Tech");
+        playlist.add("Future Synthpop");
+        playlist.add("Electropop");
+        playlist.add("Dark PsyTrance");
+        playlist.add("Rock");
+        playlist.add("Techno");
+        playlist.add("Undeground Techno");
+        playlist.add("jazz");
 
-        headers2.add("zzzz","777ddd7 SS");
+        int dist = Levenstein.compareWordAndWord(orig1, name2);
+        log.info(orig1 + " " + name2 + " " + dist);
 
-        log.info(headers2);
+        log.info(orig1 + " " + name1 + " " + Levenstein.compareWordAndWord(orig1, name2));
+        log.info(orig2 + " " + name3 + " " + Levenstein.compareWordAndWord(orig2, name3));
+        log.info(orig1 + " " + name1 + " " + Levenstein.compareWordAndWord(orig1, name2));
+        log.info(orig1 + " " + name1 + " " + Levenstein.compareWordAndWord(orig1, name2));
 
-        headers2.putAll(headers1);
-
-        log.info(headers2);
-
-
-
+//        String val = "джаз";
+//        Levenstein.index = 100;
+//        playlist.stream().forEach(n -> Levenstein.compareWordAndWord(val, n));
+//        String valCyr = Utils.convertCyrilic(val);
+//        playlist.stream().forEach(n -> Levenstein.compareWordAndWord(valCyr, n));
+//
+//        log.info(Levenstein.findVal);
+//        log.info(Levenstein.index);
     }
 
 }

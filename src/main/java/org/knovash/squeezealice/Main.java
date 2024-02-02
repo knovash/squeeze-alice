@@ -5,6 +5,7 @@ import org.knovash.squeezealice.provider.SmartHome;
 import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.utils.ArgsParser;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.utils.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
 
 import java.util.ArrayList;
