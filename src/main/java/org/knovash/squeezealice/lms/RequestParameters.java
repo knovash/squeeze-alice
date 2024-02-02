@@ -38,6 +38,10 @@ public class RequestParameters {
         return Request.create(player, new String[]{"playlist", "play", url});
     }
 
+    public static Request favorites(String player) {
+        return Request.create(player, new String[]{"favorites", "items", "0", "10" + "want_url:1"});
+    }
+
     public static Request volume(String player, String value) {
         return Request.create(player, new String[]{"mixer", "volume", value});
     }
