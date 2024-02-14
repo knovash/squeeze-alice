@@ -9,28 +9,29 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
-public class SwitchAliceCommand {
+public class Actions {
 
     // Алиса, музыку громче\тише
-    public static void volume(Player player, String value) {
-        Integer step;
-        Integer volumeAlicePrevious = player.volume_alice_previous;
-        Integer volumeAliceCurrent = Integer.valueOf(value);
-        Integer playerCurrentVolume = Integer.valueOf(player.volume());
-        if (playerCurrentVolume == null) {
-            log.info("LMS NO RESPONSE");
-            return;
-        }
-        step = player.volume_step;
-        if (playerCurrentVolume < 10) step = 1 + Math.round(playerCurrentVolume / 2);
-        log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name + " current=" + volumeAliceCurrent + " last=" + volumeAlicePrevious + " low=" + player.volume_alice_low + " hi=" + player.volume_alice_high);
-        if ((volumeAliceCurrent > volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_high))) {
-            player.volume("+" + step);
-        }
-        if (playerCurrentVolume > 1 && ((volumeAliceCurrent < volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_low)))) {
-            player.volume("-" + step);
-        }
-        player.volume_alice_previous = volumeAliceCurrent;
+    public static void volumeByQuery(Player player, String value) {
+        player.volume(value);
+//        Integer step;
+//        Integer volumeAlicePrevious = player.volume_alice_previous;
+//        Integer volumeAliceCurrent = Integer.valueOf(value);
+//        Integer playerCurrentVolume = Integer.valueOf(player.volume());
+//        if (playerCurrentVolume == null) {
+//            log.info("LMS NO RESPONSE");
+//            return;
+//        }
+//        step = player.volume_step;
+//        if (playerCurrentVolume < 10) step = 1 + Math.round(playerCurrentVolume / 2);
+//        log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name + " current=" + volumeAliceCurrent + " last=" + volumeAlicePrevious + " low=" + player.volume_alice_low + " hi=" + player.volume_alice_high);
+//        if ((volumeAliceCurrent > volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_high))) {
+//            player.volume("+" + step);
+//        }
+//        if (playerCurrentVolume > 1 && ((volumeAliceCurrent < volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_low)))) {
+//            player.volume("-" + step);
+//        }
+//        player.volume_alice_previous = volumeAliceCurrent;
     }
 
     // Алиса, включи канал
@@ -70,7 +71,11 @@ public class SwitchAliceCommand {
         // играет    +  есть играющей = подключить к играющей
         if (mode.equals("play") && playing != null) {
             log.info("SYNC TO PLAYING");
-            player.sync(playing.name).saveLastTime();
+            player
+//                    .sync(playing.name)
+                    .play(playing.path()) // времнная замена синхронизации пока не починят
+                    .saveLastTime();
+
         }
         // не играет +  нет играющей  = вэйк, сет, ластплэй
         if (!mode.equals("play") && playing == null) {
@@ -87,7 +92,8 @@ public class SwitchAliceCommand {
             player
                     .unsync()
                     .wakeAndSet()
-                    .sync(playing.name)
+//                    .sync(playing.name)
+                    .play(playing.path()) // времнная замена синхронизации пока не починят
                     .saveLastTime();
         }
         player.saveLastTimeIfPlay();

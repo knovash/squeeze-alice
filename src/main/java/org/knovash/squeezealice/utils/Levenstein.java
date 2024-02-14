@@ -19,7 +19,7 @@ public class Levenstein {
 
     public static String searchInList(String value, List<String> list) {
         filalDistance = 100;
-        if (Utils.isCyrillic(value)) {
+        if (Utils.isCyrillic(value) && !Utils.isCyrillic(list.get(0))) {
             value = Utils.convertCyrilic(value);
         }
         String finalValue = value;
@@ -28,7 +28,7 @@ public class Levenstein {
         } else {
             list.stream().forEach(name -> Levenstein.compareWordAndFrase(finalValue, name));
         }
-
+        if (filalDistance > 5) finalElement = null;
         return finalElement;
     }
 

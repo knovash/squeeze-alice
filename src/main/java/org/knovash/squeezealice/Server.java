@@ -18,19 +18,23 @@ public class Server {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
         server.createContext("/", new Handler());
+        server.setExecutor(null);
+        server.start();
+        log.info("http://localhost:" + port);
+    }
+}
 
 //        Диалог Раз Два
 //        https://dialogs.yandex.ru/developer/skills/f2c654d9-d4e7-42c8-94d5-1b058e1d5afe/settings/main
 //        Backend WebHook URL
 //        https://unicorn-neutral-badly.ngrok-free.app/alice/
-//        server.createContext("/alice", new Handler());
-
 //        Диалог Squeezebox LMS
 //        Backend WebHook URL
 //        https://dialogs.yandex.ru/developer/skills/53f7314b-b845-4ec3-9a09-49aaff2e5198/settings/main
 //        https://yandex.ru/dev/dialogs/smart-home/doc/reference/resources.html
+
+//        server.createContext("/alice", new Handler());
 //        server.createContext("/v1.0", new Handler());
 //        server.createContext("/v1.0/user/devices/query", new Handler());
 //        server.createContext("/v1.0/user/devices/action", new Handler());
@@ -40,18 +44,8 @@ public class Server {
 //        server.createContext("/token", new Handler());
 //        server.createContext("/refresh", new Handler());
 //        server.createContext("/bearer", new Handler());
-
-//        Управление через http query запросы
 //        server.createContext("/cmd", new Handler());
-
-//        Веб интерфейс настроек
 //        server.createContext("/spotify", new Handler());
 //        server.createContext("/yandex", new Handler());
 //        server.createContext("/speakers", new Handler());
 //        server.createContext("/players", new Handler());
-
-        server.setExecutor(null);
-        server.start();
-        log.info("http://localhost:" + port);
-    }
-}

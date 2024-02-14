@@ -7,9 +7,9 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
-import org.knovash.squeezealice.utils.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,6 +63,12 @@ public class LmsPlayers {
         Utils.generatePlayersAltNamesToFile();
     }
 
+    public void clear() {
+        log.info("CLEAR PLAYERS");
+        lmsPlayers.players = new ArrayList<>();
+        Utils.generatePlayersAltNamesToFile();
+    }
+
     public void write() {
         log.info("WRITE FILE lms_players.json");
         JsonUtils.pojoToJsonFile(lmsPlayers, "lms_players.json");
@@ -91,7 +97,16 @@ public class LmsPlayers {
                 .orElse(null);
     }
 
-    public String getPlayerNameByAliceId(String alice_id) {
+    public Player getPlayerByNameInQuery(String name) {
+        if (name == null) return null;
+        if (lmsPlayers.players == null) return null;
+        return lmsPlayers.players.stream()
+                .filter(player -> player.getNameInQuery().toLowerCase().equals(name.toLowerCase()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public Player getPlayerByAliceId(String alice_id) {
         if (lmsPlayers.players == null) return null;
         if (alice_id == null) return null;
         Player player = lmsPlayers.players.stream()
@@ -99,7 +114,7 @@ public class LmsPlayers {
                 .findFirst()
                 .orElse(null);
         if (player == null) return null;
-        return player.name;
+        return player;
     }
 
     public Player getPlayingPlayer(String currentName) {
@@ -121,7 +136,7 @@ public class LmsPlayers {
         return playing;
     }
 
-    public String editPlayer(HashMap<String, String> parameters) {
+    public String playerSave(HashMap<String, String> parameters) {
         log.info("PARAMETERS: " + parameters);
         String name = parameters.get("name");
         Player player = lmsPlayers.getPlayerByName(name);
@@ -139,6 +154,16 @@ public class LmsPlayers {
         player.alice_id = parameters.get("alice_id");
         player.timeVolume = Utils.stringSplitToIntMap(parameters.get("schedule"), ",", ":");
         JsonUtils.pojoToJsonFile(lmsPlayers, "lms_players.json");
+        return "OK";
+    }
+
+    public String playerRemove(HashMap<String, String> parameters) {
+        log.info("PARAMETERS: " + parameters);
+        String name = parameters.get("name");
+        Player player = lmsPlayers.getPlayerByName(name);
+        log.info("PLAYER FOR EDIT: " + player);
+        log.info("name: " + parameters.get("name"));
+        lmsPlayers.players.remove(player);
         return "OK";
     }
 }

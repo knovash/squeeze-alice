@@ -34,6 +34,7 @@ public class Player {
     public String lastPath;
     public String lastPlayTimeStr;
     public String alice_id;
+    public String nameInQuery;
 
     public static String lastStrPath;
     public static String lastPathGlobal;
@@ -76,7 +77,7 @@ public class Player {
 
     public String mode() {
         Response response = Requests.postByJsonForResponse(RequestParameters.mode(this.name).toString());
-        if (response == null) return "";
+        if (response == null) return "stop";
         log.info("PLAYER: " + this.name + " MODE: " + response.result._mode);
         return response.result._mode;
     }
@@ -118,7 +119,7 @@ public class Player {
 
     public String volume() {
         Response response = Requests.postByJsonForResponse(RequestParameters.volume(this.name).toString());
-        if (response == null) return null;
+        if (response == null) return "0";
         log.info("PLAYER: " + this.name + " GET VOLUME: " + response.result._volume);
         return response.result._volume;
     }
@@ -126,6 +127,7 @@ public class Player {
     public Player volume(String value) {
         log.info("PLAYER: " + this.name + " SET VOLUME: " + value);
         String status = Requests.postByJsonForStatus(RequestParameters.volume(this.name, value).toString());
+        if (Integer.parseInt(this.volume()) < 1) this.volume("1");
         log.info("STATUS: " + status);
         return this;
     }
@@ -210,8 +212,8 @@ public class Player {
 
     public Player sync(String toPlayer) {
         log.info("PLAYER: " + this.name + " SYNC TO: " + toPlayer);
-        String status = Requests.postByJsonForStatus(RequestParameters.sync(this.name, toPlayer).toString());
-        log.info("STATUS: " + status);
+//        String status = Requests.postByJsonForStatus(RequestParameters.sync(this.name, toPlayer).toString());
+//        log.info("STATUS: " + status);
         return this;
     }
 
@@ -278,7 +280,7 @@ public class Player {
     public Player wakeAndSet() {
         log.info("WAKE");
 
-        if (SwitchAliceCommand.timeExpired(this)) {
+        if (Actions.timeExpired(this)) {
             log.info("WAKE RUN");
             log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wake_delay);
             this

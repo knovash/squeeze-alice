@@ -22,8 +22,8 @@ import java.util.HashMap;
 public class Spotify {
 
     public static String bearerToken;
-    public static String client_id = "---------------------";
-    public static String client_secret = "---------------------";
+    public static String client_id = "";
+    public static String client_secret = "";
     public static SpotifyCredentials sc = new SpotifyCredentials();
 
     public static String getBearerToken(String clientId, String clientSecret) {
@@ -70,18 +70,12 @@ public class Spotify {
 
     public static String search(String q, Type type) {
 
-
         sc = JsonUtils.jsonFileToPojo("spotify.json", SpotifyCredentials.class);
-
         log.info("NO FILE");
         if (sc == null) Spotify.createCredFile();
-
-
         String bt = null;
         if (sc != null) bt = Spotify.getBearerToken(sc.clientId, sc.clientSecret);
         if (bt == null) return null;
-
-
         log.info("Q: " + q);
         log.info("TYPE: " + type);
         String link = null;
@@ -163,5 +157,25 @@ public class Spotify {
         if (id == null || secret == null) return "CRED ERROR";
         Spotify.createCredFile(id, secret);
         return "CRED SET";
+    }
+
+    public static String getClientIdHidden() {
+        String hidden;
+        if (client_id == null || client_id == "") {
+            hidden = "empty";
+        } else {
+            hidden = client_id.substring(0, 4) + "----";
+        }
+        return hidden;
+    }
+
+    public static String getClientSecretHidden() {
+        String hidden;
+        if (client_secret == null || client_secret == "") {
+            hidden = "empty";
+        } else {
+            hidden = client_secret.substring(0, 4) + "----";
+        }
+        return hidden;
     }
 }

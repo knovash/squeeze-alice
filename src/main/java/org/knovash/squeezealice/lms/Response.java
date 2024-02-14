@@ -34,8 +34,6 @@ public class Response {
         public String count;
         public String title;
         public List<Loop_loop> loop_loop;
-
-
     }
 
     @Data

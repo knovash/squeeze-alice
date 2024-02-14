@@ -2,7 +2,8 @@ package org.knovash.squeezealice.provider;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.SwitchAliceCommand;
+import org.knovash.squeezealice.Actions;
+import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.Device;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
@@ -12,7 +13,7 @@ public class DeviceActions {
 
     public static void runInstance(Device device) {
         int id = Integer.parseInt(device.id);
-        String name = SmartHome.getByDeviceId(id).customData.lmsName;
+        String name = SmartHome.getDeviceById(id).customData.lmsName;
         String type = device.capabilities.get(0).type;
         String instance = device.capabilities.get(0).state.instance;
         String value = device.capabilities.get(0).state.value;
@@ -38,6 +39,8 @@ public class DeviceActions {
                 }
                 if (relative != null && relative.equals(false)) {
                     log.info("VOLUME abs: " + value);
+// не понижать громкость меньше 1
+                    if (Integer.parseInt(value) < 1) value = String.valueOf(1);
                     player.volume(value);
                 }
                 break;
@@ -49,13 +52,13 @@ public class DeviceActions {
                 } else {
                     channel = Integer.parseInt(value);
                 }
-                SwitchAliceCommand.channel(player, channel);
+                Actions.channel(player, channel);
                 SmartHome.lastChannel = channel;
                 break;
             case ("on"):
                 log.info("ON/OFF PLAY/PAUSE " + value);
-                if (value.equals("true")) SwitchAliceCommand.turnOnMusicSpeaker(player);
-                if (value.equals("false")) SwitchAliceCommand.turnOffSpeaker(player);
+                if (value.equals("true")) Actions.turnOnMusicSpeaker(player);
+                if (value.equals("false")) Actions.turnOffSpeaker(player);
                 break;
         }
         log.info("OK");

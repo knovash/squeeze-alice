@@ -3,9 +3,8 @@ package org.knovash.squeezealice.utils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.provider.SmartHome;
+import org.knovash.squeezealice.SmartHome;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,24 +35,25 @@ public class Utils {
 
     public static void generatePlayersAltNamesToFile() {
         log.info("ALT NAMES");
-        File file = new File("alt_names.json");
-        Map<String, String> namesGenerated = new HashMap<>();
-        Map<String, String> namesFromFile = new HashMap<>();
-        if (Utils.altNames == null) Utils.altNames = new HashMap<>();
+//        File file = new File("alt_names.json");
+//        Map<String, String> namesGenerated = new HashMap<>();
+//        Map<String, String> namesFromFile = new HashMap<>();
+//        if (Utils.altNames == null) Utils.altNames = new HashMap<>();
         // generate
         lmsPlayers.players.forEach(player -> {
-            String altName = player.name
+//            String altName = player.name
+            player.nameInQuery = player.name
                     .replace(" ", "")
                     .replace("_", "")
                     .toLowerCase();
-            namesGenerated.put(altName, player.name);
+//            namesGenerated.put(altName, player.name);
         });
         // get from file
-        if (file.exists()) namesFromFile = JsonUtils.jsonFileToMap("alt_names.json", String.class, String.class);
-        Utils.altNames.putAll(namesFromFile);
-        Utils.altNames.putAll(namesGenerated);
-        JsonUtils.mapToJsonFile(Utils.altNames, "alt_names.json");
-        log.info("WRITE alt_names.json " + Utils.altNames);
+//        if (file.exists()) namesFromFile = JsonUtils.jsonFileToMap("alt_names.json", String.class, String.class);
+//        Utils.altNames.putAll(namesFromFile);
+//        Utils.altNames.putAll(namesGenerated);
+//        JsonUtils.mapToJsonFile(Utils.altNames, "alt_names.json");
+//        log.info("WRITE alt_names.json " + Utils.altNames);
     }
 
     public static void changePlayerValue(HashMap<String, String> parameters) {
@@ -61,7 +61,7 @@ public class Utils {
         String valueName = parameters.get("value_name");
         Integer newValue = Integer.valueOf(parameters.get("value"));
         Field field = null;
-        playerName = getAltPlayerNameByName(playerName);
+        playerName = getPlayerByNameInQuery(playerName);
         Player player = lmsPlayers.getPlayerByName(playerName);
         log.info("PLAYER: " + playerName + " VALUE NAME: " + valueName + " NEW VALUE: " + newValue);
         try {
@@ -80,7 +80,7 @@ public class Utils {
         lmsPlayers.write();
     }
 
-    public static String getAltPlayerNameByName(String name) {
+    public static String getPlayerByNameInQuery(String name) {
         log.info("NAME: " + name + " ALT NAMES: " + altNames);
         if (altNames.containsKey(name)) {
             name = altNames.get(name);
@@ -137,10 +137,6 @@ public class Utils {
         return json;
     }
 
-    public static String players() {
-        String json = JsonUtils.pojoToJson(Main.lmsPlayers.players);
-        return json;
-    }
 
     public static String stateDevices() {
         String json = JsonUtils.pojoToJson(SmartHome.devices);
@@ -185,10 +181,13 @@ public class Utils {
         log.info("CHECK IF IP IS LMS: " + ip);
         String uri = "http://" + ip + ":9000";
         HttpResponse response = headByUriForResponse(uri);
+//        log.info("---"+response.getAllHeaders());
         if (response == null) {
+//            log.info("---"+response.getAllHeaders());
 //            log.info("NOT LMS IP");
             return false;
         }
+        log.info("---"+response.getAllHeaders());
         Header[] server = response.getHeaders("Server");
         String header = server[0].toString();
         log.info("HEADER: " + header);
@@ -354,5 +353,44 @@ public class Utils {
             }
         }
         return builder.toString();
+    }
+
+    public static void rebootLocalhost(){
+        log.info("REBOOT LOCALHOST");
+        ProcessBuilder pb = new ProcessBuilder("mkdir /home/konstantin/Documents/qqqqq");
+        pb.inheritIO();
+//        pb.directory(new File("bin"));
+        try {
+            pb.start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("REBOOT OK");
+    }
+
+    public static void rebootServiceSa(){
+        log.info("REBOOT SERVICE SA");
+        ProcessBuilder pb = new ProcessBuilder("mkdir /home/konstantin/Documents/qqqqq");
+        pb.inheritIO();
+//        pb.directory(new File("bin"));
+        try {
+            pb.start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("REBOOT OK");
+    }
+
+    public static void rebootServiceLms(){
+        log.info("REBOOT SERVICE LMS");
+        ProcessBuilder pb = new ProcessBuilder("mkdir /home/konstantin/Documents/qqqqq");
+        pb.inheritIO();
+//        pb.directory(new File("bin"));
+        try {
+            pb.start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("REBOOT OK");
     }
 }

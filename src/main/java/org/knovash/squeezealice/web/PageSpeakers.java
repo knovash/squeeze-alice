@@ -16,7 +16,6 @@ public class PageSpeakers {
         log.info("PLAYERS: " + lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList()));
         lmsPlayers.write();
         String json = Html.formSpeakers();
-
         context.json = json;
         context.code = 200;
         return context;
