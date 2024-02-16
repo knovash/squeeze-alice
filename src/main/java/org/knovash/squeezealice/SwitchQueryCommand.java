@@ -174,6 +174,11 @@ public class SwitchQueryCommand {
                 Utils.rebootServiceLms();
                 response = Html.index();
                 break;
+            case ("spoti_state"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=spoti_state
+                log.info("SPOTIFY PLAYER STATE");
+                Spotify.getPlayerState();
+                response = Html.index();
+                break;
             default:
                 log.info("ACTION NOT FOUND: " + action);
                 response = "ACTION NOT FOUND: " + action;

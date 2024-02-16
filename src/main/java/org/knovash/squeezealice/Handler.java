@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.*;
+import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.utils.HttpUtils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 import org.knovash.squeezealice.web.*;
@@ -83,6 +84,14 @@ public class Handler implements HttpHandler {
                 break;
             case ("/token"):
                 context = YandexToken.action(context);
+                break;
+            case ("/spoti_auth"):
+                log.info("SPOTI AUTH");
+                context = SpotifyAuth.action(context);
+                break;
+            case ("/spoti_callback"):
+                log.info("SPOTI CALLBACK");
+                context = SpotifyAuth.callback(context);
                 break;
             default:
                 log.info("PATH ERROR " + path);

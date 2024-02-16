@@ -2,8 +2,10 @@ package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Player;
+import org.knovash.squeezealice.Requests;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.spotify.Spotify;
+import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.utils.Utils;
 
 import java.util.List;
@@ -29,6 +31,7 @@ public class Html {
                 "<p><a href=\\cmd?action=state_devices>Посмотреть настройки Devices</a></p> \n" +
                 "<p><a href=\\cmd?action=state_players>Посмотреть настройки Players</a></p> \n" +
                 "<p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
+                "<p><a href=\\spoti_auth>Spotify Auth</a></p> \n" +
                 "<p><a href=\\cmd?action=reboot_service_sa>Перезапустить SA</a></p> \n" +
                 "<p><a href=\\cmd?action=reboot_localhost>Перезапустить loacalhost</a></p> \n" +
                 "<p><a href=\\cmd?action=reboot_service_lms>Перезапустить LMS</a></p> \n" +
@@ -220,5 +223,30 @@ public class Html {
         inLms.removeAll(inHome);
         if (inLms.size() == 0) return "--";
         else return inLms.get(0).toString();
+    }
+
+    public static String spoti_callback() {
+        String page = "<!doctype html><html lang=\"ru\">\n" +
+                "<head>\n" +
+                "<meta charSet=\"utf-8\" />\n" +
+                "<title>Squeeze-Alice</title>" +
+                "</head>\n" +
+                "<body> \n" +
+                "<p><strong>Callback</strong></p> \n" +
+                "<p><a href=\\speakers>Подключение колонок LMS в УД с Алисой</a></p> \n" +
+                "<p>client_id: " + SpotifyAuth.client_id + "</p> \n" +
+                "<p>client_secret: " + SpotifyAuth.client_secret + "</p> \n" +
+                "<p>response_type: " + SpotifyAuth.response_type + "</p> \n" +
+                "<p>redirect_uri: " + SpotifyAuth.redirect_uri + "</p> \n" +
+                "<p>show_dialog: " + SpotifyAuth.show_dialog + "</p> \n" +
+                "<p>scope: " + SpotifyAuth.scope + "</p> \n" +
+                "<p>code: " + SpotifyAuth.code + "</p> \n" +
+                "<p>state: " + SpotifyAuth.state + "</p> \n" +
+                "<p>access_token: " + SpotifyAuth.access_token + "</p> \n" +
+                "<p>bearerToken: " + SpotifyAuth.bearerToken + "</p> \n" +
+                "</body>\n" +
+                "</html>";
+        log.info("bearerToken: " + SpotifyAuth.bearerToken);
+        return page;
     }
 }

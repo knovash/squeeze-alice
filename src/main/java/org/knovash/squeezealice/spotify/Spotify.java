@@ -2,8 +2,10 @@ package org.knovash.squeezealice.spotify;
 
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
+import org.apache.http.Header;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
+import org.apache.http.message.BasicHeader;
 import org.knovash.squeezealice.spotify.spotify_pojo.SpotifyCredentials;
 import org.knovash.squeezealice.spotify.spotify_pojo.Type;
 import org.knovash.squeezealice.spotify.spotify_pojo.spotify_albums.SpotifyAlbums;
@@ -53,13 +55,16 @@ public class Spotify {
         return bearerToken;
     }
 
-    public static String uri(String uri) {
+    public static String request(String uri) {
         log.info("uri: " + uri);
         Response response = null;
         String json = null;
+        Header[] headers = {
+                new BasicHeader("Authorization", SpotifyAuth.bearerToken)
+        };
         try {
             response = Request.Get(uri)
-                    .setHeader("Authorization", bearerToken)
+                    .setHeaders(headers)
                     .execute();
             json = response.returnContent().asString();
         } catch (IOException e) {
@@ -83,7 +88,7 @@ public class Spotify {
         q = q.replace(" ", "%20");
         String uri = "https://api.spotify.com/v1/search?q=" + q + "&type=" + type + "&limit=" + limit;
         log.info("URI: " + uri);
-        String json = Spotify.uri(uri);
+        String json = Spotify.request(uri);
         switch (type.toString()) {
             case ("album"):
                 log.info("ALBUM");
@@ -177,5 +182,19 @@ public class Spotify {
             hidden = client_secret.substring(0, 4) + "----";
         }
         return hidden;
+    }
+
+    public static void getPlayerState() {
+//        curl --request GET \
+//        --url https://api.spotify.com/v1/me/player \
+//        --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'
+        String json = request("https://api.spotify.com/v1/me/player");
+        log.info("PLAYER STATE JSON: " + json);
+//        ResponseState responseState = JsonUtils.jsonToPojo(json, ResponseState.class);
+//        log.info("PLAYER STATE POJO: " + responseState);
+        log.info("is_playing: " + JsonUtils.jsonGetValue(json, "is_playing"));
+        log.info("currently_playing_type: " + JsonUtils.jsonGetValue(json, "currently_playing_type"));
+        log.info("is_playing: " + JsonUtils.jsonGetValue(json, "is_playing"));
+        log.info("is_playing: " + JsonUtils.jsonGetValue(json, "is_playing"));
     }
 }
