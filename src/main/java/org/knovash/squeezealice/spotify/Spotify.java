@@ -28,34 +28,34 @@ public class Spotify {
     public static String client_secret = "";
     public static SpotifyCredentials sc = new SpotifyCredentials();
 
-    public static String getBearerToken(String clientId, String clientSecret) {
-        log.info("clientId: " + clientId + " clientSecret: " + clientSecret);
-        Response response;
-        String token;
-        String clientIdSecret = clientId + ":" + clientSecret;
-        String base64 = Base64.getEncoder().encodeToString(clientIdSecret.getBytes());
-        log.info("base64: " + base64);
-        String json = null;
-        try {
-            response = Request.Post("https://accounts.spotify.com/api/token?grant_type=client_credentials")
-                    .setHeader("Authorization", "Basic " + base64)
-                    .setHeader("Content-Type", "application/x-www-form-urlencoded")
-                    .execute();
-            json = response.returnContent().asString();
-            log.info("json: " + json);
-        } catch (IOException e) {
-            log.info("SPOTIFY BEARER TOKEN REQUEST ERROR try check credentials in spotify.json");
-            return null;
-//            throw new RuntimeException(e);
-        }
-        token = JsonUtils.jsonGetValue(json, "access_token");
-        log.info("token: " + token);
-        bearerToken = "Bearer " + token.replace("\"", "");
-        log.info("bearerToken: " + bearerToken);
-        return bearerToken;
-    }
+//    public static String getBearerToken(String clientId, String clientSecret) {
+//        log.info("clientId: " + clientId + " clientSecret: " + clientSecret);
+//        Response response;
+//        String token;
+//        String clientIdSecret = clientId + ":" + clientSecret;
+//        String base64 = Base64.getEncoder().encodeToString(clientIdSecret.getBytes());
+//        log.info("base64: " + base64);
+//        String json = null;
+//        try {
+//            response = Request.Post("https://accounts.spotify.com/api/token?grant_type=client_credentials")
+//                    .setHeader("Authorization", "Basic " + base64)
+//                    .setHeader("Content-Type", "application/x-www-form-urlencoded")
+//                    .execute();
+//            json = response.returnContent().asString();
+//            log.info("json: " + json);
+//        } catch (IOException e) {
+//            log.info("SPOTIFY BEARER TOKEN REQUEST ERROR try check credentials in spotify.json");
+//            return null;
+////            throw new RuntimeException(e);
+//        }
+//        token = JsonUtils.jsonGetValue(json, "access_token");
+//        log.info("token: " + token);
+//        bearerToken = "Bearer " + token.replace("\"", "");
+//        log.info("bearerToken: " + bearerToken);
+//        return bearerToken;
+//    }
 
-    public static String request(String uri) {
+    public static String requestForJson(String uri) {
         log.info("uri: " + uri);
         Response response = null;
         String json = null;
@@ -73,14 +73,32 @@ public class Spotify {
         return json;
     }
 
+    public static Response requestForResponse(String uri) {
+        log.info("uri: " + uri);
+        Response response = null;
+        String json = null;
+        Header[] headers = {
+                new BasicHeader("Authorization", SpotifyAuth.bearerToken)
+        };
+        try {
+            response = Request.Get(uri)
+                    .setHeaders(headers)
+                    .execute();
+//            json = response.returnContent().asString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return response;
+    }
+
     public static String search(String q, Type type) {
 
-        sc = JsonUtils.jsonFileToPojo("spotify.json", SpotifyCredentials.class);
-        log.info("NO FILE");
-        if (sc == null) Spotify.createCredFile();
-        String bt = null;
-        if (sc != null) bt = Spotify.getBearerToken(sc.clientId, sc.clientSecret);
-        if (bt == null) return null;
+//        sc = JsonUtils.jsonFileToPojo("spotify.json", SpotifyCredentials.class);
+//        log.info("NO FILE");
+//        if (sc == null) Spotify.createCredFile();
+//        String bt = null;
+//        if (sc != null) bt = Spotify.getBearerToken(sc.clientId, sc.clientSecret);
+//        if (bt == null) return null;
         log.info("Q: " + q);
         log.info("TYPE: " + type);
         String link = null;
@@ -88,7 +106,7 @@ public class Spotify {
         q = q.replace(" ", "%20");
         String uri = "https://api.spotify.com/v1/search?q=" + q + "&type=" + type + "&limit=" + limit;
         log.info("URI: " + uri);
-        String json = Spotify.request(uri);
+        String json = Spotify.requestForJson(uri);
         switch (type.toString()) {
             case ("album"):
                 log.info("ALBUM");
@@ -185,16 +203,25 @@ public class Spotify {
     }
 
     public static void getPlayerState() {
+//         https://unicorn-neutral-badly.ngrok-free.app/cmd?action=spoti_state
 //        curl --request GET \
 //        --url https://api.spotify.com/v1/me/player \
 //        --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'
-        String json = request("https://api.spotify.com/v1/me/player");
-        log.info("PLAYER STATE JSON: " + json);
-//        ResponseState responseState = JsonUtils.jsonToPojo(json, ResponseState.class);
-//        log.info("PLAYER STATE POJO: " + responseState);
-        log.info("is_playing: " + JsonUtils.jsonGetValue(json, "is_playing"));
-        log.info("currently_playing_type: " + JsonUtils.jsonGetValue(json, "currently_playing_type"));
-        log.info("is_playing: " + JsonUtils.jsonGetValue(json, "is_playing"));
-        log.info("is_playing: " + JsonUtils.jsonGetValue(json, "is_playing"));
+//        String json = requestForJson("https://api.spotify.com/v1/me/player");
+
+        Response response = requestForResponse("https://api.spotify.com/v1/me/player");
+        try {
+            log.info("PLAYER STATE RESPONSE: " + response.returnResponse().getStatusLine().getStatusCode());
+            int responseCode = response.returnResponse().getStatusLine().getStatusCode();
+            if (responseCode == 200) log.info("OK 200");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+//        log.info("PLAYER STATE JSON: " + json);
+//        log.info("is_playing: " + JsonUtils.jsonGetValue(json, "is_playing"));
+//        log.info("currently_playing_type: " + JsonUtils.jsonGetValue(json, "currently_playing_type"));
+//        log.info("is_playing: " + JsonUtils.jsonGetValue(json, "is_playing"));
+//        log.info("is_playing: " + JsonUtils.jsonGetValue(json, "is_playing"));
     }
 }

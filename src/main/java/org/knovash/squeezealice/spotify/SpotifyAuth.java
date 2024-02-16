@@ -4,15 +4,14 @@ import com.sun.net.httpserver.Headers;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
 import org.apache.http.message.BasicHeader;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.web.Html;
 
-import java.io.IOException;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.knovash.squeezealice.spotify.Request.requestForJson;
 
@@ -93,7 +92,24 @@ public class SpotifyAuth {
         log.info("access_token: " + access_token);
         bearerToken = "Bearer " + access_token.replace("\"", "");
         log.info("bearerToken: " + bearerToken);
+        write();
 
+    }
+
+    public static void write() {
+        Map<String, String> map = new HashMap<>();
+        map.put("client_id", client_id);
+        map.put("client_secret", client_secret);
+        map.put("bearerToken", bearerToken);
+        JsonUtils.mapToJsonFile(map, "spotify.json");
+    }
+
+    public static void read() {
+        Map<String, String> map = new HashMap<>();
+        map = JsonUtils.jsonFileToMap("spotify.json", String.class, String.class);
+        client_id = map.get("client_id");
+        client_secret = map.get("client_secret");
+        bearerToken = map.get("bearerToken");
     }
 
 }

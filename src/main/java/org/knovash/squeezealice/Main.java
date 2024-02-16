@@ -1,6 +1,7 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.utils.ArgsParser;
 import org.knovash.squeezealice.utils.Utils;
 
@@ -52,6 +53,10 @@ public class Main {
         lmsPlayers.update();
         lmsPlayers.write();
         log.info("PLAYERS: " + lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList()));
+
+        SpotifyAuth.read();
+        log.info("BEARER: " + SpotifyAuth.bearerToken);
+
         log.info("--- SERVER START ---");
         Server.start();
     }
