@@ -3,6 +3,7 @@ package org.knovash.squeezealice;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.spotify.Spotify;
+import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.web.Html;
 
@@ -92,9 +93,9 @@ public class SwitchQueryCommand {
                 log.info("DELETE TIME AND VOLUME");
                 response = Utils.timeVolumeDel(player, queryParams);
                 break;
-            case ("cred_spotify"):
+            case ("spotify_save_creds"):
                 log.info("CREDENTIALS SPOTIFY");
-                Spotify.credentialsSpotify(queryParams);
+                Spotify.saveCredsSpotify(queryParams);
                 response = Html.formSpotifyLogin();
                 break;
             case ("cred_yandex"):
@@ -176,8 +177,19 @@ public class SwitchQueryCommand {
                 break;
             case ("spoti_state"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=spoti_state
                 log.info("SPOTIFY PLAYER STATE");
-                Spotify.getPlayerState();
+                response = Spotify.getPlayerState();
+                break;
+            case ("spoti_auth"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=spoti_auth
+                log.info("SPOTIFY AUTH ACTION");
+                SpotifyAuth.refresh();
                 response = Html.index();
+                break;
+            case ("transfer"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=transfer
+                log.info("SPOTIFY TRANSFER");
+                Spotify.transfer(player);
+                log.info("SPOTIFY TRANSFER");
+                response = Html.index();
+                log.info("SPOTIFY TRANSFER INDEX OK");
                 break;
             default:
                 log.info("ACTION NOT FOUND: " + action);

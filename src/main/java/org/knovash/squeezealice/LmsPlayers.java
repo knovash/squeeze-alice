@@ -24,6 +24,7 @@ public class LmsPlayers {
 
     public Integer counter;
     public List<Player> players;
+    public List<String> playersOnlineNames;
 
     public void count() {
         Response response = Requests.postByJsonForResponse(RequestParameters.count().toString());
@@ -45,6 +46,29 @@ public class LmsPlayers {
     public void update() {
         log.info("UPDATE PLAYERS FROM LMS");
         lmsPlayers.count();
+        Integer counter = lmsPlayers.counter; // получить количество плееров в LMS
+        if (counter == null || counter == 0) {
+            log.info("UPDATE ERROR. NO PLAYERS IN LMS");
+            return;
+        }
+        playersOnlineNames = new ArrayList<>();
+        for (int index = 0; index < counter; index++) { // для каждого плеера по id
+            String name = Player.name(Integer.toString(index)); // запросить имя
+            String id = Player.id(Integer.toString(index)); // запросить id/mac
+            playersOnlineNames.add(name); // добавить плеер в список активных
+            if (lmsPlayers.getPlayerByName(name) == null) { // если плеера еще нет в сервере, то добавить
+                log.info("ADD NEW PLAYER: " + name);
+                lmsPlayers.players.add(new Player(name, id));
+            } else {
+                log.info("SKIP PLAYER: " + name);
+            }
+        }
+        Utils.generatePlayersQueryNames();
+    }
+
+    public void updateMac() {
+        log.info("UPDATE PLAYERS FROM LMS");
+        lmsPlayers.count();
         Integer counter = lmsPlayers.counter;
         if (counter == null || counter == 0) {
             log.info("UPDATE ERROR. NO PLAYERS IN LMS");
@@ -53,20 +77,15 @@ public class LmsPlayers {
         for (int index = 0; index < counter; index++) {
             String name = Player.name(Integer.toString(index));
             String id = Player.id(Integer.toString(index));
-            if (lmsPlayers.getPlayerByName(name) == null) {
-                log.info("ADD NEW PLAYER: " + name);
-                lmsPlayers.players.add(new Player(name, id));
-            } else {
-                log.info("SKIP PLAYER: " + name);
-            }
+            lmsPlayers.getPlayerByName(name).mac = id;
         }
-        Utils.generatePlayersAltNamesToFile();
+       write();
     }
 
     public void clear() {
         log.info("CLEAR PLAYERS");
         lmsPlayers.players = new ArrayList<>();
-        Utils.generatePlayersAltNamesToFile();
+        Utils.generatePlayersQueryNames();
     }
 
     public void write() {

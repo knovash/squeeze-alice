@@ -2,7 +2,6 @@ package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.Requests;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.SpotifyAuth;
@@ -32,9 +31,9 @@ public class Html {
                 "<p><a href=\\cmd?action=state_players>Посмотреть настройки Players</a></p> \n" +
                 "<p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
                 "<p><a href=\\spoti_auth>Spotify Auth</a></p> \n" +
-                "<p><a href=\\cmd?action=reboot_service_sa>Перезапустить SA</a></p> \n" +
-                "<p><a href=\\cmd?action=reboot_localhost>Перезапустить loacalhost</a></p> \n" +
-                "<p><a href=\\cmd?action=reboot_service_lms>Перезапустить LMS</a></p> \n" +
+                "<p><a href=\\cmd?action=spoti_auth>Spotify Auth Action</a></p> \n" +
+                "<p><a href=\\cmd?action=spoti_state>Spotify state</a></p> \n" +
+                "<p><a href=\\cmd?action=transfer>Spotify transfer</a></p> \n" +
                 "</body>\n" +
                 "</html>";
         return page;
@@ -61,7 +60,7 @@ public class Html {
                 "<input name=\"secret\" id=\"secret\" value=\"" + Spotify.getClientSecretHidden() + "\"/>" +
                 "<label for=\"secret\"> client secret</label>" +
                 "</div>" +
-                "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"cred_spotify\">" +
+                "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"spotify_save_creds\">" +
                 "<div>" +
                 "<br><button>save</button>" +
                 "</div>" +
@@ -112,6 +111,7 @@ public class Html {
     }
 
     public static String formSpeakers() {
+        lmsPlayers.update();
         String page = "<!DOCTYPE html><html lang=\"en\">" +
                 "<head><meta charset=\"UTF-8\" />" +
                 "<title>Подключение колонок LMS в УД с Алисой</title></head><body>" +
@@ -178,22 +178,24 @@ public class Html {
                 "  <h2>Настройка колонок</h2>" +
                 join(lmsPlayers.players.stream()
                         .map(p -> "<form action=\"/cmd\" method=\"get\">" +
-                                p.name +
+                                "<b>" + p.name + " - " + "</b>" +
+                                checkPlayerOnlineInLms(p.name) + " - " +
+                                checkPlayerConnectInSmartHome(p.name) +
                                 "<br>" +
                                 "<input name=\"alice_id\" id=\"alice_id\" value=\"" + p.alice_id + "\" />" +
-                                "<label for=\"alice_id\">id Алисы управляющей колонкой</label>" +
+                                "<label for=\"alice_id\"> id Алисы управляющей колонкой</label>" +
                                 "<br>" +
                                 "<input name=\"step\" id=\"step\" value=\"" + p.volume_step + "\" />" +
-                                "<label for=\"step\">шаг громкости</label>" +
+                                "<label for=\"step\"> шаг громкости</label>" +
                                 "<br>" +
                                 "<input name=\"delay\" id=\"delay\" value=\"" + p.wake_delay + "\" />" +
-                                "<label for=\"delay\">задержка включения</label>" +
+                                "<label for=\"delay\"> задержка включения</label>" +
                                 "<br>" +
                                 "<input name=\"black\" id=\"black\" value=\"" + p.black + "\" />" +
-                                "<label for=\"black\">в черном списке</label>" +
+                                "<label for=\"black\"> в черном списке</label>" +
                                 "<br>" +
                                 "<input name=\"schedule\" id=\"schedule\" value=\"" + Utils.mapToString(p.timeVolume) + "\" />" +
-                                "<label for=\"schedule\">время:громкость</label>" +
+                                "<label for=\"schedule\"> время:громкость</label>" +
                                 "<br>" +
                                 "<input type=\"hidden\" name=\"name\" id=\"name\" value=\"" + p.name + "\">" +
                                 "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"player_save\">" +
@@ -210,15 +212,27 @@ public class Html {
         return page;
     }
 
+    public static String checkPlayerOnlineInLms(String playerName) {
+        if (lmsPlayers.playersOnlineNames.contains(playerName)) return "in LMS online";
+        return "in LMS offline";
+    }
+
+    public static String checkPlayerConnectInSmartHome(String playerName) {
+        if (SmartHome.getRoomByPlayerName(playerName) == null) return "в УД не подключено";
+        return "в УД подключено";
+    }
+
     public static List<String> getNotInHome() {
-        List<String> inLms = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
+//        List<String> inLms = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
+        List<String> inLms = lmsPlayers.playersOnlineNames;
         List<String> inHome = SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
         inLms.removeAll(inHome);
         return inLms;
     }
 
     public static String getNotInHomeFirst() {
-        List<String> inLms = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
+//        List<String> inLms = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
+        List<String> inLms = lmsPlayers.playersOnlineNames;
         List<String> inHome = SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
         inLms.removeAll(inHome);
         if (inLms.size() == 0) return "--";
@@ -229,11 +243,11 @@ public class Html {
         String page = "<!doctype html><html lang=\"ru\">\n" +
                 "<head>\n" +
                 "<meta charSet=\"utf-8\" />\n" +
-                "<title>Squeeze-Alice</title>" +
+                "<title>Spotify callback</title>" +
                 "</head>\n" +
                 "<body> \n" +
-                "<p><strong>Callback</strong></p> \n" +
-                "<p><a href=\\speakers>Подключение колонок LMS в УД с Алисой</a></p> \n" +
+                "<p><a href=\"/\">Home</a></p>" +
+                "<p><strong>Spotify callback</strong></p> \n" +
                 "<p>client_id: " + SpotifyAuth.client_id + "</p> \n" +
                 "<p>client_secret: " + SpotifyAuth.client_secret + "</p> \n" +
                 "<p>response_type: " + SpotifyAuth.response_type + "</p> \n" +
@@ -243,10 +257,11 @@ public class Html {
                 "<p>code: " + SpotifyAuth.code + "</p> \n" +
                 "<p>state: " + SpotifyAuth.state + "</p> \n" +
                 "<p>access_token: " + SpotifyAuth.access_token + "</p> \n" +
-                "<p>bearerToken: " + SpotifyAuth.bearerToken + "</p> \n" +
+                "<p>bearer_token: " + SpotifyAuth.bearer_token + "</p> \n" +
+                "<p>refresh_token: " + SpotifyAuth.refresh_token + "</p> \n" +
                 "</body>\n" +
                 "</html>";
-        log.info("bearerToken: " + SpotifyAuth.bearerToken);
+        log.info("bearerToken: " + SpotifyAuth.bearer_token);
         return page;
     }
 }

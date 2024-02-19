@@ -12,14 +12,14 @@ public class ProviderAction {
         String body = context.body;
         String xRequestId = context.xRequestId;
 
-        Response response = JsonUtils.jsonToPojo(body, Response.class);
-        response.request_id = xRequestId;
-        response.payload.devices.stream().forEach(d -> deviseSetResult(d));
-        String json = JsonUtils.pojoToJson(response);
+        ResponseYandex responseYandex = JsonUtils.jsonToPojo(body, ResponseYandex.class);
+        responseYandex.request_id = xRequestId;
+        responseYandex.payload.devices.stream().forEach(d -> deviseSetResult(d));
+        String json = JsonUtils.pojoToJson(responseYandex);
 
         //TODO make after response
-        log.info("DEVICES: " + response.payload.devices.size());
-        response.payload.devices.forEach(device -> DeviceActions.runInstance(device));
+        log.info("DEVICES: " + responseYandex.payload.devices.size());
+        responseYandex.payload.devices.forEach(device -> DeviceActions.runInstance(device));
 
         context.json = json;
         context.code = 200;

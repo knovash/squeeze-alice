@@ -55,13 +55,51 @@ public class Requests {
         return response;
     }
 
+    public static Response postUriJsonBodyForResponse(String uri, String json) {
+        log.info("REQUEST TO LMS: " + json);
+        Content content = null;
+        Response response = null;
+        try {
+            content = Request.Post(uri).bodyString(json, ContentType.APPLICATION_JSON)
+                    .connectTimeout(1000)
+                    .socketTimeout(1000)
+                    .execute()
+                    .returnContent();
+        } catch (IOException e) {
+            log.info("ERROR " + e);
+        }
+        if (content != null) {
+            response = JsonUtils.jsonToPojo(content.asString(), Response.class);
+        } else {
+            log.info("ERROR RESPONSE IS EMPTY");
+        }
+        return response;
+    }
+
     public static String getByUriForStatus(String uri) {
         log.info("REQUEST URI: " + uri);
         String status = null;
         try {
             status = Request.Get(uri)
-                    .connectTimeout(1000)
-                    .socketTimeout(1000)
+                    .connectTimeout(5000)
+                    .socketTimeout(5000)
+                    .execute()
+                    .returnResponse()
+                    .getStatusLine()
+                    .toString();
+        } catch (IOException e) {
+            log.info("ERROR: " + e);
+        }
+        return status;
+    }
+
+    public static String postByUriForStatus(String uri) {
+        log.info("REQUEST URI: " + uri);
+        String status = null;
+        try {
+            status = Request.Get(uri)
+                    .connectTimeout(5000)
+                    .socketTimeout(5000)
                     .execute()
                     .returnResponse()
                     .getStatusLine()

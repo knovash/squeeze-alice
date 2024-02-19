@@ -11,6 +11,7 @@ import org.knovash.squeezealice.utils.Levenstein;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Log4j2
@@ -19,6 +20,7 @@ public class SmartHome {
 
     public static String user_id = "konstantin";
     public static LinkedList<Device> devices = new LinkedList<>();
+    public static Map<String, String> rooms = new HashMap<>();
     public static Integer lastChannel = 1;
 
     public static Device getDeviceById(int deviceId) {
@@ -26,12 +28,51 @@ public class SmartHome {
         return devices.stream().filter(d -> d.id.equals(index)).findFirst().orElse(null);
     }
 
-    public static Device getDeviceByRoom(String room) {
+    public static Device getDeviceByLmsName(String lmsName) {
+        return devices.stream().filter(d -> d.customData.lmsName.equals(lmsName)).findFirst().orElse(null);
+    }
+
+    public static Device getDeviceByRoomLevenstein(String room) {
         log.info("room " + room);
         List<String> rooms = devices.stream().map(device -> device.room).collect(Collectors.toList());
-        room = Levenstein.searchInList(room, rooms);
+        room = Levenstein.getNearestElementInList(room, rooms);
         String finalRoom = room;
         return devices.stream().filter(d -> d.room.toLowerCase().equals(finalRoom.toLowerCase())).findFirst().orElse(null);
+    }
+
+    public static Device getDeviceByRoom(String room) {
+        log.info("room " + room);
+        return devices.stream().filter(d -> d.room.toLowerCase().equals(room.toLowerCase())).findFirst().orElse(null);
+    }
+
+
+    public static String getRoomByPlayerName(String playerName) {
+        log.info("playerName " + playerName);
+        Device device = devices.stream().filter(d -> d.customData.lmsName.toLowerCase().equals(playerName.toLowerCase())).findFirst().orElse(null);
+        if (device == null) return null;
+        String room = device.room;
+        return room;
+    }
+
+    public static String getRoomByAliceId(String aliceId) {
+        log.info("aliceId " + aliceId);
+        Map.Entry<String, String> entry = SmartHome.rooms.entrySet().stream()
+                .filter(r -> r.getValue().equals(aliceId))
+                .findFirst()
+                .orElse(null);
+        if (entry == null) return null;
+        return entry.getKey();
+    }
+
+    public static String getLmsNameByAliceId(String aliceId) {
+        getRoomByAliceId(aliceId);
+        log.info("aliceId " + aliceId);
+        Map.Entry<String, String> entry = SmartHome.rooms.entrySet().stream()
+                .filter(r -> r.getValue().equals(aliceId))
+                .findFirst()
+                .orElse(null);
+        if (entry == null) return null;
+        return SmartHome.getDeviceByRoom(entry.getKey()).customData.lmsName;
     }
 
     public static void read() {
@@ -42,6 +83,12 @@ public class SmartHome {
 
     public static void write() {
         JsonUtils.listToJsonFile(SmartHome.devices, "alice_devices.json");
+    }
+
+    public static void logListStringDevices() {
+        log.info("");
+        SmartHome.devices.stream()
+                .forEach(device -> log.info(device.id + " " + device.room + " " + device.customData.lmsName));
     }
 
     public static void clear() {
@@ -116,12 +163,12 @@ public class SmartHome {
         on_of.parameters.instance = "on"; // Название функции для данного умения. volume channel
         device.capabilities.add(on_of);
 
-        Capability pause = new Capability();
-        pause.type = "devices.capabilities.toggle"; // Тип умения. channel     volume
-        pause.retrievable = true; // Доступен ли для данного умения устройства запрос состояния
-        pause.reportable = true; // Признак включенного оповещения об изменении состояния умения
-        pause.parameters.instance = "pause"; // Название функции для данного умения. volume channel
-        device.capabilities.add(pause);
+//        Capability pause = new Capability();
+//        pause.type = "devices.capabilities.toggle"; // Тип умения. channel     volume
+//        pause.retrievable = true; // Доступен ли для данного умения устройства запрос состояния
+//        pause.reportable = true; // Признак включенного оповещения об изменении состояния умения
+//        pause.parameters.instance = "pause"; // Название функции для данного умения. volume channel
+//        device.capabilities.add(pause);
 
         log.info("NEW DEVICE: " + device);
         int id = SmartHome.addNewDevice(device);

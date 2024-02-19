@@ -17,7 +17,7 @@ public class Levenstein {
     public static int filalDistance;
     public static String finalElement;
 
-    public static String searchInList(String value, List<String> list) {
+    public static String getNearestElementInList(String value, List<String> list) {
         filalDistance = 100;
         if (Utils.isCyrillic(value) && !Utils.isCyrillic(list.get(0))) {
             value = Utils.convertCyrilic(value);

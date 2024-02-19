@@ -3,9 +3,12 @@ package org.knovash.squeezealice.spotify;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.message.BasicHeader;
+import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.spotify.spotify_pojo.SpotifyCredentials;
 import org.knovash.squeezealice.spotify.spotify_pojo.Type;
 import org.knovash.squeezealice.spotify.spotify_pojo.spotify_albums.SpotifyAlbums;
@@ -16,17 +19,16 @@ import org.knovash.squeezealice.spotify.spotify_pojo.spotify_tracks.SpotifyRespo
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
-import java.util.Base64;
 import java.util.HashMap;
 
 @Log4j2
 @Data
 public class Spotify {
 
-    public static String bearerToken;
-    public static String client_id = "";
-    public static String client_secret = "";
-    public static SpotifyCredentials sc = new SpotifyCredentials();
+//    public static String bearerToken;
+//    public static String client_id = "";
+//    public static String client_secret = "";
+//    public static SpotifyCredentials sc = new SpotifyCredentials();
 
 //    public static String getBearerToken(String clientId, String clientSecret) {
 //        log.info("clientId: " + clientId + " clientSecret: " + clientSecret);
@@ -60,7 +62,7 @@ public class Spotify {
         Response response = null;
         String json = null;
         Header[] headers = {
-                new BasicHeader("Authorization", SpotifyAuth.bearerToken)
+                new BasicHeader("Authorization", SpotifyAuth.bearer_token)
         };
         try {
             response = Request.Get(uri)
@@ -73,25 +75,33 @@ public class Spotify {
         return json;
     }
 
-    public static Response requestForResponse(String uri) {
+    public static HttpResponse requestForResponse(String uri) {
         log.info("uri: " + uri);
         Response response = null;
         String json = null;
         Header[] headers = {
-                new BasicHeader("Authorization", SpotifyAuth.bearerToken)
+                new BasicHeader("Authorization", SpotifyAuth.bearer_token)
         };
+
+        HttpResponse httpResponse;
+        StatusLine statusLine;
+
         try {
             response = Request.Get(uri)
                     .setHeaders(headers)
                     .execute();
+
+
 //            json = response.returnContent().asString();
+            httpResponse = response.returnResponse();
+            statusLine = httpResponse.getStatusLine();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return response;
+        return httpResponse;
     }
 
-    public static String search(String q, Type type) {
+    public static String getLink(String target, Type type) {
 
 //        sc = JsonUtils.jsonFileToPojo("spotify.json", SpotifyCredentials.class);
 //        log.info("NO FILE");
@@ -99,12 +109,12 @@ public class Spotify {
 //        String bt = null;
 //        if (sc != null) bt = Spotify.getBearerToken(sc.clientId, sc.clientSecret);
 //        if (bt == null) return null;
-        log.info("Q: " + q);
+        log.info("TARGET: " + target);
         log.info("TYPE: " + type);
         String link = null;
         String limit = "10";
-        q = q.replace(" ", "%20");
-        String uri = "https://api.spotify.com/v1/search?q=" + q + "&type=" + type + "&limit=" + limit;
+        target = target.replace(" ", "%20");
+        String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + type + "&limit=" + limit;
         log.info("URI: " + uri);
         String json = Spotify.requestForJson(uri);
         switch (type.toString()) {
@@ -170,13 +180,13 @@ public class Spotify {
         JsonUtils.pojoToJsonFile(sc, "spotify.json");
     }
 
-    public static String credentialsSpotify(HashMap<String, String> parameters) {
+    public static String saveCredsSpotify(HashMap<String, String> parameters) {
         String id = parameters.get("id");
         String secret = parameters.get("secret");
-        Spotify.client_id = id;
-        Spotify.client_secret = secret;
-        log.info(Spotify.client_id);
-        log.info(Spotify.client_secret);
+        SpotifyAuth.client_id = id;
+        SpotifyAuth.client_secret = secret;
+        log.info(SpotifyAuth.client_id);
+        log.info(SpotifyAuth.client_secret);
         if (id == null || secret == null) return "CRED ERROR";
         Spotify.createCredFile(id, secret);
         return "CRED SET";
@@ -184,44 +194,48 @@ public class Spotify {
 
     public static String getClientIdHidden() {
         String hidden;
-        if (client_id == null || client_id == "") {
+        if (SpotifyAuth.client_id == null || SpotifyAuth.client_id == "") {
             hidden = "empty";
         } else {
-            hidden = client_id.substring(0, 4) + "----";
+            hidden = SpotifyAuth.client_id.substring(0, 4) + "----";
         }
         return hidden;
     }
 
     public static String getClientSecretHidden() {
         String hidden;
-        if (client_secret == null || client_secret == "") {
+        if (SpotifyAuth.client_secret == null || SpotifyAuth.client_secret == "") {
             hidden = "empty";
         } else {
-            hidden = client_secret.substring(0, 4) + "----";
+            hidden = SpotifyAuth.client_secret.substring(0, 4) + "----";
         }
         return hidden;
     }
 
-    public static void getPlayerState() {
+    public static String getPlayerState() {
 //         https://unicorn-neutral-badly.ngrok-free.app/cmd?action=spoti_state
 //        curl --request GET \
 //        --url https://api.spotify.com/v1/me/player \
 //        --header 'Authorization: Bearer 1POdFZRZbvb...qqillRxMr2z'
 //        String json = requestForJson("https://api.spotify.com/v1/me/player");
+        String uri = "https://api.spotify.com/v1/me/player";
+        Header[] headers = {
+                new BasicHeader("Authorization", SpotifyAuth.bearer_token)
+        };
+        String responseBody = SpotifyRequests.requestHttpClient(uri, headers);
+        log.info("PLAYER STATE CONT: " + responseBody);
+        return responseBody;
+    }
 
-        Response response = requestForResponse("https://api.spotify.com/v1/me/player");
+    public static String transfer(Player player) {
+        log.info("TRANSFER START");
+        String playerName = player.nameInQuery;
         try {
-            log.info("PLAYER STATE RESPONSE: " + response.returnResponse().getStatusLine().getStatusCode());
-            int responseCode = response.returnResponse().getStatusLine().getStatusCode();
-            if (responseCode == 200) log.info("OK 200");
+            Runtime.getRuntime().exec("sh transfer_" + playerName + ".sh");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-//        log.info("PLAYER STATE JSON: " + json);
-//        log.info("is_playing: " + JsonUtils.jsonGetValue(json, "is_playing"));
-//        log.info("currently_playing_type: " + JsonUtils.jsonGetValue(json, "currently_playing_type"));
-//        log.info("is_playing: " + JsonUtils.jsonGetValue(json, "is_playing"));
-//        log.info("is_playing: " + JsonUtils.jsonGetValue(json, "is_playing"));
+        log.info("TRANSFER FINISH");
+        return "включаю spotify на ";
     }
 }

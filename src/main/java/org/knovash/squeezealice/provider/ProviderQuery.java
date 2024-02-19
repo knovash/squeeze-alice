@@ -28,12 +28,12 @@ public class ProviderQuery {
             json = "{\"request_id\":\"" + xRequestId + "\",\"payload\":{\"devices\":[]}}";
         } else {
             if (SmartHome.devices.size() == 0) log.info("ERROR - no registered LMS players in Alice home");
-            Response response = new Response();
-            response.request_id = xRequestId;
+            ResponseYandex responseYandex = new ResponseYandex();
+            responseYandex.request_id = xRequestId;
             List<Device> jsonDevices = bodyPojo.devices.stream().map(d -> updateDevice(Integer.valueOf(d.id))).collect(Collectors.toList());
-            response.payload = new Payload();
-            response.payload.devices = jsonDevices;
-            json = JsonUtils.pojoToJson(response);
+            responseYandex.payload = new Payload();
+            responseYandex.payload.devices = jsonDevices;
+            json = JsonUtils.pojoToJson(responseYandex);
             json = json.replaceAll("(\"value\" :) \"([0-9a-z]+)\"", "$1 $2");
         }
 
@@ -65,7 +65,6 @@ public class ProviderQuery {
                 capability.state.value = player.volume();
                 break;
             case ("on"):
-
                 if (player.mode().equals("play")) power = true;
                 capability.state.value = String.valueOf(power);
                 break;

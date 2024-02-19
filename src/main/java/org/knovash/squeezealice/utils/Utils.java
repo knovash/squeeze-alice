@@ -33,7 +33,7 @@ public class Utils {
 
     public static Map<String, String> altNames;
 
-    public static void generatePlayersAltNamesToFile() {
+    public static void generatePlayersQueryNames() {
         log.info("ALT NAMES");
 //        File file = new File("alt_names.json");
 //        Map<String, String> namesGenerated = new HashMap<>();

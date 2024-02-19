@@ -39,8 +39,6 @@ public class DeviceActions {
                 }
                 if (relative != null && relative.equals(false)) {
                     log.info("VOLUME abs: " + value);
-// не понижать громкость меньше 1
-                    if (Integer.parseInt(value) < 1) value = String.valueOf(1);
                     player.volume(value);
                 }
                 break;
