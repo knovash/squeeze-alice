@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Response {
+public class ResponseYandex {
 
     public String request_id;
     public Payload payload = new Payload();

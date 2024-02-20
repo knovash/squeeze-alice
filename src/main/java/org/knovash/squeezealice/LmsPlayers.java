@@ -7,9 +7,9 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
-import org.knovash.squeezealice.utils.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,9 +24,10 @@ public class LmsPlayers {
 
     public Integer counter;
     public List<Player> players;
+    public List<String> playersOnlineNames;
 
     public void count() {
-        Response response = Requests.postByJsonForResponse(RequestParameters.count().toString());
+        Response response = Requests.postToLmsForContent(RequestParameters.count().toString());
         if (response == null) {
             log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIP + ":" + lmsPort);
             lmsPlayers.counter = 0;
@@ -37,12 +38,36 @@ public class LmsPlayers {
 
     public List<String> favorites() {
         String playerName = lmsPlayers.players.get(0).name;
-        Response response = Requests.postByJsonForResponse(RequestParameters.favorites("HomePod").toString());
+        Response response = Requests.postToLmsForContent(RequestParameters.favorites("HomePod").toString());
         List<String> playlist = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
         return playlist;
     }
 
     public void update() {
+        log.info("UPDATE PLAYERS FROM LMS");
+        lmsPlayers.count();
+        Integer counter = lmsPlayers.counter; // получить количество плееров в LMS
+        if (counter == null || counter == 0) {
+            log.info("UPDATE ERROR. NO PLAYERS IN LMS");
+            return;
+        }
+        playersOnlineNames = new ArrayList<>();
+        for (int index = 0; index < counter; index++) { // для каждого плеера по id
+            String name = Player.name(Integer.toString(index)); // запросить имя
+            String id = Player.id(Integer.toString(index)); // запросить id/mac
+            playersOnlineNames.add(name); // добавить плеер в список активных
+            if (lmsPlayers.getPlayerByName(name) == null) { // если плеера еще нет в сервере, то добавить
+                log.info("ADD NEW PLAYER: " + name);
+                lmsPlayers.players.add(new Player(name, id));
+            } else {
+                log.info("SKIP PLAYER: " + name);
+            }
+        }
+        Utils.generatePlayersQueryNames();
+        write();
+    }
+
+    public void updateMac() {
         log.info("UPDATE PLAYERS FROM LMS");
         lmsPlayers.count();
         Integer counter = lmsPlayers.counter;
@@ -53,24 +78,21 @@ public class LmsPlayers {
         for (int index = 0; index < counter; index++) {
             String name = Player.name(Integer.toString(index));
             String id = Player.id(Integer.toString(index));
-            if (lmsPlayers.getPlayerByName(name) == null) {
-                log.info("ADD NEW PLAYER: " + name);
-                lmsPlayers.players.add(new Player(name, id));
-            } else {
-                log.info("SKIP PLAYER: " + name);
-            }
+            lmsPlayers.getPlayerByName(name).mac = id;
         }
-        Utils.generatePlayersAltNamesToFile();
+       write();
+    }
+
+    public void clear() {
+        log.info("CLEAR PLAYERS");
+        lmsPlayers.players = new ArrayList<>();
+        Utils.generatePlayersQueryNames();
+        write();
     }
 
     public void write() {
         log.info("WRITE FILE lms_players.json");
         JsonUtils.pojoToJsonFile(lmsPlayers, "lms_players.json");
-    }
-
-    public void write(String fileName) {
-        log.info("WRITE FILE " + fileName);
-        JsonUtils.pojoToJsonFile(lmsPlayers, fileName + ".json");
     }
 
     public void read() {
@@ -91,15 +113,13 @@ public class LmsPlayers {
                 .orElse(null);
     }
 
-    public String getPlayerNameByAliceId(String alice_id) {
+    public Player getPlayerByNameInQuery(String name) {
+        if (name == null) return null;
         if (lmsPlayers.players == null) return null;
-        if (alice_id == null) return null;
-        Player player = lmsPlayers.players.stream()
-                .filter(p -> p.getAlice_id().equals(alice_id))
+        return lmsPlayers.players.stream()
+                .filter(player -> player.getNameInQuery().toLowerCase().equals(name.toLowerCase()))
                 .findFirst()
                 .orElse(null);
-        if (player == null) return null;
-        return player.name;
     }
 
     public Player getPlayingPlayer(String currentName) {
@@ -121,13 +141,12 @@ public class LmsPlayers {
         return playing;
     }
 
-    public String editPlayer(HashMap<String, String> parameters) {
+    public String playerSave(HashMap<String, String> parameters) {
         log.info("PARAMETERS: " + parameters);
         String name = parameters.get("name");
         Player player = lmsPlayers.getPlayerByName(name);
         log.info("PLAYER FOR EDIT: " + player);
         log.info("name: " + parameters.get("name"));
-        log.info("alice_id: " + parameters.get("alice_id"));
         log.info("delay: " + parameters.get("delay"));
         log.info("step: " + parameters.get("step"));
         log.info("black: " + parameters.get("black"));
@@ -136,9 +155,19 @@ public class LmsPlayers {
         player.wake_delay = Integer.valueOf(parameters.get("delay"));
         player.volume_step = Integer.valueOf(parameters.get("step"));
         player.black = Boolean.parseBoolean(parameters.get("black"));
-        player.alice_id = parameters.get("alice_id");
         player.timeVolume = Utils.stringSplitToIntMap(parameters.get("schedule"), ",", ":");
-        JsonUtils.pojoToJsonFile(lmsPlayers, "lms_players.json");
+        write();
+        return "OK";
+    }
+
+    public String playerRemove(HashMap<String, String> parameters) {
+        log.info("PARAMETERS: " + parameters);
+        String name = parameters.get("name");
+        Player player = lmsPlayers.getPlayerByName(name);
+        log.info("PLAYER FOR EDIT: " + player);
+        log.info("name: " + parameters.get("name"));
+        lmsPlayers.players.remove(player);
+        write();
         return "OK";
     }
 }

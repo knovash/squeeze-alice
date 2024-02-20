@@ -3,9 +3,7 @@ package org.knovash.squeezealice.utils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.provider.SmartHome;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +15,6 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -26,42 +23,32 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.knovash.squeezealice.Requests.headByUriForResponse;
 import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.Requests.headToUriForHttpResponse;
 
 @Log4j2
 public class Utils {
 
     public static Map<String, String> altNames;
 
-    public static void generatePlayersAltNamesToFile() {
-        log.info("ALT NAMES");
-        File file = new File("alt_names.json");
-        Map<String, String> namesGenerated = new HashMap<>();
-        Map<String, String> namesFromFile = new HashMap<>();
-        if (Utils.altNames == null) Utils.altNames = new HashMap<>();
-        // generate
+    public static void generatePlayersQueryNames() {
+//  только в lmsPlayers
+        log.info("PLAYERS QUERY NAMES");
         lmsPlayers.players.forEach(player -> {
-            String altName = player.name
+            player.nameInQuery = player.name
                     .replace(" ", "")
                     .replace("_", "")
                     .toLowerCase();
-            namesGenerated.put(altName, player.name);
         });
-        // get from file
-        if (file.exists()) namesFromFile = JsonUtils.jsonFileToMap("alt_names.json", String.class, String.class);
-        Utils.altNames.putAll(namesFromFile);
-        Utils.altNames.putAll(namesGenerated);
-        JsonUtils.mapToJsonFile(Utils.altNames, "alt_names.json");
-        log.info("WRITE alt_names.json " + Utils.altNames);
     }
 
     public static void changePlayerValue(HashMap<String, String> parameters) {
+//  только в switch query command
         String playerName = parameters.get("player");
         String valueName = parameters.get("value_name");
         Integer newValue = Integer.valueOf(parameters.get("value"));
         Field field = null;
-        playerName = getAltPlayerNameByName(playerName);
+        playerName = getPlayerByNameInQuery(playerName);
         Player player = lmsPlayers.getPlayerByName(playerName);
         log.info("PLAYER: " + playerName + " VALUE NAME: " + valueName + " NEW VALUE: " + newValue);
         try {
@@ -80,7 +67,8 @@ public class Utils {
         lmsPlayers.write();
     }
 
-    public static String getAltPlayerNameByName(String name) {
+    public static String getPlayerByNameInQuery(String name) {
+//  только тут в утилс для changePlayerValue
         log.info("NAME: " + name + " ALT NAMES: " + altNames);
         if (altNames.containsKey(name)) {
             name = altNames.get(name);
@@ -88,25 +76,6 @@ public class Utils {
             log.info("NO ALT NAME FOR " + name);
         }
         return name;
-    }
-
-    public static String getPlayerName(String name) {
-        log.info(name);
-        String finalName = name;
-        Optional<String> result = altNames.entrySet()
-                .stream()
-                .filter(entry -> finalName.equals(entry.getValue()))
-                .map(Map.Entry::getKey)
-                .findFirst();
-        return result.get();
-    }
-
-    public static void addPlayerAltName(HashMap<String, String> parameters) {
-//        http://localhost:8001/cmd?action=alt_name_add&query_name=ggmm&lms_name=4
-        String query_name = parameters.get("player");
-        String lms_name = parameters.get("value_name");
-        Utils.altNames.put(query_name, lms_name);
-        JsonUtils.pojoToJsonFile(altNames, "alt_names.json");
     }
 
     public static String logLastLines(HashMap<String, String> parameters) {
@@ -132,21 +101,6 @@ public class Utils {
         return result;
     }
 
-    public static String statePlayers() {
-        String json = JsonUtils.pojoToJson(lmsPlayers);
-        return json;
-    }
-
-    public static String players() {
-        String json = JsonUtils.pojoToJson(Main.lmsPlayers.players);
-        return json;
-    }
-
-    public static String stateDevices() {
-        String json = JsonUtils.pojoToJson(SmartHome.devices);
-        return json;
-    }
-
     public static String timeVolumeGet(Player player) {
         return player.timeVolume.entrySet().toString();
     }
@@ -164,31 +118,17 @@ public class Utils {
         return "REMOVED time:" + time;
     }
 
-    public static String backupServer(HashMap<String, String> parameters) {
-        String stamp = LocalDate.now().toString() + "-" + LocalTime.now().toString();
-        lmsPlayers.write("server-backup-" + stamp);
-        return "BACKUP SERVER";
-    }
-
-    public static void favoritePrev(Player player, HashMap<String, String> parameters) {
-        Integer time = Integer.valueOf(parameters.get("time"));
-        player.play(1);
-        player.timeVolume.remove(time);
-    }
-
-    public static void favoriteNext(Player player, HashMap<String, String> parameters) {
-        Integer time = Integer.valueOf(parameters.get("time"));
-        player.timeVolume.remove(time);
-    }
-
     public static boolean checkIpIsLms(String ip) {
         log.info("CHECK IF IP IS LMS: " + ip);
         String uri = "http://" + ip + ":9000";
-        HttpResponse response = headByUriForResponse(uri);
+        HttpResponse response = headToUriForHttpResponse(uri);
+//        log.info("---"+response.getAllHeaders());
         if (response == null) {
+//            log.info("---"+response.getAllHeaders());
 //            log.info("NOT LMS IP");
             return false;
         }
+        log.info("---" + response.getAllHeaders());
         Header[] server = response.getHeaders("Server");
         String header = server[0].toString();
         log.info("HEADER: " + header);
@@ -340,19 +280,58 @@ public class Utils {
         }
     }
 
-//    https://stackoverflow.com/questions/10893313/how-to-convert-cyrillic-letters-to-english-latin-in-java-string
-    public static String convertCyrilic(String message){
-        message = message.replace("дж","j");
-        char[] abcCyr =   {' ','а','б','в','г','д','ѓ','е', 'ж','з','ѕ','и','ј','к','л','љ','м','н','њ','о','п','р','с','т', 'ќ','у', 'ф','х', 'ц','ч','џ','ш', 'А','Б','В','Г','Д','Ѓ','Е', 'Ж','З','Ѕ','И','Ј','К','Л','Љ','М','Н','Њ','О','П','Р','С','Т', 'Ќ', 'У','Ф', 'Х','Ц','Ч','Џ','Ш','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','1','2','3','4','5','6','7','8','9','/','-'};
-        String[] abcLat = {" ","a","b","v","g","d","]","e","zh","z","y","i","j","k","l","q","m","n","w","o","p","r","s","t", "'","u", "f","h", "c","ch", "x","{","A","B","V","G","D","}","E","Zh","Z","Y","I","J","K","L","Q","M","N","W","O","P","R","S","T","KJ","U","F","H", "C",":", "X","{", "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","1","2","3","4","5","6","7","8","9","/","-"};
+    //    https://stackoverflow.com/questions/10893313/how-to-convert-cyrillic-letters-to-english-latin-in-java-string
+    public static String convertCyrilic(String message) {
+        message = message.replace("дж", "j");
+        char[] abcCyr = {' ', 'а', 'б', 'в', 'г', 'д', 'ѓ', 'е', 'ж', 'з', 'ѕ', 'и', 'ј', 'к', 'л', 'љ', 'м', 'н', 'њ', 'о', 'п', 'р', 'с', 'т', 'ќ', 'у', 'ф', 'х', 'ц', 'ч', 'џ', 'ш', 'А', 'Б', 'В', 'Г', 'Д', 'Ѓ', 'Е', 'Ж', 'З', 'Ѕ', 'И', 'Ј', 'К', 'Л', 'Љ', 'М', 'Н', 'Њ', 'О', 'П', 'Р', 'С', 'Т', 'Ќ', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Џ', 'Ш', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '/', '-'};
+        String[] abcLat = {" ", "a", "b", "v", "g", "d", "]", "e", "zh", "z", "y", "i", "j", "k", "l", "q", "m", "n", "w", "o", "p", "r", "s", "t", "'", "u", "f", "h", "c", "ch", "x", "{", "A", "B", "V", "G", "D", "}", "E", "Zh", "Z", "Y", "I", "J", "K", "L", "Q", "M", "N", "W", "O", "P", "R", "S", "T", "KJ", "U", "F", "H", "C", ":", "X", "{", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "/", "-"};
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < message.length(); i++) {
-            for (int x = 0; x < abcCyr.length; x++ ) {
+            for (int x = 0; x < abcCyr.length; x++) {
                 if (message.charAt(i) == abcCyr[x]) {
                     builder.append(abcLat[x]);
                 }
             }
         }
         return builder.toString();
+    }
+
+    public static void rebootLocalhost() {
+        log.info("REBOOT LOCALHOST");
+        ProcessBuilder pb = new ProcessBuilder("mkdir /home/konstantin/Documents/qqqqq");
+        pb.inheritIO();
+//        pb.directory(new File("bin"));
+        try {
+            pb.start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("REBOOT OK");
+    }
+
+    public static void rebootServiceSa() {
+        log.info("REBOOT SERVICE SA");
+        ProcessBuilder pb = new ProcessBuilder("mkdir /home/konstantin/Documents/qqqqq");
+        pb.inheritIO();
+//        pb.directory(new File("bin"));
+        try {
+            pb.start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("REBOOT OK");
+    }
+
+    public static void rebootServiceLms() {
+        log.info("REBOOT SERVICE LMS");
+        ProcessBuilder pb = new ProcessBuilder("mkdir /home/konstantin/Documents/qqqqq");
+        pb.inheritIO();
+//        pb.directory(new File("bin"));
+        try {
+            pb.start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("REBOOT OK");
     }
 }

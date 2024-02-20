@@ -14,7 +14,7 @@ public class AliceVoiceResponsePojo {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ResponseAlice {
+    protected static class ResponseAlice {
         public String text;
         public boolean end_session;
     }

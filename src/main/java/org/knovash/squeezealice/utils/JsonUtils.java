@@ -47,9 +47,6 @@ public class JsonUtils {
 
             log.info("ERROR " + e);
         }
-//        finally {
-//            log.info("OK");
-//        }
         return null;
     }
 
@@ -103,18 +100,6 @@ public class JsonUtils {
         return null;
     }
 
-//    public static <T> T jsonFileToPojoTrows(String fileName, Class<T> clazz) {
-//        File file = new File(fileName);
-//        if (file.exists()) {
-//            try {
-//                return objectMapper.readValue(file, clazz);
-//            } catch (IOException | InaccessibleObjectException e) {
-//                log.info("ERROR READ lms_players.json" + e);
-//            }
-//        }
-//        return null;
-//    }
-
     public static <T> List<T> jsonFileToList(String fileName, Class<T> clazz) {
         File file = new File(fileName);
         if (!file.exists()) return null;
@@ -133,21 +118,23 @@ public class JsonUtils {
         try {
             return objectMapper.readValue(file, type);
         } catch (IOException e) {
+            return null;
+//            throw new RuntimeException(e);
+        }
+    }
+
+    public static <K, V> Map<K, V> jsonToMap(String json, Class<K> clazzKey, Class<V> clazzValue) {
+        log.info("JSON TO MAP");
+        JavaType type = objectMapper.getTypeFactory().constructMapType(Map.class, clazzKey, clazzValue);
+        try {
+            return objectMapper.readValue(json, type);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-//    public static <K, V> Map<K, V> jsonToMap(String json, Class<K> clazzKey, Class<V> clazzValue) {
-//        log.info("JSON TO MAP");
-//        JavaType type = objectMapper.getTypeFactory().constructMapType(Map.class, clazzKey, clazzValue);
-//        try {
-//            return objectMapper.readValue(json, type);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-
     public static <K, V> void mapToJsonFile(Map<K, V> map, String fileName) {
+//  только для сохранения кредов спотифай в файл
         File file = new File(fileName);
         try {
             objectWriter.writeValue(file, map);
@@ -157,11 +144,8 @@ public class JsonUtils {
     }
 
     public static String jsonGetValue(String json, String valueName) {
-//        log.info("JSON: " + json);
-//        log.info("VALUE NAME: " + valueName);
-
+//  в голосовый коммандах и споти аус
         if (!json.contains(valueName)) return null;
-
         JsonNode jsonNode = null;
         try {
             jsonNode = objectMapper.readTree(json);
@@ -173,22 +157,14 @@ public class JsonUtils {
         return result;
     }
 
-    public static String jsonGetNode(String json) {
-        JsonNode jsonNode = null;
-        try {
-            jsonNode = objectMapper.readTree(json);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        return "NODE " + jsonNode.get("payload").get("devices").get(0).get("capabilities").get(0).get("state");
-    }
-
     public static void valueToJsonFile(String valueName, String value) {
+//  только для записи ip в файл lms_ip.json
         ValuePojo valuePojo = new ValuePojo(value);
         JsonUtils.pojoToJsonFile(valuePojo, valueName + ".json");
     }
 
     public static String valueFromJsonFile(String fileName) {
+//  только для получения ip из файла lms_ip.json
         ValuePojo valuePojo = new ValuePojo();
         valuePojo = JsonUtils.jsonFileToPojo(fileName, ValuePojo.class);
         if (valuePojo == null) return null;

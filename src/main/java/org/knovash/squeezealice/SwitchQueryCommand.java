@@ -1,131 +1,86 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.DeviceUtils;
 import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.spotify.Spotify;
+import org.knovash.squeezealice.spotify.SpotifyAuth;
+import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.web.Html;
 
 import java.util.HashMap;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
-import static org.knovash.squeezealice.utils.Utils.altNames;
 
 @Log4j2
 public class SwitchQueryCommand {
 
-    public static Context action(String query, Context context) {
-        log.info("QUERY: " + query);
+    public static Context action(Context context) {
+        HashMap<String, String> queryParams = context.queryMap;
+        log.info("QUERY: " + queryParams);
         String response;
-        String name;
-        Player player = null;
-        HashMap<String, String> parameters = context.queryMap;
+        context.json = "BAD REQUEST NO ACTION IN QUERY";
+        if (!queryParams.containsKey("action")) return context;
         context.code = 200;
-        if (!parameters.containsKey("action")) {
-            log.info("BAD REQUEST NO ACTION IN QUERY");
-            context.json = "BAD REQUEST NO ACTION IN QUERY";
-            return context;
-        }
-        String action = parameters.get("action");
+
+        String action = queryParams.get("action");
         log.info("ACTION: " + action);
-
-        if (parameters.get("player") != null) {
-            name = parameters.get("player");
-            log.info("NAME: " + name);
-            name = Utils.getAltPlayerNameByName(name);
-            log.info("ALT NAME: " + name);
-            player = lmsPlayers.getPlayerByName(name);
-            if (player == null) {
-                log.info("NO PLAYER : " + name + " TRY UPDATE FROM LMS AND RETRY");
-                lmsPlayers.update();
-                player = lmsPlayers.getPlayerByName(name);
-                if (player == null) {
-                    log.info("NO PLAYER: " + name + " ON SERVER");
-                    context.json = "ERROR: NO PLAYER IN LMS " + name + "Try check alt names: " + altNames;
-                    return context;
-                }
-                lmsPlayers.write();
-            }
-            if (player.isBlack()) {
-                log.info("PLAYER: " + name + " IN BLACK");
-                context.json = "PLAYER IN BLACKLIST " + name;
-                return context;
-            }
-        }
-
+        Player player = lmsPlayers.getPlayerByNameInQuery(queryParams.get("player"));
+        String value = queryParams.get("value");
         switch (action) {
-            case ("channel"):
-                SwitchAliceCommand.channel(player, Integer.valueOf(parameters.get("value")));
+            case ("channel"): // TASKER
+                Actions.channel(player, Integer.valueOf(value));
                 response = "CHANNEL COMPLETE";
                 break;
-            case ("volume"):
-                SwitchAliceCommand.volume(player, parameters.get("value"));
+            case ("volume"): // TASKER
+                Actions.volumeByQuery(player, value); // переделать для up dn
                 response = "VOLUME COMPLETE";
                 break;
-            case ("all_low_high"):
-                SwitchAliceCommand.allLowOrHigh(parameters.get("value"));
+            case ("all_low_high"): // TASKER
+                Actions.allLowOrHigh(value);
                 response = "PRESET COMPLETE";
                 break;
-            case ("turn_on_music"):
-            case ("turn_on_speaker"):
-                SwitchAliceCommand.turnOnMusicSpeaker(player);
+            case ("turn_on_music"): // TASKER
+                Actions.turnOnMusicSpeaker(player);
                 response = "MUSIC ON COMPLETE";
                 break;
-            case ("turn_off_music"):
-                SwitchAliceCommand.turnOffMusic();
+            case ("turn_off_music"): // TASKER
+                Actions.turnOffMusic();
                 response = "MUSIC OFF COMPLETE";
                 break;
-            case ("turn_off_speaker"):
-                SwitchAliceCommand.turnOffSpeaker(player);
+            case ("turn_off_speaker"): // TASKER
+                Actions.turnOffSpeaker(player);
                 response = "SPEAKER OFF COMPLETE";
                 break;
-            case ("toggle_music"):
-                response = SwitchAliceCommand.toggleMusic(player);
+            case ("toggle_music"): // TASKER
+                response = Actions.toggleMusic(player);
                 break;
-            case ("turn_on_spotify"):
-            case ("spotify"):
+            case ("turn_on_spotify"): // TASKER
                 log.info("SPOTIFY");
-                SwitchAliceCommand.turnOnSpotify(player);
+                Spotify.transfer(player);
                 response = "SPOTIFY COMPLETE";
                 break;
-            case ("update_players"):
-            case ("update"):
-                lmsPlayers.update();
-                response = "UPDATE COMPLETE";
-                break;
-            case ("show_log"):
-            case ("log"):
+            case ("log"): // WEB HOME
                 log.info("SHOW LOG");
-                response = Utils.logLastLines(parameters);
+                response = Utils.logLastLines(queryParams);
                 break;
-            case ("silence"):
+            case ("silence"): // TASKER
                 log.info("SILENCE");
                 player.playSilence();
                 response = "SILENCE COMPLETE";
                 break;
-            case ("change_value"):
+            case ("change_value"): // TASKER
                 log.info("CHANGE PLAYER VALUE");
-                Utils.changePlayerValue(parameters);
+                Utils.changePlayerValue(queryParams);
                 response = "VALUE COMPLETE";
-                break;
-            case ("alt_name_add"):
-                log.info("ALT NAME ADD");
-                Utils.addPlayerAltName(parameters);
-                response = "ALT NAME COMPLETE";
-                break;
-            case ("remove"):
-                log.info("REMOVE PLAYER");
-                player.remove();
-                response = "REMOVE COMPLETE";
                 break;
             case ("state_devices"):
                 log.info("STATE ALICE DEVICES");
-                response = Utils.stateDevices();
+                response = JsonUtils.pojoToJson(SmartHome.devices);
                 break;
             case ("state_players"):
                 log.info("STATE LMS PLAYERS");
-                response = Utils.statePlayers();
+                response = JsonUtils.pojoToJson(lmsPlayers);
                 break;
             case ("time_volume_get"):
                 log.info("SEND TIME AND VOLUME");
@@ -133,47 +88,110 @@ public class SwitchQueryCommand {
                 break;
             case ("time_volume_set"):
                 log.info("CHANGE TIME AND VOLUME");
-                response = Utils.timeVolumeSet(player, parameters);
+                response = Utils.timeVolumeSet(player, queryParams);
                 break;
             case ("time_volume_del"):
                 log.info("DELETE TIME AND VOLUME");
-                response = Utils.timeVolumeDel(player, parameters);
+                response = Utils.timeVolumeDel(player, queryParams);
                 break;
-            case ("cred_spotify"):
+            case ("spotify_save_creds"):
                 log.info("CREDENTIALS SPOTIFY");
-                Spotify.credentialsSpotify(parameters);
+                SpotifyAuth.save(queryParams);
                 response = Html.formSpotifyLogin();
                 break;
             case ("cred_yandex"):
                 log.info("CREDENTIALS YANDEX");
-                Yandex.credentialsYandex(parameters);
+                Yandex.credentialsYandex(queryParams);
                 response = Html.formYandexLogin();
                 break;
-            case ("backup"):
-                log.info("BACKUP SERVER");
-                response = Utils.backupServer(parameters);
-                break;
+
+//      WEB SPEAKERS
             case ("speaker_create"):
-                log.info("CREATE SPEAKER");
-                DeviceUtils.create(parameters);
+                log.info("SPEAKER CREATE");
+                SmartHome.create(queryParams);
+                SmartHome.write();
                 response = Html.formSpeakers();
                 break;
             case ("speaker_edit"):
-                log.info("EDIT SPEAKER");
-                DeviceUtils.edit(parameters);
+                log.info("SPEAKER SAVE");
+                SmartHome.save(queryParams);
+                SmartHome.write();
                 log.info("EDIT OK");
                 response = Html.formSpeakers();
-                break;
-            case ("player_edit"):
-                log.info("EDIT PLAYER");
-                lmsPlayers.editPlayer(parameters);
-                log.info("EDIT OK");
-                response = Html.formPlayers();
                 break;
             case ("speaker_remove"):
-                log.info("REMOVE SPEAKER");
-                DeviceUtils.remove(parameters);
+                log.info("SPEAKER REMOVE");
+                SmartHome.remove(queryParams);
+                SmartHome.write();
                 response = Html.formSpeakers();
+                break;
+            case ("speakers_clear"):
+                log.info("SPEAKERS CLEAR");
+                SmartHome.clear();
+                SmartHome.write();
+                response = Html.formSpeakers();
+                break;
+
+//      WEB PLAYERS
+            case ("players_update"):
+                log.info("PLAYERS UPDATE");
+                lmsPlayers.update();
+                lmsPlayers.write();
+                response = Html.formSpeakers();
+                break;
+            case ("players_clear"):
+                log.info("PLAYERS CLEAR");
+                lmsPlayers.clear();
+                lmsPlayers.write();
+                response = Html.formSpeakers();
+                break;
+            case ("player_save"):
+                log.info("PLAYER SAVE");
+                lmsPlayers.playerSave(queryParams);
+                lmsPlayers.write();
+                response = Html.formPlayers();
+                break;
+            case ("player_remove"):
+                log.info("PLAYER REMOVE");
+                lmsPlayers.playerRemove(queryParams);
+                lmsPlayers.write();
+                response = Html.formPlayers();
+                break;
+            case ("reboot_service_sa"):
+                log.info("PLAYER REMOVE");
+                Utils.rebootServiceSa();
+                response = Html.index();
+                break;
+            case ("reboot_localhost"):
+                log.info("PLAYER REMOVE");
+                Utils.rebootLocalhost();
+                response = Html.index();
+                break;
+            case ("reboot_service_lms"):
+                log.info("PLAYER REMOVE");
+                Utils.rebootServiceLms();
+                response = Html.index();
+                break;
+            case ("spoti_state"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=spoti_state
+                log.info("SPOTIFY PLAYER STATE");
+                response = Spotify.getPlayerState();
+                break;
+//            case ("spoti_auth"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=spoti_auth
+//                log.info("SPOTIFY AUTH ACTION");
+//                SpotifyAuth.();
+//                response = Html.index();
+//                break;
+            case ("spoti_refresh"):
+                log.info("SPOTIFY AUTH REFRESH");
+                SpotifyAuth.runRequestRefresh();
+                response = Html.index();
+                break;
+            case ("transfer"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=transfer
+                log.info("SPOTIFY TRANSFER");
+                Spotify.transfer(player);
+                log.info("SPOTIFY TRANSFER");
+                response = Html.index();
+                log.info("SPOTIFY TRANSFER INDEX OK");
                 break;
             default:
                 log.info("ACTION NOT FOUND: " + action);
@@ -184,3 +202,7 @@ public class SwitchQueryCommand {
         return context;
     }
 }
+
+//        reboot_service_sa>Пер
+//        reboot_localhost>Пере
+//        reboot_service_lms>Пе

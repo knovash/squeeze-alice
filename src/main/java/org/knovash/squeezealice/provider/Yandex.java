@@ -16,9 +16,9 @@ import java.util.HashMap;
 public class Yandex {
 
     //    public static String bearerToken;
-    public  String clientId = "no-------------------";
-    public  String clientSecret = "no---------------";
-    public  String bearer = "no---------------";
+    public String clientId = "no-------------------";
+    public String clientSecret = "no---------------";
+    public String bearer = "no---------------";
     public static Yandex yandex = new Yandex();
 
     public static void credentialsYandex(HashMap<String, String> parameters) {
