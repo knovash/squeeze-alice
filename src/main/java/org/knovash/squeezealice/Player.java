@@ -23,17 +23,13 @@ public class Player {
     public String name;
     public String mac;
     public Integer volume_step;
-    public Integer volume_alice_previous;
     public Integer volume_low;
     public Integer volume_high;
     public Integer wake_delay;
     public boolean black;
-    public Integer volume_alice_low;
-    public Integer volume_alice_high;
     public Map<Integer, Integer> timeVolume;
     public String lastPath;
     public String lastPlayTimeStr;
-    public String alice_id;
     public String nameInQuery;
 
     public static String lastStrPath;
@@ -44,14 +40,10 @@ public class Player {
     public Player(String name, String mac) {
         this.name = name;
         this.mac = mac;
-        this.volume_alice_previous = 1;
-        this.alice_id = "-";
         this.volume_step = 5;
         this.volume_low = 10;
         this.volume_high = 25;
         this.wake_delay = 10000;
-        this.volume_alice_low = 1;
-        this.volume_alice_high = 9;
         this.black = false;
         this.timeVolume = new HashMap<>(Map.of(
                 0, 5,
@@ -62,63 +54,63 @@ public class Player {
     }
 
     public static String name(String index) {
-        Response response = Requests.postByJsonForResponse(RequestParameters.name(index).toString());
+        Response response = Requests.postToLmsForContent(RequestParameters.name(index).toString());
         if (response == null) return "";
         log.info("NAME: " + response.result._name);
         return response.result._name;
     }
 
     public static String id(String index) {
-        Response response = Requests.postByJsonForResponse(RequestParameters.id(index).toString());
+        Response response = Requests.postToLmsForContent(RequestParameters.id(index).toString());
         if (response == null) return "";
         log.info("ID: " + response.result._id);
         return response.result._id;
     }
 
     public String mode() {
-        Response response = Requests.postByJsonForResponse(RequestParameters.mode(this.name).toString());
+        Response response = Requests.postToLmsForContent(RequestParameters.mode(this.name).toString());
         if (response == null) return "stop";
         log.info("PLAYER: " + this.name + " MODE: " + response.result._mode);
         return response.result._mode;
     }
 
     public String path() {
-        Response response = Requests.postByJsonForResponse(RequestParameters.path(this.name).toString());
+        Response response = Requests.postToLmsForContent(RequestParameters.path(this.name).toString());
         if (response == null) return "";
         log.info("PLAYER: " + this.name + " PATH: " + response.result._path);
         return response.result._path;
     }
 
     public String playlistname() {
-        Response response = Requests.postByJsonForResponse(RequestParameters.playlistname(this.name).toString());
+        Response response = Requests.postToLmsForContent(RequestParameters.playlistname(this.name).toString());
         if (response == null) return null;
         log.info("PLAYER: " + this.name + " PLAYLIST: " + response.result._name);
         return response.result._name;
     }
 
     public String albumname() {
-        Response response = Requests.postByJsonForResponse(RequestParameters.albumname(this.name).toString());
+        Response response = Requests.postToLmsForContent(RequestParameters.albumname(this.name).toString());
         if (response == null) return "";
         log.info("PLAYER: " + this.name + " ALBUM: " + response.result._album);
         return response.result._album;
     }
 
     public String trackname() {
-        Response response = Requests.postByJsonForResponse(RequestParameters.trackname(this.name).toString());
+        Response response = Requests.postToLmsForContent(RequestParameters.trackname(this.name).toString());
         if (response == null) return "";
         log.info("PLAYER: " + this.name + " TRACK: " + response.result._title);
         return response.result._title;
     }
 
     public String artistname() {
-        Response response = Requests.postByJsonForResponse(RequestParameters.artistname(this.name).toString());
+        Response response = Requests.postToLmsForContent(RequestParameters.artistname(this.name).toString());
         if (response == null) return null;
         log.info("PLAYER: " + this.name + " PLAYLIST: " + response.result._artist);
         return response.result._artist;
     }
 
     public String volume() {
-        Response response = Requests.postByJsonForResponse(RequestParameters.volume(this.name).toString());
+        Response response = Requests.postToLmsForContent(RequestParameters.volume(this.name).toString());
         if (response == null) return "0";
         log.info("PLAYER: " + this.name + " GET VOLUME: " + response.result._volume);
         return response.result._volume;
@@ -126,7 +118,7 @@ public class Player {
 
     public Player volume(String value) {
         log.info("PLAYER: " + this.name + " SET VOLUME: " + value);
-        String status = Requests.postByJsonForStatus(RequestParameters.volume(this.name, value).toString());
+        String status = Requests.postToLmsForStatus(RequestParameters.volume(this.name, value).toString());
         if (Integer.parseInt(this.volume()) < 1) this.volume("1");
         log.info("STATUS: " + status);
         return this;
@@ -134,7 +126,7 @@ public class Player {
 
     public Player play(Integer channel) {
         log.info("PLAYER: " + this.name + " PLAY CHANNEL: " + channel);
-        String status = Requests.postByJsonForStatus(RequestParameters.play(this.name, channel - 1).toString());
+        String status = Requests.postToLmsForStatus(RequestParameters.play(this.name, channel - 1).toString());
         log.info("STATUS: " + status);
         this.saveLastPath();
         return this;
@@ -142,7 +134,7 @@ public class Player {
 
     public Player play(String path) {
         log.info("PLAYER: " + this.name + " PLAY PATH: " + path);
-        String status = Requests.postByJsonForStatus(RequestParameters.play(this.name, path).toString());
+        String status = Requests.postToLmsForStatus(RequestParameters.play(this.name, path).toString());
         log.info("STATUS: " + status);
         this.saveLastPath();
         return this;
@@ -150,14 +142,14 @@ public class Player {
 
     public Player playSilence() {
         log.info("PLAYER: " + this.name + " PLAY SILENCE");
-        String status = Requests.postByJsonForStatus(RequestParameters.play(this.name, silence).toString());
+        String status = Requests.postToLmsForStatus(RequestParameters.play(this.name, silence).toString());
         log.info("STATUS: " + status);
         return this;
     }
 
     public Player play() {
         log.info("PLAYER: " + this.name + " PLAY");
-        String status = Requests.postByJsonForStatus(RequestParameters.play(this.name).toString());
+        String status = Requests.postToLmsForStatus(RequestParameters.play(this.name).toString());
         log.info("STATUS: " + status);
         this.saveLastPath();
         return this;
@@ -165,7 +157,7 @@ public class Player {
 
     public Player pause() {
         log.info("PLAYER: " + this.name + " PAUSE");
-        String status = Requests.postByJsonForStatus(RequestParameters.pause(this.name).toString());
+        String status = Requests.postToLmsForStatus(RequestParameters.pause(this.name).toString());
         log.info("STATUS: " + status);
         this.saveLastPath();
         this.saveLastTimeIfPlay();
@@ -174,7 +166,7 @@ public class Player {
 
     public Player play_pause() {
         log.info("PLAYER: " + this.name + " PLAY/PAUSE");
-        String status = Requests.postByJsonForStatus(RequestParameters.play_pause(this.name).toString());
+        String status = Requests.postToLmsForStatus(RequestParameters.play_pause(this.name).toString());
         log.info("STATUS: " + status);
         this.saveLastPath();
         return this;
@@ -182,7 +174,7 @@ public class Player {
 
     public Player prevtrack() {
         log.info("PLAYER: " + this.name + " NEXT");
-        String status = Requests.postByJsonForStatus(RequestParameters.prevtrack(this.name).toString());
+        String status = Requests.postToLmsForStatus(RequestParameters.prevtrack(this.name).toString());
         log.info("STATUS: " + status);
         this.saveLastPath();
         return this;
@@ -190,7 +182,7 @@ public class Player {
 
     public Player nexttrack() {
         log.info("PLAYER: " + this.name + " NEXT");
-        String status = Requests.postByJsonForStatus(RequestParameters.nexttrack(this.name).toString());
+        String status = Requests.postToLmsForStatus(RequestParameters.nexttrack(this.name).toString());
         log.info("STATUS: " + status);
         this.saveLastPath();
         return this;
@@ -198,14 +190,14 @@ public class Player {
 
     public Player shuffleon() {
         log.info("PLAYER: " + this.name + " SHUFFLE ON");
-        String status = Requests.postByJsonForStatus(RequestParameters.shuffleon(this.name).toString());
+        String status = Requests.postToLmsForStatus(RequestParameters.shuffleon(this.name).toString());
         log.info("STATUS: " + status);
         return this;
     }
 
     public Player shuffleoff() {
         log.info("PLAYER: " + this.name + " SHUFFLE OFF");
-        String status = Requests.postByJsonForStatus(RequestParameters.shuffleoff(this.name).toString());
+        String status = Requests.postToLmsForStatus(RequestParameters.shuffleoff(this.name).toString());
         log.info("STATUS: " + status);
         return this;
     }
@@ -219,7 +211,7 @@ public class Player {
 
     public Player unsync() {
         log.info("PLAYER UNSYNC: " + this.name);
-        String status = Requests.postByJsonForStatus(RequestParameters.unsync(this.name).toString());
+        String status = Requests.postToLmsForStatus(RequestParameters.unsync(this.name).toString());
         log.info("STATUS: " + status);
         return this;
     }

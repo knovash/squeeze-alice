@@ -40,18 +40,18 @@ public class Levenstein {
         if (d < filalDistance) {
             filalDistance = d;
             finalElement = frase;
-            log.info("FD " + filalDistance + " FE " + finalElement);
+            log.info("NEAREST: " + finalElement + " DISTANCE: " + filalDistance);
         }
         return d;
     }
 
     public static int compareWordAndWord(String val, String s2) {
         int d = dist(val.toLowerCase().toCharArray(), s2.toLowerCase().toCharArray());
-        log.info(val + " & " + s2 + " distance= " + d);
+        log.info(val + " & " + s2 + " DISTANCE: " + d);
         if (d < filalDistance) {
             filalDistance = d;
             finalElement = s2;
-            log.info("FD " + filalDistance + " FE " + finalElement);
+            log.info("NEAREST: " + finalElement + " DISTANCE: " + filalDistance);
         }
         return d;
     }

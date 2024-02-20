@@ -22,7 +22,6 @@ Project is created with:
 * Args parser Apache Commons CLI
 * Logitech Media Server API
 * Spotify API
-* AlexStar SmartHome
 * Localtunnel, Serveo
 ## Launch
 to run:
@@ -40,15 +39,6 @@ lt --port 8010 --subdomain squeeze
 ```
 example request is: http://192.168.1.52:8010/cmd?action=state
 
-create rules for virtual players here
-https://alexstar.ru/smarthome
-
-```
-https://squeeze.loca.lt/cmd?action=turnon&player=homepod
-https://squeeze.loca.lt/cmd?action=turnoff&player=homepod
-https://squeeze.loca.lt/cmd?action=volume&player=homepod&value={value}
-https://squeeze.loca.lt/cmd?action=channel&player=homepod&value={value}
-```
 ### Tasker UI for configuring settings
 
 <a href="https://taskernet.com/shares/?user=AS35m8kJKYp5977YUIkcjNHTVyukgPWCIFiiEwuSPsUglqHm3bv6bL9D5mme1LtPP5KjRMog1V%2BP&id=Task%3AStateCfg">Tasker XML</a>
@@ -57,9 +47,7 @@ https://squeeze.loca.lt/cmd?action=channel&player=homepod&value={value}
 * volume high
 * wake delay
 ## Links
-* Alex Star
-  https://alexstar.ru/smarthome
 * Localtunel
 https://localtunnel.github.io/www/
 * Logitech Media Server
-https://www.mysqueezebox.com/download
+https://lms-community.github.io/lms-server-repository/

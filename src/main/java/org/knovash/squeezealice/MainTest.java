@@ -1,43 +1,34 @@
 package org.knovash.squeezealice;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.utils.Levenstein;
-import org.knovash.squeezealice.utils.Utils;
-import org.ktilis.yandexmusiclib.*;
-import org.ktilis.yandexmusiclib.exeptions.NoTokenFoundException;
+import org.knovash.squeezealice.utils.JsonUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 @Log4j2
 public class MainTest {
 
 
-    public static void main(String[] args) throws NoTokenFoundException, IOException, ExecutionException, InterruptedException {
+    public static void main(String[] args) {
         log.info("  ---+++===[ START ]===+++---");
 
-        Runtime.getRuntime().exec("mkdir fff");
 
-        Runtime.getRuntime().exec("sh test.sh");
+        Map<String,String> rooms = new HashMap<>();
 
-//        Process p = new ProcessBuilder("mkdir sss").start();
+        rooms.put("dfds","fsfsd");
+        rooms.put("gfd","t4ttee");
+        rooms.put("bdsdf","t43t34");
 
-//        ProcessBuilder pb = new ProcessBuilder("sh test.sh", "myArg1", "myArg2");
-//        Map<String, String> env = pb.environment();
-//        env.put("VAR1", "myValue");
-//        env.remove("OTHERVAR");
-//        env.put("VAR2", env.get("VAR1") + "suffix");
-//        pb.directory(new File("/home/konstantin/IdeaProjects/squeeze-alice/"));
-//        Process p = pb.start();
+        JsonUtils.mapToJsonFile(rooms,"rrr.json");
 
-//        CompletableFuture<org.json.JSONObject> track = Playlist.getTrack("33497347","track","1","5");
 
+        Map<String,String> rooms2 = new HashMap<>();
+
+        rooms2 = JsonUtils.jsonFileToMap("rrr.json", String.class, String.class);
+
+        log.info("RRR " +rooms2);
 
     }
-
 }

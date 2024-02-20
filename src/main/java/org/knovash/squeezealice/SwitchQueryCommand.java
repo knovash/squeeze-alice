@@ -4,6 +4,7 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.SpotifyAuth;
+import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.web.Html;
 
@@ -32,7 +33,7 @@ public class SwitchQueryCommand {
                 response = "CHANNEL COMPLETE";
                 break;
             case ("volume"): // TASKER
-                Actions.volumeByQuery(player, value);
+                Actions.volumeByQuery(player, value); // переделать для up dn
                 response = "VOLUME COMPLETE";
                 break;
             case ("all_low_high"): // TASKER
@@ -56,7 +57,7 @@ public class SwitchQueryCommand {
                 break;
             case ("turn_on_spotify"): // TASKER
                 log.info("SPOTIFY");
-                Actions.turnOnSpotify(player);
+                Spotify.transfer(player);
                 response = "SPOTIFY COMPLETE";
                 break;
             case ("log"): // WEB HOME
@@ -75,11 +76,11 @@ public class SwitchQueryCommand {
                 break;
             case ("state_devices"):
                 log.info("STATE ALICE DEVICES");
-                response = Utils.stateDevices();
+                response = JsonUtils.pojoToJson(SmartHome.devices);
                 break;
             case ("state_players"):
                 log.info("STATE LMS PLAYERS");
-                response = Utils.statePlayers();
+                response = JsonUtils.pojoToJson(lmsPlayers);
                 break;
             case ("time_volume_get"):
                 log.info("SEND TIME AND VOLUME");
@@ -95,17 +96,13 @@ public class SwitchQueryCommand {
                 break;
             case ("spotify_save_creds"):
                 log.info("CREDENTIALS SPOTIFY");
-                Spotify.saveCredsSpotify(queryParams);
+                SpotifyAuth.save(queryParams);
                 response = Html.formSpotifyLogin();
                 break;
             case ("cred_yandex"):
                 log.info("CREDENTIALS YANDEX");
                 Yandex.credentialsYandex(queryParams);
                 response = Html.formYandexLogin();
-                break;
-            case ("backup"):
-                log.info("BACKUP SERVER");
-                response = Utils.backupServer(queryParams);
                 break;
 
 //      WEB SPEAKERS
@@ -179,9 +176,14 @@ public class SwitchQueryCommand {
                 log.info("SPOTIFY PLAYER STATE");
                 response = Spotify.getPlayerState();
                 break;
-            case ("spoti_auth"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=spoti_auth
-                log.info("SPOTIFY AUTH ACTION");
-                SpotifyAuth.refresh();
+//            case ("spoti_auth"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=spoti_auth
+//                log.info("SPOTIFY AUTH ACTION");
+//                SpotifyAuth.();
+//                response = Html.index();
+//                break;
+            case ("spoti_refresh"):
+                log.info("SPOTIFY AUTH REFRESH");
+                SpotifyAuth.runRequestRefresh();
                 response = Html.index();
                 break;
             case ("transfer"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=transfer

@@ -5,7 +5,6 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 
 
-
 @Log4j2
 public class YandexAuth {
 // state=https://social.yandex.ru/broker2/authz_in_web/17b50a9fa5af4dd286a0275fb5a57976/callback&

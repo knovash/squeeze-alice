@@ -5,7 +5,6 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
-import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
@@ -17,9 +16,9 @@ import java.util.HashMap;
 public class Yandex {
 
     //    public static String bearerToken;
-    public  String clientId = "no-------------------";
-    public  String clientSecret = "no---------------";
-    public  String bearer = "no---------------";
+    public String clientId = "no-------------------";
+    public String clientSecret = "no---------------";
+    public String bearer = "no---------------";
     public static Yandex yandex = new Yandex();
 
     public static void credentialsYandex(HashMap<String, String> parameters) {

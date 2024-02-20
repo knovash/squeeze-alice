@@ -30,8 +30,10 @@ public class Html {
                 "<p><a href=\\cmd?action=state_devices>Посмотреть настройки Devices</a></p> \n" +
                 "<p><a href=\\cmd?action=state_players>Посмотреть настройки Players</a></p> \n" +
                 "<p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
+                "<p>-------</p> \n" +
                 "<p><a href=\\spoti_auth>Spotify Auth</a></p> \n" +
-                "<p><a href=\\cmd?action=spoti_auth>Spotify Auth Action</a></p> \n" +
+                "<p><a href=\\spoti_refresh>Spotify Auth Refresh direct</a></p> \n" +
+                "<p><a href=\\cmd?action=spoti_refresh>Spotify Auth Refresh cmd</a></p> \n" +
                 "<p><a href=\\cmd?action=spoti_state>Spotify state</a></p> \n" +
                 "<p><a href=\\cmd?action=transfer>Spotify transfer</a></p> \n" +
                 "</body>\n" +
@@ -65,6 +67,7 @@ public class Html {
                 "<br><button>save</button>" +
                 "</div>" +
                 "</form>" +
+                "<p><a href=\\spoti_auth>Spotify Auth</a></p> \n" +
                 "<p><a href=\"/\">Home</a></p>" +
                 "</body></html>";
         return page;
@@ -171,6 +174,7 @@ public class Html {
     }
 
     public static String formPlayers() {
+        lmsPlayers.update();
         String page = "<!DOCTYPE html><html lang=\"en\">" +
                 "<head><meta charset=\"UTF-8\" />" +
                 "  <title>Настройка колонок</title></head><body>" +
@@ -181,9 +185,6 @@ public class Html {
                                 "<b>" + p.name + " - " + "</b>" +
                                 checkPlayerOnlineInLms(p.name) + " - " +
                                 checkPlayerConnectInSmartHome(p.name) +
-                                "<br>" +
-                                "<input name=\"alice_id\" id=\"alice_id\" value=\"" + p.alice_id + "\" />" +
-                                "<label for=\"alice_id\"> id Алисы управляющей колонкой</label>" +
                                 "<br>" +
                                 "<input name=\"step\" id=\"step\" value=\"" + p.volume_step + "\" />" +
                                 "<label for=\"step\"> шаг громкости</label>" +
@@ -223,7 +224,6 @@ public class Html {
     }
 
     public static List<String> getNotInHome() {
-//        List<String> inLms = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
         List<String> inLms = lmsPlayers.playersOnlineNames;
         List<String> inHome = SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
         inLms.removeAll(inHome);
@@ -231,7 +231,6 @@ public class Html {
     }
 
     public static String getNotInHomeFirst() {
-//        List<String> inLms = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
         List<String> inLms = lmsPlayers.playersOnlineNames;
         List<String> inHome = SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
         inLms.removeAll(inHome);
@@ -250,6 +249,7 @@ public class Html {
                 "<p><strong>Spotify callback</strong></p> \n" +
                 "<p>client_id: " + SpotifyAuth.client_id + "</p> \n" +
                 "<p>client_secret: " + SpotifyAuth.client_secret + "</p> \n" +
+                "<p>encoded: " + SpotifyAuth.encoded + "</p> \n" +
                 "<p>response_type: " + SpotifyAuth.response_type + "</p> \n" +
                 "<p>redirect_uri: " + SpotifyAuth.redirect_uri + "</p> \n" +
                 "<p>show_dialog: " + SpotifyAuth.show_dialog + "</p> \n" +

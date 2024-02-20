@@ -7,13 +7,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Log4j2
-public class HttpUtils {
+public class HandlerUtils {
 
 
     public static String httpExchangeGetBody(HttpExchange httpExchange) throws IOException {
+//  используется только в хэндлере для получения боди
         InputStreamReader isr = new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
         if (isr == null) return null;
         BufferedReader br = new BufferedReader(isr);
@@ -30,25 +30,17 @@ public class HttpUtils {
     }
 
     public static String getHeaderValue(HttpExchange httpExchange, String headerKey) {
+//  используется только в хэндлере для получения хедера
         String headerValue = null;
         if (httpExchange.getRequestHeaders().containsKey(headerKey))
             headerValue = httpExchange.getRequestHeaders().get(headerKey).get(0);
-       return headerValue;
-    }
-
-    public static String createQuery(Map<String, String> queryMap) {
-
-        log.info("sss " + queryMap);
-        String query = queryMap.entrySet().stream()
-                .map(f -> f.getKey() + "=[" + f.getValue() + "]")
-                .collect(Collectors.toList()).toString();
-        query = query.substring(1, query.length() - 1);
-        return query;
+        return headerValue;
     }
 
     public static HashMap<String, String> getQueryMap(String query) {
+//  используется только в хэндлере, пределывает квери в мэп
         if (query == null) return new HashMap<>();
-        query = query.replace("+"," ");
+        query = query.replace("+", " ");
         HashMap<String, String> parameters = new HashMap<>();
         Optional.ofNullable(Arrays.asList(query.split("&"))).orElseGet(Collections::emptyList)
                 .stream()
@@ -57,18 +49,5 @@ public class HttpUtils {
                 .filter(Objects::nonNull)
                 .forEach(s -> parameters.put(s[0], s[1]));
         return parameters;
-    }
-
-    public static String getValueFromMap(HashMap<String, String> parameters, String name) {
-        String value=null;
-        if (parameters.containsKey(name)) value = parameters.get(name);
-        return value;
-    }
-
-    public static String getValueFromMap(String query, String name) {
-        HashMap<String, String> parameters =  HttpUtils.getQueryMap(query);
-        String value=null;
-        if (parameters.containsKey(name)) value = parameters.get(name);
-        return value;
     }
 }

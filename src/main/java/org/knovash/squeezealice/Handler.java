@@ -6,7 +6,7 @@ import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.*;
 import org.knovash.squeezealice.spotify.SpotifyAuth;
-import org.knovash.squeezealice.utils.HttpUtils;
+import org.knovash.squeezealice.utils.HandlerUtils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 import org.knovash.squeezealice.web.*;
 
@@ -20,19 +20,20 @@ public class Handler implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         log.info("");
+        log.info("START");
         String method = httpExchange.getRequestMethod();
         String path = httpExchange.getRequestURI().getPath();
-        String host = HttpUtils.getHeaderValue(httpExchange, "Host");
+        String host = HandlerUtils.getHeaderValue(httpExchange, "Host");
         log.info("REQUEST: " + method + " " + "http://" + host + path);
         Headers headers = httpExchange.getRequestHeaders();
 //        log.info("HEADERS: " + headers.entrySet());
-        String xRequestId = HttpUtils.getHeaderValue(httpExchange, "X-request-id");
-        String body = HttpUtils.httpExchangeGetBody(httpExchange);
+        String xRequestId = HandlerUtils.getHeaderValue(httpExchange, "X-request-id");
+        String body = HandlerUtils.httpExchangeGetBody(httpExchange);
         log.info("BODY: " + body);
         String query = httpExchange.getRequestURI().getQuery();
         log.info("QUERY: " + query);
 
-        HashMap<String, String> queryMap = HttpUtils.getQueryMap(query);
+        HashMap<String, String> queryMap = HandlerUtils.getQueryMap(query);
 
         Context context = new Context();
         context.body = body;
@@ -89,6 +90,10 @@ public class Handler implements HttpHandler {
                 log.info("SPOTI AUTH");
                 context = SpotifyAuth.requestUserAuthorization(context);
                 break;
+            case ("/spoti_refresh"):
+                log.info("SPOTI AUTH");
+                context = SpotifyAuth.requestRefresh(context);
+                break;
             case ("/spoti_callback"):
                 log.info("SPOTI CALLBACK");
                 context = SpotifyAuth.callback(context);
@@ -101,7 +106,7 @@ public class Handler implements HttpHandler {
 
         String json = context.json;
         int code = context.code;
-        log.info("CODE: " + code);
+//        log.info("CODE: " + code);
         httpExchange.getResponseHeaders().putAll(context.headers);
 //        log.info("HEADERS: " + httpExchange.getResponseHeaders().entrySet());
         log.info("RESPONSE: " + json);
@@ -110,6 +115,6 @@ public class Handler implements HttpHandler {
         outputStream.write(json.getBytes());
         outputStream.flush();
         outputStream.close();
-        log.info("OK");
+        log.info("FINISH");
     }
 }

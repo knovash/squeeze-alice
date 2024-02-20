@@ -58,10 +58,6 @@ public class Main {
         SpotifyAuth.read();
         log.info("BEARER: " + SpotifyAuth.bearer_token);
 
-        SmartHome.rooms.put("Гостиная","76F751A76299DE71E1E9784E207AFC2BA1AB01361D8F8B9483A857FA87C087FA");
-        SmartHome.rooms.put("Спальня","CEE4701A73C8D5113DB40E35CDA9ECBDB6FC2CDCFF8CFD73A1ADEB2607C67AD7");
-        SmartHome.rooms.put("Душ","B9AC4386E4621FE3F21AC35537D5F52CA9028F5406F599788E0F328329E2E02F");
-
         log.info("--- SERVER START ---");
         Server.start();
     }

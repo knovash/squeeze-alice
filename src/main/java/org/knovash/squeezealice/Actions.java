@@ -3,6 +3,7 @@ package org.knovash.squeezealice;
 import lombok.extern.log4j.Log4j2;
 
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.Objects;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -11,27 +12,9 @@ import static org.knovash.squeezealice.Main.*;
 @Log4j2
 public class Actions {
 
-    // Алиса, музыку громче\тише
+    // Алиса, музыку громче\тише для Tasker. переделать для up dn
     public static void volumeByQuery(Player player, String value) {
         player.volume(value);
-//        Integer step;
-//        Integer volumeAlicePrevious = player.volume_alice_previous;
-//        Integer volumeAliceCurrent = Integer.valueOf(value);
-//        Integer playerCurrentVolume = Integer.valueOf(player.volume());
-//        if (playerCurrentVolume == null) {
-//            log.info("LMS NO RESPONSE");
-//            return;
-//        }
-//        step = player.volume_step;
-//        if (playerCurrentVolume < 10) step = 1 + Math.round(playerCurrentVolume / 2);
-//        log.info("VOLUME: (alice) " + value + " PLAYER: " + player.name + " current=" + volumeAliceCurrent + " last=" + volumeAlicePrevious + " low=" + player.volume_alice_low + " hi=" + player.volume_alice_high);
-//        if ((volumeAliceCurrent > volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_high))) {
-//            player.volume("+" + step);
-//        }
-//        if (playerCurrentVolume > 1 && ((volumeAliceCurrent < volumeAlicePrevious) || (volumeAliceCurrent.equals(player.volume_alice_low)))) {
-//            player.volume("-" + step);
-//        }
-//        player.volume_alice_previous = volumeAliceCurrent;
     }
 
     // Алиса, включи канал
@@ -73,9 +56,10 @@ public class Actions {
             log.info("SYNC TO PLAYING");
             player
 //                    .sync(playing.name)
-                    .play(playing.path()) // времнная замена синхронизации пока не починят
+                    .play(playing.path()) // времнная замена синхронизации di.fm пока не починят
                     .saveLastTime();
-
+//  https://forums.slimdevices.com/forum/user-forums/logitech-media-server/1673928-logitech-media-server-8-4-0-released?p=1675699#post1675699
+//  https://github.com/Logitech/slimserver/issues/993
         }
         // не играет +  нет играющей  = вэйк, сет, ластплэй
         if (!mode.equals("play") && playing == null) {
@@ -111,17 +95,6 @@ public class Actions {
         player
                 .unsync()
                 .pause();
-
-//        if (player.mode().equals("play")) {
-//            // если колонка играет - выключить её
-//            player
-//                    .unsync()
-//                    .pause();
-//        } else {
-//            // если колонка не играет - выключить все остальные
-//            turnOffMusic();
-//        }
-
     }
 
     public static String toggleMusic(Player player) {
@@ -132,7 +105,7 @@ public class Actions {
         return "MUSIC TOGGLE: " + mode;
     }
 
-    // Алиса, все тихо/громко
+    // Алиса, все тихо/громко НЕИСПОЛЬЗУЕТЬСЯ
     public static void allLowOrHigh(String mute) {
         switch (mute) {
             case ("1"):
@@ -146,21 +119,10 @@ public class Actions {
         }
     }
 
-    // Алиса, включи Спотифай
-    public static void turnOnSpotify(Player player) {
-        log.info("TURN ON SPOTIFY " + player.name + " MAC " + player.mac);
-        String mac = player.mac;
-        mac = mac.replace(":", "%3A");
-        String uri = "http://" + lmsIP + ":9000/plugins/spotty/index.html?index=10.1&player=" + mac + "&sess=";
-        Requests.getByUriForStatus(uri);
-    }
-
     public static boolean timeExpired(Player player) {
-//        return false;
         log.info("CHECK IF TIME EXPIRED");
         long delay = 10;
         if (player.lastPlayTimeStr == null) return true;
-
         LocalTime playerTime = LocalTime.parse(player.lastPlayTimeStr).truncatedTo(MINUTES);
         LocalTime nowTime = LocalTime.now().truncatedTo(MINUTES);
         log.info("PLAYER LAST TIME: " + playerTime);
@@ -170,5 +132,16 @@ public class Actions {
         log.info("LONG DIFFERENCE: " + diff);
         log.info("EXP BOOL: " + (diff > delay));
         return (diff > delay);
+    }
+
+    public static void favoritePrev(Player player, HashMap<String, String> parameters) {
+        Integer time = Integer.valueOf(parameters.get("time"));
+        player.play(1);
+        player.timeVolume.remove(time);
+    }
+
+    public static void favoriteNext(Player player, HashMap<String, String> parameters) {
+        Integer time = Integer.valueOf(parameters.get("time"));
+        player.timeVolume.remove(time);
     }
 }
