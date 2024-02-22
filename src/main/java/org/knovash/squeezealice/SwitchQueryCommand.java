@@ -183,7 +183,7 @@ public class SwitchQueryCommand {
 //                break;
             case ("spoti_refresh"):
                 log.info("SPOTIFY AUTH REFRESH");
-                SpotifyAuth.runRequestRefresh();
+                SpotifyAuth.requestRefresh();
                 response = Html.index();
                 break;
             case ("transfer"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=transfer

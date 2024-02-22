@@ -92,7 +92,7 @@ public class Handler implements HttpHandler {
                 break;
             case ("/spoti_refresh"):
                 log.info("SPOTI AUTH");
-                context = SpotifyAuth.requestRefresh(context);
+                SpotifyAuth.requestRefresh();
                 break;
             case ("/spoti_callback"):
                 log.info("SPOTI CALLBACK");

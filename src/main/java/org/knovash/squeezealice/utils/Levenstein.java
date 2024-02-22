@@ -32,6 +32,18 @@ public class Levenstein {
         return finalElement;
     }
 
+    public static String getNearestElementInListW(String value, List<String> list) {
+        filalDistance = 100;
+        if (Utils.isCyrillic(value) && !Utils.isCyrillic(list.get(0))) {
+            value = Utils.convertCyrilic(value);
+        }
+        String finalValue = value;
+        list.stream().forEach(name -> Levenstein.compareWordAndWord(finalValue, name));
+
+        if (filalDistance > 5) finalElement = null;
+        return finalElement;
+    }
+
     public static int compareWordAndFrase(String val, String frase) {
         int d = Arrays.stream(frase.split(" "))
                 .map(word -> dist(val.toLowerCase().toCharArray(), word.toLowerCase().toCharArray()))

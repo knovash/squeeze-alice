@@ -5,8 +5,6 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.Requests;
-import org.knovash.squeezealice.spotify.spotify_pojo.SpotifyCredentials;
 import org.knovash.squeezealice.spotify.spotify_pojo.Type;
 import org.knovash.squeezealice.spotify.spotify_pojo.spotify_albums.SpotifyAlbums;
 import org.knovash.squeezealice.spotify.spotify_pojo.spotify_artists.SpotifyArtists;
@@ -16,9 +14,9 @@ import org.knovash.squeezealice.spotify.spotify_pojo.spotify_tracks.SpotifyRespo
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
-import static org.knovash.squeezealice.Main.lmsIP;
 import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
@@ -34,11 +32,10 @@ public class Spotify {
         String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + type + "&limit=" + limit;
         log.info("URI: " + uri);
         String json = SpotifyRequests.requestForLinkJson(uri);
+        if (json == null) SpotifyAuth.requestRefresh();
+        json = SpotifyRequests.requestForLinkJson(uri);
         if (json == null) return null;
-
-        json = json.replace("\\\"", "");
-//  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
-
+        json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         switch (type.toString()) {
             case ("album"):
                 log.info("ALBUM");
@@ -99,7 +96,7 @@ public class Spotify {
         };
         String responseBody = SpotifyRequests.requestHttpClient(uri, headers);
         if (responseBody.equals("401")) { // no auth - try  get refresh token
-            SpotifyAuth.runRequestRefresh();
+//            SpotifyAuth.runRequestRefresh();
             responseBody = SpotifyRequests.requestHttpClient(uri, headers);
         }
         log.info("PLAYER STATE CONT: " + responseBody);
@@ -107,25 +104,37 @@ public class Spotify {
     }
 
     public static String transfer(Player player) {
-        log.info("TRANSFER START");
-        lmsPlayers.update();
+        log.info("TRANSFER START " + player.name + " " + player.mac);
+        lmsPlayers.updateMac();
         String mac = player.mac;
         mac = mac.replace(":", "%3A");
-        try {
-            Runtime.getRuntime().exec("sh transfer.sh " + mac);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        log.info("MAC " + player.name + " " + mac);
+        String url = "http://192.168.1.110:9000/plugins/spotty/index.html?index=10.1&" +
+                "player=" + mac + "&sess=";
+
+        requestHttpUrlConnectionGet("GET", url);
+//        HttpURLConnection con = null;
+//        try {
+//            con = (HttpURLConnection) new URL(url).openConnection();
+//            con.setRequestMethod("GET");
+//            con.getInputStream();
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
         log.info("TRANSFER FINISH");
         return "переключаю spotify на " + player.name;
     }
 
-    // Алиса, включи Спотифай НЕРАБОТАЕТ
-    public static void transfer1(Player player) {
-        log.info("TURN ON SPOTIFY " + player.name + " MAC " + player.mac);
-        String mac = player.mac;
-        mac = mac.replace(":", "%3A");
-        String uri = "http://" + lmsIP + ":9000/plugins/spotty/index.html?index=10.1&player=" + mac + "&sess=";
-        Requests.getToUriForHttpResponse(uri);
+    public static void requestHttpUrlConnectionGet(String method, String url) {
+        log.info("METHOD: " + method + " URL: " + url);
+        HttpURLConnection con = null;
+        try {
+            con = (HttpURLConnection) new URL(url).openConnection();
+            con.setRequestMethod(method);
+            con.getInputStream();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("FINISH");
     }
 }

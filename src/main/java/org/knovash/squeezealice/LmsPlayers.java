@@ -78,9 +78,9 @@ public class LmsPlayers {
         for (int index = 0; index < counter; index++) {
             String name = Player.name(Integer.toString(index));
             String id = Player.id(Integer.toString(index));
-            lmsPlayers.getPlayerByName(name).mac = id;
+            if (lmsPlayers.getPlayerByName(name) != null) lmsPlayers.getPlayerByName(name).mac = id;
         }
-       write();
+        write();
     }
 
     public void clear() {

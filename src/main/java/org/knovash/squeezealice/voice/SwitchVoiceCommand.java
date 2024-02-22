@@ -82,10 +82,10 @@ public class SwitchVoiceCommand {
     private static String selectPlayerInRoom(String command) {
         log.info("ACTION SELECT PLAYER IN ROOM");
         String target = command.replaceAll(".*колонку\\S*\\s", "").replaceAll("\"", "").replaceAll("\\s\\s", " ");
-        log.info("target levenstein nearest: " + target);
+        log.info("target: " + target);
         List<String> playerNames = lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList());
         log.info("players names in lms: " + playerNames);
-        String playerNewName = Levenstein.getNearestElementInList(target, playerNames); // найти имя плеера по имени из фразы
+        String playerNewName = Levenstein.getNearestElementInListW(target, playerNames); // найти имя плеера по имени из фразы
         if (playerNewName == null) return "нет такого плеера";
         log.info("найдено имя НОВОГО плеера " + playerNewName);
         String playerNowName = SmartHome.getLmsNameByAliceId(alice_id);

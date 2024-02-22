@@ -186,6 +186,7 @@ public class Html {
                                 checkPlayerOnlineInLms(p.name) + " - " +
                                 checkPlayerConnectInSmartHome(p.name) +
                                 "<br>" +
+                                "<p> main: "+p.main+"</p>" +
                                 "<input name=\"step\" id=\"step\" value=\"" + p.volume_step + "\" />" +
                                 "<label for=\"step\"> шаг громкости</label>" +
                                 "<br>" +
