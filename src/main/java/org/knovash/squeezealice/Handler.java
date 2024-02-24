@@ -90,10 +90,10 @@ public class Handler implements HttpHandler {
                 log.info("SPOTI AUTH");
                 context = SpotifyAuth.requestUserAuthorization(context);
                 break;
-            case ("/spoti_refresh"):
-                log.info("SPOTI AUTH");
-                SpotifyAuth.requestRefresh();
-                break;
+//            case ("/spoti_refresh"):
+//                log.info("SPOTI AUTH");
+//                SpotifyAuth.requestRefresh();
+//                break;
             case ("/spoti_callback"):
                 log.info("SPOTI CALLBACK");
                 context = SpotifyAuth.callback(context);

@@ -40,11 +40,8 @@ public class SwitchVoiceCommand {
             return createResponse("я не поняла команду");
         if (command.contains("комната"))
             return createResponse(thisRoomIsName(command));
-
         if (room == null) return createResponse("скажите навыку: это комната и название комнаты");
-
         Device device = SmartHome.getDeviceByRoom(room);
-
         if (device == null) return createResponse("я не нашла колонку в комнате " + room);
         Player player = lmsPlayers.getPlayerByName(device.customData.lmsName);
         if (player == null)
@@ -56,8 +53,12 @@ public class SwitchVoiceCommand {
             return createResponse(Spotify.transfer(player));
         if (command.contains("включи") && (command.contains("канал") || command.contains("избранное")))
             return createResponse(channel(command, player));
-        if (command.contains("включи") && !(command.contains("канал") || command.contains("избранное")))
+        if (command.contains("включи") && // включи {исполнитель}
+                !(command.contains("альбом") || command.contains("канал") || command.contains("избранное")))
             return createResponse(spotifyPlayArtist(command, player));
+        if (command.contains("включи") && command.contains("альбом") && // включи {альбом}
+                !(command.contains("канал") || command.contains("избранное")))
+            return createResponse(spotifyPlayAlbum(command, player));
         if (command.contains("громкость"))
             return createResponse(volume(player));
         if (command.contains("что") && command.contains("играет"))
@@ -88,38 +89,16 @@ public class SwitchVoiceCommand {
         String playerNewName = Levenstein.getNearestElementInListW(target, playerNames); // найти имя плеера по имени из фразы
         if (playerNewName == null) return "нет такого плеера";
         log.info("найдено имя НОВОГО плеера " + playerNewName);
-        String playerNowName = SmartHome.getLmsNameByAliceId(alice_id);
-        log.info("найдено имя плеера СЕЙЧАС " + playerNowName);
-        Player playerNow = lmsPlayers.getPlayerByName(playerNowName); // плеер сейчас в комнате
-        Player playerNew = lmsPlayers.getPlayerByName(playerNewName); // взять плеер по имени из фразы
-        log.info("ВКЛЮЧИТЬ НОВЫЙ ПЛЕЕР " + playerNew.name);
-        Actions.turnOnMusicSpeaker(playerNew);
-        log.info("ВыКЛЮЧИТЬ СЕЙЧАС ПЛЕЕР " + playerNow.name);
-        playerNow.unsync().pause();
-        log.info("заменить плеер " + playerNow.name + " на " + playerNew.name);
-        Device deviceNow = SmartHome.getDeviceByRoom(room);
+        Device deviceNow = SmartHome.getDeviceByAliceId(alice_id);
+        if (deviceNow == null) return "плеер " +playerNewName + "не подключен к навыку";
         Device deviceNew = SmartHome.getDeviceByLmsName(playerNewName);
-        log.info("deviceNow " + deviceNow.customData.lmsName + " " + deviceNow.id + " " + deviceNow.room);
-        log.info("deviceNew " + deviceNew.customData.lmsName + " " + deviceNew.id + " " + deviceNew.room);
-        String idNow = deviceNow.id;
-        String roomNow = deviceNow.room;
-        String idNew = deviceNew.id;
-        String roomNew = deviceNew.room;
-        log.info("сейчас ид " + idNow);
-        log.info("сейчас рум " + roomNow);
-        log.info("новый ид " + idNew);
-        log.info("новый рум " + roomNew);
-        SmartHome.logListStringDevices();
-        SmartHome.devices.remove(deviceNew);
-        SmartHome.devices.remove(deviceNow);
-        SmartHome.logListStringDevices();
-        deviceNew.id = idNow;
-        deviceNow.id = idNew;
-        deviceNew.room = roomNow;
-        deviceNow.room = roomNew;
-        SmartHome.devices.add(deviceNew);
-        SmartHome.devices.add(deviceNow);
-        SmartHome.logListStringDevices();
+        String playerNowName =  deviceNow.customData.lmsName;
+        deviceNow.customData.lmsName = playerNewName;
+        if (deviceNew != null) deviceNew.customData.lmsName = playerNowName;
+        Player playerNow = lmsPlayers.getPlayerByName(playerNowName);
+        Player playerNew = lmsPlayers.getPlayerByName(playerNewName);
+        Actions.turnOnMusicSpeaker(playerNew);
+        playerNow.unsync().pause();
         return "выбран плеер " + playerNewName + " в комнате " + SmartHome.getRoomByPlayerName(playerNewName);
     }
 
@@ -154,11 +133,20 @@ public class SwitchVoiceCommand {
         String link = Spotify.getLink(target, Type.playlist);
         log.info("LINK SPOTIFY: " + link);
         if (link == null) return "настройте спотифай";
-//        if (link == null) {
-//            answer = "ничего не нашла";
-//            return answer;
-//        }
         player.shuffleon().play(link);
+        answer = "сейчас, мой господин, включаю " + target;
+        return answer;
+    }
+
+    private static String spotifyPlayAlbum(String command, Player player) {
+        String answer;
+        String target;
+        target = command.replaceAll(".*включи\\S*\\s", "").replaceAll("\"", "").replaceAll("\\s\\s", " ");
+        log.info("TARGET SPOTIFY: " + target);
+        String link = Spotify.getLink(target, Type.album);
+        log.info("LINK SPOTIFY: " + link);
+        if (link == null) return "настройте спотифай";
+        player.shuffleoff().play(link);
         answer = "сейчас, мой господин, включаю " + target;
         return answer;
     }

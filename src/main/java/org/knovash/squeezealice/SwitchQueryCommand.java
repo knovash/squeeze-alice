@@ -157,35 +157,15 @@ public class SwitchQueryCommand {
                 lmsPlayers.write();
                 response = Html.formPlayers();
                 break;
-            case ("reboot_service_sa"):
-                log.info("PLAYER REMOVE");
-                Utils.rebootServiceSa();
-                response = Html.index();
-                break;
-            case ("reboot_localhost"):
-                log.info("PLAYER REMOVE");
-                Utils.rebootLocalhost();
-                response = Html.index();
-                break;
-            case ("reboot_service_lms"):
-                log.info("PLAYER REMOVE");
-                Utils.rebootServiceLms();
-                response = Html.index();
-                break;
-            case ("spoti_state"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=spoti_state
-                log.info("SPOTIFY PLAYER STATE");
-                response = Spotify.getPlayerState();
-                break;
-//            case ("spoti_auth"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=spoti_auth
-//                log.info("SPOTIFY AUTH ACTION");
-//                SpotifyAuth.();
+//            case ("spoti_state"):
+//                log.info("SPOTIFY PLAYER STATE");
+//                response = Spotify.getPlayerState();
+//                break;
+//            case ("spoti_refresh"):
+//                log.info("SPOTIFY AUTH REFRESH");
+//                SpotifyAuth.requestRefresh();
 //                response = Html.index();
 //                break;
-            case ("spoti_refresh"):
-                log.info("SPOTIFY AUTH REFRESH");
-                SpotifyAuth.requestRefresh();
-                response = Html.index();
-                break;
             case ("transfer"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=transfer
                 log.info("SPOTIFY TRANSFER");
                 Spotify.transfer(player);
@@ -202,7 +182,3 @@ public class SwitchQueryCommand {
         return context;
     }
 }
-
-//        reboot_service_sa>Пер
-//        reboot_localhost>Пере
-//        reboot_service_lms>Пе

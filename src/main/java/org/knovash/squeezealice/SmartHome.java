@@ -32,19 +32,19 @@ public class SmartHome {
         return devices.stream().filter(d -> d.customData.lmsName.equals(lmsName)).findFirst().orElse(null);
     }
 
+    public static Device getDeviceByRoom(String room) {
+        log.info("ROOM: " + room);
+        return devices.stream()
+                .filter(d -> d.room.toLowerCase().equals(room.toLowerCase()))
+                .findFirst().orElse(null);
+    }
+
     public static Device getDeviceByRoomLevenstein(String room) {
         log.info("room " + room);
         List<String> rooms = devices.stream().map(device -> device.room).collect(Collectors.toList());
         room = Levenstein.getNearestElementInList(room, rooms);
-        String finalRoom = room;
-        return devices.stream().filter(d -> d.room.toLowerCase().equals(finalRoom.toLowerCase())).findFirst().orElse(null);
+        return getDeviceByRoom(room);
     }
-
-    public static Device getDeviceByRoom(String room) {
-        log.info("ROOM: " + room);
-        return devices.stream().filter(d -> d.room.toLowerCase().equals(room.toLowerCase())).findFirst().orElse(null);
-    }
-
 
     public static String getRoomByPlayerName(String playerName) {
         log.info("PLAYER NAME: " + playerName);
@@ -56,22 +56,18 @@ public class SmartHome {
     public static String getRoomByAliceId(String aliceId) {
         log.info("ALICE ID: " + aliceId);
         Map.Entry<String, String> entry = SmartHome.rooms.entrySet().stream()
-                .filter(r -> r.getValue().equals(aliceId))
-                .findFirst()
-                .orElse(null);
+                .filter(r -> r.getValue().equals(aliceId)).findFirst().orElse(null);
         if (entry == null) return null;
         return entry.getKey();
     }
 
-    public static String getLmsNameByAliceId(String aliceId) {
+    public static Device getDeviceByAliceId(String aliceId) {
         getRoomByAliceId(aliceId);
         log.info("aliceId " + aliceId);
         Map.Entry<String, String> entry = SmartHome.rooms.entrySet().stream()
-                .filter(r -> r.getValue().equals(aliceId))
-                .findFirst()
-                .orElse(null);
+                .filter(r -> r.getValue().equals(aliceId)).findFirst().orElse(null);
         if (entry == null) return null;
-        return SmartHome.getDeviceByRoom(entry.getKey()).customData.lmsName;
+        return SmartHome.getDeviceByRoom(entry.getKey());
     }
 
     public static void read() {
