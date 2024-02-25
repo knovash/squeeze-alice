@@ -15,7 +15,6 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
@@ -236,13 +235,6 @@ public class Utils {
         return null;
     }
 
-//    public static Map<String, String> stringToMap(String text) {
-//        return Arrays.stream(text.split(","))
-//                .map(s -> s.replace(" ", ""))
-//                .map(s -> s.split(":"))
-//                .collect(Collectors.toMap(s -> s[0], s -> s[1]));
-//    }
-
     public static Map<Integer, Integer> stringSplitToIntMap(String text, String split1, String split2) {
         return Arrays.stream(text.split(split1))
                 .map(s -> s.split(split2))
@@ -260,16 +252,6 @@ public class Utils {
         Path filePath = Path.of(path);
         String content = Files.readString(filePath);
         return content;
-    }
-
-    public static String timeToString(LocalTime time) {
-        String timeStr = time.toString();
-        return timeStr;
-    }
-
-    public static LocalTime stringToTime(String timeStr) {
-        LocalTime time = LocalTime.parse(timeStr);
-        return time;
     }
 
     public static void sleep(int time) {
@@ -294,44 +276,5 @@ public class Utils {
             }
         }
         return builder.toString();
-    }
-
-    public static void rebootLocalhost() {
-        log.info("REBOOT LOCALHOST");
-        ProcessBuilder pb = new ProcessBuilder("mkdir /home/konstantin/Documents/qqqqq");
-        pb.inheritIO();
-//        pb.directory(new File("bin"));
-        try {
-            pb.start();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        log.info("REBOOT OK");
-    }
-
-    public static void rebootServiceSa() {
-        log.info("REBOOT SERVICE SA");
-        ProcessBuilder pb = new ProcessBuilder("mkdir /home/konstantin/Documents/qqqqq");
-        pb.inheritIO();
-//        pb.directory(new File("bin"));
-        try {
-            pb.start();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        log.info("REBOOT OK");
-    }
-
-    public static void rebootServiceLms() {
-        log.info("REBOOT SERVICE LMS");
-        ProcessBuilder pb = new ProcessBuilder("mkdir /home/konstantin/Documents/qqqqq");
-        pb.inheritIO();
-//        pb.directory(new File("bin"));
-        try {
-            pb.start();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        log.info("REBOOT OK");
     }
 }

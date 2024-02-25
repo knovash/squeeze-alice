@@ -31,7 +31,6 @@ public class Player {
     public String lastPath;
     public String lastPlayTimeStr;
     public String nameInQuery;
-    public Boolean main;
 
     public static String lastStrPath;
     public static String lastPathGlobal;
@@ -46,7 +45,6 @@ public class Player {
         this.volume_high = 25;
         this.wake_delay = 10000;
         this.black = false;
-        this.main = false;
         this.timeVolume = new HashMap<>(Map.of(
                 0, 5,
                 7, 10,

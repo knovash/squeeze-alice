@@ -38,7 +38,7 @@ public class LmsPlayers {
 
     public List<String> favorites() {
         String playerName = lmsPlayers.players.get(0).name;
-        Response response = Requests.postToLmsForContent(RequestParameters.favorites("HomePod").toString());
+        Response response = Requests.postToLmsForContent(RequestParameters.favorites(playerName).toString());
         List<String> playlist = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
         return playlist;
     }

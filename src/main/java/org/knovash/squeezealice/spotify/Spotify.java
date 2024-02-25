@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 @Data
@@ -109,18 +109,8 @@ public class Spotify {
         String mac = player.mac;
         mac = mac.replace(":", "%3A");
         log.info("MAC " + player.name + " " + mac);
-        String url = "http://192.168.1.110:9000/plugins/spotty/index.html?index=10.1&" +
-                "player=" + mac + "&sess=";
-
+        String url = "http://" + lmsIP + ":" + lmsPort + "/plugins/spotty/index.html?index=10.1&" + "player=" + mac + "&sess=";
         requestHttpUrlConnectionGet("GET", url);
-//        HttpURLConnection con = null;
-//        try {
-//            con = (HttpURLConnection) new URL(url).openConnection();
-//            con.setRequestMethod("GET");
-//            con.getInputStream();
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
         log.info("TRANSFER FINISH");
         return "переключаю spotify на " + player.name;
     }
