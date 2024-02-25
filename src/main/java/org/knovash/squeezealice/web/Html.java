@@ -30,12 +30,12 @@ public class Html {
                 "<p><a href=\\cmd?action=state_devices>Посмотреть настройки Devices</a></p> \n" +
                 "<p><a href=\\cmd?action=state_players>Посмотреть настройки Players</a></p> \n" +
                 "<p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
-                "<p>-------</p> \n" +
-                "<p><a href=\\spoti_auth>Spotify Auth</a></p> \n" +
-                "<p><a href=\\spoti_refresh>Spotify Auth Refresh direct</a></p> \n" +
-                "<p><a href=\\cmd?action=spoti_refresh>Spotify Auth Refresh cmd</a></p> \n" +
-                "<p><a href=\\cmd?action=spoti_state>Spotify state</a></p> \n" +
-                "<p><a href=\\cmd?action=transfer>Spotify transfer</a></p> \n" +
+//                "<p>-------</p> \n" +
+//                "<p><a href=\\spoti_auth>Spotify Auth</a></p> \n" +
+//                "<p><a href=\\spoti_refresh>Spotify Auth Refresh direct</a></p> \n" +
+//                "<p><a href=\\cmd?action=spoti_refresh>Spotify Auth Refresh cmd</a></p> \n" +
+//                "<p><a href=\\cmd?action=spoti_state>Spotify state</a></p> \n" +
+//                "<p><a href=\\cmd?action=transfer>Spotify transfer</a></p> \n" +
                 "</body>\n" +
                 "</html>";
         return page;
