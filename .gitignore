@@ -3,6 +3,7 @@ target
 build
 log
 ignor
+my_settings
 squeeze-alice-pak
 
 *.class
