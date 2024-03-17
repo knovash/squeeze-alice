@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 # sudo chmod +x *.sh
-#ssh root@192.168.1.123 systemctl daemon-reload
-ssh root@192.168.1.123 systemctl restart squeeze-alice.service
+
+echo -e ${BGreen}"READ FROM set_remote_ip.txt"${NC}
+remote=`cat set_remote_ip.txt`
+echo -e ${BGreen}"REMOTE IP "$remote${NC}
+# $remote
+
+#ssh root@$remote systemctl daemon-reload
+ssh root@$remote systemctl restart squeeze-alice.service
 
