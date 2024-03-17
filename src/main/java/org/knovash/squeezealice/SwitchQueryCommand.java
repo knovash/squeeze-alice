@@ -28,38 +28,51 @@ public class SwitchQueryCommand {
         Player player = lmsPlayers.getPlayerByNameInQuery(queryParams.get("player"));
         String value = queryParams.get("value");
         switch (action) {
-            case ("channel"): // TASKER
-                Actions.channel(player, Integer.valueOf(value));
-                response = "CHANNEL COMPLETE";
+            case ("channel"): // TASKER %SERVER2/cmd?action=channel&player=%playername&value=%channel
+                Actions.playChannel(player, Integer.valueOf(value));
+                response = "CHANNEL OK";
                 break;
-            case ("volume"): // TASKER
-                Actions.volumeByQuery(player, value); // переделать для up dn
-                response = "VOLUME COMPLETE";
+            case ("play"): // TASKER %SERVER2/cmd?action=play&player=%playername
+                Actions.turnOnMusic(player);
+                response = "PLAY OK";
                 break;
-            case ("all_low_high"): // TASKER
-                Actions.allLowOrHigh(value);
-                response = "PRESET COMPLETE";
+            case ("play_pause"): // TASKER %SERVER2/cmd?action=play_pause&player=%playername
+            case ("toggle_music"):
+                Actions.toggleMusic(player);
+                response = "PLAY/PAUSE OK";
                 break;
-            case ("turn_on_music"): // TASKER
-                Actions.turnOnMusicSpeaker(player);
-                response = "MUSIC ON COMPLETE";
+            case ("play_pause_all"): // TASKER %SERVER2/cmd?action=play_pause&player=%playername
+            case ("toggle_music_all"):
+                Actions.toggleMusicAll(player);
+                response = "PLAY/PAUSE OK";
                 break;
-            case ("turn_off_music"): // TASKER
-                Actions.turnOffMusic();
-                response = "MUSIC OFF COMPLETE";
+            case ("separate_on"): // TASKER %SERVER2/cmd?action=separate&player=%playername
+                Actions.separate_on(player);
+                response = "SEPARATE ON OK";
                 break;
-            case ("turn_off_speaker"): // TASKER
-                Actions.turnOffSpeaker(player);
-                response = "SPEAKER OFF COMPLETE";
+            case ("separate_off"): // TASKER %SERVER2/cmd?action=separate&player=%playername
+                Actions.separate_alone_off(player);
+                response = "SEPARATE OFF OK";
                 break;
-            case ("toggle_music"): // TASKER
-                response = Actions.toggleMusic(player);
+            case ("separate_alone_off"): // TASKER %SERVER2/cmd?action=separate&player=%playername
+                Actions.separate_alone_off(player);
+                response = "SEPARATE ALONE OFF OK";
                 break;
-            case ("turn_on_spotify"): // TASKER
-                log.info("SPOTIFY");
+
+            case ("alone_on"): // TASKER %SERVER2/cmd?action=alone&player=%playername
+                Actions.alone_on(player);
+                response = "ALONE OK";
+                break;
+            case ("alone_off"): // TASKER %SERVER2/cmd?action=alone&player=%playername
+                Actions.separate_alone_off(player);
+                response = "ALONE OK";
+                break;
+
+            case ("transfer"): // TASKER %SERVER2/cmd?action=transfer&player=%playername
                 Spotify.transfer(player);
-                response = "SPOTIFY COMPLETE";
+                response = "TRANSFER OK";
                 break;
+
             case ("log"): // WEB HOME
                 log.info("SHOW LOG");
                 response = Utils.logLastLines(queryParams);
@@ -166,12 +179,15 @@ public class SwitchQueryCommand {
 //                SpotifyAuth.requestRefresh();
 //                response = Html.index();
 //                break;
-            case ("transfer"): // https://unicorn-neutral-badly.ngrok-free.app/cmd?action=transfer
-                log.info("SPOTIFY TRANSFER");
-                Spotify.transfer(player);
-                log.info("SPOTIFY TRANSFER");
-                response = Html.index();
-                log.info("SPOTIFY TRANSFER INDEX OK");
+            case ("restart"):
+                log.info("RESTART SERVER");
+               Utils.restart();
+                response = "RESTART";
+                break;
+            case ("reboot"):
+                log.info("REBOOT SERVER");
+                Utils.reboot();
+                response = "REBOOT";
                 break;
             default:
                 log.info("ACTION NOT FOUND: " + action);
@@ -181,4 +197,7 @@ public class SwitchQueryCommand {
         context.json = response;
         return context;
     }
+
+
+
 }

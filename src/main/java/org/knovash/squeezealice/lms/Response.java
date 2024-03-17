@@ -31,9 +31,11 @@ public class Response {
         public String _artist;
         public String _id;
         public String _syncgroups;
+        public String _url;
         public String count;
         public String title;
         public List<Loop_loop> loop_loop;
+        public List<SyncgroupsLoop> syncgroups_loop;
     }
 
     @Data
@@ -47,5 +49,13 @@ public class Response {
         public String image;
         public int isaudio;
         public int hasitems;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SyncgroupsLoop{
+        public String sync_member_names;
+        public String sync_members;
     }
 }

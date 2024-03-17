@@ -54,7 +54,6 @@ public class Main {
         lmsPlayers.write();
         log.info("PLAYERS: " + lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList()));
 
-        lmsPlayers.updateMac();
         SpotifyAuth.read();
         log.info("BEARER: " + SpotifyAuth.bearer_token);
 

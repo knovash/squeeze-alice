@@ -58,6 +58,10 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"playlist", "name", "?"});
     }
 
+    public static RequestToLms playlisturl(String player) {
+        return RequestToLms.create(player, new String[]{player, "playlist", "url", "?"});
+    }
+
     public static RequestToLms albumname(String player) {
         return RequestToLms.create(player, new String[]{"playlist", "album", "?"});
     }

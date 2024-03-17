@@ -10,7 +10,7 @@ NC='\033[0m' # No Color
 echo -e "\nrun "${BGreen}"STOP SERVER SERVICE"${NC}"\n"
 systemctl stop squeeze-alice.service
 
-rm -r /opt/squeeze-alice*
+#rm -r /opt/squeeze-alice*
 
 cd /root
 

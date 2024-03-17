@@ -35,7 +35,7 @@ public class SpotifyRequests {
             return null;
 //            throw new RuntimeException(e);
         }
-        log.info("JSON: " + json);
+//        log.info("JSON: " + json);
         return json;
     }
 

@@ -18,12 +18,9 @@ public class DeviceActions {
         String instance = device.capabilities.get(0).state.instance;
         String value = device.capabilities.get(0).state.value;
         Boolean relative = device.capabilities.get(0).state.relative;
-        log.info("ID: " + id);
-        log.info("NAME " + name);
+        log.info("ID: " + id + " NAME " + name);
         log.info("TYPE: " + type);
-        log.info("INSTANCE: " + instance);
-        log.info("VALUE: " + value);
-        log.info("RELATIVE: " + relative);
+        log.info("INSTANCE: " + instance + " VALUE: " + value + " RELATIVE: " + relative);
 
         // обратиться к девайсу и изменить его состояние
         Player player = lmsPlayers.getPlayerByName(name);
@@ -50,13 +47,13 @@ public class DeviceActions {
                 } else {
                     channel = Integer.parseInt(value);
                 }
-                Actions.channel(player, channel);
+                Actions.playChannel(player, channel);
                 SmartHome.lastChannel = channel;
                 break;
             case ("on"):
                 log.info("ON/OFF PLAY/PAUSE " + value);
-                if (value.equals("true")) Actions.turnOnMusicSpeaker(player);
-                if (value.equals("false")) Actions.turnOffSpeaker(player);
+                if (value.equals("true")) Actions.turnOnMusic(player);
+                if (value.equals("false")) Actions.turnOffMusic(player);
                 break;
         }
         log.info("OK");

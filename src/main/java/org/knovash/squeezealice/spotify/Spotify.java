@@ -105,12 +105,13 @@ public class Spotify {
 
     public static String transfer(Player player) {
         log.info("TRANSFER START " + player.name + " " + player.mac);
-        lmsPlayers.updateMac();
+        lmsPlayers.update();
         String mac = player.mac;
         mac = mac.replace(":", "%3A");
         log.info("MAC " + player.name + " " + mac);
         String url = "http://" + lmsIP + ":" + lmsPort + "/plugins/spotty/index.html?index=10.1&" + "player=" + mac + "&sess=";
         requestHttpUrlConnectionGet("GET", url);
+        player.syncAllOtherPlayingToThis();
         log.info("TRANSFER FINISH");
         return "переключаю spotify на " + player.name;
     }

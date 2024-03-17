@@ -52,41 +52,36 @@ public class LmsPlayers {
             return;
         }
         playersOnlineNames = new ArrayList<>();
+//        playersOnline = new ArrayList<>();
         for (int index = 0; index < counter; index++) { // для каждого плеера по id
             String name = Player.name(Integer.toString(index)); // запросить имя
             String id = Player.id(Integer.toString(index)); // запросить id/mac
-            playersOnlineNames.add(name); // добавить плеер в список активных
             if (lmsPlayers.getPlayerByName(name) == null) { // если плеера еще нет в сервере, то добавить
                 log.info("ADD NEW PLAYER: " + name);
                 lmsPlayers.players.add(new Player(name, id));
-            } else {
-                log.info("SKIP PLAYER: " + name);
             }
+            playersOnlineNames.add(name); // добавить плеер в список активных
+//            playersOnline.add(lmsPlayers.getPlayerByName(name)); // добавить плеер в список активных
         }
-        Utils.generatePlayersQueryNames();
+        generatePlayersQueryNames();
         write();
     }
 
-    public void updateMac() {
-        log.info("UPDATE PLAYERS FROM LMS");
-        lmsPlayers.count();
-        Integer counter = lmsPlayers.counter;
-        if (counter == null || counter == 0) {
-            log.info("UPDATE ERROR. NO PLAYERS IN LMS");
-            return;
-        }
-        for (int index = 0; index < counter; index++) {
-            String name = Player.name(Integer.toString(index));
-            String id = Player.id(Integer.toString(index));
-            if (lmsPlayers.getPlayerByName(name) != null) lmsPlayers.getPlayerByName(name).mac = id;
-        }
-        write();
+    public static void generatePlayersQueryNames() {
+//  только в lmsPlayers
+        log.info("PLAYERS QUERY NAMES");
+        lmsPlayers.players.forEach(player -> {
+            player.nameInQuery = player.name
+                    .replace(" ", "")
+                    .replace("_", "")
+                    .toLowerCase();
+        });
     }
 
     public void clear() {
         log.info("CLEAR PLAYERS");
         lmsPlayers.players = new ArrayList<>();
-        Utils.generatePlayersQueryNames();
+        generatePlayersQueryNames();
         write();
     }
 
@@ -124,16 +119,20 @@ public class LmsPlayers {
 
     public Player getPlayingPlayer(String currentName) {
         log.info("Search for playing player...");
-        Player playing = lmsPlayers.players
+
+        Player playing =  lmsPlayers.playersOnlineNames
                 .stream()
-                .filter(player -> player.mode().equals("play"))
+                .map(n -> getPlayerByName(n))
+                .filter(p -> !p.separate)
+                .filter(p -> p.mode().equals("play"))
                 .findFirst()
                 .orElse(null);
-        log.info("PLAYING: " + playing);
+        log.info("PLAYING GET: " + playing);
+        log.info("PLAYING CHECK PATH not silence");
         if (playing == null ||
                 playing.path().equals(silence) ||
                 playing.name.equals(currentName)) {
-            log.info("NO PLAYING");
+            log.info("PLAYING ERROR: null or silence or current name");
             return null;
         } else {
             log.info("PLAYING: " + playing.name);

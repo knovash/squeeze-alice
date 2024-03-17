@@ -49,6 +49,14 @@ public class SwitchVoiceCommand {
         Player.lastAliceId = alice_id;
         if (command.contains("выбери колонку") || command.contains("выбери плеер"))
             return createResponse(selectPlayerInRoom(command));
+
+        if (command.contains("играть отдельно") || command.contains("включи отдельно")|| command.contains("отдельно"))
+            return createResponse(separate_on(player));
+        if (command.contains("играть только тут") || command.contains("включи только тут") || command.contains("только тут"))
+            return createResponse(alone_on(player));
+        if (command.contains("играть вместе") || command.contains("включи вместе") || command.contains("вместе"))
+            return createResponse(separate_alone_off(player));
+
         if (command.contains("переключи") && (command.contains("spotify") || command.contains("спотифай")))
             return createResponse(Spotify.transfer(player));
         if (command.contains("включи") && (command.contains("канал") || command.contains("избранное")))
@@ -97,8 +105,9 @@ public class SwitchVoiceCommand {
         if (deviceNew != null) deviceNew.customData.lmsName = playerNowName;
         Player playerNow = lmsPlayers.getPlayerByName(playerNowName);
         Player playerNew = lmsPlayers.getPlayerByName(playerNewName);
-        Actions.turnOnMusicSpeaker(playerNew);
+        Actions.turnOnMusic(playerNew);
         playerNow.unsync().pause();
+        SmartHome.write();
         return "выбран плеер " + playerNewName + " в комнате " + SmartHome.getRoomByPlayerName(playerNewName);
     }
 
@@ -118,7 +127,7 @@ public class SwitchVoiceCommand {
             // найдена
             log.info("ROOM: " + device.room);
             String playerName = device.customData.lmsName;
-            answer = "это комната " + device.room + " с колонкой" + playerName;
+            answer = "это комната " + device.room + " с колонкой " + playerName;
             SmartHome.rooms.put(room, alice_id);
             SmartHome.write();
         }
@@ -133,7 +142,7 @@ public class SwitchVoiceCommand {
         String link = Spotify.getLink(target, Type.playlist);
         log.info("LINK SPOTIFY: " + link);
         if (link == null) return "настройте спотифай";
-        player.shuffleon().play(link);
+        Actions.playSpotify(player, link);
         answer = "сейчас, мой господин, включаю " + target;
         return answer;
     }
@@ -146,7 +155,7 @@ public class SwitchVoiceCommand {
         String link = Spotify.getLink(target, Type.album);
         log.info("LINK SPOTIFY: " + link);
         if (link == null) return "настройте спотифай";
-        player.shuffleoff().play(link);
+        Actions.playSpotify(player, link);
         answer = "сейчас, мой господин, включаю " + target;
         return answer;
     }
@@ -164,7 +173,7 @@ public class SwitchVoiceCommand {
         int index = playlist.indexOf(channel) + 1;
         answer = "сейчас, мой господин, включаю канал " + index + ", " + channel;
         log.info("INDEX: " + index);
-        player.play(index);
+        Actions.playChannel(player,index);
         return answer;
     }
 
@@ -178,17 +187,26 @@ public class SwitchVoiceCommand {
     }
 
     private static String whatsPlaying(Player player) {
-        String answer;
+        String answer = "";
         log.info("WATS PLAYING");
         String playlist = player.playlistname();
+
+        String playlistUrl = player.playlistUrl();
+        log.info("PLAYLIST URL: " + playlistUrl);
+
         String mode = player.mode();
         if (playlist == null) playlist = player.artistname();
         if (playlist == null) return createResponse("медиасервер не отвечает");
         log.info("PLAYLIST: " + playlist);
+
+        String separate = "";
+        if (player.separate) separate = "отдельно ";
+
         if (mode.equals("play")) {
-            answer = "сейчас на " + player.name + " играет " + playlist + " громкость " + player.volume();
-        } else {
-            answer = "сейчас на " + player.name + " не играет " + playlist;
+            answer = "сейчас на " + player.name + " играет " + separate + playlist + " громкость " + player.volume();
+        }
+        if (!mode.equals("play")) {
+            answer = "сейчас на " + player.name + " не играет " + separate + playlist;
         }
         return answer;
     }
@@ -198,6 +216,29 @@ public class SwitchVoiceCommand {
         log.info("NEXT TRACK");
         player.nexttrack();
         answer = "включаю следующий";
+        return answer;
+    }
+
+    private static String separate_on(Player player) {
+        String answer;
+        log.info("SEPARATE ON");
+        Actions.separate_on(player);
+        answer = "включаю отдельно " + player.name;
+        return answer;
+    }
+    private static String alone_on(Player player) {
+        String answer;
+        log.info("ALONE ON");
+        Actions.alone_on(player);
+        answer = "включаю только тут на " + player.name;
+        return answer;
+    }
+    private static String separate_alone_off(Player player) {
+        String answer;
+        log.info("SEPARATE ALONE OFF");
+        Actions.separate_alone_off(player);
+//        player.syncAllOtherPlaying();
+        answer = "включаю вместе " + player.name;
         return answer;
     }
 }

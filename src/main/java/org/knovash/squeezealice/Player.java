@@ -26,7 +26,9 @@ public class Player {
     public Integer volume_low;
     public Integer volume_high;
     public Integer wake_delay;
-    public boolean black;
+    public boolean black = false;
+    public boolean separate = false;
+//    public boolean alone = false;
     public Map<Integer, Integer> timeVolume;
     public String lastPath;
     public String lastPlayTimeStr;
@@ -47,8 +49,8 @@ public class Player {
         this.black = false;
         this.timeVolume = new HashMap<>(Map.of(
                 0, 5,
-                7, 10,
-                8, 15,
+                7, 5,
+                9, 10,
                 20, 10,
                 22, 5));
     }
@@ -74,6 +76,13 @@ public class Player {
         return response.result._mode;
     }
 
+    public List<Response.SyncgroupsLoop> syncgroups() {
+        Response response = Requests.postToLmsForContent(RequestParameters.syncgroups().toString());
+        if (response == null) return null;
+        log.info("SYNCGROUPS: " + response.result.syncgroups_loop);
+        return response.result.syncgroups_loop;
+    }
+
     public String path() {
         Response response = Requests.postToLmsForContent(RequestParameters.path(this.name).toString());
         if (response == null) return "";
@@ -86,6 +95,14 @@ public class Player {
         if (response == null) return null;
         log.info("PLAYER: " + this.name + " PLAYLIST: " + response.result._name);
         return response.result._name;
+    }
+
+    public String playlistUrl() {
+        Response response = Requests.postToLmsForContent(RequestParameters.playlisturl(this.name).toString());
+        if (response == null) return null;
+        log.info(response.result.toString());
+        log.info("PLAYER: " + this.name + " PLAYLIST: " + response.result._url);
+        return response.result._url;
     }
 
     public String albumname() {
@@ -124,11 +141,17 @@ public class Player {
         return this;
     }
 
+    public Player play() {
+        log.info("PLAYER: " + this.name + " PLAY");
+        String status = Requests.postToLmsForStatus(RequestParameters.play(this.name).toString());
+        log.info("STATUS: " + status);
+        return this;
+    }
+
     public Player play(Integer channel) {
         log.info("PLAYER: " + this.name + " PLAY CHANNEL: " + channel);
         String status = Requests.postToLmsForStatus(RequestParameters.play(this.name, channel - 1).toString());
         log.info("STATUS: " + status);
-        this.saveLastPath();
         return this;
     }
 
@@ -136,7 +159,6 @@ public class Player {
         log.info("PLAYER: " + this.name + " PLAY PATH: " + path);
         String status = Requests.postToLmsForStatus(RequestParameters.play(this.name, path).toString());
         log.info("STATUS: " + status);
-        this.saveLastPath();
         return this;
     }
 
@@ -147,20 +169,10 @@ public class Player {
         return this;
     }
 
-    public Player play() {
-        log.info("PLAYER: " + this.name + " PLAY");
-        String status = Requests.postToLmsForStatus(RequestParameters.play(this.name).toString());
-        log.info("STATUS: " + status);
-        this.saveLastPath();
-        return this;
-    }
-
     public Player pause() {
         log.info("PLAYER: " + this.name + " PAUSE");
         String status = Requests.postToLmsForStatus(RequestParameters.pause(this.name).toString());
         log.info("STATUS: " + status);
-        this.saveLastPath();
-        this.saveLastTimeIfPlay();
         return this;
     }
 
@@ -168,7 +180,6 @@ public class Player {
         log.info("PLAYER: " + this.name + " PLAY/PAUSE");
         String status = Requests.postToLmsForStatus(RequestParameters.play_pause(this.name).toString());
         log.info("STATUS: " + status);
-        this.saveLastPath();
         return this;
     }
 
@@ -176,7 +187,6 @@ public class Player {
         log.info("PLAYER: " + this.name + " NEXT");
         String status = Requests.postToLmsForStatus(RequestParameters.prevtrack(this.name).toString());
         log.info("STATUS: " + status);
-        this.saveLastPath();
         return this;
     }
 
@@ -184,7 +194,6 @@ public class Player {
         log.info("PLAYER: " + this.name + " NEXT");
         String status = Requests.postToLmsForStatus(RequestParameters.nexttrack(this.name).toString());
         log.info("STATUS: " + status);
-        this.saveLastPath();
         return this;
     }
 
@@ -202,10 +211,23 @@ public class Player {
         return this;
     }
 
-    public Player sync(String toPlayer) {
-        log.info("PLAYER: " + this.name + " SYNC TO: " + toPlayer);
-//        String status = Requests.postByJsonForStatus(RequestParameters.sync(this.name, toPlayer).toString());
-//        log.info("STATUS: " + status);
+    public Player sync(String toPlayerName) {
+        log.info("PLAYER: " + this.name + " SYNC TO: " + toPlayerName);
+
+//  пока сломанана синхронизация di.fm в LMS
+//  https://forums.slimdevices.com/forum/user-forums/logitech-media-server/1673928-logitech-media-server-8-4-0-released?p=1675699#post1675699
+//  https://github.com/Logitech/slimserver/issues/993
+        String path = lmsPlayers.getPlayerByName(toPlayerName).path();
+        if (path.contains("di.fm") || path.contains("audioaddict")) {
+            log.info("SYNC DI.FM");
+            this.play(path);
+            log.info("STATUS: sync to audioaddict finish");
+            return this;
+        } else {
+            log.info("SYNC NORMAL");
+            String status = Requests.postToLmsForStatus(RequestParameters.sync(this.name, toPlayerName).toString());
+            log.info("STATUS: " + status);
+        }
         return this;
     }
 
@@ -229,10 +251,10 @@ public class Player {
                 thisPath.equals(silence) ||
                 thisPath.contains("tishini") ||
                 thisPath.contains("silence") ||
-                thisPath.contains("korot") ||
-                thisPath.contains("spotify")
+                thisPath.contains("korot")
         ) {
             log.info("SKIP PATH: " + thisPath);
+
         } else {
             log.info("PRESS BUTTON PLAY: " + thisPath);
             this.play();
@@ -242,8 +264,7 @@ public class Player {
                 thisLastPath.equals(silence) ||
                 thisLastPath.contains("tishini") ||
                 thisLastPath.contains("silence") ||
-                thisLastPath.contains("korot") ||
-                thisLastPath.contains("spotify")
+                thisLastPath.contains("korot")
         ) {
             log.info("SKIP LAST PATH: " + thisLastPath);
         } else {
@@ -255,8 +276,7 @@ public class Player {
                 globalLastPath.equals(silence) ||
                 globalLastPath.contains("tishini") ||
                 globalLastPath.contains("korot") ||
-                globalLastPath.contains("silence") ||
-                globalLastPath.contains("spotify")
+                globalLastPath.contains("silence")
         ) {
             log.info("SKIP GLOBAL PATH: " + globalLastPath);
         } else {
@@ -270,13 +290,10 @@ public class Player {
     }
 
     public Player wakeAndSet() {
-        log.info("WAKE");
-
+        log.info("WAKE START -------------------");
         if (Actions.timeExpired(this)) {
-            log.info("WAKE RUN");
             log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wake_delay);
             this
-                    .saveLastPath()
                     .playSilence()
                     .volume("-1")
                     .setVolumeByTime()
@@ -284,6 +301,7 @@ public class Player {
                     .volume("-1")
                     .setVolumeByTime()
                     .pause();
+            log.info("WAKE FINISH ------------------");
         } else {
             log.info("WAKE SKIP");
         }
@@ -314,12 +332,35 @@ public class Player {
         return this;
     }
 
+    public Player waitFor(int delay) {
+        log.info("WAIT " + delay + " START");
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("WAIT " + delay + " FINISH");
+        return this;
+    }
+
     public Player saveLastPath() {
+        log.info("SAVE LAST PATH");
         String path = this.path();
         if (path != null && !path.equals(silence)) {
             this.lastPath = path;
             lastPathGlobal = this.lastPath;
         }
+        log.info("SAVED LAST PATH: " + this.lastPath);
+        return this;
+    }
+
+    public Player saveLastPathLink(String path) {
+        log.info("SAVE LAST PATH LINK START");
+        this.lastPath = path;
+        lastPathGlobal = this.lastPath;
+        log.info("SAVED LAST PATH: " + this.lastPath);
+//        log.info("SAVED LAST PATH G : " + lastPathGlobal);
+        log.info("SAVE LAST PATH LINK STOP");
         return this;
     }
 
@@ -328,22 +369,37 @@ public class Player {
     }
 
     public Player saveLastTime() {
-        log.info("SAVE TIME");
         this.lastPlayTimeStr = LocalTime.now().truncatedTo(MINUTES).toString();
-        log.info("LAST TIME: " + this.lastPlayTimeStr + " " +
+        log.info("SAVE LAST TIME: " + this.lastPlayTimeStr + " " +
                 this.lastPlayTimeStr.equals(LocalTime.now().truncatedTo(MINUTES).toString()) +
                 " TIME NOW: " + LocalTime.now().truncatedTo(MINUTES));
-        log.info("SAVE TIME OK");
         return this;
     }
 
-    public Player saveLastTimeIfPlay() {
-        log.info("SAVE TIME");
-        log.info("PLAYER MODE " + this.mode());
-        log.info("PLAYER LAST TIME " + this.lastPlayTimeStr);
-        this.lastPlayTimeStr = LocalTime.now().truncatedTo(MINUTES).toString();
-        if (this.mode().equals("play")) this.lastPlayTimeStr = LocalTime.now().truncatedTo(MINUTES).toString();
-        log.info("PLAYER NOW TIME " + this.lastPlayTimeStr);
+    public Player syncAllOtherPlayingToThis() {
+        log.info("SYNC ALL OTHER PLAYING to " + this.name + " SEPARATE: " + this.separate);
+        if (this.separate) {
+            log.info("PLAYER SEPARETE OR ALONE - RETURN");
+            return this;
+        }
+        lmsPlayers.update();
+        List<String> listNamesOnline = lmsPlayers.playersOnlineNames;
+        log.info("PLAYERS ONLINE: " + listNamesOnline);
+        listNamesOnline.remove(this.name);
+        List<Response.SyncgroupsLoop> groupe = this.syncgroups();
+        if (groupe != null) {
+            String names = groupe.get(0).sync_member_names;
+            List<String> listNamesInGroupe = List.of(names.split(","));
+            listNamesOnline.removeAll(listNamesInGroupe);
+        }
+        log.info("FOREACH SYNC TO : " + this.name);
+        listNamesOnline.stream()
+                .map(n -> lmsPlayers.getPlayerByName(n))
+                .filter(p -> p.mode().equals("play"))
+                .peek(p -> log.info(p.name + " separate: " + p.separate))
+                .filter(p -> !p.separate)
+                .forEach(p -> p.sync(this.name));
+        log.info("SYNC ALL OTHER PLAYING FINISH");
         return this;
     }
 
