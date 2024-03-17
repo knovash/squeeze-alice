@@ -30,16 +30,16 @@ public class Utils {
 
     public static Map<String, String> altNames;
 
-    public static void generatePlayersQueryNames() {
-//  только в lmsPlayers
-        log.info("PLAYERS QUERY NAMES");
-        lmsPlayers.players.forEach(player -> {
-            player.nameInQuery = player.name
-                    .replace(" ", "")
-                    .replace("_", "")
-                    .toLowerCase();
-        });
-    }
+//    public static void generatePlayersQueryNames() {
+////  только в lmsPlayers
+//        log.info("PLAYERS QUERY NAMES");
+//        lmsPlayers.players.forEach(player -> {
+//            player.nameInQuery = player.name
+//                    .replace(" ", "")
+//                    .replace("_", "")
+//                    .toLowerCase();
+//        });
+//    }
 
     public static void changePlayerValue(HashMap<String, String> parameters) {
 //  только в switch query command
@@ -276,5 +276,21 @@ public class Utils {
             }
         }
         return builder.toString();
+    }
+
+    public static void restart() {
+        try {
+            Runtime.getRuntime().exec("systemctl restart squeeze-alice.service");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void reboot() {
+        try {
+            Runtime.getRuntime().exec("reboot");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -3,9 +3,9 @@
 BGreen='\033[1;32m'
 NC='\033[0m' # No Color
 
-echo -e "\n"${BGreen}"UPDATE"${NC}"\n"
-sudo apt update
-sudo apt upgrade
+#echo -e "\n"${BGreen}"UPDATE"${NC}"\n"
+#sudo apt update
+#sudo apt upgrade
 
 echo -e "\nrun "${BGreen}"INSTALL JAVA"${NC}"\n"
 #https://sciencesappliquees.com/noncato/350-orange-pi-install-java-jdk-8
@@ -13,7 +13,8 @@ sudo apt-get install default-jre
 
 echo "\nrun "${BGreen}"INSTALL NGROK"${NC}"\n"
 #https://dashboard.ngrok.com/get-started/setup/linux
-curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list && sudo apt update && sudo apt install ngrok
+curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list && sudo apt install ngrok
+
 echo -e "\nrun "${BGreen}"ADD NGROK TOKEN"${NC}"\n"
 #https://dashboard.ngrok.com/get-started/your-authtoken
 ngrok config add-authtoken 1wRUYOxT1LsSQyozlfXziUUv0qk_6vSqXU8RMvscXiQjJe6CP &

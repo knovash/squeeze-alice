@@ -35,7 +35,8 @@ public class Html {
 //                "<p><a href=\\spoti_refresh>Spotify Auth Refresh direct</a></p> \n" +
 //                "<p><a href=\\cmd?action=spoti_refresh>Spotify Auth Refresh cmd</a></p> \n" +
 //                "<p><a href=\\cmd?action=spoti_state>Spotify state</a></p> \n" +
-//                "<p><a href=\\cmd?action=transfer>Spotify transfer</a></p> \n" +
+                "<p><a href=\\cmd?action=restart>Restart server service</a></p> \n" +
+                "<p><a href=\\cmd?action=reboot>Reboot device</a></p> \n" +
                 "</body>\n" +
                 "</html>";
         return page;
