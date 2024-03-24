@@ -62,7 +62,7 @@ public class ProviderQuery {
         Boolean power = false;
         switch (capability.parameters.instance) {
             case ("volume"):
-                capability.state.value = player.volume();
+                capability.state.value = player.volumeGet();
                 break;
             case ("on"):
                 if (player.mode().equals("play")) power = true;

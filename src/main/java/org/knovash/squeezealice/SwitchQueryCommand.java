@@ -28,49 +28,49 @@ public class SwitchQueryCommand {
         Player player = lmsPlayers.getPlayerByNameInQuery(queryParams.get("player"));
         String value = queryParams.get("value");
         switch (action) {
-            case ("channel"): // TASKER %SERVER2/cmd?action=channel&player=%playername&value=%channel
+            case ("channel"):
                 Actions.playChannel(player, Integer.valueOf(value));
-                response = "CHANNEL OK";
+                response = "PLAY CHANNEL " + value;
                 break;
-            case ("play"): // TASKER %SERVER2/cmd?action=play&player=%playername
+            case ("play"):
                 Actions.turnOnMusic(player);
-                response = "PLAY OK";
+                response = "PLAY";
                 break;
-            case ("play_pause"): // TASKER %SERVER2/cmd?action=play_pause&player=%playername
             case ("toggle_music"):
-                Actions.toggleMusic(player);
-                response = "PLAY/PAUSE OK";
+            case ("play_pause"):
+                response = Actions.toggleMusic(player);
                 break;
-            case ("play_pause_all"): // TASKER %SERVER2/cmd?action=play_pause&player=%playername
             case ("toggle_music_all"):
-                Actions.toggleMusicAll(player);
-                response = "PLAY/PAUSE OK";
+            case ("play_pause_all"):
+                response = Actions.toggleMusicAll(player);
                 break;
-            case ("separate_on"): // TASKER %SERVER2/cmd?action=separate&player=%playername
-                Actions.separate_on(player);
-                response = "SEPARATE ON OK";
+            case ("stop_all"):
+            case ("pause_all"):
+                response = Actions.stopMusicAll();
                 break;
-            case ("separate_off"): // TASKER %SERVER2/cmd?action=separate&player=%playername
-                Actions.separate_alone_off(player);
-                response = "SEPARATE OFF OK";
+            case ("next"):
+                player.next();
+                response = "NEXT";
                 break;
-            case ("separate_alone_off"): // TASKER %SERVER2/cmd?action=separate&player=%playername
-                Actions.separate_alone_off(player);
-                response = "SEPARATE ALONE OFF OK";
+            case ("prev"):
+                player.prev();
+                response = "PREV";
                 break;
-
-            case ("alone_on"): // TASKER %SERVER2/cmd?action=alone&player=%playername
-                Actions.alone_on(player);
+            case ("separate_on"):
+                player.separate_on();
+                response = "SEPARATE ON";
+                break;
+            case ("alone_on"):
+                player.alone_on();
+                response = "ALONE ON";
+                break;
+            case ("separate_alone_off"):
+                player.separate_alone_off();
                 response = "ALONE OK";
                 break;
-            case ("alone_off"): // TASKER %SERVER2/cmd?action=alone&player=%playername
-                Actions.separate_alone_off(player);
-                response = "ALONE OK";
-                break;
-
-            case ("transfer"): // TASKER %SERVER2/cmd?action=transfer&player=%playername
+            case ("transfer"):
                 Spotify.transfer(player);
-                response = "TRANSFER OK";
+                response = "TRANSFER";
                 break;
 
             case ("log"): // WEB HOME
@@ -170,18 +170,9 @@ public class SwitchQueryCommand {
                 lmsPlayers.write();
                 response = Html.formPlayers();
                 break;
-//            case ("spoti_state"):
-//                log.info("SPOTIFY PLAYER STATE");
-//                response = Spotify.getPlayerState();
-//                break;
-//            case ("spoti_refresh"):
-//                log.info("SPOTIFY AUTH REFRESH");
-//                SpotifyAuth.requestRefresh();
-//                response = Html.index();
-//                break;
             case ("restart"):
                 log.info("RESTART SERVER");
-               Utils.restart();
+                Utils.restart();
                 response = "RESTART";
                 break;
             case ("reboot"):
@@ -197,7 +188,6 @@ public class SwitchQueryCommand {
         context.json = response;
         return context;
     }
-
 
 
 }

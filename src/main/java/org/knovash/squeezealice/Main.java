@@ -59,5 +59,6 @@ public class Main {
 
         log.info("--- SERVER START ---");
         Server.start();
+//        Utils.timerRequestPlayersState(30);
     }
 }

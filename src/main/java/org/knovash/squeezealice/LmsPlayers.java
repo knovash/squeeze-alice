@@ -25,6 +25,10 @@ public class LmsPlayers {
     public Integer counter;
     public List<Player> players;
     public List<String> playersOnlineNames;
+    public String lastPath;
+    public int lastChannel = 1;
+    public String lastPlayTime;
+    public String lastAliceId;
 
     public void count() {
         Response response = Requests.postToLmsForContent(RequestParameters.count().toString());
@@ -38,7 +42,7 @@ public class LmsPlayers {
 
     public List<String> favorites() {
         String playerName = lmsPlayers.players.get(0).name;
-        Response response = Requests.postToLmsForContent(RequestParameters.favorites(playerName).toString());
+        Response response = Requests.postToLmsForContent(RequestParameters.favorites(playerName, 10).toString());
         List<String> playlist = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
         return playlist;
     }
@@ -52,36 +56,28 @@ public class LmsPlayers {
             return;
         }
         playersOnlineNames = new ArrayList<>();
-//        playersOnline = new ArrayList<>();
         for (int index = 0; index < counter; index++) { // для каждого плеера по id
             String name = Player.name(Integer.toString(index)); // запросить имя
             String id = Player.id(Integer.toString(index)); // запросить id/mac
-            if (lmsPlayers.getPlayerByName(name) == null) { // если плеера еще нет в сервере, то добавить
-                log.info("ADD NEW PLAYER: " + name);
-                lmsPlayers.players.add(new Player(name, id));
-            }
-            playersOnlineNames.add(name); // добавить плеер в список активных
-//            playersOnline.add(lmsPlayers.getPlayerByName(name)); // добавить плеер в список активных
-        }
-        generatePlayersQueryNames();
-        write();
-    }
 
-    public static void generatePlayersQueryNames() {
-//  только в lmsPlayers
-        log.info("PLAYERS QUERY NAMES");
-        lmsPlayers.players.forEach(player -> {
-            player.nameInQuery = player.name
-                    .replace(" ", "")
-                    .replace("_", "")
-                    .toLowerCase();
-        });
+            if (lmsPlayers.getPlayerByName(name) == null) { // если плеера еще нет в сервере, то добавить
+                log.info("FOUND NEW PLAYER: " + name);
+                Player newPlayer = new Player(name, id);
+                log.info("ADD NEW PLAYER: " + newPlayer);
+                lmsPlayers.players.add(newPlayer);
+                write();
+            }
+
+            Player player = lmsPlayers.getPlayerByName(name);
+            player.online = true;
+            if (player.mode().equals("play")) player.saveLastTime();
+            playersOnlineNames.add(name); // добавить плеер в список активных
+        }
     }
 
     public void clear() {
         log.info("CLEAR PLAYERS");
         lmsPlayers.players = new ArrayList<>();
-        generatePlayersQueryNames();
         write();
     }
 
@@ -118,25 +114,18 @@ public class LmsPlayers {
     }
 
     public Player getPlayingPlayer(String currentName) {
-        log.info("Search for playing player...");
-
-        Player playing =  lmsPlayers.playersOnlineNames
+        log.info("SEARCH FOR PLAYING " + lmsPlayers.playersOnlineNames);
+        Player playing = lmsPlayers.playersOnlineNames
                 .stream()
                 .map(n -> getPlayerByName(n))
                 .filter(p -> !p.separate)
+                .filter(p -> p.online)
+                .filter(p -> !p.name.equals(currentName))
+                .filter(p -> !p.path().equals(silence))
                 .filter(p -> p.mode().equals("play"))
                 .findFirst()
                 .orElse(null);
-        log.info("PLAYING GET: " + playing);
-        log.info("PLAYING CHECK PATH not silence");
-        if (playing == null ||
-                playing.path().equals(silence) ||
-                playing.name.equals(currentName)) {
-            log.info("PLAYING ERROR: null or silence or current name");
-            return null;
-        } else {
-            log.info("PLAYING: " + playing.name);
-        }
+        log.info("PLAYING: " + playing);
         return playing;
     }
 
