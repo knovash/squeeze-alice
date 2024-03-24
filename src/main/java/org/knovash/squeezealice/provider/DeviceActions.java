@@ -6,6 +6,8 @@ import org.knovash.squeezealice.Actions;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.Device;
 
+import java.util.concurrent.CompletableFuture;
+
 import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
@@ -29,14 +31,14 @@ public class DeviceActions {
                 if (relative != null && relative.equals(true)) {
                     log.info("VOLUME rel: " + value);
                     if (value.contains("-")) {
-                        player.volume(value);
+                        player.volumeSet(value);
                     } else {
-                        player.volume("+" + value);
+                        player.volumeSet("+" + value);
                     }
                 }
                 if (relative != null && relative.equals(false)) {
                     log.info("VOLUME abs: " + value);
-                    player.volume(value);
+                    player.volumeSet(value);
                 }
                 break;
             case ("channel"):
@@ -52,7 +54,14 @@ public class DeviceActions {
                 break;
             case ("on"):
                 log.info("ON/OFF PLAY/PAUSE " + value);
-                if (value.equals("true")) Actions.turnOnMusic(player);
+                if (value.equals("true")) {
+//                    Actions.turnOnMusic(player);
+                    CompletableFuture.supplyAsync(() -> {
+                        Actions.turnOnMusic(player);
+                        return "";
+                    });
+                }
+                ;
                 if (value.equals("false")) Actions.turnOffMusic(player);
                 break;
         }

@@ -30,6 +30,7 @@ public class Response {
         public String _album;
         public String _artist;
         public String _id;
+        public String _tracks;
         public String _syncgroups;
         public String _url;
         public String count;

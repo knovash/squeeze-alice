@@ -207,7 +207,7 @@ public class Html {
                                 "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"player_remove\">" +
                                 "<button>remove</button></form>"
                         ).collect(Collectors.toList())) +
-                "<p>последний запрос от Алисы id: " + Player.lastAliceId + "</p>" +
+                "<p>последний запрос от Алисы id: " + lmsPlayers.lastAliceId + "</p>" +
                 "<p>чтобы узнать id Алисы, спросите Алиса скажи раз два, что сейчас играет? и обновите страницу</p>" +
                 "<p><a href=\"/\">Home</a></p>" +
                 "</body></html>";

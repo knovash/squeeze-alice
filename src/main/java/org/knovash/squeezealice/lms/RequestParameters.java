@@ -38,8 +38,14 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"playlist", "play", url});
     }
 
-    public static RequestToLms favorites(String player) {
-        return RequestToLms.create(player, new String[]{"favorites", "items", "0", "10" + "want_url:1"});
+    public static RequestToLms favorites(String player, int value) {
+//        {"id":"1","method":"slim.request","params":["",["favorites","items","0","5","want_url:1"]]}
+        return RequestToLms.create(player, new String[]{"favorites", "items", "0", "want_url:0"});
+    }
+
+    public static RequestToLms favoritesAdd(String player, String url, String title) {
+//        {"id":"1","method":"slim.request","params":["",["favorites","add","url:http://prem2.di.fm/chillout_hi?780a4f0bfb95c977ceab43a2","title:SSSSS"]]}
+        return RequestToLms.create(player, new String[]{"favorites", "add", "url:" + url, "title:" + title});
     }
 
     public static RequestToLms volume(String player, String value) {
@@ -100,5 +106,10 @@ public class RequestParameters {
 
     public static RequestToLms nexttrack(String player) {
         return RequestToLms.create(player, new String[]{"playlist", "jump", "+1"});
+    }
+
+    public static RequestToLms tracks(String player) {
+//        {"id": 1, "method": "slim.request", "params":["HomePod", ["playlist", "tracks", "?"]]}
+        return RequestToLms.create(player, new String[]{"playlist", "tracks", "?"});
     }
 }

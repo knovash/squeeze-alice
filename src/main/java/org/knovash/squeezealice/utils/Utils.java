@@ -3,6 +3,7 @@ package org.knovash.squeezealice.utils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.knovash.squeezealice.LmsPlayers;
 import org.knovash.squeezealice.Player;
 
 import java.io.File;
@@ -17,6 +18,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -292,5 +295,20 @@ public class Utils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void timerRequestPlayersState(int priod) {
+        Runnable drawRunnable = new Runnable() {
+            public void run() {
+                log.info("TIMER --------------------------");
+                lmsPlayers.update();
+
+//                lmsPlayers.players.stream()
+//                        .filter(p -> p.mode().equals("play"))
+//                        .forEach(p -> p.saveLastTime());
+            }
+        };
+        ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
+        exec.scheduleAtFixedRate(drawRunnable, 30, priod, java.util.concurrent.TimeUnit.SECONDS);
     }
 }

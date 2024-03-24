@@ -9,10 +9,11 @@ import org.knovash.squeezealice.lms.Response;
 
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
-import static org.knovash.squeezealice.Main.silence;
 import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.Main.silence;
 
 @Log4j2
 @Data
@@ -21,6 +22,7 @@ import static org.knovash.squeezealice.Main.lmsPlayers;
 public class Player {
 
     public String name;
+    public String nameInQuery;
     public String mac;
     public Integer volume_step;
     public Integer volume_low;
@@ -28,20 +30,18 @@ public class Player {
     public Integer wake_delay;
     public boolean black = false;
     public boolean separate = false;
-//    public boolean alone = false;
+    public boolean online = false;
     public Map<Integer, Integer> timeVolume;
+
     public String lastPath;
-    public String lastPlayTimeStr;
-    public String nameInQuery;
+    public String lastPlayTime;
+    public int lastChannel = 1;
 
-    public static String lastStrPath;
-    public static String lastPathGlobal;
-
-    public static String lastAliceId;
 
     public Player(String name, String mac) {
         this.name = name;
         this.mac = mac;
+        this.nameInQuery = this.getQueryNameString();
         this.volume_step = 5;
         this.volume_low = 10;
         this.volume_high = 25;
@@ -90,6 +90,13 @@ public class Player {
         return response.result._path;
     }
 
+    public String tracks() {
+        Response response = Requests.postToLmsForContent(RequestParameters.tracks(this.name).toString());
+        if (response == null) return "0";
+        log.info("PLAYER: " + this.name + " TRACKS: " + response.result._tracks);
+        return response.result._tracks;
+    }
+
     public String playlistname() {
         Response response = Requests.postToLmsForContent(RequestParameters.playlistname(this.name).toString());
         if (response == null) return null;
@@ -126,17 +133,17 @@ public class Player {
         return response.result._artist;
     }
 
-    public String volume() {
+    public String volumeGet() {
         Response response = Requests.postToLmsForContent(RequestParameters.volume(this.name).toString());
         if (response == null) return "0";
         log.info("PLAYER: " + this.name + " GET VOLUME: " + response.result._volume);
         return response.result._volume;
     }
 
-    public Player volume(String value) {
+    public Player volumeSet(String value) {
         log.info("PLAYER: " + this.name + " SET VOLUME: " + value);
         String status = Requests.postToLmsForStatus(RequestParameters.volume(this.name, value).toString());
-        if (Integer.parseInt(this.volume()) < 1) this.volume("1");
+        if (Integer.parseInt(this.volumeGet()) < 1) this.volumeSet("1");
         log.info("STATUS: " + status);
         return this;
     }
@@ -144,27 +151,6 @@ public class Player {
     public Player play() {
         log.info("PLAYER: " + this.name + " PLAY");
         String status = Requests.postToLmsForStatus(RequestParameters.play(this.name).toString());
-        log.info("STATUS: " + status);
-        return this;
-    }
-
-    public Player play(Integer channel) {
-        log.info("PLAYER: " + this.name + " PLAY CHANNEL: " + channel);
-        String status = Requests.postToLmsForStatus(RequestParameters.play(this.name, channel - 1).toString());
-        log.info("STATUS: " + status);
-        return this;
-    }
-
-    public Player play(String path) {
-        log.info("PLAYER: " + this.name + " PLAY PATH: " + path);
-        String status = Requests.postToLmsForStatus(RequestParameters.play(this.name, path).toString());
-        log.info("STATUS: " + status);
-        return this;
-    }
-
-    public Player playSilence() {
-        log.info("PLAYER: " + this.name + " PLAY SILENCE");
-        String status = Requests.postToLmsForStatus(RequestParameters.play(this.name, silence).toString());
         log.info("STATUS: " + status);
         return this;
     }
@@ -183,18 +169,97 @@ public class Player {
         return this;
     }
 
-    public Player prevtrack() {
-        log.info("PLAYER: " + this.name + " NEXT");
+    public Player playChannel(Integer channel) {
+        log.info("PLAYER: " + this.name + " PLAY CHANNEL: " + channel);
+        String status = Requests.postToLmsForStatus(RequestParameters.play(this.name, channel - 1).toString());
+        log.info("STATUS: " + status);
+        return this;
+    }
+
+    public Player playPath(String path) {
+        log.info("PLAYER: " + this.name + " PLAY PATH: " + path);
+        String status = Requests.postToLmsForStatus(RequestParameters.play(this.name, path).toString());
+        log.info("STATUS: " + status);
+        return this;
+    }
+
+    public Player playSilence() {
+        log.info("PLAYER: " + this.name + " PLAY SILENCE");
+        String status = Requests.postToLmsForStatus(RequestParameters.play(this.name, silence).toString());
+        log.info("STATUS: " + status);
+        return this;
+    }
+
+
+    public Player prevTrack() {
+        log.info("PLAYER: " + this.name + " NEXT TRACK");
         String status = Requests.postToLmsForStatus(RequestParameters.prevtrack(this.name).toString());
         log.info("STATUS: " + status);
         return this;
     }
 
-    public Player nexttrack() {
-        log.info("PLAYER: " + this.name + " NEXT");
+    public Player nextTrack() {
+        log.info("PLAYER: " + this.name + " NEXT TRACK");
         String status = Requests.postToLmsForStatus(RequestParameters.nexttrack(this.name).toString());
         log.info("STATUS: " + status);
         return this;
+    }
+
+    public Player prevChannel() {
+        log.info("LAST CHANNEL: " + SmartHome.lastChannel);
+        int favSize = this.favorites().size();
+        this.path();
+        int channel = SmartHome.lastChannel - 1;
+        if (channel < 1) channel = favSize;
+        log.info("PLAY CHANNEL: " + channel);
+        Actions.playChannel(this, channel);
+        return this;
+    }
+
+    public Player nextChannel() {
+        log.info("LAST CHANNEL: " + SmartHome.lastChannel);
+        int favSize = this.favorites().size();
+        int channel = SmartHome.lastChannel + 1;
+        if (channel > favSize) channel = 1;
+        log.info("PLAY CHANNEL: " + channel);
+        Actions.playChannel(this, channel);
+        return this;
+    }
+
+    public Player next() {
+        log.info("PLAYER: " + this.name + " NEXT");
+        int tracks = Integer.parseInt(this.tracks());
+        log.info("TRACKS IN PLAYLIST: " + tracks);
+        if (tracks < 2) this.nextChannel();
+        else this.nextTrack();
+        return this;
+    }
+
+    public Player prev() {
+        log.info("PLAYER: " + this.name + " PREV");
+        int tracks = Integer.parseInt(this.tracks());
+        log.info("TRACKS IN PLAYLIST: " + tracks);
+        if (tracks < 2) this.prevChannel();
+        else this.prevTrack();
+        return this;
+    }
+
+    public List<String> favorites() {
+        String playerName = this.name;
+        Response response = Requests.postToLmsForContent(RequestParameters.favorites(playerName, 10).toString());
+        List<String> playlist = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
+        log.info("FAVORITES: " + playlist);
+        return playlist;
+    }
+
+    public void favoritesAdd() {
+        String playerName = this.name;
+        String url ="";
+//        url = this.path()
+        String title ="";
+        Response response = Requests.postToLmsForContent(RequestParameters.favoritesAdd(playerName, url, title ).toString());
+        log.info("FAVORITES ADD");
+
     }
 
     public Player shuffleon() {
@@ -213,14 +278,13 @@ public class Player {
 
     public Player sync(String toPlayerName) {
         log.info("PLAYER: " + this.name + " SYNC TO: " + toPlayerName);
-
 //  пока сломанана синхронизация di.fm в LMS
 //  https://forums.slimdevices.com/forum/user-forums/logitech-media-server/1673928-logitech-media-server-8-4-0-released?p=1675699#post1675699
 //  https://github.com/Logitech/slimserver/issues/993
         String path = lmsPlayers.getPlayerByName(toPlayerName).path();
         if (path.contains("di.fm") || path.contains("audioaddict")) {
             log.info("SYNC DI.FM");
-            this.play(path);
+            this.playPath(path);
             log.info("STATUS: sync to audioaddict finish");
             return this;
         } else {
@@ -238,72 +302,67 @@ public class Player {
         return this;
     }
 
+    public Player ifNotPlayUnsyncWakeSet() {
+        log.info("CHECK IF PLAY");
+        if (!this.mode().equals("play")) {
+            log.info("PLAYER " + this.name + " NOT PLAY - UNSYNC, WAKE, SET");
+            this.unsync().wakeAndSet();
+        } else log.info("PLAYER " + this.name + " PLAY - SKIP WAKE");
+        return this;
+    }
+
+    public Player stopAllOther() {
+        lmsPlayers.players.stream()
+                .filter(p -> !p.name.equals(this.name))
+                .forEach(player -> player.unsync());
+        return this;
+    }
+
     public Player playLast() {
         log.info("PLAY LAST");
         String thisPath = this.path();
-        log.info("TRY PATH: " + thisPath);
         String thisLastPath = this.lastPath;
-        log.info("TRY LAST PATH: " + thisLastPath);
-        String globalLastPath = Player.lastPathGlobal;
-        log.info("TRY GLOBAL LAST PATH: " + globalLastPath);
-
-        if (thisPath == null ||
-                thisPath.equals(silence) ||
-                thisPath.contains("tishini") ||
-                thisPath.contains("silence") ||
-                thisPath.contains("korot")
-        ) {
-            log.info("SKIP PATH: " + thisPath);
-
-        } else {
-            log.info("PRESS BUTTON PLAY: " + thisPath);
+        String commonLastPath = lmsPlayers.lastPath;
+        log.info("THIS PATH: " + thisPath);
+        log.info("LAST PATH: " + thisLastPath);
+        log.info("TRY GLOBAL LAST PATH: " + commonLastPath);
+        log.info("SILENCE PATH: " + silence);
+        if (thisPath != null && !thisPath.equals(silence)) {
+            log.info("PLAY THIS PATH");
             this.play();
             return this;
         }
-        if (thisLastPath == null ||
-                thisLastPath.equals(silence) ||
-                thisLastPath.contains("tishini") ||
-                thisLastPath.contains("silence") ||
-                thisLastPath.contains("korot")
-        ) {
-            log.info("SKIP LAST PATH: " + thisLastPath);
-        } else {
-            log.info("PLAY PLAYER LAST PATH: " + thisLastPath);
-            this.play(thisLastPath);
+        if (thisLastPath != null && !thisPath.equals(silence)) {
+            log.info("PLAY THIS LAST PATH");
+            this.playPath(thisLastPath);
             return this;
         }
-        if (Player.lastPathGlobal == null ||
-                globalLastPath.equals(silence) ||
-                globalLastPath.contains("tishini") ||
-                globalLastPath.contains("korot") ||
-                globalLastPath.contains("silence")
-        ) {
-            log.info("SKIP GLOBAL PATH: " + globalLastPath);
-        } else {
-            log.info("PLAY GLOBAL LAST PATH: " + globalLastPath);
-            this.play(globalLastPath);
+        if (commonLastPath != null && !thisPath.equals(silence)) {
+            log.info("PLAY COMMON LAST PATH");
+            this.playPath(commonLastPath);
             return this;
         }
-        log.info("PLAY FIRST FAVORITE");
-        this.play(1);
+        log.info("PLAY CHANNEL 1");
+        this.playChannel(1);
         return this;
     }
 
     public Player wakeAndSet() {
         log.info("WAKE START -------------------");
+//        if (true) {
         if (Actions.timeExpired(this)) {
             log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wake_delay);
             this
                     .playSilence()
-                    .volume("-1")
+                    .volumeSet("+1")
                     .setVolumeByTime()
                     .waitForWake()
-                    .volume("-1")
+                    .volumeSet("-1")
                     .setVolumeByTime()
                     .pause();
             log.info("WAKE FINISH ------------------");
         } else {
-            log.info("WAKE SKIP");
+            log.info("WAKE SKIP ------------------");
         }
         return this;
     }
@@ -318,7 +377,7 @@ public class Player {
                         .max(Comparator.comparing(Map.Entry::getKey))
                         .get();
         log.info("VOLUME: " + e.getValue() + " BY TIME: " + e.getKey());
-        this.volume(String.valueOf(e.getValue()));
+        this.volumeSet(String.valueOf(e.getValue()));
         return this;
     }
 
@@ -348,16 +407,23 @@ public class Player {
         String path = this.path();
         if (path != null && !path.equals(silence)) {
             this.lastPath = path;
-            lastPathGlobal = this.lastPath;
+            lmsPlayers.lastPath = this.lastPath;
         }
-        log.info("SAVED LAST PATH: " + this.lastPath);
+        log.info("SAVE LAST PATH: " + this.lastPath);
+        return this;
+    }
+
+    public Player saveLastChannel(int channel) {
+        log.info("SAVE LAST CHANNEL: " + channel);
+        SmartHome.lastChannel = channel;
+        this.lastChannel = channel;
         return this;
     }
 
     public Player saveLastPathLink(String path) {
         log.info("SAVE LAST PATH LINK START");
         this.lastPath = path;
-        lastPathGlobal = this.lastPath;
+        lmsPlayers.lastPath = this.lastPath;
         log.info("SAVED LAST PATH: " + this.lastPath);
 //        log.info("SAVED LAST PATH G : " + lastPathGlobal);
         log.info("SAVE LAST PATH LINK STOP");
@@ -368,11 +434,38 @@ public class Player {
         lmsPlayers.players.remove(this);
     }
 
+    public Player separate_on() { // отдельно от других
+        log.info("SEPARATE ON");
+        this.separate = true;
+        lmsPlayers.write();
+        this
+                .unsync()
+                .play();
+        return this;
+    }
+
+    public Player alone_on() {  // только этот плеер
+        log.info("ALONE ON");
+        this.separate = true;
+        lmsPlayers.write();
+        this
+                .unsync()
+                .play()
+                .stopAllOther();
+        return this;
+    }
+
+    public Player separate_alone_off() {
+        log.info("SEPARATE ALONE OFF");
+        lmsPlayers.players.forEach(p -> p.separate = false);
+        lmsPlayers.write();
+        Actions.turnOnMusic(this);
+        return this;
+    }
+
     public Player saveLastTime() {
-        this.lastPlayTimeStr = LocalTime.now().truncatedTo(MINUTES).toString();
-        log.info("SAVE LAST TIME: " + this.lastPlayTimeStr + " " +
-                this.lastPlayTimeStr.equals(LocalTime.now().truncatedTo(MINUTES).toString()) +
-                " TIME NOW: " + LocalTime.now().truncatedTo(MINUTES));
+        this.lastPlayTime = LocalTime.now().truncatedTo(MINUTES).toString();
+        log.info("SAVE LAST TIME: " + this.lastPlayTime);
         return this;
     }
 
@@ -401,6 +494,13 @@ public class Player {
                 .forEach(p -> p.sync(this.name));
         log.info("SYNC ALL OTHER PLAYING FINISH");
         return this;
+    }
+
+    public String getQueryNameString() {
+        return this.nameInQuery = this.name
+                .replace(" ", "")
+                .replace("_", "")
+                .toLowerCase();
     }
 
     @Override
