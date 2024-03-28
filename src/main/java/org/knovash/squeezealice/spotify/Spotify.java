@@ -2,9 +2,10 @@ package org.knovash.squeezealice.spotify;
 
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
-import org.apache.http.Header;
-import org.apache.http.message.BasicHeader;
 import org.knovash.squeezealice.Player;
+import org.knovash.squeezealice.spotify.spotify_pojo.CurrentlyPlaying;
+import org.knovash.squeezealice.spotify.spotify_pojo.PlayerArtist;
+import org.knovash.squeezealice.spotify.spotify_pojo.PlayerPlaylist;
 import org.knovash.squeezealice.spotify.spotify_pojo.Type;
 import org.knovash.squeezealice.spotify.spotify_pojo.spotify_albums.SpotifyAlbums;
 import org.knovash.squeezealice.spotify.spotify_pojo.spotify_artists.SpotifyArtists;
@@ -12,12 +13,6 @@ import org.knovash.squeezealice.spotify.spotify_pojo.spotify_playlist.Item;
 import org.knovash.squeezealice.spotify.spotify_pojo.spotify_playlist.SpotifyPlaylists;
 import org.knovash.squeezealice.spotify.spotify_pojo.spotify_tracks.SpotifyResponseTracks;
 import org.knovash.squeezealice.utils.JsonUtils;
-
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 @Data
@@ -31,9 +26,13 @@ public class Spotify {
         target = target.replace(" ", "%20");
         String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + type + "&limit=" + limit;
         log.info("URI: " + uri);
-        String json = SpotifyRequests.requestForLinkJson(uri);
-        if (json == null) SpotifyAuth.requestRefresh();
-        json = SpotifyRequests.requestForLinkJson(uri);
+
+        String json = getJson(uri);
+
+//        String json = SpotifyRequests.requestForLinkJson(uri);
+//        if (json == null) SpotifyAuth.requestRefresh();
+//        json = SpotifyRequests.requestForLinkJson(uri);
+
         if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         switch (type.toString()) {
@@ -87,45 +86,72 @@ public class Spotify {
         return SpotifyAuth.client_secret.substring(0, 4) + "----";
     }
 
-    public static String getPlayerState() { // получить состояние плеера спотифай
-//  https://unicorn-neutral-badly.ngrok-free.app/cmd?action=spoti_state
-//  https://developer.spotify.com/documentation/web-api/reference/get-information-about-the-users-current-playback
-        String uri = "https://api.spotify.com/v1/me/player";
-        Header[] headers = {
-                new BasicHeader("Authorization", SpotifyAuth.bearer_token)
-        };
-        String responseBody = SpotifyRequests.requestHttpClient(uri, headers);
-        if (responseBody.equals("401")) { // no auth - try  get refresh token
-//            SpotifyAuth.runRequestRefresh();
-            responseBody = SpotifyRequests.requestHttpClient(uri, headers);
+    public static CurrentlyPlaying getCurrentlyPlaying() {
+        String uri = "https://api.spotify.com/v1/me/player/currently-playing";
+        log.info("URI: " + uri);
+        String body = SpotifyRequests.requestHttpClient(uri);
+//        log.info("BODY: " + body);
+//        body = body.replace("\\\"", ""); //  ф
+        if (body.contains("204")) return null;
+        String json = getJson(uri);
+//        String json = SpotifyRequests.requestForLinkJson(uri);
+//        if (json == null) SpotifyAuth.requestRefresh();
+//        json = SpotifyRequests.requestForLinkJson(uri);
+        if (json == null) return null;
+//        log.info("JSON: " + json);
+        json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
+        CurrentlyPlaying currentlyPlaying = JsonUtils.jsonToPojo(json, CurrentlyPlaying.class);
+        log.info("CURRENTLY PLAYING: " + currentlyPlaying);
+        return currentlyPlaying;
+    }
+
+    public static String getCurrentName(CurrentlyPlaying currentlyPlaying) {
+        String id;
+        String name = "";
+        String json;
+        String uri = currentlyPlaying.context.uri;
+        String type = currentlyPlaying.context.type;
+//      "uri": "spotify:playlist:37i9dQZF1DWTvNyxOwkztu"
+//      "uri": "spotify:artist:5K4W6rqBFWDnAN6FQUkS6x"
+        if (type.equals("playlist")) {
+            id = uri.replaceAll("spotify:playlist:", "");
+            uri = "https://api.spotify.com/v1/playlists/" + id;
+            json = getJson(uri);
+            json = json.replace("\\\"", ""); //  фикс для такого "name"
+            PlayerPlaylist playerPlaylist = JsonUtils.jsonToPojo(json, PlayerPlaylist.class);
+            name = playerPlaylist.name;
         }
-        log.info("PLAYER STATE CONT: " + responseBody);
-        return responseBody;
+        if (type.equals("artist")) {
+            id = uri.replaceAll("spotify:artist:", "");
+            uri = "https://api.spotify.com/v1/artists/" + id;
+            json = getJson(uri);
+            json = json.replace("\\\"", ""); //  фикс для такого "name"
+            PlayerArtist playerArtist = JsonUtils.jsonToPojo(json, PlayerArtist.class);
+            name = playerArtist.name;
+        }
+        return name;
+    }
+
+    public static String getJson(String uri) {
+        String json = SpotifyRequests.requestForLinkJson(uri);
+        if (json == null) SpotifyAuth.requestRefresh();
+        json = SpotifyRequests.requestForLinkJson(uri);
+        if (json == null) return null;
+        return json;
     }
 
     public static String transfer(Player player) {
-        log.info("TRANSFER START " + player.name + " " + player.mac);
-        lmsPlayers.update();
-        String mac = player.mac;
-        mac = mac.replace(":", "%3A");
-        log.info("MAC " + player.name + " " + mac);
-        String url = "http://" + lmsIP + ":" + lmsPort + "/plugins/spotty/index.html?index=10.1&" + "player=" + mac + "&sess=";
-        requestHttpUrlConnectionGet("GET", url);
+        log.info("TRANSFER START " + player.name);
+        CurrentlyPlaying currentlyPlaying = getCurrentlyPlaying();
+        if (currentlyPlaying == null) return "Spotifi не играет";
+        log.info("CURRENT TYPE: " + currentlyPlaying.context.type);
+        log.info("CURRENT URI: " + currentlyPlaying.context.uri);
+        String playingUri = currentlyPlaying.context.uri;
+//        String name = getCurrentName(currentlyPlaying);
+//        log.info("CURRENT NAME: " + name);
+        player.playPath(playingUri);
         player.syncAllOtherPlayingToThis();
         log.info("TRANSFER FINISH");
         return "переключаю spotify на " + player.name;
-    }
-
-    public static void requestHttpUrlConnectionGet(String method, String url) {
-        log.info("METHOD: " + method + " URL: " + url);
-        HttpURLConnection con = null;
-        try {
-            con = (HttpURLConnection) new URL(url).openConnection();
-            con.setRequestMethod(method);
-            con.getInputStream();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        log.info("FINISH");
     }
 }

@@ -19,6 +19,7 @@ public class Actions {
                 .saveLastChannel(channel)
                 .saveLastPath()
                 .syncAllOtherPlayingToThis();
+        lmsPlayers.write();
     }
 
     public static void playSpotify(Player player, String link) {
@@ -28,8 +29,9 @@ public class Actions {
                 .playPath(link)
                 .saveLastTime()
                 .saveLastPathLink(link)
-                .waitFor(2000)
+                .waitFor(1000)
                 .syncAllOtherPlayingToThis();
+        lmsPlayers.write();
     }
 
     public static void turnOnMusic(Player player) {
@@ -37,7 +39,11 @@ public class Actions {
         player.ifNotPlayUnsyncWakeSet();
         if (player.separate) {
             log.info("PLAYER IS SEPARATED - PLAY LAST");
-            player.playLast().saveLastPath().saveLastTime();
+            player
+                    .playLast()
+                    .saveLastPath()
+                    .saveLastTime();
+            lmsPlayers.write();
             return;
         }
         Player playing = lmsPlayers.getPlayingPlayer(player.name);
@@ -48,16 +54,24 @@ public class Actions {
             log.info("SYNC TO PLAYING " + playing);
             player.sync(playing.name);
         }
-        player.saveLastPath().saveLastTime();
+        player
+                .saveLastPath()
+                .saveLastTime();
+        lmsPlayers.write();
     }
 
     public static void turnOffMusic(Player player) {
         log.info("TURN OFF SPEAKER");
-        player.unsync().pause();
+        player
+                .unsync()
+                .pause()
+                .saveLastTime()
+                .saveLastPath();
+        lmsPlayers.write();
     }
 
     public static String toggleMusic(Player player) {
-        String mode = player.mode();
+        String mode = player.mode(); // TODO двойной запрос состояния плеера
         if (mode.equals("play")) {
             turnOffMusic(player);
             mode = "STOP " + player.name;
@@ -71,7 +85,7 @@ public class Actions {
     public static String toggleMusicAll(Player player) {
         String mode = player.mode();
         if (mode.equals("play")) {
-            lmsPlayers.players.forEach(p -> p.unsync().pause());
+            lmsPlayers.players.forEach(p -> turnOffMusic(p));
             mode = "STOP " + player.name;
         } else {
             turnOnMusic(player);
@@ -81,12 +95,12 @@ public class Actions {
     }
 
     public static String stopMusicAll() {
-        lmsPlayers.players.forEach(p -> p.unsync().pause());
+        lmsPlayers.players.forEach(p -> turnOffMusic(p));
         return "STOP ALL";
     }
 
     public static boolean timeExpired(Player player) {
-        long delay = 10;
+        long delay = lmsPlayers.delayExpire;
         log.info("CHECK IF LAST PLAY TIME EXPIRED");
         if (player.lastPlayTime == null) return true;
         LocalTime playerTime = LocalTime.parse(player.lastPlayTime).truncatedTo(MINUTES);

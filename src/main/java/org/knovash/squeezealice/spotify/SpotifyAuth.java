@@ -30,7 +30,13 @@ public class SpotifyAuth {
     public static String response_type = "code";
     public static String redirect_uri = "https://unicorn-neutral-badly.ngrok-free.app/spoti_callback";
     public static String show_dialog; // Optional
-    public static String scope = "user-read-private user-read-email user-read-playback-state"; // Optional
+    public static String scope =
+            "user-read-private " +
+            "user-read-email " +
+            "user-read-playback-state " +
+            "app-remote-control " +
+            "user-read-currently-playing " +
+            "user-modify-playback-state"; // Optional
     public static String code; // вернется в калбэке
     public static String state = "1234567890123456"; // вернется в калбэке
     public static String access_token;

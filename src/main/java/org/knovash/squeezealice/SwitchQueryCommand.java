@@ -56,6 +56,30 @@ public class SwitchQueryCommand {
                 player.prev();
                 response = "PREV";
                 break;
+            case ("next_track"):
+                player.nextTrack();
+                response = "NEXT";
+                break;
+            case ("prev_track"):
+                player.prevTrack();
+                response = "PREV";
+                break;
+            case ("next_channel"):
+                player.nextChannel();
+                response = "NEXT";
+                break;
+            case ("prev_channel"):
+                player.prevChannel();
+                response = "PREV";
+                break;
+            case ("volume_dn"):
+                player.volumeSet("-3");
+                response = "VOLUME DN";
+                break;
+            case ("volume_up"):
+                player.volumeSet("+3");
+                response = "VOLUME UP";
+                break;
             case ("separate_on"):
                 player.separate_on();
                 response = "SEPARATE ON";
