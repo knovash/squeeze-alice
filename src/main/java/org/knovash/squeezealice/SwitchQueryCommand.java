@@ -6,6 +6,7 @@ import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
+import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 import org.knovash.squeezealice.web.Html;
 
 import java.util.HashMap;
@@ -95,6 +96,10 @@ public class SwitchQueryCommand {
             case ("transfer"):
                 Spotify.transfer(player);
                 response = "TRANSFER";
+                break;
+            case ("whatsplaying"):
+//                SwitchVoiceCommand.createResponse(SwitchVoiceCommand.whatsPlaying(player));
+                response = "WHATSPLAYING";
                 break;
 
             case ("log"): // WEB HOME

@@ -87,7 +87,7 @@ public class SwitchVoiceCommand {
         return createResponse("я не поняла команду");
     }
 
-    private static String createResponse(String text) {
+    public static String createResponse(String text) { // TODO
         AliceVoiceResponsePojo alice = new AliceVoiceResponsePojo();
         AliceVoiceResponsePojo.ResponseAlice responseAlice = new AliceVoiceResponsePojo.ResponseAlice();
         responseAlice.text = text;
@@ -203,7 +203,7 @@ public class SwitchVoiceCommand {
         return answer;
     }
 
-    private static String whatsPlaying(Player player) {
+    public static String whatsPlaying(Player player) {
         String answer = "";
         log.info("WATS PLAYING");
         String playlist = player.playlistname();

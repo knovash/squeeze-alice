@@ -87,10 +87,12 @@ public class Player {
     }
 
     public String path() {
+//        if (this.name.equals("HomePod2")) return null;
         Response response = Requests.postToLmsForContent(RequestParameters.path(this.name).toString());
         if (response == null) return "";
         log.info("PLAYER: " + this.name + " PATH: " + response.result._path);
         return response.result._path;
+//        return null;
     }
 
     public String tracks() {
@@ -343,12 +345,12 @@ public class Player {
             this.play();
             return this;
         }
-        if (thisLastPath != null && !thisPath.equals(silence)) {
+        if (thisLastPath != null && !thisLastPath.equals(silence)) {
             log.info("PLAY THIS LAST PATH");
             this.playPath(thisLastPath);
             return this;
         }
-        if (commonLastPath != null && !thisPath.equals(silence)) {
+        if (commonLastPath != null && !commonLastPath.equals(silence)) {
             log.info("PLAY COMMON LAST PATH");
             this.playPath(commonLastPath);
             return this;
