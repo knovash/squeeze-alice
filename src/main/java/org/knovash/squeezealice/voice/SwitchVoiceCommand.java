@@ -43,6 +43,8 @@ public class SwitchVoiceCommand {
             return createResponse(updatePlayers());
         if (command.contains("выбери колонку") || command.contains("выбери плеер"))
             return createResponse(selectPlayerInRoom(command));
+        if (command.contains("где пульт"))
+            return createResponse(whereRemote());
         if (command.contains("комната")) // это комната {название}
             return createResponse(thisRoomIsName(command));
         if (room == null) return createResponse("скажите навыку: это комната и название комнаты");
@@ -62,7 +64,7 @@ public class SwitchVoiceCommand {
             return createResponse(alone_on(player));
         if (command.contains("играть вместе") || command.contains("включи вместе") || command.contains("вместе"))
             return createResponse(separate_alone_off(player));
-        if (command.contains("переключи") && (command.contains("spotify") || command.contains("спотифай")))
+        if ((command.contains("переключи") && (command.contains("spotify") || command.contains("спотифай")) || command.contains("spotify")))
             return createResponse(Spotify.transfer(player));
         if (command.contains("включи") && (command.contains("канал") || command.contains("избранное")))
             return createResponse(channel(command, player));
@@ -80,10 +82,12 @@ public class SwitchVoiceCommand {
             return createResponse(next(player));
         if (command.contains("добавь в избранное") || command.contains("добавь избранное"))
             return createResponse(favoritesAdd(player));
+        if (command.contains("подключи пульт"))
+            return createResponse(connectBtRemote(player));
         return createResponse("я не поняла команду");
     }
 
-    private static String createResponse(String text) {
+    public static String createResponse(String text) { // TODO
         AliceVoiceResponsePojo alice = new AliceVoiceResponsePojo();
         AliceVoiceResponsePojo.ResponseAlice responseAlice = new AliceVoiceResponsePojo.ResponseAlice();
         responseAlice.text = text;
@@ -199,7 +203,7 @@ public class SwitchVoiceCommand {
         return answer;
     }
 
-    private static String whatsPlaying(Player player) {
+    public static String whatsPlaying(Player player) {
         String answer = "";
         log.info("WATS PLAYING");
         String playlist = player.playlistname();
@@ -276,11 +280,25 @@ public class SwitchVoiceCommand {
 
     private static String favoritesAdd(Player player) {
         String answer;
-        log.info("SEPARATE ALONE OFF");
-        player.separate_alone_off();
+        log.info("FAVORITES ADD");
+        String addTitle;
+        addTitle = player.favoritesAdd();
+        answer = "добавила в избранное " + addTitle;
+        return answer;
+    }
 
+    private static String connectBtRemote(Player player) {
+        String answer;
+        log.info("CONNECT BT REMOTE");
+        lmsPlayers.btplayer = player.name;
+        answer = "пульт подключен к " + player.name;
+        return answer;
+    }
 
-        answer = "включаю вместе " + player.name;
+    private static String whereRemote() {
+        String answer;
+        log.info("WHERE BT REMOTE");
+        answer = "пульт подключен к " +  lmsPlayers.btplayer;
         return answer;
     }
 

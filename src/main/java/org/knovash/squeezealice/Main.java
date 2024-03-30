@@ -57,8 +57,12 @@ public class Main {
         SpotifyAuth.read();
         log.info("BEARER: " + SpotifyAuth.bearer_token);
 
+        log.info("LAST PATH: " + lmsPlayers.lastPath);
+        log.info("LAST CHANNEL: " + lmsPlayers.lastChannel);
+        log.info("BT REMOTE: " + lmsPlayers.btplayer);
+
         log.info("--- SERVER START ---");
         Server.start();
-//        Utils.timerRequestPlayersState(30);
+//        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate); // MINUTES
     }
 }

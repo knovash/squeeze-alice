@@ -21,7 +21,6 @@ public class SmartHome {
     public static String user_id = "konstantin";
     public static LinkedList<Device> devices = new LinkedList<>();
     public static Map<String, String> rooms = new HashMap<>();
-    public static Integer lastChannel = 1;
 
     public static Device getDeviceById(int deviceId) {
         String index = String.valueOf(deviceId);

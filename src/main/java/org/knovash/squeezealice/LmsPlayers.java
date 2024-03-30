@@ -26,9 +26,12 @@ public class LmsPlayers {
     public List<Player> players;
     public List<String> playersOnlineNames;
     public String lastPath;
-    public int lastChannel = 1;
-    public String lastPlayTime;
+    public int lastChannel = 3;
+    //    public String lastPlayTime;
     public String lastAliceId;
+    public String btplayer = "HomePod";
+    public int delayUpdate = 5; // MINUTES
+    public int delayExpire = 10; // MINUTES
 
     public void count() {
         Response response = Requests.postToLmsForContent(RequestParameters.count().toString());
@@ -63,6 +66,7 @@ public class LmsPlayers {
             if (lmsPlayers.getPlayerByName(name) == null) { // если плеера еще нет в сервере, то добавить
                 log.info("FOUND NEW PLAYER: " + name);
                 Player newPlayer = new Player(name, id);
+//                newPlayer.nameInQuery = newPlayer.getQueryNameString();
                 log.info("ADD NEW PLAYER: " + newPlayer);
                 lmsPlayers.players.add(newPlayer);
                 write();
@@ -93,6 +97,9 @@ public class LmsPlayers {
             log.info("NO PLAYERS lms_players.json");
         } else {
             lmsPlayers = lp;
+            log.info("LAST PATH: " + lmsPlayers.lastPath);
+            log.info("LAST CHANNEL: " + lmsPlayers.lastChannel);
+            log.info("BT REMOTE: " + lmsPlayers.btplayer);
         }
     }
 
@@ -105,7 +112,12 @@ public class LmsPlayers {
     }
 
     public Player getPlayerByNameInQuery(String name) {
+        log.info("NAME: " + name);
         if (name == null) return null;
+        if (name.equals("btremote")) {
+            log.info("BT PLAYER: " + btplayer);
+            return lmsPlayers.getPlayerByNameInQuery(btplayer);
+        }
         if (lmsPlayers.players == null) return null;
         return lmsPlayers.players.stream()
                 .filter(player -> player.getNameInQuery().toLowerCase().equals(name.toLowerCase()))
@@ -118,11 +130,24 @@ public class LmsPlayers {
         Player playing = lmsPlayers.playersOnlineNames
                 .stream()
                 .map(n -> getPlayerByName(n))
+                .peek(p -> log.info("PATH 000 " + p.name))
                 .filter(p -> !p.separate)
                 .filter(p -> p.online)
                 .filter(p -> !p.name.equals(currentName))
-                .filter(p -> !p.path().equals(silence))
+//                .peek(p -> log.info("PATH 111 " + p.name ))
+//                .filter(p -> p.path() != null)
+//                .filter(p -> !p.path().equals(silence))
+
+                .filter(p -> {
+                    String pp = p.path();
+                    if (pp == null) return false;
+                    if (pp.equals(silence)) return false;
+                    return true;
+                })
+
+//                .peek(p -> log.info("PATH 333 " + p.name ))
                 .filter(p -> p.mode().equals("play"))
+//                .peek(p -> log.info("PATH 444 " + p.name ))
                 .findFirst()
                 .orElse(null);
         log.info("PLAYING: " + playing);

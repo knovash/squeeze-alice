@@ -31,7 +31,7 @@ public class SpotifyRequests {
                     .execute();
             json = response.returnContent().asString();
         } catch (IOException e) {
-            log.info("JSON: " + json);
+//            log.info("JSON: " + json);
             return null;
 //            throw new RuntimeException(e);
         }
@@ -53,7 +53,32 @@ public class SpotifyRequests {
         return json;
     }
 
-    public static String requestHttpClient(String uri, Header[] headers) {
+    public static String requestHttpClient(String uri) {
+        SpotifyAuth.requestRefresh();
+
+        Header[] headers = {
+                new BasicHeader("Authorization", SpotifyAuth.bearer_token)
+        };
+
+        int code;
+        String responseBody;
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            final HttpGet httpGet = new HttpGet(uri);
+            httpGet.setHeaders(headers);
+            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+                code = response.getStatusLine().getStatusCode();
+                log.info("CODE: " + code);
+                if (code == 401) return "401"; // no auth - try  get refresh token
+                if (code != 200) return "CODE: " + code + " ERROR: " + response.getStatusLine();
+                responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return responseBody;
+    }
+
+    public static String requestHttpClienth(String uri, Header[] headers) {
         int code;
         String responseBody;
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {

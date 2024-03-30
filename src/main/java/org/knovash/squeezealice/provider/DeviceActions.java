@@ -42,15 +42,15 @@ public class DeviceActions {
                 }
                 break;
             case ("channel"):
-                log.info("CHANNEL: " + value + " LAST CHANNEL: " + SmartHome.lastChannel);
+                log.info("CHANNEL: " + value + " LAST CHANNEL: " + lmsPlayers.lastChannel);
                 int channel;
                 if (relative != null && relative.equals(true)) {
-                    channel = SmartHome.lastChannel + 1;
+                    channel = lmsPlayers.lastChannel + 1;
                 } else {
                     channel = Integer.parseInt(value);
                 }
                 Actions.playChannel(player, channel);
-                SmartHome.lastChannel = channel;
+                lmsPlayers.lastChannel = channel;
                 break;
             case ("on"):
                 log.info("ON/OFF PLAY/PAUSE " + value);

@@ -41,7 +41,10 @@ public class Player {
     public Player(String name, String mac) {
         this.name = name;
         this.mac = mac;
-        this.nameInQuery = this.getQueryNameString();
+        this.nameInQuery = this.name
+                .replace(" ", "")
+                .replace("_", "")
+                .toLowerCase();
         this.volume_step = 5;
         this.volume_low = 10;
         this.volume_high = 25;
@@ -84,10 +87,12 @@ public class Player {
     }
 
     public String path() {
+//        if (this.name.equals("HomePod2")) return null;
         Response response = Requests.postToLmsForContent(RequestParameters.path(this.name).toString());
         if (response == null) return "";
         log.info("PLAYER: " + this.name + " PATH: " + response.result._path);
         return response.result._path;
+//        return null;
     }
 
     public String tracks() {
@@ -206,10 +211,11 @@ public class Player {
     }
 
     public Player prevChannel() {
-        log.info("LAST CHANNEL: " + SmartHome.lastChannel);
+        log.info("LAST CHANNEL: " + lmsPlayers.lastChannel);
+        int channel = 1;
         int favSize = this.favorites().size();
-        this.path();
-        int channel = SmartHome.lastChannel - 1;
+        if (this.lastChannel != 0) channel = this.lastChannel - 1;
+        else channel = lmsPlayers.lastChannel - 1;
         if (channel < 1) channel = favSize;
         log.info("PLAY CHANNEL: " + channel);
         Actions.playChannel(this, channel);
@@ -217,9 +223,16 @@ public class Player {
     }
 
     public Player nextChannel() {
-        log.info("LAST CHANNEL: " + SmartHome.lastChannel);
+        log.info("LAST CHANNEL THIS: " + this.lastChannel + " COMMON: " + lmsPlayers.lastChannel);
+        int channel = 1;
         int favSize = this.favorites().size();
-        int channel = SmartHome.lastChannel + 1;
+        if (this.lastChannel != 0) {
+            channel = this.lastChannel + 1;
+            log.info("CHANNEL THIS+1: " + channel);
+        } else {
+            channel = lmsPlayers.lastChannel + 1;
+            log.info("CHANNEL COMMON+1: " + channel);
+        }
         if (channel > favSize) channel = 1;
         log.info("PLAY CHANNEL: " + channel);
         Actions.playChannel(this, channel);
@@ -252,14 +265,14 @@ public class Player {
         return playlist;
     }
 
-    public void favoritesAdd() {
+    public String favoritesAdd() {
         String playerName = this.name;
-        String url ="";
-//        url = this.path()
-        String title ="";
-        Response response = Requests.postToLmsForContent(RequestParameters.favoritesAdd(playerName, url, title ).toString());
+        String url = this.lastPath;
+        int size = this.favorites().size() + 1;
+        String title = "New" + size;
+        Response response = Requests.postToLmsForContent(RequestParameters.favoritesAdd(playerName, url, title).toString());
         log.info("FAVORITES ADD");
-
+        return title;
     }
 
     public Player shuffleon() {
@@ -332,18 +345,18 @@ public class Player {
             this.play();
             return this;
         }
-        if (thisLastPath != null && !thisPath.equals(silence)) {
+        if (thisLastPath != null && !thisLastPath.equals(silence)) {
             log.info("PLAY THIS LAST PATH");
             this.playPath(thisLastPath);
             return this;
         }
-        if (commonLastPath != null && !thisPath.equals(silence)) {
+        if (commonLastPath != null && !commonLastPath.equals(silence)) {
             log.info("PLAY COMMON LAST PATH");
             this.playPath(commonLastPath);
             return this;
         }
         log.info("PLAY CHANNEL 1");
-        this.playChannel(1);
+        this.playChannel(1).saveLastChannel(1);
         return this;
     }
 
@@ -415,7 +428,7 @@ public class Player {
 
     public Player saveLastChannel(int channel) {
         log.info("SAVE LAST CHANNEL: " + channel);
-        SmartHome.lastChannel = channel;
+        lmsPlayers.lastChannel = channel;
         this.lastChannel = channel;
         return this;
     }
@@ -475,7 +488,7 @@ public class Player {
             log.info("PLAYER SEPARETE OR ALONE - RETURN");
             return this;
         }
-        lmsPlayers.update();
+//        lmsPlayers.update();
         List<String> listNamesOnline = lmsPlayers.playersOnlineNames;
         log.info("PLAYERS ONLINE: " + listNamesOnline);
         listNamesOnline.remove(this.name);
@@ -496,12 +509,12 @@ public class Player {
         return this;
     }
 
-    public String getQueryNameString() {
-        return this.nameInQuery = this.name
-                .replace(" ", "")
-                .replace("_", "")
-                .toLowerCase();
-    }
+//    public String getQueryNameString() {
+//        return this.nameInQuery = this.name
+//                .replace(" ", "")
+//                .replace("_", "")
+//                .toLowerCase();
+//    }
 
     @Override
     public String toString() {
