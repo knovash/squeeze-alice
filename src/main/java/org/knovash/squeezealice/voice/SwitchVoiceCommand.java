@@ -39,16 +39,15 @@ public class SwitchVoiceCommand {
         log.info("ROOM: " + room); // текст из диалога
         if (command == null)
             return createResponse("я не поняла команду");
-        if (command.contains("обнови") || command.contains("обнови плееры"))
+        if (command.contains("обнови"))
             return createResponse(updatePlayers());
-        if (command.contains("выбери колонку") || command.contains("выбери плеер"))
+        if (command.contains("колонка") || command.contains("плеер"))
             return createResponse(selectPlayerInRoom(command));
         if (command.contains("где пульт"))
             return createResponse(whereRemote());
         if (command.contains("комната")) // это комната {название}
             return createResponse(thisRoomIsName(command));
         if (room == null) return createResponse("скажите навыку: это комната и название комнаты");
-
 
         Device device = SmartHome.getDeviceByRoom(room);
         if (device == null) return createResponse("я не нашла колонку в комнате " + room);
@@ -58,32 +57,31 @@ public class SwitchVoiceCommand {
             return createResponse("я не нашла колонку " + device.customData.lmsName + " в комнате " + room);
         lmsPlayers.lastAliceId = alice_id;
 
-        if (command.contains("играть отдельно") || command.contains("включи отдельно") || command.contains("отдельно"))
+        if (command.contains("включи пульт") || command.contains("подключи пульт"))
+            return createResponse(connectBtRemote(player));
+        if (command.contains("отдельно"))
             return createResponse(separate_on(player));
-        if (command.contains("играть только тут") || command.contains("включи только тут") || command.contains("только тут"))
+        if (command.contains("только тут"))
             return createResponse(alone_on(player));
-        if (command.contains("играть вместе") || command.contains("включи вместе") || command.contains("вместе"))
+        if (command.contains("вместе"))
             return createResponse(separate_alone_off(player));
-        if ((command.contains("переключи") && (command.contains("spotify") || command.contains("спотифай")) || command.contains("spotify")))
+        if ((command.contains("spotify") || command.contains("спотифай")))
             return createResponse(Spotify.transfer(player));
-        if (command.contains("включи") && (command.contains("канал") || command.contains("избранное")))
+        if ((command.contains("канал")))
             return createResponse(channel(command, player));
         if (command.contains("включи") && // включи {исполнитель}
                 !(command.contains("альбом") || command.contains("канал") || command.contains("избранное")))
             return createResponse(spotifyPlayArtist(command, player));
-        if (command.contains("включи") && command.contains("альбом") && // включи {альбом}
-                !(command.contains("канал") || command.contains("избранное")))
+        if (command.contains("включи альбом"))
             return createResponse(spotifyPlayAlbum(command, player));
         if (command.contains("громкость"))
             return createResponse(volume(player));
-        if (command.contains("что") && command.contains("играет"))
+        if (command.contains("что играет"))
             return createResponse(whatsPlaying(player));
         if (command.contains("дальше") || command.contains("следующий"))
             return createResponse(next(player));
         if (command.contains("добавь в избранное") || command.contains("добавь избранное"))
             return createResponse(favoritesAdd(player));
-        if (command.contains("подключи пульт"))
-            return createResponse(connectBtRemote(player));
         return createResponse("я не поняла команду");
     }
 
@@ -290,7 +288,7 @@ public class SwitchVoiceCommand {
     private static String connectBtRemote(Player player) {
         String answer;
         log.info("CONNECT BT REMOTE");
-        lmsPlayers.btplayer = player.name;
+        lmsPlayers.btplayer = player.nameInQuery;
         answer = "пульт подключен к " + player.name;
         return answer;
     }
@@ -298,7 +296,7 @@ public class SwitchVoiceCommand {
     private static String whereRemote() {
         String answer;
         log.info("WHERE BT REMOTE");
-        answer = "пульт подключен к " +  lmsPlayers.btplayer;
+        answer = "пульт подключен к " + lmsPlayers.btplayer;
         return answer;
     }
 

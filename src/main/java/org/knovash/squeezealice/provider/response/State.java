@@ -8,10 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class State {
-
     public String instance;
     public String value;
     public boolean relative = false;
     public ActionResult action_result = new ActionResult();
-
 }

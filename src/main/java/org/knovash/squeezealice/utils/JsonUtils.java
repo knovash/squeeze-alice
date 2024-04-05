@@ -29,11 +29,10 @@ public class JsonUtils {
 
     public static String pojoToJson(Object pojo) {
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         try {
 //            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo);
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo).replace("\\", "");// для State переделанного в String
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo).replace("\\", "").replace("\"true\"", "true").replace("\"false\"", "false");// для State переделанного в String
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

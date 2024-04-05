@@ -66,11 +66,13 @@ public class Actions {
                 .unsync()
                 .pause()
                 .saveLastTime()
-                .saveLastPath();
+//                .saveLastPath()
+        ;
         lmsPlayers.write();
     }
 
     public static String toggleMusic(Player player) {
+        log.info("START TOGGLE MUSIC PLAYER: " + player.name);
         String mode = player.mode(); // TODO двойной запрос состояния плеера
         if (mode.equals("play")) {
             turnOffMusic(player);

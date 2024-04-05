@@ -340,21 +340,25 @@ public class Player {
         log.info("LAST PATH: " + thisLastPath);
         log.info("TRY GLOBAL LAST PATH: " + commonLastPath);
         log.info("SILENCE PATH: " + silence);
-        if (thisPath != null && !thisPath.equals(silence)) {
-            log.info("PLAY THIS PATH");
-            this.play();
-            return this;
-        }
-        if (thisLastPath != null && !thisLastPath.equals(silence)) {
-            log.info("PLAY THIS LAST PATH");
-            this.playPath(thisLastPath);
-            return this;
-        }
+
+
         if (commonLastPath != null && !commonLastPath.equals(silence)) {
             log.info("PLAY COMMON LAST PATH");
             this.playPath(commonLastPath);
             return this;
         }
+
+        if (thisPath != null && !thisPath.equals(silence)) {
+            log.info("PLAY THIS PATH");
+            this.play();
+            return this;
+        }
+
+//        if (thisLastPath != null && !thisLastPath.equals(silence)) {
+//            log.info("PLAY THIS LAST PATH");
+//            this.playPath(thisLastPath);
+//            return this;
+//        }
         log.info("PLAY CHANNEL 1");
         this.playChannel(1).saveLastChannel(1);
         return this;

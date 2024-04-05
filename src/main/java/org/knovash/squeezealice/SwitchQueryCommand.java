@@ -26,8 +26,12 @@ public class SwitchQueryCommand {
 
         String action = queryParams.get("action");
         log.info("ACTION: " + action);
-        Player player = lmsPlayers.getPlayerByNameInQuery(queryParams.get("player"));
+        String playerInQuery = queryParams.get("player");
+        log.info("PLAYER IN QUERY: " + playerInQuery);
+        Player player = lmsPlayers.getPlayerByNameInQuery(playerInQuery);
+        log.info("PLAYER BY NAME IN QUERY: " + player);
         String value = queryParams.get("value");
+        log.info("VALUE: " + value);
         switch (action) {
             case ("channel"):
                 Actions.playChannel(player, Integer.valueOf(value));
@@ -39,14 +43,17 @@ public class SwitchQueryCommand {
                 break;
             case ("toggle_music"):
             case ("play_pause"):
+                log.info("CASE TOGGLE MUSIC " + player);
                 response = Actions.toggleMusic(player);
                 break;
             case ("toggle_music_all"):
             case ("play_pause_all"):
+                log.info("CASE TOGGLE MUSIC ALL");
                 response = Actions.toggleMusicAll(player);
                 break;
             case ("stop_all"):
             case ("pause_all"):
+                log.info("CASE STOP MUSIC ALL");
                 response = Actions.stopMusicAll();
                 break;
             case ("next"):
