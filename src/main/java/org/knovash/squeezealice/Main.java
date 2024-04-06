@@ -59,7 +59,15 @@ public class Main {
 
         log.info("LAST PATH: " + lmsPlayers.lastPath);
         log.info("LAST CHANNEL: " + lmsPlayers.lastChannel);
-        log.info("BT REMOTE: " + lmsPlayers.btplayer);
+        log.info("BT REMOTE: " + lmsPlayers.btPlayerInQuery);
+
+//        HashMap<String, String> parameters = new HashMap<>();
+//        parameters.put("room", "Серверная");
+//        parameters.put("speaker_name_lms", "Spotify");
+//        parameters.put("name", "Спотифай");
+//        parameters.put("speaker_name_alice", "Spotify");
+//        parameters.put("id", "22");
+//        SmartHome.create(parameters);
 
         log.info("--- SERVER START ---");
         Server.start();

@@ -26,8 +26,8 @@ cd squeeze-alice-pak
 echo -e "\n"${BGreen}"COPY TAR TO "$remote${NC}"\n"
 sshpass -p "12345" scp * root@$remote:/root/
 
-echo -e "\n"${BGreen}"RUN INSTALL SCRIPT ON REMOTE "$remote${NC}"\n"
-ssh root@$remote sh first_run_on_remote.sh
+#echo -e "\n"${BGreen}"RUN INSTALL SCRIPT ON REMOTE "$remote${NC}"\n"
+#ssh root@$remote sh first_run_on_remote.sh
 
 echo -e "\n"${BGreen}"OPEN SSH TERMINAL"{NC}"\n"
 ssh root@$remote

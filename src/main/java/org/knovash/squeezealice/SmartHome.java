@@ -93,9 +93,10 @@ public class SmartHome {
         SmartHome.write();
     }
 
-    public static Integer addNewDevice(Device device) {
+    public static Integer addNewDevice(Device device, int idd) {
         log.info("ADD DEVICE: " + device.customData.lmsName);
         int id = SmartHome.devices.size() + 1;
+        if (idd != 0) id = idd;
         device.id = String.valueOf(id);
         SmartHome.devices.add(device);
         return id;
@@ -125,10 +126,12 @@ public class SmartHome {
         return "REMOVED " + deviceId + " DEVICES SIZE: " + SmartHome.devices.size();
     }
 
-    public static Integer create(HashMap<String, String> parameters) {
+    public static void create(HashMap<String, String> parameters) {
+        log.info("CREATE " + parameters);
         Device device = new Device(parameters.get("speaker_name_alice"));
         device.type = "devices.types.media_device.receiver";
         device.room = parameters.get("room");
+        if (parameters.get("name") != null) device.name = parameters.get("name");
         device.customData.lmsName = parameters.get("speaker_name_lms");
 
         Capability volume = new Capability();
@@ -163,10 +166,14 @@ public class SmartHome {
         device.capabilities.add(on_of);
 
         log.info("NEW DEVICE: " + device);
-        int id = SmartHome.addNewDevice(device);
+
+        int id = 0;
+        if (parameters.get("id") != null) id = Integer.parseInt(parameters.get("id"));
+
+        SmartHome.addNewDevice(device, id);
+
         log.info("DEVICES: " + SmartHome.devices.stream().map(d -> d.customData.lmsName + " id=" + d.id)
                 .collect(Collectors.toList()));
         SmartHome.write();
-        return id;
     }
 }

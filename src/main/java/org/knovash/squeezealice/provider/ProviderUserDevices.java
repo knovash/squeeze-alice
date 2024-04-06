@@ -13,7 +13,7 @@ public class ProviderUserDevices {
     public static Context action(Context context) {
         log.info("");
         String xRequestId = context.xRequestId;
-
+        log.info("XREQUESTID: " + xRequestId);
         ResponseYandex responseYandex = new ResponseYandex();
         responseYandex.request_id = xRequestId;
         responseYandex.payload = new Payload();
@@ -21,8 +21,13 @@ public class ProviderUserDevices {
         responseYandex.payload.devices = SmartHome.devices;
         String json = JsonUtils.pojoToJson(responseYandex);
 
+        json = json.replace("\"true\"","true");
+        json = json.replace("\"false\"","false");
+
         context.json = json;
         context.code = 200;
         return context;
     }
 }
+
+

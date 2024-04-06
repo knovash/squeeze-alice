@@ -26,10 +26,10 @@ public class LmsPlayers {
     public List<Player> players;
     public List<String> playersOnlineNames;
     public String lastPath;
-    public int lastChannel = 3;
-    //    public String lastPlayTime;
+    public int lastChannel = 1;
     public String lastAliceId;
-    public String btplayer = "HomePod";
+    public String btPlayerInQuery = "homepod";
+    public String btPlayerName = "HomePod";
     public int delayUpdate = 5; // MINUTES
     public int delayExpire = 10; // MINUTES
 
@@ -99,24 +99,28 @@ public class LmsPlayers {
             lmsPlayers = lp;
             log.info("LAST PATH: " + lmsPlayers.lastPath);
             log.info("LAST CHANNEL: " + lmsPlayers.lastChannel);
-            log.info("BT REMOTE: " + lmsPlayers.btplayer);
+            log.info("BT REMOTE: " + lmsPlayers.btPlayerInQuery);
         }
     }
 
     public Player getPlayerByName(String name) {
+        Player player = new Player();
         if (lmsPlayers.players == null) return null;
-        return lmsPlayers.players.stream()
-                .filter(player -> player.getName().toLowerCase().equals(name.toLowerCase()))
+        player = lmsPlayers.players.stream()
+                .filter(p -> p.getName().toLowerCase().equals(name.toLowerCase()))
                 .findFirst()
                 .orElse(null);
+        if (player == null) log.info("PLAYER NOT FOUND " + name);
+
+        return player;
     }
 
     public Player getPlayerByNameInQuery(String name) {
         log.info("NAME: " + name);
         if (name == null) return null;
         if (name.equals("btremote")) {
-            log.info("BT PLAYER: " + btplayer);
-            return lmsPlayers.getPlayerByNameInQuery(btplayer);
+            log.info("BT PLAYER: " + btPlayerInQuery);
+            return lmsPlayers.getPlayerByNameInQuery(btPlayerInQuery);
         }
         if (lmsPlayers.players == null) return null;
         return lmsPlayers.players.stream()
@@ -125,29 +129,22 @@ public class LmsPlayers {
                 .orElse(null);
     }
 
-    public Player getPlayingPlayer(String currentName) {
-        log.info("SEARCH FOR PLAYING " + lmsPlayers.playersOnlineNames);
-        Player playing = lmsPlayers.playersOnlineNames
-                .stream()
-                .map(n -> getPlayerByName(n))
-                .peek(p -> log.info("PATH 000 " + p.name))
+    public Player getPlayingPlayer(String exceptName) {
+        log.info("SEARCH FOR PLAYING online" + lmsPlayers.playersOnlineNames);
+        log.info("EXCEPT CURRENT PLAYER " + exceptName);
+
+        Player playing = lmsPlayers.players.stream()
+//        Player playing = lmsPlayers.playersOnlineNames.stream().map(n -> getPlayerByName(n))
                 .filter(p -> !p.separate)
                 .filter(p -> p.online)
-                .filter(p -> !p.name.equals(currentName))
-//                .peek(p -> log.info("PATH 111 " + p.name ))
-//                .filter(p -> p.path() != null)
-//                .filter(p -> !p.path().equals(silence))
-
+                .filter(p -> !p.name.equals(exceptName))
                 .filter(p -> {
                     String pp = p.path();
                     if (pp == null) return false;
                     if (pp.equals(silence)) return false;
                     return true;
                 })
-
-//                .peek(p -> log.info("PATH 333 " + p.name ))
                 .filter(p -> p.mode().equals("play"))
-//                .peek(p -> log.info("PATH 444 " + p.name ))
                 .findFirst()
                 .orElse(null);
         log.info("PLAYING: " + playing);

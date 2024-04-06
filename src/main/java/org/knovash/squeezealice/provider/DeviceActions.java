@@ -5,6 +5,7 @@ import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.Actions;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.Device;
+import org.knovash.squeezealice.spotify.Spotify;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -24,8 +25,16 @@ public class DeviceActions {
         log.info("TYPE: " + type);
         log.info("INSTANCE: " + instance + " VALUE: " + value + " RELATIVE: " + relative);
 
+        if (name.equals("Spotify")) {
+            log.info("SPOTY");
+//            Spotify.transfer()
+            return;
+        }
+
         // обратиться к девайсу и изменить его состояние
         Player player = lmsPlayers.getPlayerByName(name);
+        if (player == null ) return;
+        log.info("PLAYER: " + player.name);
         switch (instance) {
             case ("volume"):
                 if (relative != null && relative.equals(true)) {
@@ -55,14 +64,17 @@ public class DeviceActions {
             case ("on"):
                 log.info("ON/OFF PLAY/PAUSE " + value);
                 if (value.equals("true")) {
+                    log.info("TURN OFF");
 //                    Actions.turnOnMusic(player);
                     CompletableFuture.supplyAsync(() -> {
                         Actions.turnOnMusic(player);
                         return "";
                     });
                 }
-                ;
-                if (value.equals("false")) Actions.turnOffMusic(player);
+                if (value.equals("false")) {
+                    log.info("TURN OFF");
+                    Actions.turnOffMusic(player);
+                }
                 break;
         }
         log.info("OK");
