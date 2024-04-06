@@ -204,11 +204,10 @@ public class SwitchVoiceCommand {
     public static String whatsPlaying(Player player) {
         String answer = "";
         log.info("WATS PLAYING");
-        String playlist = player.playlistname();
-        String playlistUrl = player.playlistUrl();
-        log.info("PLAYLIST URL: " + playlistUrl);
-        String mode = player.mode();
-        if (playlist == null) playlist = player.artistname();
+        String playlist;
+        player.title();
+        playlist = player.title;
+
         if (playlist == null) return createResponse("медиасервер не отвечает");
         log.info("PLAYLIST: " + playlist);
         String separate = "";
@@ -225,6 +224,7 @@ public class SwitchVoiceCommand {
         String separateAnswer = "";
         if (separatePlayers.contains(player.name)) separatePlayers.remove(player.name);
         if (separatePlayers.size() != 0) separateAnswer = ", отдельно играет " + String.join(", ", separatePlayers);
+        String mode = player.mode();
         if (mode.equals("play")) {
             answer = "сейчас на " + player.name + " играет " + separate + playlist + " громкость " + player.volumeGet();
         }
@@ -247,7 +247,8 @@ public class SwitchVoiceCommand {
         String answer;
         log.info("SEPARATE ON");
         player.separate_on();
-        answer = "включаю отдельно " + player.name;
+        player.title();
+        answer = "включаю отдельно " + player.name + ". " + player.title;
         return answer;
     }
 
@@ -255,15 +256,18 @@ public class SwitchVoiceCommand {
         String answer;
         log.info("ALONE ON");
         player.alone_on();
-        answer = "включаю только тут на " + player.name;
+        player.title();
+        answer = "включаю только тут на " + player.name + ". " + player.title;
         return answer;
     }
 
     private static String separate_alone_off(Player player) {
         String answer;
         log.info("SEPARATE ALONE OFF");
-        player.separate_alone_off();
+        Player playing = player.separate_alone_off();
         answer = "включаю вместе " + player.name;
+        player.title();
+        if (playing != null) answer = "включаю вместе " + player.name + " и " + playing.name + ". " + playing.title;
         return answer;
     }
 
@@ -288,7 +292,8 @@ public class SwitchVoiceCommand {
     private static String connectBtRemote(Player player) {
         String answer;
         log.info("CONNECT BT REMOTE");
-        lmsPlayers.btplayer = player.nameInQuery;
+        lmsPlayers.btPlayerInQuery = player.nameInQuery;
+        lmsPlayers.btPlayerName = player.name;
         answer = "пульт подключен к " + player.name;
         return answer;
     }
@@ -296,7 +301,7 @@ public class SwitchVoiceCommand {
     private static String whereRemote() {
         String answer;
         log.info("WHERE BT REMOTE");
-        answer = "пульт подключен к " + lmsPlayers.btplayer;
+        answer = "пульт подключен к " + lmsPlayers.btPlayerName;
         return answer;
     }
 

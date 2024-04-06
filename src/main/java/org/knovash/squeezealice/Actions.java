@@ -36,6 +36,12 @@ public class Actions {
 
     public static void turnOnMusic(Player player) {
         log.info("TURN ON MUSIC PLAYER: " + player.name);
+
+        if (player.name.equals("Spotify")) {
+            log.info("ITS SPOTIFY");
+            return;
+        }
+
         player.ifNotPlayUnsyncWakeSet();
         if (player.separate) {
             log.info("PLAYER IS SEPARATED - PLAY LAST");
@@ -61,12 +67,18 @@ public class Actions {
     }
 
     public static void turnOffMusic(Player player) {
-        log.info("TURN OFF SPEAKER");
+        log.info("TURN OFF SPEAKER " + player.name + " SEPARATE "+player.separate);
+
+        if (player.name.equals("Spotify")) {
+            log.info("ITS SPOTIFY");
+            return;
+        }
+
         player
                 .unsync()
                 .pause()
                 .saveLastTime()
-//                .saveLastPath()
+                .saveLastPath()
         ;
         lmsPlayers.write();
     }

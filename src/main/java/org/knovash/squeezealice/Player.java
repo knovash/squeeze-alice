@@ -32,6 +32,7 @@ public class Player {
     public boolean separate = false;
     public boolean online = false;
     public Map<Integer, Integer> timeVolume;
+    public String title = "херпоймичё";
 
     public String lastPath;
     public String lastPlayTime;
@@ -41,6 +42,7 @@ public class Player {
     public Player(String name, String mac) {
         this.name = name;
         this.mac = mac;
+        this.title = "херпоймичё";
         this.nameInQuery = this.name
                 .replace(" ", "")
                 .replace("_", "")
@@ -341,12 +343,11 @@ public class Player {
         log.info("TRY GLOBAL LAST PATH: " + commonLastPath);
         log.info("SILENCE PATH: " + silence);
 
-
-        if (commonLastPath != null && !commonLastPath.equals(silence)) {
-            log.info("PLAY COMMON LAST PATH");
-            this.playPath(commonLastPath);
-            return this;
-        }
+//        if (this.separate && thisPath != null && !thisPath.equals(silence)){
+//            log.info("PLAY THIS PATH SEPARATE");
+//            this.play();
+//            return this;
+//        }
 
         if (thisPath != null && !thisPath.equals(silence)) {
             log.info("PLAY THIS PATH");
@@ -354,11 +355,12 @@ public class Player {
             return this;
         }
 
-//        if (thisLastPath != null && !thisLastPath.equals(silence)) {
-//            log.info("PLAY THIS LAST PATH");
-//            this.playPath(thisLastPath);
-//            return this;
-//        }
+        if (commonLastPath != null && !commonLastPath.equals(silence)) {
+            log.info("PLAY COMMON LAST PATH");
+            this.playPath(commonLastPath);
+            return this;
+        }
+
         log.info("PLAY CHANNEL 1");
         this.playChannel(1).saveLastChannel(1);
         return this;
@@ -473,16 +475,35 @@ public class Player {
     }
 
     public Player separate_alone_off() {
-        log.info("SEPARATE ALONE OFF");
+        log.info("SEPARATE ALONE OFF - SYNC ALL PLAYING TO PLAYING");
+        Player playing = lmsPlayers.getPlayingPlayer("none");
+        log.info("PLAYING: " + playing);
+        if (playing == null) {
+            playing = this;
+            if (!playing.mode().equals("play")) playing.play();
+        }
+        log.info("ALL SEPARATE SET false");
         lmsPlayers.players.forEach(p -> p.separate = false);
         lmsPlayers.write();
-        Actions.turnOnMusic(this);
-        return this;
+        log.info("SYNC ALL PLAYING TO: " + playing);
+        playing.syncAllOtherPlayingToThis();
+        return playing;
     }
 
     public Player saveLastTime() {
         this.lastPlayTime = LocalTime.now().truncatedTo(MINUTES).toString();
         log.info("SAVE LAST TIME: " + this.lastPlayTime);
+        return this;
+    }
+
+    public Player title() {
+        log.info("START PLAYER: " + this.name + " TITLE: " + this.title);
+        String playlist = this.playlistname();
+        String playlistUrl = this.playlistUrl();
+        log.info("PLAYLIST URL: " + playlistUrl);
+        if (playlist == null) playlist = this.artistname();
+        if (playlist != null) this.title = playlist;
+        log.info("PLAYER: " + this.name + " TITLE: " + this.title);
         return this;
     }
 
@@ -512,13 +533,6 @@ public class Player {
         log.info("SYNC ALL OTHER PLAYING FINISH");
         return this;
     }
-
-//    public String getQueryNameString() {
-//        return this.nameInQuery = this.name
-//                .replace(" ", "")
-//                .replace("_", "")
-//                .toLowerCase();
-//    }
 
     @Override
     public String toString() {

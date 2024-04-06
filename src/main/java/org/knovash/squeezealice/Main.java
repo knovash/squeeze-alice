@@ -6,7 +6,6 @@ import org.knovash.squeezealice.utils.ArgsParser;
 import org.knovash.squeezealice.utils.Utils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
@@ -60,14 +59,15 @@ public class Main {
 
         log.info("LAST PATH: " + lmsPlayers.lastPath);
         log.info("LAST CHANNEL: " + lmsPlayers.lastChannel);
-        log.info("BT REMOTE: " + lmsPlayers.btplayer);
-
+        log.info("BT REMOTE: " + lmsPlayers.btPlayerInQuery);
 
 //        HashMap<String, String> parameters = new HashMap<>();
-//        parameters.put("room", "Spotify");
+//        parameters.put("room", "Серверная");
 //        parameters.put("speaker_name_lms", "Spotify");
+//        parameters.put("name", "Спотифай");
+//        parameters.put("speaker_name_alice", "Spotify");
+//        parameters.put("id", "22");
 //        SmartHome.create(parameters);
-//        SmartHome.getDeviceByRoom("Spotify").name = "Spotify";
 
         log.info("--- SERVER START ---");
         Server.start();
