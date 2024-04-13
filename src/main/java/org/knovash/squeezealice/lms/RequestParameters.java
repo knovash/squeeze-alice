@@ -112,4 +112,15 @@ public class RequestParameters {
 //        {"id": 1, "method": "slim.request", "params":["HomePod", ["playlist", "tracks", "?"]]}
         return RequestToLms.create(player, new String[]{"playlist", "tracks", "?"});
     }
+
+    public static RequestToLms serverstatusname() {
+//        {"id": 1, "method": "slim.request", "params":["HomePod2", ["status", "1", "1"]]}
+//        "player count": 5,
+        return RequestToLms.create("", new String[]{"serverstatus", "name"});
+    }
+
+    public static RequestToLms status(String player) {
+//        {"id": 1, "method": "slim.request", "params":["HomePod2", ["status", "1", "1"]]}
+        return RequestToLms.create(player, new String[]{"status", "1", "1"});
+    }
 }

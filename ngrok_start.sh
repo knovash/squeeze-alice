@@ -24,4 +24,4 @@ ngrok http --domain=$domain
 
 echo -e ${BGreen}"START REMOTE TUNNEL"${NC}"\n"
 ssh root@$remote systemctl restart squeeze-tunnel.service
-$SHELL
+#$SHELL

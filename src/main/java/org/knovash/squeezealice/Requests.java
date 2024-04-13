@@ -20,8 +20,8 @@ public class Requests {
         HttpResponse response = null;
         try {
             response = Request.Head(uri)
-                    .connectTimeout(1000)
-                    .socketTimeout(1000)
+                    .connectTimeout(500)
+                    .socketTimeout(500)
                     .execute()
                     .returnResponse();
         } catch (IOException e) {
@@ -44,12 +44,12 @@ public class Requests {
                     .toString();
         } catch (IOException e) {
             log.info("ERROR " + e);
-            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIP + ":" + lmsPort);
+            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIp + ":" + lmsPort);
         }
         return status;
     }
 
-    public static Response postToLmsForContent(String json) {
+    public static Response postToLmsForResponse(String json) {
 //  все запросы плеера для получения информации из Response response.result._artist
         log.info("REQUEST TO LMS: " + json);
         Content content = null;
@@ -62,7 +62,7 @@ public class Requests {
                     .returnContent();
         } catch (IOException e) {
             log.info("ERROR " + e);
-            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIP + ":" + lmsPort);
+            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIp + ":" + lmsPort);
         }
         if (content != null) {
             response = JsonUtils.jsonToPojo(content.asString(), Response.class);
@@ -70,5 +70,23 @@ public class Requests {
             log.info("ERROR RESPONSE IS EMPTY");
         }
         return response;
+    }
+
+    public static String postToLmsForJsonBody(String json) {
+//  все запросы плеера для получения информации из Response response.result._artist
+        log.info("REQUEST TO LMS: " + json);
+        Content content = null;
+        Response response = null;
+        try {
+            content = Request.Post(lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
+                    .connectTimeout(1000)
+                    .socketTimeout(1000)
+                    .execute()
+                    .returnContent();
+        } catch (IOException e) {
+            log.info("ERROR " + e);
+            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIp + ":" + lmsPort);
+        }
+        return content.asString();
     }
 }

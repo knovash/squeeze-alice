@@ -1,7 +1,6 @@
 package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.SpotifyAuth;
@@ -30,11 +29,6 @@ public class Html {
                 "<p><a href=\\cmd?action=state_devices>Посмотреть настройки Devices</a></p> \n" +
                 "<p><a href=\\cmd?action=state_players>Посмотреть настройки Players</a></p> \n" +
                 "<p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
-//                "<p>-------</p> \n" +
-//                "<p><a href=\\spoti_auth>Spotify Auth</a></p> \n" +
-//                "<p><a href=\\spoti_refresh>Spotify Auth Refresh direct</a></p> \n" +
-//                "<p><a href=\\cmd?action=spoti_refresh>Spotify Auth Refresh cmd</a></p> \n" +
-//                "<p><a href=\\cmd?action=spoti_state>Spotify state</a></p> \n" +
                 "<p><a href=\\cmd?action=restart>Restart server service</a></p> \n" +
                 "<p><a href=\\cmd?action=reboot>Reboot device</a></p> \n" +
                 "</body>\n" +
@@ -115,19 +109,19 @@ public class Html {
     }
 
     public static String formSpeakers() {
-        lmsPlayers.update();
+        lmsPlayers.updateNew();
         String page = "<!DOCTYPE html><html lang=\"en\">" +
                 "<head><meta charset=\"UTF-8\" />" +
                 "<title>Подключение колонок LMS в УД с Алисой</title></head><body>" +
                 "<p><a href=\"/\">Home</a></p>" +
                 "<h2>Подключение колонок LMS в УД с Алисой</h2>" +
                 "<p>Колонки найденные в LMS: " +
-                getNotInHome() + " " +
+                lmsPlayers.playersNamesOnLine + " " +
                 "<a href=\"/cmd?action=players_update\">обновить</a></p>" +
                 "<p>Колонки подключенные в УД: " +
                 SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList()) + " " +
                 "<a href=\"/cmd?action=speakers_clear\">очистить</a></p>" +
-                formAddSpeaker() +
+                formAddDevice() +
                 "<h3>Подключенные колонки</h3>" +
                 join(SmartHome.devices.stream()
                         .map(d ->
@@ -156,15 +150,15 @@ public class Html {
         return page;
     }
 
-    public static String formAddSpeaker() {
+    public static String formAddDevice() {
         String page = "";
-        if (getNotInHome().size() > 0) {
+        if (getPlayersNamesNotInDevices().size() > 0) {
             page = "<h3>Добавить колонку</h3>" +
                     "<form action=\"/cmd\" method=\"get\">" +
                     "<input type=\"hidden\" name=\"speaker_name_alice\" id=\"speaker_name_alice\" value=\"" + "музыка" + "\">" +
-                    getNotInHomeFirst() +
+                    getPlayerNameNotInDevicesFirst() +
                     "<br>" +
-                    "<input type=\"hidden\" name=\"speaker_name_lms\" id=\"speaker_name_lms\" value=\"" + getNotInHomeFirst() + "\" />" +
+                    "<input type=\"hidden\" name=\"speaker_name_lms\" id=\"speaker_name_lms\" value=\"" + getPlayerNameNotInDevicesFirst() + "\" />" +
                     "<br>" +
                     "<input name=\"room\" id=\"room\" value=\"Комната\" />" +
                     "<label for=\"room\">Название комнаты в Умном доме</label>" +
@@ -175,7 +169,7 @@ public class Html {
     }
 
     public static String formPlayers() {
-        lmsPlayers.update();
+        lmsPlayers.updateNew();
         String page = "<!DOCTYPE html><html lang=\"en\">" +
                 "<head><meta charset=\"UTF-8\" />" +
                 "  <title>Настройка колонок</title></head><body>" +
@@ -215,7 +209,7 @@ public class Html {
     }
 
     public static String checkPlayerOnlineInLms(String playerName) {
-        if (lmsPlayers.playersOnlineNames.contains(playerName)) return "in LMS online";
+        if (lmsPlayers.playersNamesOnLine.contains(playerName)) return "in LMS online";
         return "in LMS offline";
     }
 
@@ -224,19 +218,19 @@ public class Html {
         return "в УД подключено";
     }
 
-    public static List<String> getNotInHome() {
-        List<String> inLms = lmsPlayers.playersOnlineNames;
-        List<String> inHome = SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
-        inLms.removeAll(inHome);
-        return inLms;
+    public static List<String> getPlayersNamesNotInDevices() {
+        lmsPlayers.updateNew();
+        List<String> notInDevices = lmsPlayers.playersNamesOnLine;
+        List<String> inDevices = SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
+        notInDevices.removeAll(inDevices);
+        return notInDevices;
     }
 
-    public static String getNotInHomeFirst() {
-        List<String> inLms = lmsPlayers.playersOnlineNames;
-        List<String> inHome = SmartHome.devices.stream().map(d -> d.customData.lmsName).collect(Collectors.toList());
-        inLms.removeAll(inHome);
-        if (inLms.size() == 0) return "--";
-        else return inLms.get(0).toString();
+    public static String getPlayerNameNotInDevicesFirst() {
+
+        List<String> ff = getPlayersNamesNotInDevices();
+        if (ff.size() == 0) return "no";
+        return ff.get(0);
     }
 
     public static String spoti_callback() {

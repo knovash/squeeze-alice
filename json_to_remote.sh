@@ -15,4 +15,7 @@ echo -e ${BGreen}"REMOTE IP "$remote${NC}
 
 echo -e "json to "${BGreen}$remote${NC}"\n"
 sshpass -p "12345" scp *.json root@$remote:/opt/squeeze-alice-1.0/
-$SHELL
+
+echo -e ${BGreen}"OK"${NC}
+sleep 5
+#$SHELL

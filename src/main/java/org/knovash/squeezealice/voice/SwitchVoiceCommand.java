@@ -205,6 +205,7 @@ public class SwitchVoiceCommand {
         String answer = "";
         log.info("WATS PLAYING");
         String playlist;
+        player.status();
         player.title();
         playlist = player.title;
 
@@ -224,7 +225,7 @@ public class SwitchVoiceCommand {
         String separateAnswer = "";
         if (separatePlayers.contains(player.name)) separatePlayers.remove(player.name);
         if (separatePlayers.size() != 0) separateAnswer = ", отдельно играет " + String.join(", ", separatePlayers);
-        String mode = player.mode();
+        String mode = player.status.result.mode;
         if (mode.equals("play")) {
             answer = "сейчас на " + player.name + " играет " + separate + playlist + " громкость " + player.volumeGet();
         }
@@ -273,10 +274,10 @@ public class SwitchVoiceCommand {
 
     private static String updatePlayers() {
         String answer;
-        log.info("BEFORE UPDATE " + lmsPlayers.playersOnlineNames.toString());
-        lmsPlayers.update();
-        log.info("AFTER UPDATE " + lmsPlayers.playersOnlineNames.toString());
-        answer = "найдено плееров " + lmsPlayers.playersOnlineNames.size() + ", " + String.join(", ", lmsPlayers.playersOnlineNames);
+        log.info("BEFORE UPDATE " + lmsPlayers.playersNamesOnLine.toString());
+        lmsPlayers.updateNew();
+        log.info("AFTER UPDATE " + lmsPlayers.playersNamesOnLine.toString());
+        answer = "найдено плееров " + lmsPlayers.playersNamesOnLine.size() + ", " + String.join(", ", lmsPlayers.playersNamesOnLine);
         return answer;
     }
 

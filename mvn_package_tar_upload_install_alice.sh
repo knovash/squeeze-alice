@@ -19,6 +19,9 @@ mvn package
 echo -e "\n"${BGreen}"TAR"${NC}"\n"
 sh tar.sh
 
+ssh root@$remote rm -r /opt/squeeze-alice*
+
+
 cd squeeze-alice-pak
 echo -e "\n"${BGreen}"COPY TAR TO "$remote${NC}"\n"
 sshpass -p "12345" scp * root@$remote:/root/
@@ -29,4 +32,4 @@ ssh root@$remote sh install_alice.sh
 echo -e "\n"${BGreen}"OPEN SSH TERMINAL"${NC}"\n"
 ssh root@$remote
 
-$SHELL
+#$SHELL

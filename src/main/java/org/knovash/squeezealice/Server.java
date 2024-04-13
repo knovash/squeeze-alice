@@ -12,6 +12,8 @@ import static org.knovash.squeezealice.Main.port;
 public class Server {
 
     public static void start() {
+        log.info("");
+        log.info("SERVER START");
         HttpServer server;
         try {
             server = HttpServer.create(new InetSocketAddress(port), 0);

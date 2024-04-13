@@ -49,7 +49,7 @@ public class Handler implements HttpHandler {
                 context = PageIndex.action(context);
                 break;
             case ("/speakers"):
-                context = PageSpeakers.action(context);
+                context = PageDevices.action(context);
                 break;
             case ("/players"):
                 context = PagePlayers.action(context);
