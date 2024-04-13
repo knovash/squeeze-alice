@@ -4,8 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.lms.PlayerStatus;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
+import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.time.LocalTime;
 import java.util.*;
@@ -23,25 +25,27 @@ public class Player {
 
     public String name;
     public String nameInQuery;
-    public String mac;
+    public String id;
     public Integer volume_step;
     public Integer volume_low;
+    public boolean playing;
     public Integer volume_high;
     public Integer wake_delay;
     public boolean black = false;
     public boolean separate = false;
-    public boolean online = false;
+    public boolean connected = false;
     public Map<Integer, Integer> timeVolume;
     public String title = "херпоймичё";
 
     public String lastPath;
     public String lastPlayTime;
     public int lastChannel = 1;
+    public PlayerStatus status = new PlayerStatus();
 
 
-    public Player(String name, String mac) {
+    public Player(String name, String id) {
         this.name = name;
-        this.mac = mac;
+        this.id = id;
         this.title = "херпоймичё";
         this.nameInQuery = this.name
                 .replace(" ", "")
@@ -61,58 +65,58 @@ public class Player {
     }
 
     public static String name(String index) {
-        Response response = Requests.postToLmsForContent(RequestParameters.name(index).toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.name(index).toString());
         if (response == null) return "";
         log.info("NAME: " + response.result._name);
         return response.result._name;
     }
 
     public static String id(String index) {
-        Response response = Requests.postToLmsForContent(RequestParameters.id(index).toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.id(index).toString());
         if (response == null) return "";
         log.info("ID: " + response.result._id);
         return response.result._id;
     }
 
     public String mode() {
-        Response response = Requests.postToLmsForContent(RequestParameters.mode(this.name).toString());
+        this.playing = false;
+        Response response = Requests.postToLmsForResponse(RequestParameters.mode(this.name).toString());
         if (response == null) return "stop";
+        if (response.result._mode.equals("play")) this.playing = true;
         log.info("PLAYER: " + this.name + " MODE: " + response.result._mode);
         return response.result._mode;
     }
 
     public List<Response.SyncgroupsLoop> syncgroups() {
-        Response response = Requests.postToLmsForContent(RequestParameters.syncgroups().toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.syncgroups().toString());
         if (response == null) return null;
         log.info("SYNCGROUPS: " + response.result.syncgroups_loop);
         return response.result.syncgroups_loop;
     }
 
     public String path() {
-//        if (this.name.equals("HomePod2")) return null;
-        Response response = Requests.postToLmsForContent(RequestParameters.path(this.name).toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.path(this.name).toString());
         if (response == null) return "";
         log.info("PLAYER: " + this.name + " PATH: " + response.result._path);
         return response.result._path;
-//        return null;
     }
 
     public String tracks() {
-        Response response = Requests.postToLmsForContent(RequestParameters.tracks(this.name).toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.tracks(this.name).toString());
         if (response == null) return "0";
         log.info("PLAYER: " + this.name + " TRACKS: " + response.result._tracks);
         return response.result._tracks;
     }
 
     public String playlistname() {
-        Response response = Requests.postToLmsForContent(RequestParameters.playlistname(this.name).toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.playlistname(this.name).toString());
         if (response == null) return null;
         log.info("PLAYER: " + this.name + " PLAYLIST: " + response.result._name);
         return response.result._name;
     }
 
     public String playlistUrl() {
-        Response response = Requests.postToLmsForContent(RequestParameters.playlisturl(this.name).toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.playlisturl(this.name).toString());
         if (response == null) return null;
         log.info(response.result.toString());
         log.info("PLAYER: " + this.name + " PLAYLIST: " + response.result._url);
@@ -120,28 +124,28 @@ public class Player {
     }
 
     public String albumname() {
-        Response response = Requests.postToLmsForContent(RequestParameters.albumname(this.name).toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.albumname(this.name).toString());
         if (response == null) return "";
         log.info("PLAYER: " + this.name + " ALBUM: " + response.result._album);
         return response.result._album;
     }
 
     public String trackname() {
-        Response response = Requests.postToLmsForContent(RequestParameters.trackname(this.name).toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.trackname(this.name).toString());
         if (response == null) return "";
         log.info("PLAYER: " + this.name + " TRACK: " + response.result._title);
         return response.result._title;
     }
 
     public String artistname() {
-        Response response = Requests.postToLmsForContent(RequestParameters.artistname(this.name).toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.artistname(this.name).toString());
         if (response == null) return null;
         log.info("PLAYER: " + this.name + " PLAYLIST: " + response.result._artist);
         return response.result._artist;
     }
 
     public String volumeGet() {
-        Response response = Requests.postToLmsForContent(RequestParameters.volume(this.name).toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.volume(this.name).toString());
         if (response == null) return "0";
         log.info("PLAYER: " + this.name + " GET VOLUME: " + response.result._volume);
         return response.result._volume;
@@ -261,7 +265,7 @@ public class Player {
 
     public List<String> favorites() {
         String playerName = this.name;
-        Response response = Requests.postToLmsForContent(RequestParameters.favorites(playerName, 10).toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.favorites(playerName, 10).toString());
         List<String> playlist = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
         log.info("FAVORITES: " + playlist);
         return playlist;
@@ -272,7 +276,7 @@ public class Player {
         String url = this.lastPath;
         int size = this.favorites().size() + 1;
         String title = "New" + size;
-        Response response = Requests.postToLmsForContent(RequestParameters.favoritesAdd(playerName, url, title).toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.favoritesAdd(playerName, url, title).toString());
         log.info("FAVORITES ADD");
         return title;
     }
@@ -291,7 +295,7 @@ public class Player {
         return this;
     }
 
-    public Player sync(String toPlayerName) {
+    public Player syncTo(String toPlayerName) {
         log.info("PLAYER: " + this.name + " SYNC TO: " + toPlayerName);
 //  пока сломанана синхронизация di.fm в LMS
 //  https://forums.slimdevices.com/forum/user-forums/logitech-media-server/1673928-logitech-media-server-8-4-0-released?p=1675699#post1675699
@@ -343,12 +347,6 @@ public class Player {
         log.info("TRY GLOBAL LAST PATH: " + commonLastPath);
         log.info("SILENCE PATH: " + silence);
 
-//        if (this.separate && thisPath != null && !thisPath.equals(silence)){
-//            log.info("PLAY THIS PATH SEPARATE");
-//            this.play();
-//            return this;
-//        }
-
         if (thisPath != null && !thisPath.equals(silence)) {
             log.info("PLAY THIS PATH");
             this.play();
@@ -367,8 +365,7 @@ public class Player {
     }
 
     public Player wakeAndSet() {
-        log.info("WAKE START -------------------");
-//        if (true) {
+        log.info("WAKE START >>>>>>>>>>");
         if (Actions.timeExpired(this)) {
             log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wake_delay);
             this
@@ -379,9 +376,9 @@ public class Player {
                     .volumeSet("-1")
                     .setVolumeByTime()
                     .pause();
-            log.info("WAKE FINISH ------------------");
+            log.info("WAKE FINISH <<<<<<<<<<");
         } else {
-            log.info("WAKE SKIP ------------------");
+            log.info("WAKE SKIP <<<<<<<<<<");
         }
         return this;
     }
@@ -496,49 +493,82 @@ public class Player {
         return this;
     }
 
+    public Player status() {
+        String json = Requests.postToLmsForJsonBody(RequestParameters.status(this.name).toString());
+        log.info("STATUS JSON: " + json);
+        json = json.replaceAll("(\"\\w*)(\\s)(\\w*\":)", "$1_$3");
+        PlayerStatus playerStatus = JsonUtils.jsonToPojo(json, PlayerStatus.class);
+        log.info("STATUS MODE: " + playerStatus.result.mode);
+        log.info("STATUS VOLUME: " + playerStatus.result.mixer_volume);
+        log.info("STATUS TITLE: " + playerStatus.result.current_title);
+        log.info("STATUS INDEX: " + playerStatus.result.playlist_cur_index);
+        this.status = playerStatus;
+        return this;
+    }
+
     public Player title() {
+//  запрашивать "playlist", "name" для Soma и Di. для Spoty нету. запросить "artist"
         log.info("START PLAYER: " + this.name + " TITLE: " + this.title);
-        String playlist = this.playlistname();
-        String playlistUrl = this.playlistUrl();
-        log.info("PLAYLIST URL: " + playlistUrl);
-        if (playlist == null) playlist = this.artistname();
-        if (playlist != null) this.title = playlist;
-        log.info("PLAYER: " + this.name + " TITLE: " + this.title);
+        String title = this.status.result.current_title;
+        if ((title != null) || (title != "")) {
+            if (title.contains(":")) title = title.replaceAll(":.*", "");
+            if (title.contains("- DI.FM")) title = title.replaceAll(" - DI.FM.*", "");
+            log.info("TITLE playlistname: _" + title + "_");
+        }
+        if ((title == null) || (title == "")) title = this.artistname();
+        if (title == null) title = "херпоймичё";
+        this.title = title;
+        log.info("TITLE: " + this.title);
         return this;
     }
 
     public Player syncAllOtherPlayingToThis() {
-        log.info("SYNC ALL OTHER PLAYING to " + this.name + " SEPARATE: " + this.separate);
+        log.info("SYNC ALL PLAYING TO " + this.name);
+        log.info("CHECK IF SEPARATE");
         if (this.separate) {
-            log.info("PLAYER SEPARETE OR ALONE - RETURN");
+            log.info("PLAYER SEPARETE");
             return this;
         }
-//        lmsPlayers.update();
-        List<String> listNamesOnline = lmsPlayers.playersOnlineNames;
-        log.info("PLAYERS ONLINE: " + listNamesOnline);
-        listNamesOnline.remove(this.name);
+        log.info("GET SYNC GROPE");
         List<Response.SyncgroupsLoop> groupe = this.syncgroups();
+        List<String> listNamesInGroupe;
+        String firstNameinGroupe = null;
         if (groupe != null) {
             String names = groupe.get(0).sync_member_names;
-            List<String> listNamesInGroupe = List.of(names.split(","));
-            listNamesOnline.removeAll(listNamesInGroupe);
+            listNamesInGroupe = List.of(names.split(","));
+            firstNameinGroupe = listNamesInGroupe.get(0);
+            log.info("PLAYERS IN SYNC GROUPE: " + listNamesInGroupe);
+        } else {
+            log.info("NO SYNC GROPE");
+            listNamesInGroupe = new ArrayList<>();
         }
-        log.info("FOREACH SYNC TO : " + this.name);
-        listNamesOnline.stream()
-                .map(n -> lmsPlayers.getPlayerByName(n))
-                .filter(p -> p.mode().equals("play"))
-                .peek(p -> log.info(p.name + " separate: " + p.separate))
+        log.info("UPDATE");
+        lmsPlayers.updateNew();
+        log.info("STREAM PLAYERS, FILTER, SYNC TO THIS");
+        lmsPlayers.players.stream()
+                .filter(p -> !p.name.equals(this.name))
+                .peek(p -> log.info("PLAYER: " + p.name +
+                        " PLAYING: " + p.playing +
+                        " SEPARATE: " + p.separate +
+                        " SYNC: " + listNamesInGroupe.contains(p.name)))
+                .filter(p -> p.playing)
+                .filter(p -> !p.name.equals(this.name))
+                .filter(p -> !listNamesInGroupe.contains(p.name))
                 .filter(p -> !p.separate)
-                .forEach(p -> p.sync(this.name));
+                .peek(p -> log.info("PLAYER: " + p.name + " SYNC TO: " + this.name))
+                .forEach(p -> p.syncTo(this.name));
+        Player playerInGroupe = lmsPlayers.getPlayerByName(firstNameinGroupe);
+        log.info("IF SYNC GROPE - SYNC " + playerInGroupe + "FIRST TO THIS");
+        if (playerInGroupe != null && playerInGroupe.playing) playerInGroupe.syncTo(this.name);
         log.info("SYNC ALL OTHER PLAYING FINISH");
         return this;
     }
 
     @Override
     public String toString() {
-        return "\nPlayer{" +
+        return "Player{" +
                 "name='" + name + '\'' +
-                ", id='" + mac + '\'' +
+                ", id='" + id + '\'' +
                 '}';
     }
 
@@ -547,11 +577,11 @@ public class Player {
         if (this == o) return true;
         if (!(o instanceof Player)) return false;
         Player player = (Player) o;
-        return Objects.equals(getName(), player.getName()) && Objects.equals(getMac(), player.getMac());
+        return Objects.equals(getName(), player.getName()) && Objects.equals(getId(), player.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getMac());
+        return Objects.hash(getName(), getId());
     }
 }

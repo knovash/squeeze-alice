@@ -3,7 +3,7 @@ package org.knovash.squeezealice.utils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.knovash.squeezealice.LmsPlayers;
+import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
 
 import java.io.File;
@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.Main.*;
 import static org.knovash.squeezealice.Requests.headToUriForHttpResponse;
 
 @Log4j2
@@ -34,19 +34,7 @@ public class Utils {
 
     public static Map<String, String> altNames;
 
-//    public static void generatePlayersQueryNames() {
-////  только в lmsPlayers
-//        log.info("PLAYERS QUERY NAMES");
-//        lmsPlayers.players.forEach(player -> {
-//            player.nameInQuery = player.name
-//                    .replace(" ", "")
-//                    .replace("_", "")
-//                    .toLowerCase();
-//        });
-//    }
-
     public static void changePlayerValue(HashMap<String, String> parameters) {
-//  только в switch query command
         String playerName = parameters.get("player");
         String valueName = parameters.get("value_name");
         Integer newValue = Integer.valueOf(parameters.get("value"));
@@ -57,9 +45,7 @@ public class Utils {
         try {
             field = Player.class.getField(valueName);
             field.set(player, newValue);
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
         try {
@@ -71,7 +57,6 @@ public class Utils {
     }
 
     public static String getPlayerByNameInQuery(String name) {
-//  только тут в утилс для changePlayerValue
         log.info("NAME: " + name + " ALT NAMES: " + altNames);
         if (altNames.containsKey(name)) {
             name = altNames.get(name);
@@ -121,22 +106,21 @@ public class Utils {
         return "REMOVED time:" + time;
     }
 
-    public static boolean checkIpIsLms(String ip) {
-        log.info("CHECK IF IP IS LMS: " + ip);
-        String uri = "http://" + ip + ":9000";
+    public static boolean checkLmsIp(String ip) {
+        log.info("CHECK IP IS LMS: " + ip);
+        String uri = "http://" + ip + ":" + lmsPort;
         HttpResponse response = headToUriForHttpResponse(uri);
-//        log.info("---"+response.getAllHeaders());
-        if (response == null) {
-//            log.info("---"+response.getAllHeaders());
-//            log.info("NOT LMS IP");
-            return false;
-        }
-        log.info("---" + response.getAllHeaders());
+        if (response == null) return false;
         Header[] server = response.getHeaders("Server");
+        if (server == null) return false;
         String header = server[0].toString();
         log.info("HEADER: " + header);
-        if (header.contains("Logitech Media Server")) log.info("IS LMS IP OK");
-        return header.contains("Logitech Media Server");
+        if (header.contains("Logitech Media Server") || header.contains("Lyrion Music Server")) {
+            log.info("LMS IP OK " + ip);
+            return true;
+        }
+        log.info("IP NOT LMS");
+        return false;
     }
 
     public static String getMyIpAddres() {
@@ -168,37 +152,31 @@ public class Utils {
         return myip;
     }
 
-    public static String searchLmsIp() {
-        log.info("SEARCH LMS IN NETWORK");
+    public static boolean searchLmsIp() {
+        log.info("");
+        log.info("SEARCH LMS IP");
         String lmsIp = null;
-        log.info("TRY GET IP FROM PREVIOUS SEARCH RESULT IN lms_ip.json");
-        lmsIp = JsonUtils.valueFromJsonFile("lms_ip.json");
-//        log.info("IP FROM FILE: " + lmsIp);
-        if (lmsIp != null && checkIpIsLms(lmsIp)) {
-            log.info("IP FROM FILE: " + lmsIp);
-            return lmsIp;
-        }
-        log.info("NO PREVIOUS FILE. START SEARCH NETWORK...");
         String myip = Utils.getMyIpAddres();
-//        log.info("MY IP " + myip);
-//        String lmsIp = null;
         Integer start = 1;
-        while (lmsIp == null && start < 255) {
+        while (lmsIp == null && start < 150) {
             lmsIp = IntStream
                     .range(start, start + 50)
                     .boxed()
-//                    .peek(s -> log.info("INDEX: " + s))
-                    .map(index -> CompletableFuture.supplyAsync(() -> Utils.checkIpIsReachable(myip, Integer.valueOf(index))))
+                    .map(index -> CompletableFuture.supplyAsync(() -> Utils.checkIp(myip, Integer.valueOf(index))))
                     .collect(Collectors.collectingAndThen(Collectors.toList(), cfs -> cfs.stream().map(CompletableFuture::join)))
                     .filter(Objects::nonNull)
                     .findFirst().orElse(null);
-//            log.info("TRY: " + lmsIp);
             start = start + 50;
         }
         log.info("LMS IP: " + lmsIp);
-
-        if (lmsIp != null) JsonUtils.valueToJsonFile("lms_ip", lmsIp);
-        return lmsIp;
+        if (lmsIp != null) {
+            JsonUtils.valueToJsonFile("lms_ip", lmsIp);
+            Main.lmsIp = lmsIp;
+            Main.lmsUrl = "http://" + Main.lmsIp + ":" + Main.lmsPort + "/jsonrpc.js/";
+            return true;
+        }
+        log.info("LMS NOT FOUND. please check \"config.json\"");
+        return false;
     }
 
     public static boolean isCyrillic(String text) {
@@ -215,12 +193,12 @@ public class Utils {
         return null;
     }
 
-    public static String checkIpIsReachable(String fullIp, Integer index) {
+    public static String checkIp(String fullIp, Integer index) {
+        if (index > 124) return null;
         InetAddress inetAddress = null;
         try {
             inetAddress = InetAddress.getByName(fullIp);
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
+        } catch (UnknownHostException ignored) {
         }
         byte[] ip = inetAddress.getAddress();
         ip[3] = Byte.parseByte(String.valueOf(index));
@@ -228,13 +206,11 @@ public class Utils {
         try {
             InetAddress address = InetAddress.getByAddress(ip);
             ipTry = address.toString().substring(1);
-//            log.info("TRY IP... " + ipTry);
-            if (address.isReachable(1000) && checkIpIsLms(ipTry)) {
-                log.info("IP IS LMS: " + ipTry);
+            if (address.isReachable(1000) && checkLmsIp(ipTry)) {
+                log.info("LMS IP OK: " + ipTry);
                 return ipTry;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ignored) {
         }
         return null;
     }
@@ -299,17 +275,43 @@ public class Utils {
     }
 
     public static void timerRequestPlayersState(int priod) {
+        log.info("TIMER REQUEST PLAYERS STATE UPDATE");
         Runnable drawRunnable = new Runnable() {
             public void run() {
-                log.info("TIMER --------------------------");
-                lmsPlayers.update();
-
-//                lmsPlayers.players.stream()
-//                        .filter(p -> p.mode().equals("play"))
-//                        .forEach(p -> p.saveLastTime());
+                lmsPlayers.updateNew();
             }
         };
         ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
         exec.scheduleAtFixedRate(drawRunnable, 5, priod, TimeUnit.MINUTES);
+    }
+
+
+    public static void readConfig() {
+        log.info("");
+        log.info("READ CONFIG FROM config.json");
+        config = JsonUtils.jsonFileToMap("config.json", String.class, String.class);
+        if (config == null) return;
+        Main.lmsIp = config.get("lmsIp");
+        Main.lmsPort = config.get("lmsPort");
+        Main.port = Integer.parseInt(config.get("port"));
+        Main.silence = config.get("silence");
+        Main.lmsUrl = "http://" + Main.lmsIp + ":" + Main.lmsPort + "/jsonrpc.js/";
+        log.info("LMS IP: " + Main.lmsIp);
+        log.info("LMS PORT: " + Main.lmsPort);
+        log.info("LMS URL: " + Main.lmsUrl);
+        log.info("THIS PORT: " + Main.port);
+        log.info("SILENCE: " + Main.silence);
+    }
+
+    public static void writeConfig() {
+        log.info("");
+        log.info("WRITE CONFIG TO config.json");
+        config = new HashMap<>();
+        config.put("lmsIp", lmsIp);
+        config.put("lmsPort", lmsPort);
+        config.put("port", String.valueOf(port));
+        config.put("silence", silence);
+        log.info(config);
+        JsonUtils.mapToJsonFile(config, "config.json");
     }
 }

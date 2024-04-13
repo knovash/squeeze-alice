@@ -6,7 +6,6 @@ import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
-import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 import org.knovash.squeezealice.web.Html;
 
 import java.util.HashMap;
@@ -184,7 +183,7 @@ public class SwitchQueryCommand {
 //      WEB PLAYERS
             case ("players_update"):
                 log.info("PLAYERS UPDATE");
-                lmsPlayers.update();
+                lmsPlayers.updateNew();
                 lmsPlayers.write();
                 response = Html.formSpeakers();
                 break;

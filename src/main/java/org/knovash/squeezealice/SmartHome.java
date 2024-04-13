@@ -70,10 +70,13 @@ public class SmartHome {
     }
 
     public static void read() {
+        log.info("");
+        log.info("READ ALICE DEVICES FROM alice_devices.json");
         SmartHome.devices = new LinkedList<>();
         List<Device> devices = JsonUtils.jsonFileToList("alice_devices.json", Device.class);
         if (devices != null) SmartHome.devices.addAll(devices);
         SmartHome.rooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
+        log.info("DEVICES: " + SmartHome.devices.stream().map(d -> d.customData.lmsName + ":" + d.room).collect(Collectors.toList()));
     }
 
     public static void write() {

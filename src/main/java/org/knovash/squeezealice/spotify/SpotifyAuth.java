@@ -144,11 +144,14 @@ public class SpotifyAuth {
     }
 
     public static void read() {
+        log.info("");
+        log.info("READ CREDENTIALS FROM spotify.json");
         Map<String, String> map = new HashMap<>();
         map = JsonUtils.jsonFileToMap("spotify.json", String.class, String.class);
         if (map == null) return;
         client_id = map.get("client_id");
         client_secret = map.get("client_secret");
         bearer_token = map.get("bearerToken");
+        log.info("BEARER: " + SpotifyAuth.bearer_token);
     }
 }

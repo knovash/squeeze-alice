@@ -8,6 +8,7 @@ import org.knovash.squeezealice.Main;
 public class ArgsParser {
 
     public static void parse(String[] arg) {
+        log.info("READ CONFIG FROM ARGS");
         CommandLine commandLine;
         Options options = new Options();
         CommandLineParser parser = new DefaultParser();
@@ -22,9 +23,11 @@ public class ArgsParser {
         log.info("lmsip " + commandLine.getOptionValue("lmsip"));
         log.info("lmsport " + commandLine.getOptionValue("lmsport"));
         log.info("port " + commandLine.getOptionValue("port"));
-        if (commandLine.getOptionValue("lmsip") != null) Main.lmsIP = commandLine.getOptionValue("lmsip");
+        if (commandLine.getOptionValue("lmsip") != null) Main.lmsIp = commandLine.getOptionValue("lmsip");
         if (commandLine.getOptionValue("lmsport") != null) Main.lmsPort = commandLine.getOptionValue("lmsport");
         if (commandLine.getOptionValue("port") != null) Main.port = Integer.parseInt(commandLine.getOptionValue("port"));
-        Main.lmsUrl = "http://" + Main.lmsIP + ":"+Main.lmsPort+"/jsonrpc.js";
+        Main.lmsUrl = "http://" + Main.lmsIp + ":"+Main.lmsPort+"/jsonrpc.js";
+        log.info("LMS URL: " +  Main.lmsUrl);
+        log.info("THIS PORT: " +  Main.port);
     }
 }

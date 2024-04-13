@@ -3,10 +3,7 @@ package org.knovash.squeezealice.utils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,11 +17,14 @@ import java.lang.reflect.InaccessibleObjectException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Log4j2
 public class JsonUtils {
 
-    private static ObjectMapper objectMapper = new ObjectMapper();
+    private static ObjectMapper objectMapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private static ObjectWriter objectWriter = objectMapper.writer(new DefaultPrettyPrinter());
 
     public static String pojoToJson(Object pojo) {
@@ -170,6 +170,21 @@ public class JsonUtils {
         String json = JsonUtils.pojoToJson(valuePojo);
         String value = JsonUtils.jsonGetValue(json, "value");
         return value;
+    }
+
+    public static String replaceSpace(String json) {
+        log.info("REPLACE SPACES IN JSON");
+        Pattern pattern = Pattern.compile("\"\\w*\\s(\\w*\\s)*\\w*\"\\s*:");
+        Matcher matcher = pattern.matcher(json);
+        while (matcher.find()) {
+            String field = matcher.group();
+            String fieldReplaced = matcher.group()
+                    .replaceAll("\\s+:", ":")
+                    .replaceAll("\\s+", "_");
+//            log.info("REPLACED " + field + " to " + fieldReplaced);
+            json = json.replaceAll(field, fieldReplaced);
+        }
+        return json;
     }
 
     @Data

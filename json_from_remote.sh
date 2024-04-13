@@ -14,4 +14,7 @@ echo -e ${BGreen}"REMOTE IP "$remote${NC}
 
 echo -e "copy json from "${BGreen}$remote${NC}"\n"
 sshpass -p "12345" scp root@$remote:/opt/squeeze-alice-1.0/*.json ./
+
+echo -e ${BGreen}"OK"${NC}
+sleep 5
 #$SHELL

@@ -13,12 +13,12 @@ public class Actions {
     public static void playChannel(Player player, Integer channel) {
         log.info("CHANNEL: " + channel + " PLAYER: " + player.name);
         player
-                .ifNotPlayUnsyncWakeSet()
-                .playChannel(channel)
+                .ifNotPlayUnsyncWakeSet() // mode? sync- volume
+                .playChannel(channel) // playlist item
                 .saveLastTime()
                 .saveLastChannel(channel)
-                .saveLastPath()
-                .syncAllOtherPlayingToThis();
+                .saveLastPath() // path
+                .syncAllOtherPlayingToThis(); // получить mode каждого
         lmsPlayers.write();
     }
 
@@ -58,7 +58,7 @@ public class Actions {
             player.playLast();
         } else {
             log.info("SYNC TO PLAYING " + playing);
-            player.sync(playing.name);
+            player.syncTo(playing.name);
         }
         player
                 .saveLastPath()

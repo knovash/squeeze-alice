@@ -6,9 +6,12 @@ import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
+import org.knovash.squeezealice.lms.ServerStatusName;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +27,9 @@ public class LmsPlayers {
 
     public Integer counter;
     public List<Player> players;
-    public List<String> playersOnlineNames;
+    public List<String> playersNames = new ArrayList<>();
+    public List<String> playersNamesOnLine = new ArrayList<>();
+    public List<String> playersNamesOffLine = new ArrayList<>();
     public String lastPath;
     public int lastChannel = 1;
     public String lastAliceId;
@@ -34,9 +39,9 @@ public class LmsPlayers {
     public int delayExpire = 10; // MINUTES
 
     public void count() {
-        Response response = Requests.postToLmsForContent(RequestParameters.count().toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.count().toString());
         if (response == null) {
-            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIP + ":" + lmsPort);
+            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIp + ":" + lmsPort);
             lmsPlayers.counter = 0;
             return;
         }
@@ -45,12 +50,13 @@ public class LmsPlayers {
 
     public List<String> favorites() {
         String playerName = lmsPlayers.players.get(0).name;
-        Response response = Requests.postToLmsForContent(RequestParameters.favorites(playerName, 10).toString());
+        Response response = Requests.postToLmsForResponse(RequestParameters.favorites(playerName, 10).toString());
         List<String> playlist = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
         return playlist;
     }
 
     public void update() {
+        LocalTime time1 = LocalTime.now();
         log.info("UPDATE PLAYERS FROM LMS");
         lmsPlayers.count();
         Integer counter = lmsPlayers.counter; // получить количество плееров в LMS
@@ -58,11 +64,10 @@ public class LmsPlayers {
             log.info("UPDATE ERROR. NO PLAYERS IN LMS");
             return;
         }
-        playersOnlineNames = new ArrayList<>();
+        playersNamesOnLine = new ArrayList<>();
         for (int index = 0; index < counter; index++) { // для каждого плеера по id
             String name = Player.name(Integer.toString(index)); // запросить имя
             String id = Player.id(Integer.toString(index)); // запросить id/mac
-
             if (lmsPlayers.getPlayerByName(name) == null) { // если плеера еще нет в сервере, то добавить
                 log.info("FOUND NEW PLAYER: " + name);
                 Player newPlayer = new Player(name, id);
@@ -71,13 +76,67 @@ public class LmsPlayers {
                 lmsPlayers.players.add(newPlayer);
                 write();
             }
-
             Player player = lmsPlayers.getPlayerByName(name);
-            player.online = true;
+            player.connected = true;
             if (player.mode().equals("play")) player.saveLastTime();
-            playersOnlineNames.add(name); // добавить плеер в список активных
+            playersNamesOnLine.add(name); // добавить плеер в список активных
         }
+        LocalTime time2 = LocalTime.now();
+        log.info("------------- TIME OLD: " + Duration.between(time1, time2));
+
     }
+
+
+    public void updateNew() {
+        log.info("");
+        log.info("UPDATE PLAYERS START >>>>>>>>>>");
+        LocalTime time1 = LocalTime.now();
+        playersNames = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
+        playersNamesOffLine = new ArrayList<>();
+        playersNamesOffLine.addAll(playersNames);
+        playersNamesOnLine = new ArrayList<>();
+        String json = Requests.postToLmsForJsonBody(RequestParameters.serverstatusname().toString());
+        json = JsonUtils.replaceSpace(json);
+        json = json.replaceAll("\"newversion.*</a>\\.\"", "\"newversion\": \"--\"");
+        ServerStatusName serverStatusName = JsonUtils.jsonToPojo(json, ServerStatusName.class);
+        serverStatusName.result.players_loop.forEach(p -> {
+            log.info("NAME: " + p.name +
+                    " ID: " + p.playerid +
+                    " CONNECTED: " + p.connected +
+                    " INDEX: " + p.playerindex +
+                    " PLAYING: " + p.isplaying);
+            playersNamesOnLine.add(p.name);
+            playersNamesOffLine.remove(p.name);
+            if (lmsPlayers.getPlayerByName(p.name) == null) { // если плеера еще нет в сервере, то добавить
+                log.info("NEW PLAYER: " + p.name);
+                Player player = new Player();
+                player.name = p.name;
+                player.id = p.playerid;
+                if (p.isplaying == 1) {
+                    player.playing = true;
+                    player.saveLastTime();
+                } else {
+                    player.playing = false;
+                }
+                lmsPlayers.players.add(player);
+            } else {
+                lmsPlayers.getPlayerByName(p.name).connected = true;
+                if (p.isplaying == 1) {
+                    lmsPlayers.getPlayerByName(p.name).playing = true;
+                    lmsPlayers.getPlayerByName(p.name).saveLastTime();
+                } else {
+                    lmsPlayers.getPlayerByName(p.name).playing = false;
+                }
+            }
+        });
+        write();
+        log.info("PLAYERS: " + lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList()));
+        log.info("PLAYERS NAMES: " + lmsPlayers.playersNames);
+        log.info("PLAYERS NAMES ONLINE: " + lmsPlayers.playersNamesOnLine);
+        log.info("PLAYERS NAMES OFFLINE: " + lmsPlayers.playersNamesOffLine);
+        log.info("UPDATE PLAYERS FINISH " + Duration.between(time1, LocalTime.now()) + " <<<<<<<<<<");
+    }
+
 
     public void clear() {
         log.info("CLEAR PLAYERS");
@@ -91,7 +150,9 @@ public class LmsPlayers {
     }
 
     public void read() {
-        log.info("READ");
+        log.info("");
+        log.info("READ LMS PLAYERS FROM lms_players.json");
+        lmsPlayers.players = new ArrayList<>();
         LmsPlayers lp = JsonUtils.jsonFileToPojo("lms_players.json", LmsPlayers.class);
         if (lp == null) {
             log.info("NO PLAYERS lms_players.json");
@@ -101,17 +162,18 @@ public class LmsPlayers {
             log.info("LAST CHANNEL: " + lmsPlayers.lastChannel);
             log.info("BT REMOTE: " + lmsPlayers.btPlayerInQuery);
         }
+        log.info("PLAYERS: " + lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList()));
     }
 
     public Player getPlayerByName(String name) {
         Player player = new Player();
+        if (name == null) return null;
         if (lmsPlayers.players == null) return null;
         player = lmsPlayers.players.stream()
                 .filter(p -> p.getName().toLowerCase().equals(name.toLowerCase()))
                 .findFirst()
                 .orElse(null);
         if (player == null) log.info("PLAYER NOT FOUND " + name);
-
         return player;
     }
 
@@ -130,13 +192,13 @@ public class LmsPlayers {
     }
 
     public Player getPlayingPlayer(String exceptName) {
-        log.info("SEARCH FOR PLAYING online" + lmsPlayers.playersOnlineNames);
+        LocalTime time1 = LocalTime.now();
+        log.info("SEARCH FOR PLAYING online" + lmsPlayers.playersNamesOnLine);
         log.info("EXCEPT CURRENT PLAYER " + exceptName);
-
         Player playing = lmsPlayers.players.stream()
 //        Player playing = lmsPlayers.playersOnlineNames.stream().map(n -> getPlayerByName(n))
                 .filter(p -> !p.separate)
-                .filter(p -> p.online)
+                .filter(p -> p.connected)
                 .filter(p -> !p.name.equals(exceptName))
                 .filter(p -> {
                     String pp = p.path();
@@ -148,6 +210,34 @@ public class LmsPlayers {
                 .findFirst()
                 .orElse(null);
         log.info("PLAYING: " + playing);
+        LocalTime time2 = LocalTime.now();
+        log.info("------------- TIME PLAYING OLD: " + Duration.between(time1, time2));
+        return playing;
+
+    }
+
+    public Player getPlayingPlayerNew(String exceptName) {
+        LocalTime time1 = LocalTime.now();
+        log.info("");
+        log.info("SEARCH FOR PLAYING PLAYER. EXCEPT PLAYER " + exceptName);
+        lmsPlayers.updateNew();
+        Player playing = lmsPlayers.players.stream()
+                .peek(p -> log.info("PLAYER: " + p.name + " SEPARATE: " + p.separate + " ONLINE: " + p.connected + " PLAYING: " + p.playing))
+                .filter(p -> !p.separate)
+                .filter(p -> p.connected)
+                .filter(p -> p.playing)
+                .filter(p -> !p.name.equals(exceptName))
+                .filter(p -> {
+                    String pp = p.path();
+                    if (pp == null) return false;
+                    if (pp.equals(silence)) return false;
+                    return true;
+                })
+                .findFirst()
+                .orElse(null);
+        log.info("PLAYING: " + playing);
+        LocalTime time2 = LocalTime.now();
+        log.info("------------- TIME PLAYING NEW: " + Duration.between(time1, time2));
         return playing;
     }
 

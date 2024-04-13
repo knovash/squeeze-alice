@@ -7,8 +7,8 @@ After=network-online.target
 Type=simple
 User=root
 WorkingDirectory=/opt/squeeze-alice-1.0/
-Restart=yes
-Restart=always
+Restart=no
+;Restart=always
 #RestartSec=5
 ExecStart=java -jar /opt/squeeze-alice-1.0/squeeze-alice-1.0.jar -lmsip 192.168.1.110 -port 8010
 [Install]

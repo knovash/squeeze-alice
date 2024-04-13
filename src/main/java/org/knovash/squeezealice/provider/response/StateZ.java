@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class State {
-
+public class StateZ {
     public String instance;
     public String value;
     public boolean relative = false;
