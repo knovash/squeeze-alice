@@ -79,6 +79,7 @@ public class ServerStatusName {
 //        public String newversion;
         public int other_player_count;
         public int player_count;
+        public String  current_title;
         public int info_total_albums;
         public int progresstotal;
         public int info_total_songs;
@@ -99,6 +100,7 @@ public class ServerStatusName {
                     ", info_total_genres=" + info_total_genres +
                     ", other_player_count=" + other_player_count +
                     ", player_count=" + player_count +
+                    ", current_title='" + current_title + '\'' +
                     ", info_total_albums=" + info_total_albums +
                     ", progresstotal=" + progresstotal +
                     ", info_total_songs=" + info_total_songs +

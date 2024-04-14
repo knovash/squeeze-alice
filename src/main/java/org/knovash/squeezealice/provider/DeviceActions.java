@@ -33,7 +33,7 @@ public class DeviceActions {
 
         // обратиться к девайсу и изменить его состояние
         Player player = lmsPlayers.getPlayerByName(name);
-        if (player == null ) return;
+        if (player == null) return;
         log.info("PLAYER: " + player.name);
         switch (instance) {
             case ("volume"):
@@ -54,11 +54,16 @@ public class DeviceActions {
                 log.info("CHANNEL: " + value + " LAST CHANNEL: " + lmsPlayers.lastChannel);
                 int channel;
                 if (relative != null && relative.equals(true)) {
-                    channel = lmsPlayers.lastChannel + 1;
+                    if (player.lastChannel != 0) channel = player.lastChannel + 1;
+                    else channel = lmsPlayers.lastChannel + 1;
                 } else {
                     channel = Integer.parseInt(value);
                 }
-                Actions.playChannel(player, channel);
+//                Actions.playChannel(player, channel);
+                CompletableFuture.supplyAsync(() -> {
+                    Actions.playChannel(player, channel);
+                    return "";
+                });
                 lmsPlayers.lastChannel = channel;
                 break;
             case ("on"):
@@ -73,7 +78,11 @@ public class DeviceActions {
                 }
                 if (value.equals("false")) {
                     log.info("TURN OFF");
-                    Actions.turnOffMusic(player);
+//                    Actions.turnOffMusic(player);
+                    CompletableFuture.supplyAsync(() -> {
+                        Actions.turnOffMusic(player);
+                        return "";
+                    });
                 }
                 break;
         }

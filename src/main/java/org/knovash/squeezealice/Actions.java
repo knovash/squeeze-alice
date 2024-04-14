@@ -22,13 +22,13 @@ public class Actions {
         lmsPlayers.write();
     }
 
-    public static void playSpotify(Player player, String link) {
+    public static void playSpotify(Player player, String path) {
         log.info("SPOTIFY LINK PLAYER: " + player.name);
         player
                 .ifNotPlayUnsyncWakeSet()
-                .playPath(link)
+                .playPath(path)
                 .saveLastTime()
-                .saveLastPathLink(link)
+//                .saveLastPathLink(link)
                 .waitFor(1000)
                 .syncAllOtherPlayingToThis();
         lmsPlayers.write();
@@ -45,29 +45,23 @@ public class Actions {
         player.ifNotPlayUnsyncWakeSet();
         if (player.separate) {
             log.info("PLAYER IS SEPARATED - PLAY LAST");
-            player
-                    .playLast()
-                    .saveLastPath()
-                    .saveLastTime();
+            player.playLast(); // include last path & time
             lmsPlayers.write();
             return;
         }
-        Player playing = lmsPlayers.getPlayingPlayer(player.name);
+        Player playing = lmsPlayers.getPlayingPlayerNew(player.name);
         if (playing == null) {
-            log.info("NO PLAYING - PLAY LAST");
+            log.info("NO PLAYING. PLAY LAST");
             player.playLast();
         } else {
             log.info("SYNC TO PLAYING " + playing);
-            player.syncTo(playing.name);
+            player.syncTo(playing.name); //.saveLastPath().saveLastTime();
         }
-        player
-                .saveLastPath()
-                .saveLastTime();
         lmsPlayers.write();
     }
 
     public static void turnOffMusic(Player player) {
-        log.info("TURN OFF SPEAKER " + player.name + " SEPARATE "+player.separate);
+        log.info("TURN OFF SPEAKER " + player.name + " SEPARATE " + player.separate);
 
         if (player.name.equals("Spotify")) {
             log.info("ITS SPOTIFY");
