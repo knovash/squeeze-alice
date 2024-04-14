@@ -28,6 +28,7 @@ public class Html {
                 "<p><a href=\\spotify>Настройка Spotify</a></p> \n" +
                 "<p><a href=\\cmd?action=state_devices>Посмотреть настройки Devices</a></p> \n" +
                 "<p><a href=\\cmd?action=state_players>Посмотреть настройки Players</a></p> \n" +
+                "<p><a href=\\monitor>Monitor</a></p> \n" +
                 "<p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
                 "<p><a href=\\cmd?action=restart>Restart server service</a></p> \n" +
                 "<p><a href=\\cmd?action=reboot>Reboot device</a></p> \n" +

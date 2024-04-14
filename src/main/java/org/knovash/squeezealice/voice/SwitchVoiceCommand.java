@@ -165,7 +165,10 @@ public class SwitchVoiceCommand {
         String link = Spotify.getLink(target, Type.album);
         log.info("LINK SPOTIFY: " + link);
         if (link == null) return "настройте спотифай";
-        Actions.playSpotify(player, link);
+        CompletableFuture.supplyAsync(() -> {
+            Actions.playSpotify(player, link);
+            return "";
+        });
         answer = "сейчас, мой господин, включаю " + target;
         return answer;
     }
@@ -183,12 +186,10 @@ public class SwitchVoiceCommand {
         int index = playlist.indexOf(channel) + 1;
         answer = "сейчас, мой господин, включаю канал " + index + ", " + channel;
         log.info("INDEX: " + index);
-
         CompletableFuture.supplyAsync(() -> {
             Actions.playChannel(player, index);
             return "";
         });
-
         return answer;
     }
 
@@ -204,13 +205,12 @@ public class SwitchVoiceCommand {
     public static String whatsPlaying(Player player) {
         String answer = "";
         log.info("WATS PLAYING");
-        String playlist;
         player.status();
-        player.title();
-        playlist = player.title;
+        lmsPlayers.updateNew();
+        String title = player.title;
 
-        if (playlist == null) return createResponse("медиасервер не отвечает");
-        log.info("PLAYLIST: " + playlist);
+        if (title == null) return createResponse("медиасервер не отвечает");
+        log.info("PLAYLIST: " + title);
         String separate = "";
         if (player.separate) separate = "отдельно ";
 
@@ -218,19 +218,24 @@ public class SwitchVoiceCommand {
                 lmsPlayers.players.stream()
                         .peek(p -> log.info(p.name + " separate " + p.separate))
                         .filter(p -> p.separate)
+                        .filter(p -> !p.name.equals(player.name))
                         .peek(p -> log.info(p.name + " filter separate " + p.separate))
-                        .map(p -> p.name)
+                        .map(p -> {
+                            if (p.playing) return " играет " + p.name;
+                            return " не играет " + p.name;
+                        })
                         .collect(Collectors.toList());
         log.info("SEPARATE PLAYERS: " + separatePlayers);
         String separateAnswer = "";
         if (separatePlayers.contains(player.name)) separatePlayers.remove(player.name);
-        if (separatePlayers.size() != 0) separateAnswer = ", отдельно играет " + String.join(", ", separatePlayers);
+        if (separatePlayers.size() != 0) separateAnswer = ", отдельно " + String.join(", ", separatePlayers);
         String mode = player.status.result.mode;
+        int volume = player.status.result.mixer_volume;
         if (mode.equals("play")) {
-            answer = "сейчас на " + player.name + " играет " + separate + playlist + " громкость " + player.volumeGet();
+            answer = "сейчас на " + player.name + " играет " + separate + title + " громкость " + volume;
         }
         if (!mode.equals("play")) {
-            answer = "сейчас на " + player.name + " не играет " + separate + playlist;
+            answer = "сейчас на " + player.name + " не играет " + separate + title;
         }
         answer = answer + separateAnswer;
         return answer;
@@ -247,8 +252,9 @@ public class SwitchVoiceCommand {
     private static String separate_on(Player player) {
         String answer;
         log.info("SEPARATE ON");
-        player.separate_on();
-        player.title();
+        player
+                .separate_on()
+                .status();
         answer = "включаю отдельно " + player.name + ". " + player.title;
         return answer;
     }
@@ -256,8 +262,9 @@ public class SwitchVoiceCommand {
     private static String alone_on(Player player) {
         String answer;
         log.info("ALONE ON");
-        player.alone_on();
-        player.title();
+        player
+                .alone_on()
+                .status();
         answer = "включаю только тут на " + player.name + ". " + player.title;
         return answer;
     }
@@ -265,10 +272,10 @@ public class SwitchVoiceCommand {
     private static String separate_alone_off(Player player) {
         String answer;
         log.info("SEPARATE ALONE OFF");
-        Player playing = player.separate_alone_off();
-        answer = "включаю вместе " + player.name;
-        player.title();
-        if (playing != null) answer = "включаю вместе " + player.name + " и " + playing.name + ". " + playing.title;
+        player.separate_alone_off();
+        player.waitFor(1000).status(); // неуспевает обновить current_title
+//        player.waitFor(500).status();
+        answer = "включаю вместе " + player.name + " " + player.title;
         return answer;
     }
 

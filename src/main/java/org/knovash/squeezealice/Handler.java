@@ -54,6 +54,9 @@ public class Handler implements HttpHandler {
             case ("/players"):
                 context = PagePlayers.action(context);
                 break;
+            case ("/monitor"):
+                context = PageMonitor.action(context);
+                break;
             case ("/spotify"):
                 context = PageSpotify.action(context);
                 break;

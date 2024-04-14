@@ -8,4 +8,4 @@ echo -e ${BGreen}"REMOTE IP "$remote${NC}
 
 ssh root@$remote
 
-$SHELL
+#$SHELL

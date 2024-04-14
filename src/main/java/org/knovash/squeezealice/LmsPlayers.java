@@ -55,36 +55,35 @@ public class LmsPlayers {
         return playlist;
     }
 
-    public void update() {
-        LocalTime time1 = LocalTime.now();
-        log.info("UPDATE PLAYERS FROM LMS");
-        lmsPlayers.count();
-        Integer counter = lmsPlayers.counter; // получить количество плееров в LMS
-        if (counter == null || counter == 0) {
-            log.info("UPDATE ERROR. NO PLAYERS IN LMS");
-            return;
-        }
-        playersNamesOnLine = new ArrayList<>();
-        for (int index = 0; index < counter; index++) { // для каждого плеера по id
-            String name = Player.name(Integer.toString(index)); // запросить имя
-            String id = Player.id(Integer.toString(index)); // запросить id/mac
-            if (lmsPlayers.getPlayerByName(name) == null) { // если плеера еще нет в сервере, то добавить
-                log.info("FOUND NEW PLAYER: " + name);
-                Player newPlayer = new Player(name, id);
-//                newPlayer.nameInQuery = newPlayer.getQueryNameString();
-                log.info("ADD NEW PLAYER: " + newPlayer);
-                lmsPlayers.players.add(newPlayer);
-                write();
-            }
-            Player player = lmsPlayers.getPlayerByName(name);
-            player.connected = true;
-            if (player.mode().equals("play")) player.saveLastTime();
-            playersNamesOnLine.add(name); // добавить плеер в список активных
-        }
-        LocalTime time2 = LocalTime.now();
-        log.info("------------- TIME OLD: " + Duration.between(time1, time2));
-
-    }
+//    public void update() {
+//        LocalTime time1 = LocalTime.now();
+//        log.info("UPDATE PLAYERS FROM LMS");
+//        lmsPlayers.count();
+//        Integer counter = lmsPlayers.counter; // получить количество плееров в LMS
+//        if (counter == null || counter == 0) {
+//            log.info("UPDATE ERROR. NO PLAYERS IN LMS");
+//            return;
+//        }
+//        playersNamesOnLine = new ArrayList<>();
+//        for (int index = 0; index < counter; index++) { // для каждого плеера по id
+//            String name = Player.name(Integer.toString(index)); // запросить имя
+//            String id = Player.id(Integer.toString(index)); // запросить id/mac
+//            if (lmsPlayers.getPlayerByName(name) == null) { // если плеера еще нет в сервере, то добавить
+//                log.info("FOUND NEW PLAYER: " + name);
+//                Player newPlayer = new Player(name, id);
+////                newPlayer.nameInQuery = newPlayer.getQueryNameString();
+//                log.info("ADD NEW PLAYER: " + newPlayer);
+//                lmsPlayers.players.add(newPlayer);
+//                write();
+//            }
+//            Player player = lmsPlayers.getPlayerByName(name);
+//            player.connected = true;
+//            if (player.mode().equals("play")) player.saveLastTime();
+//            playersNamesOnLine.add(name); // добавить плеер в список активных
+//        }
+//        LocalTime time2 = LocalTime.now();
+//        log.info("------------- TIME OLD: " + Duration.between(time1, time2));
+//    }
 
 
     public void updateNew() {
@@ -120,13 +119,19 @@ public class LmsPlayers {
                 }
                 lmsPlayers.players.add(player);
             } else {
-                lmsPlayers.getPlayerByName(p.name).connected = true;
+                Player player =  lmsPlayers.getPlayerByName(p.name);
+               player.connected = true;
                 if (p.isplaying == 1) {
-                    lmsPlayers.getPlayerByName(p.name).playing = true;
-                    lmsPlayers.getPlayerByName(p.name).saveLastTime();
+                    player.playing = true;
+                    player.saveLastTime();
                 } else {
-                    lmsPlayers.getPlayerByName(p.name).playing = false;
+                    player.playing = false;
                 }
+
+                if (serverStatusName.result != null){
+//                    player.title() = serverStatusName.
+                }
+
             }
         });
         write();
@@ -191,7 +196,7 @@ public class LmsPlayers {
                 .orElse(null);
     }
 
-    public Player getPlayingPlayer(String exceptName) {
+    public Player getPlayingPldayer(String exceptName) {
         LocalTime time1 = LocalTime.now();
         log.info("SEARCH FOR PLAYING online" + lmsPlayers.playersNamesOnLine);
         log.info("EXCEPT CURRENT PLAYER " + exceptName);
@@ -219,7 +224,7 @@ public class LmsPlayers {
     public Player getPlayingPlayerNew(String exceptName) {
         LocalTime time1 = LocalTime.now();
         log.info("");
-        log.info("SEARCH FOR PLAYING PLAYER. EXCEPT PLAYER " + exceptName);
+        log.info("SEARCH FOR PLAYING. EXCEPT " + exceptName + " START >>>>>>>>>>");
         lmsPlayers.updateNew();
         Player playing = lmsPlayers.players.stream()
                 .peek(p -> log.info("PLAYER: " + p.name + " SEPARATE: " + p.separate + " ONLINE: " + p.connected + " PLAYING: " + p.playing))
@@ -235,9 +240,7 @@ public class LmsPlayers {
                 })
                 .findFirst()
                 .orElse(null);
-        log.info("PLAYING: " + playing);
-        LocalTime time2 = LocalTime.now();
-        log.info("------------- TIME PLAYING NEW: " + Duration.between(time1, time2));
+        log.info("PLAYING: " + playing + " FINISH <<<<<<<<<<");
         return playing;
     }
 
