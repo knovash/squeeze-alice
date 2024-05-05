@@ -1,6 +1,7 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.utils.Utils;
 
@@ -19,6 +20,7 @@ public class Main {
     public static int port = Integer.parseInt(bundle.getString("port"));
     public static LmsPlayers lmsPlayers = new LmsPlayers();
     public static Map<String, String> config = new HashMap<>();
+    public static Map<String, String> rooms = new HashMap<>();
 
     public static void main(String[] args) {
         log.info("READ CONFIG FROM config.properties");
@@ -33,11 +35,16 @@ public class Main {
             log.info("WRONG LMS IP. RUN SEARCH LMS IP");
             if (!Utils.searchLmsIp()) return;
         }
+        Utils.readRooms();
+
         Utils.writeConfig();
-        SmartHome.read();
         lmsPlayers.read();
-        lmsPlayers.updateNew();
+        lmsPlayers.update();
         SpotifyAuth.read();
+        Yandex.read();
+        Yandex.getInfo();
+        log.info(SmartHome.devices);
+//        JsonUtils.pojoToJsonFile(SmartHome.devices,"devices.json");
         Server.start();
 //        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate);
     }

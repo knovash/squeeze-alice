@@ -90,19 +90,19 @@ public class Utils {
     }
 
     public static String timeVolumeGet(Player player) {
-        return player.timeVolume.entrySet().toString();
+        return player.schedule.entrySet().toString();
     }
 
     public static String timeVolumeSet(Player player, HashMap<String, String> parameters) {
         Integer time = Integer.valueOf(parameters.get("time"));
         Integer volume = Integer.valueOf(parameters.get("volume"));
-        player.timeVolume.put(time, volume);
+        player.schedule.put(time, volume);
         return "SET " + time + " : " + volume;
     }
 
     public static String timeVolumeDel(Player player, HashMap<String, String> parameters) {
         Integer time = Integer.valueOf(parameters.get("time"));
-        player.timeVolume.remove(time);
+        player.schedule.remove(time);
         return "REMOVED time:" + time;
     }
 
@@ -224,6 +224,7 @@ public class Utils {
     }
 
     public static String mapToString(Map<Integer, Integer> headerMap) {
+        if (headerMap == null) return "---";
         return headerMap.entrySet().stream().map(e -> e.getKey() + ":" + e.getValue())
                 .collect(Collectors.joining(","));
     }
@@ -278,7 +279,7 @@ public class Utils {
         log.info("TIMER REQUEST PLAYERS STATE UPDATE");
         Runnable drawRunnable = new Runnable() {
             public void run() {
-                lmsPlayers.updateNew();
+                lmsPlayers.update();
             }
         };
         ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
@@ -313,5 +314,21 @@ public class Utils {
         config.put("silence", silence);
         log.info(config);
         JsonUtils.mapToJsonFile(config, "config.json");
+    }
+
+
+    public static void readRooms() {
+        log.info("");
+        log.info("READ ROOMS FROM rooms.json");
+        rooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
+        if (rooms == null) { rooms = new HashMap<>(); return;}
+        log.info("ROOMS: " + Main.rooms);
+    }
+
+    public static void writeRooms() {
+        log.info("");
+        log.info("WRITE ROOMS TO rooms.json");
+        log.info(rooms);
+        JsonUtils.mapToJsonFile(rooms, "rooms.json");
     }
 }

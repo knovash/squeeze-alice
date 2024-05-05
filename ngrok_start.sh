@@ -16,12 +16,15 @@ echo -e "\n"${BGreen}"NGROK DOMAIN "$domain${NC}"\n"
 echo -e ${BGreen}"STOP REMOTE TUNNEL"${NC}"\n"
 echo -e ${BGreen}"START LOCAL TUNNEL"${NC}"\n"
 echo -e ${BGreen}"FOR START REMOTE TUNNEL STOP THIS CTRL+C"${NC}"\n"
-sleep 3
+
 ssh root@$remote systemctl stop squeeze-tunnel.service
+sleep 5
 
 #ngrok http --domain=unicorn-neutral-badly.ngrok-free.app 8010
 ngrok http --domain=$domain
 
 echo -e ${BGreen}"START REMOTE TUNNEL"${NC}"\n"
 ssh root@$remote systemctl restart squeeze-tunnel.service
+
+sleep 10
 #$SHELL

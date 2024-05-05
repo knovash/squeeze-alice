@@ -31,11 +31,9 @@ public class SpotifyRequests {
                     .execute();
             json = response.returnContent().asString();
         } catch (IOException e) {
-//            log.info("JSON: " + json);
             return null;
 //            throw new RuntimeException(e);
         }
-//        log.info("JSON: " + json);
         return json;
     }
 

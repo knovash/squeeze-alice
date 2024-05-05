@@ -2,7 +2,6 @@ package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
-import org.knovash.squeezealice.SmartHome;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,7 +21,7 @@ public class PageMonitor {
 
     public static String monitor() {
         log.info("MONITOR");
-        lmsPlayers.updateNew();
+        lmsPlayers.update();
 
 
         List<String> list = lmsPlayers.players.stream()
@@ -30,7 +29,7 @@ public class PageMonitor {
 
                         "  PLAYING: <b>" + p.playing + "</b> " +
                         "  SEPARATE: <b>" + p.separate + "</b> " +
-                        "  DELAY: " + p.wake_delay + " " +
+                        "  DELAY: " + p.delay + " " +
                         "  TITLE: " + p.title + "</p>" +
                         "<p>CONNECTED: " + p.connected + " " +
                         "  LAST CHANNEL: " + p.lastChannel + " " +

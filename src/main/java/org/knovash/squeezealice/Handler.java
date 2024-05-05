@@ -44,12 +44,10 @@ public class Handler implements HttpHandler {
         context.query = query;
         context.queryMap = queryMap;
 
+        log.info("SWITCH PATH: " + path);
         switch (path) {
             case ("/"):
                 context = PageIndex.action(context);
-                break;
-            case ("/speakers"):
-                context = PageDevices.action(context);
                 break;
             case ("/players"):
                 context = PagePlayers.action(context);
@@ -84,14 +82,13 @@ public class Handler implements HttpHandler {
             case ("/v1.0/user/devices/action"):
                 context = ProviderAction.action(context);
                 break;
-            case ("/auth"):
+            case ("/auth"): // сюда первый запрос от Яндекса для привязки акаунта
                 context = YandexAuth.action(context);
                 break;
-            case ("/token"):
+            case ("/token"): // сюда второй запрос от Яндекса для привязки акаунта
                 context = YandexToken.action(context);
                 break;
             case ("/spoti_auth"):
-                log.info("SPOTI AUTH");
                 context = SpotifyAuth.requestUserAuthorization(context);
                 break;
 //            case ("/spoti_refresh"):

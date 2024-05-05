@@ -3,8 +3,10 @@
 
 echo -e ${BGreen}"READ FROM set_lms_ip.txt"${NC}
 remote=`cat set_lms_ip.txt`
-echo -e ${BGreen}"LMS IP "$lms${NC}
-# $lms
+echo -e ${BGreen}"REMOTE IP "$remote${NC}
+# $remote
 
-#ssh root@lms systemctl daemon-reload
-ssh root@lms systemctl restart logitechmediaserver.service
+#ssh root@$remote systemctl daemon-reload
+ssh root@$remote systemctl restart logitechmediaserver.service
+
+sleep 10

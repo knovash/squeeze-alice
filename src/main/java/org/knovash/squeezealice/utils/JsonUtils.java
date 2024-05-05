@@ -31,11 +31,11 @@ public class JsonUtils {
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         try {
-//            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo);
             return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo).replace("\\", "").replace("\"true\"", "true").replace("\"false\"", "false");// для State переделанного в String
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+
     }
 
     public static <T> T jsonToPojo(String json, Class<T> clazz) {
@@ -181,7 +181,6 @@ public class JsonUtils {
             String fieldReplaced = matcher.group()
                     .replaceAll("\\s+:", ":")
                     .replaceAll("\\s+", "_");
-//            log.info("REPLACED " + field + " to " + fieldReplaced);
             json = json.replaceAll(field, fieldReplaced);
         }
         return json;

@@ -1,10 +1,7 @@
 package org.knovash.squeezealice.voice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.Actions;
-import org.knovash.squeezealice.Context;
-import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.SmartHome;
+import org.knovash.squeezealice.*;
 import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.spotify_pojo.Type;
@@ -16,12 +13,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.Main.rooms;
 
 @Log4j2
 public class SwitchVoiceCommand {
 
-    private static String alice_id;
-    private static String room;
+    public static String alice_id;
+    public static String room;
 
     public static Context action(Context context) {
         log.info("");
@@ -41,22 +39,25 @@ public class SwitchVoiceCommand {
             return createResponse("я не поняла команду");
         if (command.contains("обнови"))
             return createResponse(updatePlayers());
-        if (command.contains("колонка") || command.contains("плеер"))
+        if (command.contains("выбери колонку"))
             return createResponse(selectPlayerInRoom(command));
         if (command.contains("где пульт"))
             return createResponse(whereRemote());
+
         if (command.contains("комната")) // это комната {название}
             return createResponse(thisRoomIsName(command));
         if (room == null) return createResponse("скажите навыку: это комната и название комнаты");
 
         Device device = SmartHome.getDeviceByRoom(room);
-        if (device == null) return createResponse("я не нашла колонку в комнате " + room);
+        if (device == null) return createResponse("я не нашла комнату " + room + " в доме");
 
-        Player player = lmsPlayers.getPlayerByName(device.customData.lmsName);
+        Player player = device.takePlayer();
         if (player == null)
-            return createResponse("я не нашла колонку " + device.customData.lmsName + " в комнате " + room);
-        lmsPlayers.lastAliceId = alice_id;
+            return createResponse("я не нашла колонку " + device.takePlayerName() + " в комнате " + room);
 
+        lmsPlayers.lastAliceId = alice_id;
+        if (command.contains("какая колонка"))
+            return createResponse(whatsPlayer(player));
         if (command.contains("включи пульт") || command.contains("подключи пульт"))
             return createResponse(connectBtRemote(player));
         if (command.contains("отдельно"))
@@ -102,20 +103,30 @@ public class SwitchVoiceCommand {
         List<String> playerNames = lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList());
         log.info("players names in lms: " + playerNames);
         String playerNewName = Levenstein.getNearestElementInListW(target, playerNames); // найти имя плеера по имени из фразы
-        if (playerNewName == null) return "нет такого плеера";
+        if (playerNewName == null) return "нет такой колонки";
         log.info("найдено имя НОВОГО плеера " + playerNewName);
-        Device deviceNow = SmartHome.getDeviceByAliceId(alice_id);
-        if (deviceNow == null) return "плеер " + playerNewName + "не подключен к навыку";
-        Device deviceNew = SmartHome.getDeviceByLmsName(playerNewName);
-        String playerNowName = deviceNow.customData.lmsName;
-        deviceNow.customData.lmsName = playerNewName;
-        if (deviceNew != null) deviceNew.customData.lmsName = playerNowName;
-        Player playerNow = lmsPlayers.getPlayerByName(playerNowName);
+
         Player playerNew = lmsPlayers.getPlayerByName(playerNewName);
-        Actions.turnOnMusic(playerNew);
-        playerNow.unsync().pause();
-        SmartHome.write();
-        return "выбран плеер " + playerNewName + " в комнате " + SmartHome.getRoomByPlayerName(playerNewName);
+        log.info("найден НОВЫЙ плеер " + playerNew.name);
+
+//        room = playerNew.roomPlayer;
+
+        Player playerNow = lmsPlayers.getPlayerByRoom(room);
+        String id = playerNow.deviceId;
+        log.info("ROOM: " + room + " ID: " + id);
+
+        playerNow.roomPlayer = null;
+        playerNow.deviceId = null;
+        playerNew.roomPlayer = room;
+        playerNew.deviceId = id;
+
+        CompletableFuture.supplyAsync(() -> {
+            Actions.turnOnMusic(playerNew);
+            playerNow.unsync().pause();
+//            SmartHome.write();
+            return "";
+        });
+        return "выбрана колонка " + playerNewName + " в комнате " + SmartHome.getRoomByPlayerName(playerNewName);
     }
 
     private static String thisRoomIsName(String command) {
@@ -132,11 +143,19 @@ public class SwitchVoiceCommand {
             answer = "ой, не найдена комната " + room;
         } else {
             // найдена
-            log.info("ROOM: " + device.room);
-            String playerName = device.customData.lmsName;
-            answer = "это комната " + device.room + " с колонкой " + playerName;
-            SmartHome.rooms.put(room, alice_id);
-            SmartHome.write();
+            log.info("ROOM ID: " + device.id);
+            String playerName = device.takePlayerName();
+            log.info("PLAYER NAME: " + playerName);
+            log.info("ALICE ID: " + alice_id);
+            log.info("ROOM: " + room);
+            answer = "это комната " + room + " с колонкой " + playerName;
+            log.info("ANSWER: " + answer);
+            log.info("ROOMS: " + Main.rooms);
+            Main.rooms.put(room, alice_id);
+            log.info("ROOMS: " + Main.rooms);
+            JsonUtils.mapToJsonFile(rooms, "rooms.json");
+//            SmartHome.write();
+            log.info("FINISH");
         }
         return answer;
     }
@@ -206,7 +225,7 @@ public class SwitchVoiceCommand {
         String answer = "";
         log.info("WATS PLAYING");
         player.status();
-        lmsPlayers.updateNew();
+        lmsPlayers.update();
         String title = player.title;
 
         if (title == null) return createResponse("медиасервер не отвечает");
@@ -235,7 +254,13 @@ public class SwitchVoiceCommand {
             answer = "сейчас на " + player.name + " играет " + separate + title + " громкость " + volume;
         }
         if (!mode.equals("play")) {
-            answer = "сейчас на " + player.name + " не играет " + separate + title;
+            Player playing = lmsPlayers.getPlayingPlayer(player.name);
+
+            if (playing != null) {
+                playing.status();
+                answer = "сейчас на " + player.name + " не играет " + separate + title +
+                        ". на " + playing.name + " играет " + separate + playing.title; }
+            else answer = "сейчас на " + player.name + " не играет " + separate + title;
         }
         answer = answer + separateAnswer;
         return answer;
@@ -244,7 +269,10 @@ public class SwitchVoiceCommand {
     private static String next(Player player) { // дальше, следующий
         String answer;
         log.info("NEXT TRACK");
-        player.nextTrack();
+        CompletableFuture.supplyAsync(() -> {
+            player.nextTrack();
+            return "";
+        });
         answer = "включаю следующий";
         return answer;
     }
@@ -252,9 +280,13 @@ public class SwitchVoiceCommand {
     private static String separate_on(Player player) {
         String answer;
         log.info("SEPARATE ON");
-        player
-                .separate_on()
-                .status();
+        player.status();
+        CompletableFuture.supplyAsync(() -> {
+            player
+                    .separate_on()
+                    .status();
+            return "";
+        });
         answer = "включаю отдельно " + player.name + ". " + player.title;
         return answer;
     }
@@ -262,9 +294,13 @@ public class SwitchVoiceCommand {
     private static String alone_on(Player player) {
         String answer;
         log.info("ALONE ON");
-        player
-                .alone_on()
-                .status();
+        player.status();
+        CompletableFuture.supplyAsync(() -> {
+            player
+                    .alone_on()
+                    .status();
+            return "";
+        });
         answer = "включаю только тут на " + player.name + ". " + player.title;
         return answer;
     }
@@ -282,7 +318,7 @@ public class SwitchVoiceCommand {
     private static String updatePlayers() {
         String answer;
         log.info("BEFORE UPDATE " + lmsPlayers.playersNamesOnLine.toString());
-        lmsPlayers.updateNew();
+        lmsPlayers.update();
         log.info("AFTER UPDATE " + lmsPlayers.playersNamesOnLine.toString());
         answer = "найдено плееров " + lmsPlayers.playersNamesOnLine.size() + ", " + String.join(", ", lmsPlayers.playersNamesOnLine);
         return answer;
@@ -310,6 +346,13 @@ public class SwitchVoiceCommand {
         String answer;
         log.info("WHERE BT REMOTE");
         answer = "пульт подключен к " + lmsPlayers.btPlayerName;
+        return answer;
+    }
+
+    private static String whatsPlayer(Player player) {
+        String answer;
+        log.info("WHATS PLAYER");
+        answer = "сейчас подключена колонка " + player.name;
         return answer;
     }
 

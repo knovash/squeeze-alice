@@ -10,8 +10,6 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.knovash.squeezealice.Main.lmsPlayers;
-
 @Log4j2
 public class ProviderQuery {
 
@@ -30,7 +28,7 @@ public class ProviderQuery {
             if (SmartHome.devices.size() == 0) log.info("ERROR - no registered LMS players in Alice home");
             ResponseYandex responseYandex = new ResponseYandex();
             responseYandex.request_id = xRequestId;
-            List<Device> jsonDevices = bodyPojo.devices.stream().map(d -> updateDevice(Integer.valueOf(d.id))).collect(Collectors.toList());
+            List<Device> jsonDevices = bodyPojo.devices.stream().map(d -> updateDevice(d)).collect(Collectors.toList());
             responseYandex.payload = new Payload();
             responseYandex.payload.devices = jsonDevices;
             json = JsonUtils.pojoToJson(responseYandex);
@@ -42,10 +40,9 @@ public class ProviderQuery {
         return context;
     }
 
-    public static Device updateDevice(Integer device_id) {
+    public static Device updateDevice(Device device) {
         // обратиться к девайсу и обновить все его значения
-        player = lmsPlayers.getPlayerByName(SmartHome.getDeviceById(device_id).customData.lmsName);
-        Device device = SmartHome.getDeviceById(device_id);
+        player = device.takePlayer();
         device.capabilities.forEach(capability -> changeCapability(capability));
         log.info("DEVICE UPDATED\n" + device);
         return device;

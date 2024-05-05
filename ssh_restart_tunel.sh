@@ -9,3 +9,5 @@ echo -e ${BGreen}"REMOTE IP "$remote${NC}
 #ssh root@$remote systemctl daemon-reload
 ssh root@$remote systemctl restart squeeze-tunnel.service
 
+sleep 10
+

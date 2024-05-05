@@ -6,7 +6,9 @@ import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
-import org.knovash.squeezealice.web.Html;
+import org.knovash.squeezealice.web.PagePlayers;
+import org.knovash.squeezealice.web.PageSpotify;
+import org.knovash.squeezealice.web.PageYandex;
 
 import java.util.HashMap;
 
@@ -56,20 +58,20 @@ public class SwitchQueryCommand {
                 response = Actions.stopMusicAll();
                 break;
             case ("next"):
-                player.next();
-                response = "NEXT";
+                player.next().status();
+                response = player.name + " - Next - " + player.title;
                 break;
             case ("prev"):
-                player.prev();
-                response = "PREV";
+                player.prev().status();
+                response = player.name + " - Prev - " + player.title;
                 break;
             case ("next_track"):
-                player.nextTrack();
-                response = "NEXT";
+                player.nextTrack().status();
+                response = player.name + " - Next track - " + player.title;
                 break;
             case ("prev_track"):
-                player.prevTrack();
-                response = "PREV";
+                player.prevTrack().status();
+                response = player.name + " - Next track - " + player.title;
                 break;
             case ("next_channel"):
                 player.nextChannel();
@@ -102,10 +104,6 @@ public class SwitchQueryCommand {
             case ("transfer"):
                 Spotify.transfer(player);
                 response = "TRANSFER";
-                break;
-            case ("whatsplaying"):
-//                SwitchVoiceCommand.createResponse(SwitchVoiceCommand.whatsPlaying(player));
-                response = "WHATSPLAYING";
                 break;
 
             case ("log"): // WEB HOME
@@ -145,70 +143,58 @@ public class SwitchQueryCommand {
             case ("spotify_save_creds"):
                 log.info("CREDENTIALS SPOTIFY");
                 SpotifyAuth.save(queryParams);
-                response = Html.formSpotifyLogin();
+                response = PageSpotify.page();
                 break;
             case ("cred_yandex"):
                 log.info("CREDENTIALS YANDEX");
                 Yandex.credentialsYandex(queryParams);
-                response = Html.formYandexLogin();
+                response = PageYandex.page();
                 break;
-
-//      WEB SPEAKERS
-            case ("speaker_create"):
-                log.info("SPEAKER CREATE");
-                SmartHome.create(queryParams);
-                SmartHome.write();
-                response = Html.formSpeakers();
+            case ("yandex_save_client_id"):
+                log.info("YANDEX SAVE CLIENT ID");
+                Yandex.saveClientId(queryParams);
+                response = PageYandex.page();
                 break;
-            case ("speaker_edit"):
-                log.info("SPEAKER SAVE");
-                SmartHome.save(queryParams);
-                SmartHome.write();
-                log.info("EDIT OK");
-                response = Html.formSpeakers();
-                break;
-            case ("speaker_remove"):
-                log.info("SPEAKER REMOVE");
-                SmartHome.remove(queryParams);
-                SmartHome.write();
-                response = Html.formSpeakers();
-                break;
-            case ("speakers_clear"):
-                log.info("SPEAKERS CLEAR");
-                SmartHome.clear();
-                SmartHome.write();
-                response = Html.formSpeakers();
+            case ("yandex_save_token"):
+                log.info("YANDEX SAVE TOKEN");
+                Yandex.saveToken(queryParams);
+                response = PageYandex.page();
                 break;
 
 //      WEB PLAYERS
-            case ("players_update"):
-                log.info("PLAYERS UPDATE");
-                lmsPlayers.updateNew();
-                lmsPlayers.write();
-                response = Html.formSpeakers();
-                break;
-            case ("players_clear"):
-                log.info("PLAYERS CLEAR");
-                lmsPlayers.clear();
-                lmsPlayers.write();
-                response = Html.formSpeakers();
-                break;
+//            case ("players_update"):
+//                log.info("PLAYERS UPDATE");
+//                lmsPlayers.updateNew();
+//                lmsPlayers.write();
+//                response = Html.formSpeakers();
+//                break;
+//            case ("players_clear"):
+//                log.info("PLAYERS CLEAR");
+//                lmsPlayers.clear();
+//                lmsPlayers.write();
+//                response = Html.formSpeakers();
+//                break;
             case ("player_save"):
                 log.info("PLAYER SAVE");
                 lmsPlayers.playerSave(queryParams);
                 lmsPlayers.write();
-                response = Html.formPlayers();
+                response = PagePlayers.page();
                 break;
             case ("player_remove"):
                 log.info("PLAYER REMOVE");
                 lmsPlayers.playerRemove(queryParams);
                 lmsPlayers.write();
-                response = Html.formPlayers();
+                response = PagePlayers.page();
                 break;
             case ("restart"):
                 log.info("RESTART SERVER");
                 Utils.restart();
                 response = "RESTART";
+                break;
+            case ("reset_players"):
+                log.info("RESET PLAYERS");
+                lmsPlayers.resetPlayers();
+                response = "RESET PLAYERS";
                 break;
             case ("reboot"):
                 log.info("REBOOT SERVER");
@@ -223,6 +209,4 @@ public class SwitchQueryCommand {
         context.json = response;
         return context;
     }
-
-
 }

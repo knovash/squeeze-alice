@@ -11,7 +11,7 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.utils.JsonUtils;
-import org.knovash.squeezealice.web.Html;
+import org.knovash.squeezealice.web.PageSpotiCallback;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -95,7 +95,7 @@ public class SpotifyAuth {
         code = context.queryMap.get("code");
         state = context.queryMap.get("state");
         requestAccessToken();
-        String json = Html.spoti_callback();
+        String json = PageSpotiCallback.page();
         context.json = json;
         context.code = 200;
         return context;
@@ -139,7 +139,8 @@ public class SpotifyAuth {
         Map<String, String> map = new HashMap<>();
         map.put("client_id", client_id);
         map.put("client_secret", client_secret);
-        map.put("bearerToken", bearer_token);
+        map.put("bearer_token", bearer_token);
+        map.put("redirect_uri", redirect_uri);
         JsonUtils.mapToJsonFile(map, "spotify.json");
     }
 
@@ -151,7 +152,8 @@ public class SpotifyAuth {
         if (map == null) return;
         client_id = map.get("client_id");
         client_secret = map.get("client_secret");
-        bearer_token = map.get("bearerToken");
+        bearer_token = map.get("bearer_token");
+        redirect_uri = map.get("redirect_uri");
         log.info("BEARER: " + SpotifyAuth.bearer_token);
     }
 }

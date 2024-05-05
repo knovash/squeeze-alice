@@ -90,15 +90,9 @@ public class Spotify {
         String uri = "https://api.spotify.com/v1/me/player/currently-playing";
         log.info("URI: " + uri);
         String body = SpotifyRequests.requestHttpClient(uri);
-//        log.info("BODY: " + body);
-//        body = body.replace("\\\"", ""); //  ф
         if (body.contains("204")) return null;
         String json = getJson(uri);
-//        String json = SpotifyRequests.requestForLinkJson(uri);
-//        if (json == null) SpotifyAuth.requestRefresh();
-//        json = SpotifyRequests.requestForLinkJson(uri);
         if (json == null) return null;
-//        log.info("JSON: " + json);
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         CurrentlyPlaying currentlyPlaying = JsonUtils.jsonToPojo(json, CurrentlyPlaying.class);
         log.info("CURRENTLY PLAYING: " + currentlyPlaying);
@@ -111,8 +105,6 @@ public class Spotify {
         String json;
         String uri = currentlyPlaying.context.uri;
         String type = currentlyPlaying.context.type;
-//      "uri": "spotify:playlist:37i9dQZF1DWTvNyxOwkztu"
-//      "uri": "spotify:artist:5K4W6rqBFWDnAN6FQUkS6x"
         if (type.equals("playlist")) {
             id = uri.replaceAll("spotify:playlist:", "");
             uri = "https://api.spotify.com/v1/playlists/" + id;
