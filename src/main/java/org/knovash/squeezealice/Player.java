@@ -9,8 +9,6 @@ import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,16 +25,19 @@ public class Player {
 
     public String name;
     public String nameInQuery;
-    public String id;
+    public String roomPlayer = ""; // in Yandex
+    public String deviceId; // in Yandex
+    public String mac; // mac in LMS
     public Integer volume_step;
     public Integer volume_low;
     public boolean playing;
+    public String mode;
     public Integer volume_high;
-    public Integer wake_delay;
+    public Integer delay;
     public boolean black = false;
     public boolean separate = false;
     public boolean connected = false;
-    public Map<Integer, Integer> timeVolume;
+    public Map<Integer, Integer> schedule;
     public String title = "херпоймичё";
 
     public String lastPath;
@@ -44,9 +45,9 @@ public class Player {
     public int lastChannel = 0;
     public PlayerStatus status = new PlayerStatus();
 
-    public Player(String name, String id) {
+    public Player(String name, String mac) {
         this.name = name;
-        this.id = id;
+        this.mac = mac;
         this.title = "херпоймичё";
         this.nameInQuery = this.name
                 .replace(" ", "")
@@ -55,9 +56,9 @@ public class Player {
         this.volume_step = 5;
         this.volume_low = 10;
         this.volume_high = 25;
-        this.wake_delay = 10000;
+        this.delay = 10000;
         this.black = false;
-        this.timeVolume = new HashMap<>(Map.of(
+        this.schedule = new HashMap<>(Map.of(
                 0, 5,
                 7, 5,
                 9, 10,
@@ -155,6 +156,7 @@ public class Player {
     public Player volumeSet(String value) {
         log.info("PLAYER: " + this.name + " SET VOLUME: " + value);
         String status = Requests.postToLmsForStatus(RequestParameters.volume(this.name, value).toString());
+        if (status == null || !status.contains("200")) return this; // если лмс не отвечает
         if (Integer.parseInt(this.volumeGet()) < 1) this.volumeSet("1");
         log.info("STATUS: " + status);
         return this;
@@ -313,20 +315,19 @@ public class Player {
 //  https://github.com/Logitech/slimserver/issues/993
         log.info("CHECK PATH IF audioaddict");
         String path = lmsPlayers.getPlayerByName(toPlayerName).path();
+//        this.playPath(path);
+//        log.info("SYNC audioaddict FINISH");
 
-        this.playPath(path);
-        log.info("SYNC audioaddict FINISH");
-
-//        if (path.contains("di.fm") || path.contains("audioaddict")) {
-//            this.playPath(path);
-//            log.info("SYNC audioaddict FINISH");
-//            return this;
-//        } else {
-//            String status = Requests.postToLmsForStatus(RequestParameters.sync(this.name, toPlayerName).toString());
-//            log.info("STATUS: " + status);
-//            this.saveLastTime().saveLastPath();
-//            log.info("SYNC FINISH");
-//        }
+        if (path.contains("di.fm") || path.contains("audioaddict")) {
+            this.playPath(path);
+            log.info("SYNC audioaddict FINISH");
+            return this;
+        } else {
+            String status = Requests.postToLmsForStatus(RequestParameters.sync(this.name, toPlayerName).toString());
+            log.info("STATUS: " + status);
+            this.saveLastPath().saveLastTime();
+            log.info("SYNC FINISH");
+        }
         return this;
     }
 
@@ -338,7 +339,8 @@ public class Player {
 
     public Player ifNotPlayUnsyncWakeSet() {
         log.info("CHECK IF PLAY");
-        if (!this.mode().equals("play")) {
+        this.status();
+        if (!this.playing) {
             log.info("PLAYER " + this.name + " NOT PLAY - UNSYNC, WAKE, SET");
             this.unsync().wakeAndSet();
         } else log.info("PLAYER " + this.name + " PLAY - SKIP WAKE");
@@ -382,7 +384,7 @@ public class Player {
     public Player wakeAndSet() {
         log.info("WAKE START >>>>>>>>>>");
         if (Actions.timeExpired(this)) {
-            log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.wake_delay);
+            log.info("PLAYER: " + this.name + " WAKE WAIT: " + this.delay);
             this
                     .playSilence()
                     .volumeSet("+1")
@@ -400,9 +402,9 @@ public class Player {
 
     public Player setVolumeByTime() {
         LocalTime timeNow = LocalTime.now();
-        log.info("VOLUME BY TIME: " + timeNow + " OF: " + this.timeVolume);
+        log.info("VOLUME BY TIME: " + timeNow + " OF: " + this.schedule);
         Map.Entry<Integer, Integer> e =
-                timeVolume.entrySet()
+                schedule.entrySet()
                         .stream()
                         .filter(entry -> LocalTime.of(entry.getKey(), 0).isBefore(timeNow))
                         .max(Comparator.comparing(Map.Entry::getKey))
@@ -413,9 +415,9 @@ public class Player {
     }
 
     public Player waitForWake() {
-        log.info("WAIT " + wake_delay + " . . . . .");
+        log.info("WAIT " + delay + " . . . . .");
         try {
-            Thread.sleep(this.wake_delay);
+            Thread.sleep(this.delay);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -451,16 +453,6 @@ public class Player {
         return this;
     }
 
-//    public Player saveLastPathLink(String path) {
-//        log.info("SAVE LAST PATH LINK START");
-//        this.lastPath = path;
-//        lmsPlayers.lastPath = this.lastPath;
-//        log.info("SAVED LAST PATH: " + this.lastPath);
-////        log.info("SAVED LAST PATH G : " + lastPathGlobal);
-//        log.info("SAVE LAST PATH LINK STOP");
-//        return this;
-//    }
-
     public void remove() {
         lmsPlayers.players.remove(this);
     }
@@ -486,21 +478,34 @@ public class Player {
 
     public Player separate_alone_off() {
         log.info("SEPARATE ALONE OFF START >>>>>>>>>>");
+
+        if (this.mode().equals("play")) {
+            log.info("ALL SEPARATE SET false");
+            lmsPlayers.players.forEach(p -> p.separate = false);
+            lmsPlayers.write();
+            log.info("SYNC ALL PLAYING TO THIS: " + this.name);
+            this.syncAllOtherPlayingToThis();
+            log.info("SEPARATE ALONE OFF FINISH <<<<<<<<<<");
+            return this;
+        }
+
+        Player playing = lmsPlayers.getPlayingPlayer(this.name);
+        log.info("PLAYING: " + playing);
         log.info("ALL SEPARATE SET false");
         lmsPlayers.players.forEach(p -> p.separate = false);
         lmsPlayers.write();
-        Player playing = lmsPlayers.getPlayingPlayerNew(this.name);
-        log.info("PLAYING: " + playing);
+
         if (playing == null) {
             log.info("NO PLAYING. START PLAY THIS: " + this);
             Actions.turnOnMusic(this);
             log.info("SEPARATE ALONE OFF FINISH <<<<<<<<<<");
-            return playing;
+            return this;
         }
-        log.info("SYNC ALL PLAYING TO: " + playing);
+
+        log.info("SYNC ALL PLAYING TO THIS: " + playing.name);
         playing.syncAllOtherPlayingToThis();
         log.info("SEPARATE ALONE OFF FINISH <<<<<<<<<<");
-        return playing;
+        return this;
     }
 
     public Player saveLastTime() {
@@ -518,6 +523,8 @@ public class Player {
         log.info("STATUS VOLUME: " + playerStatus.result.mixer_volume);
         log.info("STATUS TITLE: " + playerStatus.result.current_title);
         log.info("STATUS INDEX: " + playerStatus.result.playlist_cur_index);
+        this.playing = false;
+        if (playerStatus.result.mode.equals("play")) this.playing = true;
         this.status = playerStatus;
         title();
         return this;
@@ -527,11 +534,18 @@ public class Player {
 //  запрашивать "playlist", "name" для Soma и Di. для Spoty нету. запросить "artist"
         log.info("PLAYER: " + this.name + " TITLE: " + this.title);
         String title = this.status.result.current_title;
-        if ((title != null) || (title != "")) {
+        log.info("CURRENT_TITLE: " + title);
+        if ((title != null) && (title != "")) {
+            log.info("TITLE REPLACE after : - ");
             if (title.contains(": ")) title = title.replaceAll(":.*", "");
             if (title.contains(" - ")) title = title.replaceAll(" - .*", "");
         }
-        if ((title == null) || (title == "")) title = this.artistname();
+        log.info("TITLE TRY ARTIST NAME: ");
+        if ((title == null) || (title == "")) {
+            log.info("TITLE ARTIST NAME: ");
+            title = this.artistname();
+        }
+
         if (title == null) title = "херпоймичё";
         this.title = title;
         log.info("TITLE: " + this.title);
@@ -558,7 +572,7 @@ public class Player {
             listNamesInGroupe = new ArrayList<>();
         }
         log.info("UPDATE");
-        lmsPlayers.updateNew();
+        lmsPlayers.update();
         log.info("STREAM PLAYERS, FILTER, SYNC TO THIS");
         lmsPlayers.players.stream()
                 .filter(p -> !p.name.equals(this.name))
@@ -583,7 +597,9 @@ public class Player {
     public String toString() {
         return "Player{" +
                 "name='" + name + '\'' +
-                ", id='" + id + '\'' +
+                ", id='" + mac + '\'' +
+                ", room='" + roomPlayer + '\'' +
+//                ", roomExtId='" + roomExtId + '\'' +
                 '}';
     }
 
@@ -592,11 +608,11 @@ public class Player {
         if (this == o) return true;
         if (!(o instanceof Player)) return false;
         Player player = (Player) o;
-        return Objects.equals(getName(), player.getName()) && Objects.equals(getId(), player.getId());
+        return Objects.equals(getName(), player.getName()) && Objects.equals(getMac(), player.getMac());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getId());
+        return Objects.hash(getName(), getMac());
     }
 }

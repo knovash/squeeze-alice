@@ -8,10 +8,7 @@ import org.knovash.squeezealice.provider.response.Range;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Levenstein;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Log4j2
@@ -24,22 +21,23 @@ public class SmartHome {
 
     public static Device getDeviceById(int deviceId) {
         String index = String.valueOf(deviceId);
-        return devices.stream().filter(d -> d.id.equals(index)).findFirst().orElse(null);
-    }
-
-    public static Device getDeviceByLmsName(String lmsName) {
-        return devices.stream().filter(d -> d.customData.lmsName.equals(lmsName)).findFirst().orElse(null);
+        return devices.stream()
+                .filter(d -> (d.id != null))
+                .filter(d -> d.id.equals(index))
+                .findFirst().orElse(null);
     }
 
     public static Device getDeviceByRoom(String room) {
         log.info("ROOM: " + room);
-        return devices.stream()
-                .filter(d -> d.room.toLowerCase().equals(room.toLowerCase()))
+        return  devices.stream()
+                .filter(d -> (d.room != null))
+                .filter(d -> d.room.equals(room))
                 .findFirst().orElse(null);
     }
 
     public static Device getDeviceByRoomLevenstein(String room) {
-        log.info("room " + room);
+        log.info("ROOM " + room);
+        if (devices == null || devices.size() == 0) return null;
         List<String> rooms = devices.stream().map(device -> device.room).collect(Collectors.toList());
         room = Levenstein.getNearestElementInList(room, rooms);
         return getDeviceByRoom(room);
@@ -47,14 +45,32 @@ public class SmartHome {
 
     public static String getRoomByPlayerName(String playerName) {
         log.info("PLAYER NAME: " + playerName);
-        Device device = devices.stream().filter(d -> d.customData.lmsName.toLowerCase().equals(playerName.toLowerCase())).findFirst().orElse(null);
+        Device device = devices.stream().filter(d -> d.takePlayerName().toLowerCase().equals(playerName.toLowerCase())).findFirst().orElse(null);
         if (device == null) return null;
         return device.room;
     }
 
+    public static String getIdByPlayerName(String playerName) {
+        log.info("PLAYER NAME: " + playerName);
+
+        log.info("PLAYER NAME: " + playerName);
+
+        if (devices == null) return "---";
+        if (devices.size() == 0) return "---";
+        Device device = devices.stream()
+                .filter(d -> d.takePlayerName() != null)
+                .filter(d -> d.takePlayerName().equals(playerName))
+                .findFirst()
+                .orElse(null);
+        if (device == null) return "---";
+        if (device.id == null) return "---";
+        return device.id;
+    }
+
     public static String getRoomByAliceId(String aliceId) {
         log.info("ALICE ID: " + aliceId);
-        Map.Entry<String, String> entry = SmartHome.rooms.entrySet().stream()
+        if (Main.rooms == null) return null;
+        Map.Entry<String, String> entry = Main.rooms.entrySet().stream()
                 .filter(r -> r.getValue().equals(aliceId)).findFirst().orElse(null);
         if (entry == null) return null;
         return entry.getKey();
@@ -63,7 +79,7 @@ public class SmartHome {
     public static Device getDeviceByAliceId(String aliceId) {
         getRoomByAliceId(aliceId);
         log.info("aliceId " + aliceId);
-        Map.Entry<String, String> entry = SmartHome.rooms.entrySet().stream()
+        Map.Entry<String, String> entry = Main.rooms.entrySet().stream()
                 .filter(r -> r.getValue().equals(aliceId)).findFirst().orElse(null);
         if (entry == null) return null;
         return SmartHome.getDeviceByRoom(entry.getKey());
@@ -75,67 +91,33 @@ public class SmartHome {
         SmartHome.devices = new LinkedList<>();
         List<Device> devices = JsonUtils.jsonFileToList("alice_devices.json", Device.class);
         if (devices != null) SmartHome.devices.addAll(devices);
-        SmartHome.rooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
-        log.info("DEVICES: " + SmartHome.devices.stream().map(d -> d.customData.lmsName + ":" + d.room).collect(Collectors.toList()));
+//        Main.rooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
+        log.info("DEVICES: " + SmartHome.devices.stream().map(d -> d.takePlayerName() + ":" + d.room).collect(Collectors.toList()));
     }
 
-    public static void write() {
-        JsonUtils.listToJsonFile(SmartHome.devices, "alice_devices.json");
-        JsonUtils.mapToJsonFile(SmartHome.rooms, "rooms.json");
-    }
-
-    public static void logListStringDevices() {
-        log.info("LOG DEVICES");
-        SmartHome.devices.stream()
-                .forEach(device -> log.info(device.id + " " + device.room + " " + device.customData.lmsName));
-    }
 
     public static void clear() {
         log.info("CLEAR DEVICES");
         devices = new LinkedList<>();
-        SmartHome.write();
     }
 
     public static Integer addNewDevice(Device device, int idd) {
-        log.info("ADD DEVICE: " + device.customData.lmsName);
+        log.info("ADD DEVICE: " + device.takePlayerName() + " ID: " + idd);
         int id = SmartHome.devices.size() + 1;
         if (idd != 0) id = idd;
         device.id = String.valueOf(id);
         SmartHome.devices.add(device);
+        log.info("DEVICES: " + SmartHome.devices.stream().map(d -> d.takePlayerName() + " id=" + d.id)
+                .collect(Collectors.toList()));
         return id;
     }
 
-    public static String save(HashMap<String, String> parameters) {
-        log.info("PARAMETERS: " + parameters);
-        int index_old = Integer.parseInt(parameters.get("id_old"));
-        Device device = SmartHome.devices.get(index_old);
-        device.name = parameters.get("speaker_name_alice");
-        device.id = parameters.get("id");
-        device.room = parameters.get("room");
-        device.customData.lmsName = parameters.get("speaker_name_lms");
-        SmartHome.devices.remove(index_old);
-        SmartHome.devices.add(device);
-        SmartHome.devices.sort((d1, d2) -> d1.id.compareTo(d2.id));
-        SmartHome.write();
-        return "SAVED";
-    }
-
-    public static String remove(HashMap<String, String> parameters) {
-        log.info("REMOVE DEVICE");
-        String deviceId = parameters.get("id");
-        Device device = SmartHome.devices.stream().filter(d -> d.id.equals(deviceId)).findFirst().get();
-        SmartHome.devices.remove(device);
-        SmartHome.write();
-        return "REMOVED " + deviceId + " DEVICES SIZE: " + SmartHome.devices.size();
-    }
-
-    public static void create(HashMap<String, String> parameters) {
-        log.info("CREATE " + parameters);
-        Device device = new Device(parameters.get("speaker_name_alice"));
+    public static Device create(HashMap<String, String> parameters) {
+        log.info("");
+        log.info("CREATE parameters: " + parameters);
+        Device device = new Device();
         device.type = "devices.types.media_device.receiver";
         device.room = parameters.get("room");
-        if (parameters.get("name") != null) device.name = parameters.get("name");
-        device.customData.lmsName = parameters.get("speaker_name_lms");
 
         Capability volume = new Capability();
         volume.type = "devices.capabilities.range"; // Тип умения. channel     volume
@@ -168,15 +150,30 @@ public class SmartHome {
         on_of.parameters.instance = "on"; // Название функции для данного умения. volume channel
         device.capabilities.add(on_of);
 
-        log.info("NEW DEVICE: " + device);
+        Integer id = null;
+        Integer idByParameters = null;
+        if (parameters.get("id") != null) idByParameters = Integer.parseInt(parameters.get("id"));
+        log.info("ID BY PARAMETERS: " + idByParameters);
 
-        int id = 0;
-        if (parameters.get("id") != null) id = Integer.parseInt(parameters.get("id"));
+        if (SmartHome.devices == null) SmartHome.devices = new LinkedList<>();
 
-        SmartHome.addNewDevice(device, id);
-
-        log.info("DEVICES: " + SmartHome.devices.stream().map(d -> d.customData.lmsName + " id=" + d.id)
+        if (idByParameters == null) {
+            if (SmartHome.devices.size() == 0) {
+                id = 1;
+            } else {
+                Integer idBySmartHome = Integer.valueOf(SmartHome.devices.stream()
+                        .map(device1 -> device1.id)
+                        .max(Comparator.naturalOrder())
+                        .orElse(null));
+                log.info("ID BY SMARTHOME: " + idBySmartHome);
+                id = idBySmartHome + 1;
+            }
+        } else id = idByParameters;
+        device.id = String.valueOf(id);
+        log.info("NEW DEVICE: " + "Room = " + device.room + " Device id = " + device.id);
+        SmartHome.devices.add(device);
+        log.info("DEVICES: " + SmartHome.devices.stream().map(d -> "Room = " + d.room + " Device id = " + d.id)
                 .collect(Collectors.toList()));
-        SmartHome.write();
+        return device;
     }
 }

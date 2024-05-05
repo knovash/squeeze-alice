@@ -49,7 +49,7 @@ public class Actions {
             lmsPlayers.write();
             return;
         }
-        Player playing = lmsPlayers.getPlayingPlayerNew(player.name);
+        Player playing = lmsPlayers.getPlayingPlayer(player.name);
         if (playing == null) {
             log.info("NO PLAYING. PLAY LAST");
             player.playLast();
@@ -79,32 +79,34 @@ public class Actions {
 
     public static String toggleMusic(Player player) {
         log.info("START TOGGLE MUSIC PLAYER: " + player.name);
-        String mode = player.mode(); // TODO двойной запрос состояния плеера
-        if (mode.equals("play")) {
+        player.status(); // TODO двойной запрос состояния плеера
+        String mode;
+        if (player.playing) {
             turnOffMusic(player);
-            mode = "STOP " + player.name;
+            mode = player.name + " - Stop - " + player.title;
         } else {
             turnOnMusic(player);
-            mode = "PLAY " + player.name;
+            mode = player.name + " - Play - " + player.title;
         }
-        return "TOGGLE " + mode;
+        return mode;
     }
 
     public static String toggleMusicAll(Player player) {
-        String mode = player.mode();
-        if (mode.equals("play")) {
+        player.status(); // TODO двойной запрос состояния плеера
+        String mode;
+        if (player.playing) {
             lmsPlayers.players.forEach(p -> turnOffMusic(p));
-            mode = "STOP " + player.name;
+            mode =  "All players - Stop";
         } else {
             turnOnMusic(player);
-            mode = "PLAY " + player.name;
+            mode = "All players - Play";
         }
-        return "TOGGLE ALL " + mode;
+        return mode;
     }
 
     public static String stopMusicAll() {
         lmsPlayers.players.forEach(p -> turnOffMusic(p));
-        return "STOP ALL";
+        return "All players - Stop";
     }
 
     public static boolean timeExpired(Player player) {

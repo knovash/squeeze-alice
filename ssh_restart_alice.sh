@@ -9,3 +9,6 @@ echo -e ${BGreen}"REMOTE IP "$remote${NC}
 #ssh root@$remote systemctl daemon-reload
 ssh root@$remote systemctl restart squeeze-alice.service
 
+ssh root@$remote sh log.sh
+
+sleep 10

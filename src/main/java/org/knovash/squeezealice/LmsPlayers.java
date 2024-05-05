@@ -7,6 +7,7 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.lms.ServerStatusName;
+import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 
@@ -14,6 +15,7 @@ import java.time.Duration;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,38 +57,7 @@ public class LmsPlayers {
         return playlist;
     }
 
-//    public void update() {
-//        LocalTime time1 = LocalTime.now();
-//        log.info("UPDATE PLAYERS FROM LMS");
-//        lmsPlayers.count();
-//        Integer counter = lmsPlayers.counter; // получить количество плееров в LMS
-//        if (counter == null || counter == 0) {
-//            log.info("UPDATE ERROR. NO PLAYERS IN LMS");
-//            return;
-//        }
-//        playersNamesOnLine = new ArrayList<>();
-//        for (int index = 0; index < counter; index++) { // для каждого плеера по id
-//            String name = Player.name(Integer.toString(index)); // запросить имя
-//            String id = Player.id(Integer.toString(index)); // запросить id/mac
-//            if (lmsPlayers.getPlayerByName(name) == null) { // если плеера еще нет в сервере, то добавить
-//                log.info("FOUND NEW PLAYER: " + name);
-//                Player newPlayer = new Player(name, id);
-////                newPlayer.nameInQuery = newPlayer.getQueryNameString();
-//                log.info("ADD NEW PLAYER: " + newPlayer);
-//                lmsPlayers.players.add(newPlayer);
-//                write();
-//            }
-//            Player player = lmsPlayers.getPlayerByName(name);
-//            player.connected = true;
-//            if (player.mode().equals("play")) player.saveLastTime();
-//            playersNamesOnLine.add(name); // добавить плеер в список активных
-//        }
-//        LocalTime time2 = LocalTime.now();
-//        log.info("------------- TIME OLD: " + Duration.between(time1, time2));
-//    }
-
-
-    public void updateNew() {
+    public void update() {
         log.info("");
         log.info("UPDATE PLAYERS START >>>>>>>>>>");
         LocalTime time1 = LocalTime.now();
@@ -108,9 +79,7 @@ public class LmsPlayers {
             playersNamesOffLine.remove(p.name);
             if (lmsPlayers.getPlayerByName(p.name) == null) { // если плеера еще нет в сервере, то добавить
                 log.info("NEW PLAYER: " + p.name);
-                Player player = new Player();
-                player.name = p.name;
-                player.id = p.playerid;
+                Player player = new Player(p.name, p.playerid);
                 if (p.isplaying == 1) {
                     player.playing = true;
                     player.saveLastTime();
@@ -119,8 +88,8 @@ public class LmsPlayers {
                 }
                 lmsPlayers.players.add(player);
             } else {
-                Player player =  lmsPlayers.getPlayerByName(p.name);
-               player.connected = true;
+                Player player = lmsPlayers.getPlayerByName(p.name);
+                player.connected = true;
                 if (p.isplaying == 1) {
                     player.playing = true;
                     player.saveLastTime();
@@ -128,7 +97,7 @@ public class LmsPlayers {
                     player.playing = false;
                 }
 
-                if (serverStatusName.result != null){
+                if (serverStatusName.result != null) {
 //                    player.title() = serverStatusName.
                 }
 
@@ -171,14 +140,30 @@ public class LmsPlayers {
     }
 
     public Player getPlayerByName(String name) {
+        log.info("BY NAME: " + name);
         Player player = new Player();
         if (name == null) return null;
         if (lmsPlayers.players == null) return null;
         player = lmsPlayers.players.stream()
-                .filter(p -> p.getName().toLowerCase().equals(name.toLowerCase()))
+                .filter(p -> (p.getName() != null))
+                .filter(p -> p.getName().equals(name))
                 .findFirst()
                 .orElse(null);
         if (player == null) log.info("PLAYER NOT FOUND " + name);
+//        log.info("PLAYER: " + player.name);
+        return player;
+    }
+
+    public Player getPlayerByRoom(String room) {
+        log.info("ROOM: " + room);
+        Player player = new Player();
+        player = lmsPlayers.players.stream()
+                .filter(p -> (p.roomPlayer != null))
+                .filter(p -> p.roomPlayer.equals(room))
+                .findFirst()
+                .orElse(null);
+        log.info("PLAYER: " + player.name);
+        if (player == null) log.info("PLAYER NOT FOUND WHITH ROOM " + room);
         return player;
     }
 
@@ -221,11 +206,11 @@ public class LmsPlayers {
 
     }
 
-    public Player getPlayingPlayerNew(String exceptName) {
+    public Player getPlayingPlayer(String exceptName) {
         LocalTime time1 = LocalTime.now();
         log.info("");
         log.info("SEARCH FOR PLAYING. EXCEPT " + exceptName + " START >>>>>>>>>>");
-        lmsPlayers.updateNew();
+        lmsPlayers.update();
         Player playing = lmsPlayers.players.stream()
                 .peek(p -> log.info("PLAYER: " + p.name + " SEPARATE: " + p.separate + " ONLINE: " + p.connected + " PLAYING: " + p.playing))
                 .filter(p -> !p.separate)
@@ -245,20 +230,61 @@ public class LmsPlayers {
     }
 
     public String playerSave(HashMap<String, String> parameters) {
-        log.info("PARAMETERS: " + parameters);
+        log.info("PLAYER SAVE PARAMETERS: " + parameters);
         String name = parameters.get("name");
+        String room = parameters.get("room");
+        String delay = parameters.get("delay");
+        String schedule = parameters.get("schedule");
+
         Player player = lmsPlayers.getPlayerByName(name);
-        log.info("PLAYER FOR EDIT: " + player);
+
+        log.info("PLAYER: " + player);
         log.info("name: " + parameters.get("name"));
+        log.info("room: " + parameters.get("room"));
         log.info("delay: " + parameters.get("delay"));
-        log.info("step: " + parameters.get("step"));
-        log.info("black: " + parameters.get("black"));
         log.info("schedule: " + parameters.get("schedule"));
         log.info(Utils.stringSplitToIntMap(parameters.get("schedule"), ",", ":"));
-        player.wake_delay = Integer.valueOf(parameters.get("delay"));
-        player.volume_step = Integer.valueOf(parameters.get("step"));
-        player.black = Boolean.parseBoolean(parameters.get("black"));
-        player.timeVolume = Utils.stringSplitToIntMap(parameters.get("schedule"), ",", ":");
+
+
+        player.roomPlayer = room;
+        player.delay = Integer.valueOf(delay);
+        player.schedule = Utils.stringSplitToIntMap(schedule, ",", ":");
+
+        List<String> rooms = SmartHome.devices.stream().map(device -> device.room).collect(Collectors.toList());
+        log.info("ROOMS: " + rooms);
+//        комната существует, плеер = плеер в комнате - изменить параметры плеера
+//        комната существует, плеер != плеер в комнате - поменять id плееров. изменить параметры плеера
+//        комната не существует - создать device. изменить параметры плеера
+
+
+//      комната не существует - создать device и room
+        if (!rooms.contains(room)) {
+            log.info("ROOM NOT EXISTS. CREATE DEVICE IN ROOM");
+            HashMap<String, String> parameters2 = new HashMap<>();
+            parameters2.put("room", room);
+            Device device = SmartHome.create(parameters2);
+            String id = device.id;
+            player.deviceId = id;
+        }
+//      комната существует
+        else {
+            String id = SmartHome.getDeviceByRoom(room).id;
+            player.deviceId = id;
+            log.info("ROOM EXISTS");
+            Player playerInRoom = lmsPlayers.getPlayerByRoom(room);
+            log.info("PLAYER IN ROOM: " + playerInRoom.name + " " + playerInRoom.roomPlayer + " " + playerInRoom.deviceId);
+            if (!player.name.equals(playerInRoom.name)) {
+                log.info("PLAYER != PLAYER IN ROOM - SWAP PLAYERS ID");
+                player.deviceId = playerInRoom.deviceId;
+                player.roomPlayer = room;
+
+                playerInRoom.deviceId = null;
+                playerInRoom.roomPlayer = null;
+                log.info("PLAYER IN ROOM: " + playerInRoom.name + " " + playerInRoom.roomPlayer + " " + playerInRoom.deviceId);
+            }
+        }
+        log.info("PLAYER: " + player.name + " " + player.roomPlayer + " " + player.deviceId);
+
         write();
         return "OK";
     }
@@ -272,5 +298,12 @@ public class LmsPlayers {
         lmsPlayers.players.remove(player);
         write();
         return "OK";
+    }
+
+    public void resetPlayers() {
+        lmsPlayers.players = new ArrayList<>();
+        SmartHome.devices = new LinkedList<>();
+        lmsPlayers.update();
+        lmsPlayers.write();
     }
 }

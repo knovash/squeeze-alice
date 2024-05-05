@@ -20,8 +20,8 @@ public class Requests {
         HttpResponse response = null;
         try {
             response = Request.Head(uri)
-                    .connectTimeout(500)
-                    .socketTimeout(500)
+                    .connectTimeout(900)
+                    .socketTimeout(900)
                     .execute()
                     .returnResponse();
         } catch (IOException e) {
