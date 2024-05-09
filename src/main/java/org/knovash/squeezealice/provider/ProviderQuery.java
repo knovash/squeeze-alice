@@ -28,7 +28,9 @@ public class ProviderQuery {
             if (SmartHome.devices.size() == 0) log.info("ERROR - no registered LMS players in Alice home");
             ResponseYandex responseYandex = new ResponseYandex();
             responseYandex.request_id = xRequestId;
-            List<Device> jsonDevices = bodyPojo.devices.stream().map(d -> updateDevice(d)).collect(Collectors.toList());
+            List<Device> jsonDevices = bodyPojo.devices.stream()
+                    .map(d -> SmartHome.getDeviceById(Integer.parseInt(d.id)))
+                    .map(d -> updateDevice(d)).collect(Collectors.toList());
             responseYandex.payload = new Payload();
             responseYandex.payload.devices = jsonDevices;
             json = JsonUtils.pojoToJson(responseYandex);
