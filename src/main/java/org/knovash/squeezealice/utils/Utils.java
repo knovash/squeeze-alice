@@ -5,6 +5,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
+import org.knovash.squeezealice.SmartHome;
 
 import java.io.File;
 import java.io.IOException;
@@ -321,7 +322,10 @@ public class Utils {
         log.info("");
         log.info("READ ROOMS FROM rooms.json");
         rooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
-        if (rooms == null) { rooms = new HashMap<>(); return;}
+        if (rooms == null) {
+            rooms = new HashMap<>();
+            return;
+        }
         log.info("ROOMS: " + Main.rooms);
     }
 
@@ -330,5 +334,18 @@ public class Utils {
         log.info("WRITE ROOMS TO rooms.json");
         log.info(rooms);
         JsonUtils.mapToJsonFile(rooms, "rooms.json");
+    }
+
+    public static String rooms() {
+//        public static List<String> rooms() {
+
+//        String[] array = new String[] { "a", "b", "c" };
+//        String joined2 = String.join(",", array);
+//        n headerMap.entrySet().stream().map(e -> e.getKey() + ":" + e.getValue())
+//                .collect(Collectors.joining(","));
+//    }
+        return SmartHome.devices.stream().map(device -> device.room).collect(Collectors.joining(","));
+
+//        return SmartHome.devices.stream().map(device -> device.room).collect(Collectors.toList());
     }
 }

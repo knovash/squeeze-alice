@@ -29,7 +29,7 @@ public class Device {
         log.info("THIS DEVICE ID: " + this.id + " ROOM: " + this.room);
        if (this.id == null) return null;
         Player player = lmsPlayers.players.stream()
-                .peek(p -> log.info("PLAYER ID: " + p.deviceId + " ROOM: " + p.roomPlayer))
+                .peek(p -> log.info("PLAYER deviceId: " + p.deviceId + " ROOM: " + p.roomPlayer))
                 .filter(p -> p.roomPlayer != null)
                 .filter(p -> p.deviceId != null)
                 .filter(p -> p.deviceId.equals(this.id))

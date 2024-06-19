@@ -64,6 +64,8 @@ public class SwitchVoiceCommand {
             return createResponse(separate_on(player));
         if (command.contains("только тут"))
             return createResponse(alone_on(player));
+        if (command.contains("переключи сюда") || command.contains("переключи музыку сюда") || command.contains("переключи музыку"))
+            return createResponse(swithToHere(player));
         if (command.contains("вместе"))
             return createResponse(separate_alone_off(player));
         if ((command.contains("spotify") || command.contains("спотифай")))
@@ -259,8 +261,8 @@ public class SwitchVoiceCommand {
             if (playing != null) {
                 playing.status();
                 answer = "сейчас на " + player.name + " не играет " + separate + title +
-                        ". на " + playing.name + " играет " + separate + playing.title; }
-            else answer = "сейчас на " + player.name + " не играет " + separate + title;
+                        ". на " + playing.name + " играет " + separate + playing.title;
+            } else answer = "сейчас на " + player.name + " не играет " + separate + title;
         }
         answer = answer + separateAnswer;
         return answer;
@@ -302,6 +304,20 @@ public class SwitchVoiceCommand {
             return "";
         });
         answer = "включаю только тут на " + player.name + ". " + player.title;
+        return answer;
+    }
+
+    private static String swithToHere(Player player) {
+        String answer;
+        log.info("SWITCH TO HERE");
+        player.status();
+        CompletableFuture.supplyAsync(() -> {
+            player.play()
+                    .stopAllOther()
+                    .status();
+            return "";
+        });
+        answer = "переключаю музыку на " + player.name + ". " + player.title;
         return answer;
     }
 
