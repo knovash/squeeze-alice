@@ -105,6 +105,10 @@ public class SwitchQueryCommand {
                 Spotify.transfer(player);
                 response = "TRANSFER";
                 break;
+            case ("get_rooms"):
+                Utils.rooms();
+                response = Utils.rooms().toString();
+                break;
 
             case ("log"): // WEB HOME
                 log.info("SHOW LOG");

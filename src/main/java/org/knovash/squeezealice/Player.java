@@ -313,21 +313,29 @@ public class Player {
 //  пока сломанана синхронизация di.fm в LMS
 //  https://forums.slimdevices.com/forum/user-forums/logitech-media-server/1673928-logitech-media-server-8-4-0-released?p=1675699#post1675699
 //  https://github.com/Logitech/slimserver/issues/993
-        log.info("CHECK PATH IF audioaddict");
-        String path = lmsPlayers.getPlayerByName(toPlayerName).path();
+
+//        log.info("CHECK PATH IF audioaddict");
+//        String path = lmsPlayers.getPlayerByName(toPlayerName).path();
+
 //        this.playPath(path);
 //        log.info("SYNC audioaddict FINISH");
 
-        if (path.contains("di.fm") || path.contains("audioaddict")) {
-            this.playPath(path);
-            log.info("SYNC audioaddict FINISH");
-            return this;
-        } else {
-            String status = Requests.postToLmsForStatus(RequestParameters.sync(this.name, toPlayerName).toString());
-            log.info("STATUS: " + status);
-            this.saveLastPath().saveLastTime();
-            log.info("SYNC FINISH");
-        }
+//        if (path.contains("di.fm") || path.contains("audioaddict")) {
+//            this.playPath(path);
+//            log.info("SYNC audioaddict FINISH");
+//            return this;
+//        } else {
+//            String status = Requests.postToLmsForStatus(RequestParameters.sync(this.name, toPlayerName).toString());
+//            log.info("STATUS: " + status);
+//            this.saveLastPath().saveLastTime();
+//            log.info("SYNC FINISH");
+//        }
+
+        String status = Requests.postToLmsForStatus(RequestParameters.sync(this.name, toPlayerName).toString());
+        log.info("STATUS: " + status);
+        this.saveLastPath().saveLastTime();
+        log.info("SYNC FINISH");
+
         return this;
     }
 
