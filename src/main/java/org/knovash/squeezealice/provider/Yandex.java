@@ -94,7 +94,6 @@ public class Yandex {
     }
 
     public static void read() {
-        log.info("");
         log.info("READ CREDENTIALS FROM yandex.json");
         Map<String, String> map = new HashMap<>();
         map = JsonUtils.jsonFileToMap("yandex.json", String.class, String.class);
@@ -102,11 +101,11 @@ public class Yandex {
         yandex.clientId = map.get("clientId");
         yandex.clientSecret = map.get("clientSecret");
         yandex.bearer = map.get("bearer");
-        log.info("BEARER: " + yandex.bearer);
+//        log.info("TOKEN: " + yandex.bearer);
     }
 
-    public static void getInfo() {
-        log.info("YANDEX GET INFO START >>>>>>>>>>");
+    public static void getRoomsFromYandexSmartHome() {
+        log.info("GET ROOMS FROM YANDEX SMART HOME");
         Response response;
         String json = null;
         String oauthToken = "OAuth " + yandex.bearer;
@@ -127,13 +126,12 @@ public class Yandex {
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                 .filter(device -> device.name.equals("музыка"))
                 .collect(Collectors.toMap(device -> device.room, device -> device.external_id));
-        log.info("ROOM ID - ROOM EXTID - ROOM NAME");
         Map<String, String> roomNameRoomExtId = roomIdRoomExtId.entrySet().stream()
-                .peek(entry -> log.info(entry.getKey() + " " + entry.getValue() + " " + roomIdRoomName.get(entry.getKey())))
+                .peek(entry -> log.info("ROOM: " + entry.getKey() + " " + entry.getValue() + " " + roomIdRoomName.get(entry.getKey())))
                 .collect(Collectors.toMap(entry -> roomIdRoomName.get(entry.getKey()), entry -> entry.getValue()));
 
         if (roomIdRoomExtId.size() > 0) {
-            log.info("CREATE DEVICES FROM YANDEX");
+            log.info("CREATE DEVICES");
             roomNameRoomExtId.entrySet().stream()
                     .forEach(entry -> {
                         HashMap<String, String> parameters = new HashMap<>();
@@ -156,7 +154,6 @@ public class Yandex {
 
 //            Map<String, String> roomIdRoomName = yandexInfo.rooms.stream()
 //                    .collect(Collectors.toMap(room -> room.id, room -> room.name));
-
 
 
             log.info("YANDEX GET INFO FINISH <<<<<<<<<<");

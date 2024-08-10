@@ -10,6 +10,8 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.knovash.squeezealice.Main.lmsPlayers;
+
 @Log4j2
 public class ProviderQuery {
 
@@ -44,7 +46,8 @@ public class ProviderQuery {
 
     public static Device updateDevice(Device device) {
         // обратиться к девайсу и обновить все его значения
-        player = device.takePlayer();
+//        player = device.lmsGetPlayerByDeviceId();
+        player = lmsPlayers.getPlayerByDeviceId(device.id);
         device.capabilities.forEach(capability -> changeCapability(capability));
         log.info("DEVICE UPDATED\n" + device);
         return device;

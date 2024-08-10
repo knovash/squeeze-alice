@@ -22,7 +22,7 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"pause", "1"});
     }
 
-    public static RequestToLms play_pause(String player) {
+    public static RequestToLms togglePlayPause(String player) {
         return RequestToLms.create(player, new String[]{"pause"});
     }
 
@@ -108,6 +108,11 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"playlist", "jump", "+1"});
     }
 
+
+    public static RequestToLms track(String player, String track) {
+        return RequestToLms.create(player, new String[]{"playlist", "jump", track});
+    }
+
     public static RequestToLms tracks(String player) {
 //        {"id": 1, "method": "slim.request", "params":["HomePod", ["playlist", "tracks", "?"]]}
         return RequestToLms.create(player, new String[]{"playlist", "tracks", "?"});
@@ -121,6 +126,6 @@ public class RequestParameters {
 
     public static RequestToLms status(String player) {
 //        {"id": 1, "method": "slim.request", "params":["HomePod2", ["status", "1", "1"]]}
-        return RequestToLms.create(player, new String[]{"status", "1", "1"});
+        return RequestToLms.create(player, new String[]{"status", "0", "100"});
     }
 }

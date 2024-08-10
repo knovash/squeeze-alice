@@ -31,7 +31,6 @@ public class Requests {
     }
 
     public static String postToLmsForStatus(String json) {
-//  все запросы плеера на действия. возвращают статус выполнения
         log.info("REQUEST TO LMS: " + json);
         String status = null;
         try {
@@ -40,11 +39,11 @@ public class Requests {
                     .socketTimeout(1000)
                     .execute()
                     .returnResponse()
-                    .getStatusLine() // возвращает статус выполнения
+                    .getStatusLine()
                     .toString();
         } catch (IOException e) {
-            log.info("ERROR " + e);
-            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIp + ":" + lmsPort);
+            log.info("REQUEST ERROR " + e);
+            return null;
         }
         return status;
     }
@@ -62,12 +61,13 @@ public class Requests {
                     .returnContent();
         } catch (IOException e) {
             log.info("ERROR " + e);
-            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIp + ":" + lmsPort);
+            return null;
         }
         if (content != null) {
             response = JsonUtils.jsonToPojo(content.asString(), Response.class);
         } else {
             log.info("ERROR RESPONSE IS EMPTY");
+            return null;
         }
         return response;
     }
@@ -85,7 +85,7 @@ public class Requests {
                     .returnContent();
         } catch (IOException e) {
             log.info("ERROR " + e);
-            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIp + ":" + lmsPort);
+            return null;
         }
         return content.asString();
     }

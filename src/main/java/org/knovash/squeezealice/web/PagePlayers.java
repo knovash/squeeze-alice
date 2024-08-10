@@ -4,6 +4,7 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.utils.Utils;
+import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,15 +23,15 @@ public class PagePlayers {
     }
 
     public static String page() {
-        lmsPlayers.update();
+        lmsPlayers.updateServerStatus();
         log.info("START GENER PAGE");
         String page2 = "<!DOCTYPE html><html lang=\"en\">" +
                 "<head><meta charset=\"UTF-8\" />" +
                 "  <title>Настройка колонок</title></head><body>" +
                 "<p><a href=\"/\">Home</a></p>" +
 
-                "Devices: " + SmartHome.devices.size() + " " + SmartHome.devices.stream().map(device -> device.room + ":" + device.id + ":" + device.takePlayerName()).collect(Collectors.toList()) + "<br>" +
-                "Players: " + lmsPlayers.players.size() + " " + lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList()) + "</p>" +
+                "Yandex Devices: " + SmartHome.devices.size() + " " + SmartHome.devices.stream().map(device -> device.room + ":" + device.id + ":" + device.takePlayerName()).collect(Collectors.toList()) + "<br>" +
+                "LMS Players: " + lmsPlayers.players.size() + " " + lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList()) + "</p>" +
 
                 "  <h2>Настройка колонок</h2>" +
                 join(lmsPlayers.players.stream().map(p -> "<form action=\"/cmd\" method=\"get\">" +
@@ -62,6 +63,7 @@ public class PagePlayers {
                         "<button>remove</button></form>"
                 ).collect(Collectors.toList())) +
                 "<p>последний запрос от Алисы id: " + lmsPlayers.lastAliceId + "</p>" +
+                "<p>SwitchVoiceCommand.aliceId: " + SwitchVoiceCommand.aliceId + "</p>" +
                 "<p>чтобы узнать id Алисы, спросите Алиса скажи раз два, что сейчас играет? и обновите страницу</p>" +
                 "<p><a href=\"/\">Home</a></p>" +
                 "</body></html>";

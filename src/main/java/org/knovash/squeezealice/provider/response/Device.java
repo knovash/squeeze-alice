@@ -25,22 +25,23 @@ public class Device {
     public List<Property> properties = new ArrayList<>();
     public List<String> aliases = new ArrayList<>();
 
-    public Player takePlayer() {
-        log.info("THIS DEVICE ID: " + this.id + " ROOM: " + this.room);
-       if (this.id == null) return null;
-        Player player = lmsPlayers.players.stream()
-                .peek(p -> log.info("PLAYER deviceId: " + p.deviceId + " ROOM: " + p.roomPlayer))
-                .filter(p -> p.roomPlayer != null)
-                .filter(p -> p.deviceId != null)
-                .filter(p -> p.deviceId.equals(this.id))
-                .findFirst().orElse(null);
-        log.info("PLAYER: " + player);
-        return player;
-    }
+//    public Player lmsGetPlayerByDeviceId() {
+//        log.info("THIS DEVICE ID: " + this.id + " ROOM: " + this.room);
+//       if (this.id == null) return null;
+//        Player player = lmsPlayers.players.stream()
+////                .peek(p -> log.info("PLAYER deviceId: " + p.deviceId + " ROOM: " + p.roomPlayer))
+//                .filter(p -> p.roomPlayer != null)
+//                .filter(p -> p.deviceId != null)
+//                .filter(p -> p.deviceId.equals(this.id))
+//                .findFirst().orElse(null);
+//        log.info("PLAYER: " + player);
+//        return player;
+//    }
 
     public String takePlayerName() {
         log.info("TAKE PLAYER NAME");
-        Player player = this.takePlayer();
+//        Player player = this.lmsGetPlayerByDeviceId();
+        Player player = lmsPlayers.getPlayerByDeviceId(id);
         log.info("PLAYER: " + player);
         if (player == null) return null;
         log.info("PLAYER NAME: " + player.name);

@@ -19,16 +19,15 @@ public class Handler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        log.info("");
-        log.info("START");
+        log.info("START ---------------------------------------------");
         String method = httpExchange.getRequestMethod();
         String path = httpExchange.getRequestURI().getPath();
         String host = HandlerUtils.getHeaderValue(httpExchange, "Host");
         log.info("REQUEST: " + method + " " + "http://" + host + path);
         Headers headers = httpExchange.getRequestHeaders();
-        log.info("HEADERS: " + headers.entrySet());
+//        log.info("HEADERS: " + headers.entrySet());
         String xRequestId = HandlerUtils.getHeaderValue(httpExchange, "X-request-id");
-        log.info("XREQUESTID: " + xRequestId);
+//        log.info("XREQUESTID: " + xRequestId);
         String body = HandlerUtils.httpExchangeGetBody(httpExchange);
         log.info("BODY: " + body);
         String query = httpExchange.getRequestURI().getQuery();
@@ -91,10 +90,6 @@ public class Handler implements HttpHandler {
             case ("/spoti_auth"):
                 context = SpotifyAuth.requestUserAuthorization(context);
                 break;
-//            case ("/spoti_refresh"):
-//                log.info("SPOTI AUTH");
-//                SpotifyAuth.requestRefresh();
-//                break;
             case ("/spoti_callback"):
                 log.info("SPOTI CALLBACK");
                 context = SpotifyAuth.callback(context);
@@ -110,7 +105,7 @@ public class Handler implements HttpHandler {
 //        log.info("CODE: " + code);
         httpExchange.getResponseHeaders().putAll(context.headers);
 //        log.info("HEADERS: " + httpExchange.getResponseHeaders().entrySet());
-        log.info("RESPONSE: " + json);
+//        log.info("RESPONSE: " + json);
         httpExchange.sendResponseHeaders(code, json.getBytes().length);
         OutputStream outputStream = httpExchange.getResponseBody();
         outputStream.write(json.getBytes());
