@@ -6,17 +6,14 @@ import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
-import org.knovash.squeezealice.lms.ServerStatusName;
+import org.knovash.squeezealice.lms.ServerStatusByName;
 import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 
 import java.time.Duration;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
@@ -27,7 +24,7 @@ import static org.knovash.squeezealice.Main.*;
 @AllArgsConstructor
 public class LmsPlayers {
 
-    public Integer counter;
+    //    public Integer counter;
     public List<Player> players;
     public List<String> playersNames = new ArrayList<>();
     public List<String> playersNamesOnLine = new ArrayList<>();
@@ -39,16 +36,18 @@ public class LmsPlayers {
     public String btPlayerName = "HomePod";
     public int delayUpdate = 5; // MINUTES
     public int delayExpire = 10; // MINUTES
+    public Boolean spotify;
+    public static ServerStatusByName serverStatusByName = new ServerStatusByName();
 
-    public void count() {
-        Response response = Requests.postToLmsForResponse(RequestParameters.count().toString());
-        if (response == null) {
-            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIp + ":" + lmsPort);
-            lmsPlayers.counter = 0;
-            return;
-        }
-        lmsPlayers.counter = Integer.parseInt(response.result._count);
-    }
+//    public void count() {
+//        Response response = Requests.postToLmsForResponse(RequestParameters.count().toString());
+//        if (response == null) {
+//            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIp + ":" + lmsPort);
+//            lmsPlayers.counter = 0;
+//            return;
+//        }
+//        lmsPlayers.counter = Integer.parseInt(response.result._count);
+//    }
 
     public List<String> favorites() {
         String playerName = lmsPlayers.players.get(0).name;
@@ -57,60 +56,55 @@ public class LmsPlayers {
         return playlist;
     }
 
-    public void update() {
-        log.info("");
-        log.info("UPDATE PLAYERS START >>>>>>>>>>");
+    public void updateServerStatus() {
         LocalTime time1 = LocalTime.now();
         playersNames = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
+        log.info("PLAYERS NAMES: " + playersNames);
         playersNamesOffLine = new ArrayList<>();
         playersNamesOffLine.addAll(playersNames);
         playersNamesOnLine = new ArrayList<>();
+        log.info("GET STATUS FROM LMS");
         String json = Requests.postToLmsForJsonBody(RequestParameters.serverstatusname().toString());
+        if (json == null) return;
         json = JsonUtils.replaceSpace(json);
         json = json.replaceAll("\"newversion.*</a>\\.\"", "\"newversion\": \"--\"");
-        ServerStatusName serverStatusName = JsonUtils.jsonToPojo(json, ServerStatusName.class);
-        serverStatusName.result.players_loop.forEach(p -> {
-            log.info("NAME: " + p.name +
-                    " ID: " + p.playerid +
-                    " CONNECTED: " + p.connected +
-                    " INDEX: " + p.playerindex +
-                    " PLAYING: " + p.isplaying);
-            playersNamesOnLine.add(p.name);
-            playersNamesOffLine.remove(p.name);
-            if (lmsPlayers.getPlayerByName(p.name) == null) { // если плеера еще нет в сервере, то добавить
-                log.info("NEW PLAYER: " + p.name);
-                Player player = new Player(p.name, p.playerid);
-                if (p.isplaying == 1) {
-                    player.playing = true;
-                    player.saveLastTime();
-                } else {
-                    player.playing = false;
-                }
-                lmsPlayers.players.add(player);
-            } else {
-                Player player = lmsPlayers.getPlayerByName(p.name);
-                player.connected = true;
-                if (p.isplaying == 1) {
-                    player.playing = true;
-                    player.saveLastTime();
-                } else {
-                    player.playing = false;
-                }
-
-                if (serverStatusName.result != null) {
-//                    player.title() = serverStatusName.
-                }
-
-            }
-        });
-        write();
-        log.info("PLAYERS: " + lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList()));
-        log.info("PLAYERS NAMES: " + lmsPlayers.playersNames);
-        log.info("PLAYERS NAMES ONLINE: " + lmsPlayers.playersNamesOnLine);
-        log.info("PLAYERS NAMES OFFLINE: " + lmsPlayers.playersNamesOffLine);
-        log.info("UPDATE PLAYERS FINISH " + Duration.between(time1, LocalTime.now()) + " <<<<<<<<<<");
+        serverStatusByName = JsonUtils.jsonToPojo(json, ServerStatusByName.class);
+        log.info("SEARCH AND ADD NEW PLAYERS FROM LMS");
+        if (serverStatusByName == null) return;
+        serverStatusByName.result.players_loop.forEach(p -> updatePlayer(p));
+        log.info("PLAYERS ONLINE: " + lmsPlayers.playersNamesOnLine + " " + Duration.between(time1, LocalTime.now()));
     }
 
+    public void updatePlayer(ServerStatusByName.PlayersLoop p) {
+        log.info("NAME: " + p.name +
+                " ID: " + p.playerid +
+                " CONNECTED: " + p.connected +
+                " INDEX: " + p.playerindex +
+                " PLAYING: " + p.isplaying);
+        playersNamesOnLine.add(p.name);
+        playersNamesOffLine.remove(p.name);
+        Player playerByName = lmsPlayers.getPlayerByName(p.name);
+        if (playerByName == null) { // если плеера еще нет в сервере, то добавить
+            log.info("ADD NEW PLAYER: " + p.name);
+            Player player = new Player(p.name, p.playerid);
+            if (p.isplaying == 1) {
+                player.playing = true;
+                player.saveLastTime();
+            } else {
+                player.playing = false;
+            }
+            lmsPlayers.players.add(player);
+        } else {
+            Player player = playerByName;
+            player.connected = true;
+            if (p.isplaying == 1) {
+                player.playing = true;
+                player.saveLastTime();
+            } else {
+                player.playing = false;
+            }
+        }
+    }
 
     public void clear() {
         log.info("CLEAR PLAYERS");
@@ -124,7 +118,6 @@ public class LmsPlayers {
     }
 
     public void read() {
-        log.info("");
         log.info("READ LMS PLAYERS FROM lms_players.json");
         lmsPlayers.players = new ArrayList<>();
         LmsPlayers lp = JsonUtils.jsonFileToPojo("lms_players.json", LmsPlayers.class);
@@ -140,7 +133,7 @@ public class LmsPlayers {
     }
 
     public Player getPlayerByName(String name) {
-        log.info("BY NAME: " + name);
+//        log.info("BY NAME: " + name);
         Player player = new Player();
         if (name == null) return null;
         if (lmsPlayers.players == null) return null;
@@ -157,12 +150,15 @@ public class LmsPlayers {
     public Player getPlayerByRoom(String room) {
         log.info("ROOM: " + room);
         Player player = new Player();
-        player = lmsPlayers.players.stream()
+        Optional optionalPlayer = lmsPlayers.players.stream()
+                .peek(p -> log.info("0: " + p.name + " " + p.roomPlayer))
                 .filter(p -> (p.roomPlayer != null))
                 .filter(p -> p.roomPlayer.equals(room))
-                .findFirst()
-                .orElse(null);
-        log.info("PLAYER: " + player.name);
+                .filter(Objects::nonNull).findFirst();
+        player = (Player) optionalPlayer.orElse(null);
+
+        log.info("PLAYER: " + player);
+        if (player != null) log.info("PLAYER: " + player.name);
         if (player == null) log.info("PLAYER NOT FOUND WHITH ROOM " + room);
         return player;
     }
@@ -208,9 +204,8 @@ public class LmsPlayers {
 
     public Player getPlayingPlayer(String exceptName) {
         LocalTime time1 = LocalTime.now();
-        log.info("");
-        log.info("SEARCH FOR PLAYING. EXCEPT " + exceptName + " START >>>>>>>>>>");
-        lmsPlayers.update();
+        log.info("SEARCH FOR PLAYING. EXCEPT " + exceptName);
+        lmsPlayers.updateServerStatus();
         Player playing = lmsPlayers.players.stream()
                 .peek(p -> log.info("PLAYER: " + p.name + " SEPARATE: " + p.separate + " ONLINE: " + p.connected + " PLAYING: " + p.playing))
                 .filter(p -> !p.separate)
@@ -225,7 +220,7 @@ public class LmsPlayers {
                 })
                 .findFirst()
                 .orElse(null);
-        log.info("PLAYING: " + playing + " FINISH <<<<<<<<<<");
+        log.info("PLAYING: " + playing);
         return playing;
     }
 
@@ -303,7 +298,37 @@ public class LmsPlayers {
     public void resetPlayers() {
         lmsPlayers.players = new ArrayList<>();
         SmartHome.devices = new LinkedList<>();
-        lmsPlayers.update();
+        lmsPlayers.updateServerStatus();
         lmsPlayers.write();
+    }
+
+    public List<String> getSeparatePlayers(Player excludePlayer) {
+        log.info("TRY GET SEPARATED PLAYERS");
+        lmsPlayers.updateServerStatus();
+//        log.info("GET SEPARATED PLAYERS");
+        List<String> separatePlayers =
+                lmsPlayers.players.stream()
+//                        .peek(p -> log.info(p.name + " separate " + p.separate))
+                        .filter(p -> p.separate)
+                        .filter(p -> !p.name.equals(excludePlayer.name))
+//                        .peek(p -> log.info(p.name + " filter separate " + p.separate))
+                        .map(p -> {
+                            if (p.playing) return " играет " + p.name;
+                            return " не играет " + p.name;
+                        })
+                        .collect(Collectors.toList());
+        log.info("SEPARATED PLAYERS: " + separatePlayers);
+        return separatePlayers;
+    }
+
+    public Player getPlayerByDeviceId(String id) {
+        if (id == null) return null;
+        Player player = lmsPlayers.players.stream()
+                .filter(p -> p.roomPlayer != null)
+                .filter(p -> p.deviceId != null)
+                .filter(p -> p.deviceId.equals(id))
+                .findFirst().orElse(null);
+        log.info("ID: " + id + " PLAYER: " + player);
+        return player;
     }
 }

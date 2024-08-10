@@ -40,13 +40,17 @@ public class JsonUtils {
 
     public static <T> T jsonToPojo(String json, Class<T> clazz) {
         json = json.replace("\\", "");
+        //        catch (JsonMappingException e){}
         try {
             return objectMapper.readValue(json, clazz);
-        } catch (JsonProcessingException e) {
-
+        } catch (JsonMappingException e) {
             log.info("ERROR " + e);
+            return null;
+        } catch (JsonProcessingException e) {
+            log.info("ERROR " + e);
+            return null;
         }
-        return null;
+//        return null;
     }
 
     public static <T> String listToJson(List<T> list) {
@@ -67,12 +71,14 @@ public class JsonUtils {
     }
 
     public static void pojoToJsonFile(Object pojo, String fileName) {
+//        log.info("START POJO TO JSON FILE " + fileName);
         File file = new File(fileName);
         try {
             objectWriter.writeValue(file, pojo);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+//        log.info("FINISH");
     }
 
     public static <T> void listToJsonFile(List<T> list, String fileName) {
@@ -173,7 +179,7 @@ public class JsonUtils {
     }
 
     public static String replaceSpace(String json) {
-        log.info("REPLACE SPACES IN JSON");
+//        log.info("REPLACE SPACES IN JSON");
         Pattern pattern = Pattern.compile("\"\\w*\\s(\\w*\\s)*\\w*\"\\s*:");
         Matcher matcher = pattern.matcher(json);
         while (matcher.find()) {

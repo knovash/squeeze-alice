@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 
-import static org.knovash.squeezealice.spotify.SpotifyRequests.requestForJson;
+import static org.knovash.squeezealice.spotify.SpotifyRequests.requestPost;
 
 
 @Log4j2
@@ -31,12 +31,13 @@ public class SpotifyAuth {
     public static String redirect_uri = "https://unicorn-neutral-badly.ngrok-free.app/spoti_callback";
     public static String show_dialog; // Optional
     public static String scope =
-            "user-read-private " +
-            "user-read-email " +
-            "user-read-playback-state " +
             "app-remote-control " +
-            "user-read-currently-playing " +
-            "user-modify-playback-state"; // Optional
+                    "user-read-private " +
+                    "user-read-email " +
+                    "user-read-playback-state " +
+                    "user-read-currently-playing " +
+                    "user-read-private " +
+                    "user-modify-playback-state";
     public static String code; // вернется в калбэке
     public static String state = "1234567890123456"; // вернется в калбэке
     public static String access_token;
@@ -48,7 +49,8 @@ public class SpotifyAuth {
     public static Context requestUserAuthorization(Context context) {
 //  https://developer.spotify.com/documentation/web-api/tutorials/code-flow
 //  https://developer.spotify.com/dashboard/f45a18e2bcfe456dbd9e7b73e74514af/settings
-        log.info("requestUserAuthorization");
+        log.info("");
+        log.info("REQUEST AUTH REDIRECT");
         context.json = "REDIRECT";
         context.code = 302;
         String location = "https://accounts.spotify.com/authorize?" +
@@ -61,12 +63,14 @@ public class SpotifyAuth {
         Headers headers = new Headers();
         headers.add("Location", location);
         context.headers = headers;
+        log.info("FINISH\n");
         return context;
     }
 
     public static void requestAccessToken() {
 //  https://developer.spotify.com/documentation/web-api/tutorials/code-flow
-        log.info("request Access Token");
+        log.info("");
+        log.info("CALLBACK REQUEST ACCESS TOKEN");
         String uri = "https://accounts.spotify.com/api/token?" +
                 "grant_type=" + "authorization_code" + "&" +
                 "code=" + code + "&" +
@@ -77,7 +81,7 @@ public class SpotifyAuth {
                 new BasicHeader("Authorization", "Basic " + encoded),
                 new BasicHeader("Content-Type", "application/x-www-form-urlencoded")
         };
-        json = requestForJson(uri, headers);
+        json = requestPost(uri, headers);
         access_token = JsonUtils.jsonGetValue(json, "access_token");
         token_type = JsonUtils.jsonGetValue(json, "token_type");
         expires_in = JsonUtils.jsonGetValue(json, "expires_in");
@@ -86,27 +90,33 @@ public class SpotifyAuth {
         bearer_token = "Bearer " + access_token.replace("\"", "");
         log.info("access_token: " + access_token);
         log.info("bearerToken: " + bearer_token);
+        log.info("expires_in: " + expires_in);
+        log.info("refresh_token: " + refresh_token);
         write();
+        log.info("FINISH\n");
     }
 
     public static Context callback(Context context) {
 //  https://developer.spotify.com/documentation/web-api/tutorials/code-flow
-        log.info("/CALLBACK QUERY " + context.query);
+        log.info("");
+        log.info("CALLBACK QUERY: " + context.query);
         code = context.queryMap.get("code");
         state = context.queryMap.get("state");
         requestAccessToken();
         String json = PageSpotiCallback.page();
         context.json = json;
         context.code = 200;
+        log.info("FINISH\n");
         return context;
     }
 
-    public static void requestRefresh() {
+    public static void callbackRequestRefresh() {
 //  https://developer.spotify.com/documentation/web-api/tutorials/refreshing-tokens
-        log.info("REFRESH");
         String url = "https://accounts.spotify.com/api/token";
-        String refToken = "AQCInBGE4cutlNYbShDtT4Z_3G0pCTAKvNwWzyT3IK2XBnLvN0xhKGSj_2S1tP0HzjiSK-X_LHZi0Ay2IFRNThrwXqhbRzocfDoqkXbGoCHeCC_r8I72qV4eBreLo67DpOo";
-        log.info("URL: " + url);
+        String refToken = refresh_token;
+        log.info("SPOTIFY CALLBACK REFRESH TOKEN " + url);
+        encoded = Base64.getEncoder().encodeToString((client_id + ':' + client_secret).getBytes());
+        String json;
         final Collection<NameValuePair> params = new ArrayList<>();
         params.add(new BasicNameValuePair("grant_type", "refresh_token"));
         params.add(new BasicNameValuePair("refresh_token", refToken));
@@ -115,16 +125,17 @@ public class SpotifyAuth {
             postResultForm = Request.Post(url)
                     .bodyForm(params, Charset.defaultCharset())
                     .addHeader("Content-Type", "application/x-www-form-urlencoded")
-                    .addHeader("Authorization", "Basic ZjQ1YTE4ZTJiY2ZlNDU2ZGJkOWU3YjczZTc0NTE0YWY6NWMzMzIxYjRhZTdlNDNhYjkzYTJjZTRlYzFiNGNmNDg=")
+                    .addHeader("Authorization", "Basic " + encoded)
                     .execute().returnContent();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.info("ERROR: " + e);
+            return;
+//            throw new RuntimeException(e);
         }
-        log.info("STATUS " + postResultForm.asString());
         String jsonResponse = postResultForm.asString();
         access_token = JsonUtils.jsonGetValue(jsonResponse, "access_token");
         bearer_token = "Bearer " + access_token;
-        log.info("BEARER: " + bearer_token);
+        log.info("SPOTIFY TOKEN: " + bearer_token);
     }
 
 
@@ -132,28 +143,36 @@ public class SpotifyAuth {
         if (parameters.get("id") == null || parameters.get("secret") == null) return "CREDS ERROR";
         SpotifyAuth.client_id = parameters.get("id");
         SpotifyAuth.client_secret = parameters.get("secret");
+        log.info("FINISH\n");
         return "CREDS SAVE";
     }
 
     public static void write() {
+        log.info("WRITE CREDENTIALS TO spotify.json");
         Map<String, String> map = new HashMap<>();
         map.put("client_id", client_id);
         map.put("client_secret", client_secret);
+        map.put("access_token", access_token);
         map.put("bearer_token", bearer_token);
+        map.put("refresh_token", refresh_token);
+        map.put("expires_in", expires_in);
         map.put("redirect_uri", redirect_uri);
+        log.info(map);
         JsonUtils.mapToJsonFile(map, "spotify.json");
+        log.info("FINISH\n");
     }
 
     public static void read() {
-        log.info("");
         log.info("READ CREDENTIALS FROM spotify.json");
-        Map<String, String> map = new HashMap<>();
-        map = JsonUtils.jsonFileToMap("spotify.json", String.class, String.class);
+        Map<String, String> map = JsonUtils.jsonFileToMap("spotify.json", String.class, String.class);
         if (map == null) return;
         client_id = map.get("client_id");
         client_secret = map.get("client_secret");
+        access_token = map.get("access_token");
         bearer_token = map.get("bearer_token");
+        refresh_token = map.get("refresh_token");
+        expires_in = map.get("expires_in");
         redirect_uri = map.get("redirect_uri");
-        log.info("BEARER: " + SpotifyAuth.bearer_token);
+        log.info(map);
     }
 }

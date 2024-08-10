@@ -10,29 +10,29 @@ import static org.knovash.squeezealice.Main.lmsPlayers;
 @Log4j2
 public class Actions {
 
-    public static void playChannel(Player player, Integer channel) {
-        log.info("CHANNEL: " + channel + " PLAYER: " + player.name);
-        player
-                .ifNotPlayUnsyncWakeSet() // mode? sync- volume
-                .playChannel(channel) // playlist item
-                .saveLastTime()
-                .saveLastChannel(channel)
-                .saveLastPath() // path
-                .syncAllOtherPlayingToThis(); // получить mode каждого
-        lmsPlayers.write();
-    }
+//    public static void actionPlayChannel(Player player, Integer channel) {
+//        log.info("CHANNEL: " + channel + " PLAYER: " + player.name);
+//        player
+//                .ifNotPlayUnsyncWakeSet() // mode? sync- volume
+//                .playChannel(channel) // playlist item
+//                .saveLastTime()
+//                .saveLastChannel(channel)
+//                .saveLastPath() // path
+//                .syncAllOtherPlayingToThis(); // получить mode каждого
+//        lmsPlayers.write();
+//    }
 
-    public static void playSpotify(Player player, String path) {
-        log.info("SPOTIFY LINK PLAYER: " + player.name);
-        player
-                .ifNotPlayUnsyncWakeSet()
-                .playPath(path)
-                .saveLastTime()
-//                .saveLastPathLink(link)
-                .waitFor(1000)
-                .syncAllOtherPlayingToThis();
-        lmsPlayers.write();
-    }
+//    public static void playSpotify(Player player, String path) {
+//        log.info("SPOTIFY LINK PLAYER: " + player.name);
+//        player
+//                .ifNotPlayUnsyncWakeSet()
+//                .playPath(path)
+//                .saveLastTime()
+////                .saveLastPathLink(link)
+//                .waitFor(1000)
+//                .syncAllOtherPlayingToThis();
+//        lmsPlayers.write();
+//    }
 
     public static void turnOnMusic(Player player) {
         log.info("TURN ON MUSIC PLAYER: " + player.name);
@@ -121,4 +121,5 @@ public class Actions {
         log.info("EXPIRED: " + (diff > delay));
         return (diff > delay);
     }
+
 }

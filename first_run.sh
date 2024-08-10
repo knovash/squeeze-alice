@@ -7,8 +7,9 @@ echo -e "\n"${BGreen}"READ FROM set_remote_ip.txt"${NC}"\n"
 remote=`cat set_remote_ip.txt`
 echo -e "\n"${BGreen}"REMOTE IP "$remote${NC}"\n"
 
-echo -e "\n"${BGreen}"MVN PACKAGE > TAR > UPLOAD > INSTALL"${NC}"\n"
+#echo -e "\n"${BGreen}"MVN PACKAGE > TAR > UPLOAD > INSTALL"${NC}"\n"
 
+# копировать ссш ключ
 echo -e "\n"${BGreen}"COPY SSH KEY ~/.ssh/id_rsa.pub TO REMOTE "$remote${NC}"\n"
 ssh root@$remote mkdir -p .ssh
 sshpass -p "12345" scp ~/.ssh/id_rsa.pub root@$remote:.ssh/authorized_keys

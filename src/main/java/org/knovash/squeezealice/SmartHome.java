@@ -17,7 +17,7 @@ public class SmartHome {
 
     public static String user_id = "konstantin";
     public static LinkedList<Device> devices = new LinkedList<>();
-    public static Map<String, String> rooms = new HashMap<>();
+//    public static Map<String, String> rooms = new HashMap<>();
 
     public static Device getDeviceById(int deviceId) {
         String index = String.valueOf(deviceId);
@@ -31,8 +31,17 @@ public class SmartHome {
         log.info("ROOM: " + room);
         return  devices.stream()
                 .filter(d -> (d.room != null))
-                .filter(d -> d.room.equals(room))
+                .filter(d -> d.room.toLowerCase().equals(room.toLowerCase()))
                 .findFirst().orElse(null);
+    }
+
+    public static String getDeviceIdByRoom(String room) {
+        log.info("ROOM: " + room);
+        log.info("ROOM: " + devices);
+        return  devices.stream()
+                .filter(d -> (d.room != null))
+                .filter(d -> d.room.toLowerCase().equals(room.toLowerCase()))
+                .findFirst().orElse(null).id;
     }
 
     public static Device getDeviceByRoomLevenstein(String room) {
@@ -67,24 +76,6 @@ public class SmartHome {
         return device.id;
     }
 
-    public static String getRoomByAliceId(String aliceId) {
-        log.info("ALICE ID: " + aliceId);
-        if (Main.rooms == null) return null;
-        Map.Entry<String, String> entry = Main.rooms.entrySet().stream()
-                .filter(r -> r.getValue().equals(aliceId)).findFirst().orElse(null);
-        if (entry == null) return null;
-        return entry.getKey();
-    }
-
-    public static Device getDeviceByAliceId(String aliceId) {
-        getRoomByAliceId(aliceId);
-        log.info("aliceId " + aliceId);
-        Map.Entry<String, String> entry = Main.rooms.entrySet().stream()
-                .filter(r -> r.getValue().equals(aliceId)).findFirst().orElse(null);
-        if (entry == null) return null;
-        return SmartHome.getDeviceByRoom(entry.getKey());
-    }
-
     public static void read() {
         log.info("");
         log.info("READ ALICE DEVICES FROM alice_devices.json");
@@ -94,7 +85,6 @@ public class SmartHome {
 //        Main.rooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
         log.info("DEVICES: " + SmartHome.devices.stream().map(d -> d.takePlayerName() + ":" + d.room).collect(Collectors.toList()));
     }
-
 
     public static void clear() {
         log.info("CLEAR DEVICES");
@@ -113,8 +103,8 @@ public class SmartHome {
     }
 
     public static Device create(HashMap<String, String> parameters) {
-        log.info("");
-        log.info("CREATE parameters: " + parameters);
+//        log.info("");
+        log.debug("PARAMETERS: " + parameters);
         Device device = new Device();
         device.type = "devices.types.media_device.receiver";
         device.room = parameters.get("room");
@@ -153,7 +143,7 @@ public class SmartHome {
         Integer id = null;
         Integer idByParameters = null;
         if (parameters.get("id") != null) idByParameters = Integer.parseInt(parameters.get("id"));
-        log.info("ID BY PARAMETERS: " + idByParameters);
+//        log.info("ID BY PARAMETERS: " + idByParameters);
 
         if (SmartHome.devices == null) SmartHome.devices = new LinkedList<>();
 
@@ -170,10 +160,10 @@ public class SmartHome {
             }
         } else id = idByParameters;
         device.id = String.valueOf(id);
-        log.info("NEW DEVICE: " + "Room = " + device.room + " Device id = " + device.id);
+        log.info("NEW DEVICE: " + "room=" + device.room + " id=" + device.id + " type="+device.type);
         SmartHome.devices.add(device);
-        log.info("DEVICES: " + SmartHome.devices.stream().map(d -> "Room = " + d.room + " Device id = " + d.id)
-                .collect(Collectors.toList()));
+//        log.info("DEVICES: " + SmartHome.devices.stream().map(d -> "Room = " + d.room + " Device id = " + d.id)
+//                .collect(Collectors.toList()));
         return device;
     }
 }

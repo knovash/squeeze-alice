@@ -21,7 +21,7 @@ public class PageMonitor {
 
     public static String monitor() {
         log.info("MONITOR");
-        lmsPlayers.update();
+        lmsPlayers.updateServerStatus();
 
 
         List<String> list = lmsPlayers.players.stream()

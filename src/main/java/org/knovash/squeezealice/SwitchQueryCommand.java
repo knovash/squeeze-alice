@@ -35,7 +35,8 @@ public class SwitchQueryCommand {
         log.info("VALUE: " + value);
         switch (action) {
             case ("channel"):
-                Actions.playChannel(player, Integer.valueOf(value));
+//                Actions.actionPlayChannel(player, Integer.valueOf(value));
+                player.playChannel(Integer.valueOf(value));
                 response = "PLAY CHANNEL " + value;
                 break;
             case ("play"):
@@ -106,8 +107,8 @@ public class SwitchQueryCommand {
                 response = "TRANSFER";
                 break;
             case ("get_rooms"):
-                Utils.rooms();
-                response = Utils.rooms().toString();
+                Utils.listDevicesRooms();
+                response = Utils.listDevicesRooms().toString();
                 break;
 
             case ("log"): // WEB HOME

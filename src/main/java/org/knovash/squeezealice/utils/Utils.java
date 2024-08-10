@@ -108,16 +108,16 @@ public class Utils {
     }
 
     public static boolean checkLmsIp(String ip) {
-        log.info("CHECK IP IS LMS: " + ip);
+        log.info("CHECK LMS IP: " + ip);
         String uri = "http://" + ip + ":" + lmsPort;
         HttpResponse response = headToUriForHttpResponse(uri);
         if (response == null) return false;
         Header[] server = response.getHeaders("Server");
         if (server == null) return false;
         String header = server[0].toString();
-        log.info("HEADER: " + header);
+        log.info("CHECK LMS HEADER: " + header);
         if (header.contains("Logitech Media Server") || header.contains("Lyrion Music Server")) {
-            log.info("LMS IP OK " + ip);
+            log.info("CHECK LMS IP OK " + ip);
             return true;
         }
         log.info("IP NOT LMS");
@@ -158,16 +158,21 @@ public class Utils {
         log.info("SEARCH LMS IP");
         String lmsIp = null;
         String myip = Utils.getMyIpAddres();
-        Integer start = 1;
-        while (lmsIp == null && start < 150) {
-            lmsIp = IntStream
-                    .range(start, start + 50)
-                    .boxed()
-                    .map(index -> CompletableFuture.supplyAsync(() -> Utils.checkIp(myip, Integer.valueOf(index))))
-                    .collect(Collectors.collectingAndThen(Collectors.toList(), cfs -> cfs.stream().map(CompletableFuture::join)))
-                    .filter(Objects::nonNull)
-                    .findFirst().orElse(null);
-            start = start + 50;
+        if (Utils.checkLmsIp(myip)) {
+            lmsIp = myip;
+        } else {
+
+            Integer start = 1;
+            while (lmsIp == null && start < 150) {
+                lmsIp = IntStream
+                        .range(start, start + 50)
+                        .boxed()
+                        .map(index -> CompletableFuture.supplyAsync(() -> Utils.checkIp(myip, Integer.valueOf(index))))
+                        .collect(Collectors.collectingAndThen(Collectors.toList(), cfs -> cfs.stream().map(CompletableFuture::join)))
+                        .filter(Objects::nonNull)
+                        .findFirst().orElse(null);
+                start = start + 50;
+            }
         }
         log.info("LMS IP: " + lmsIp);
         if (lmsIp != null) {
@@ -236,9 +241,9 @@ public class Utils {
         return content;
     }
 
-    public static void sleep(int time) {
+    public static void sleep(int seconds) {
         try {
-            Thread.sleep(time);
+            Thread.sleep(seconds);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -280,7 +285,7 @@ public class Utils {
         log.info("TIMER REQUEST PLAYERS STATE UPDATE");
         Runnable drawRunnable = new Runnable() {
             public void run() {
-                lmsPlayers.update();
+                lmsPlayers.updateServerStatus();
             }
         };
         ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
@@ -289,7 +294,6 @@ public class Utils {
 
 
     public static void readConfig() {
-        log.info("");
         log.info("READ CONFIG FROM config.json");
         config = JsonUtils.jsonFileToMap("config.json", String.class, String.class);
         if (config == null) return;
@@ -298,15 +302,14 @@ public class Utils {
         Main.port = Integer.parseInt(config.get("port"));
         Main.silence = config.get("silence");
         Main.lmsUrl = "http://" + Main.lmsIp + ":" + Main.lmsPort + "/jsonrpc.js/";
-        log.info("LMS IP: " + Main.lmsIp);
-        log.info("LMS PORT: " + Main.lmsPort);
+//        log.info("LMS IP: " + Main.lmsIp);
+//        log.info("LMS PORT: " + Main.lmsPort);
         log.info("LMS URL: " + Main.lmsUrl);
         log.info("THIS PORT: " + Main.port);
         log.info("SILENCE: " + Main.silence);
     }
 
     public static void writeConfig() {
-        log.info("");
         log.info("WRITE CONFIG TO config.json");
         config = new HashMap<>();
         config.put("lmsIp", lmsIp);
@@ -319,33 +322,23 @@ public class Utils {
 
 
     public static void readRooms() {
-        log.info("");
-        log.info("READ ROOMS FROM rooms.json");
-        rooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
-        if (rooms == null) {
-            rooms = new HashMap<>();
+        log.info("READ ROOMS FROM rooms_new.json");
+        roomsNew = JsonUtils.jsonFileToMap("rooms_new.json", String.class, String.class);
+        if (roomsNew == null) {
+            roomsNew = new HashMap<>();
+            log.info("READ NO ROOMS");
             return;
         }
-        log.info("ROOMS: " + Main.rooms);
+        log.info("ROOMS: " + Main.roomsNew);
     }
 
     public static void writeRooms() {
-        log.info("");
         log.info("WRITE ROOMS TO rooms.json");
-        log.info(rooms);
-        JsonUtils.mapToJsonFile(rooms, "rooms.json");
+        log.info("ROOMS: " + Main.roomsNew);
+        JsonUtils.mapToJsonFile(roomsNew, "rooms.json");
     }
 
-    public static String rooms() {
-//        public static List<String> rooms() {
-
-//        String[] array = new String[] { "a", "b", "c" };
-//        String joined2 = String.join(",", array);
-//        n headerMap.entrySet().stream().map(e -> e.getKey() + ":" + e.getValue())
-//                .collect(Collectors.joining(","));
-//    }
+    public static String listDevicesRooms() {
         return SmartHome.devices.stream().map(device -> device.room).collect(Collectors.joining(","));
-
-//        return SmartHome.devices.stream().map(device -> device.room).collect(Collectors.toList());
     }
 }
