@@ -40,22 +40,20 @@ public class SwitchVoiceCommand {
         if (command.contains("найди сервер")) return searchServer();
         if (command.contains("найди колонки")) return searchPlayers();
         if (command.matches("это комната.*с колонкой.*")) return selectRoomWithSpeaker(command);
-        if (command.contains("это комната")) return selectRoom(command);
-//        room = SmartHome.getRoomByAliceId(aliceId);
-        room = Main.roomsNew.get(aliceId);
+        if (command.contains("это комната")) return selectRoomByCommand(command);
+        room = Main.rooms.get(aliceId);
         log.info("ROOM: " + room);
         String firstRoomname = "";
         if (SmartHome.devices.size() > 0) firstRoomname = SmartHome.devices.get(0).room;
         if (room == null) return "скажите навыку, это комната и название комнаты, например " + firstRoomname;
 
-        if (command.contains("выбери колонку")) return selectPlayer(command);
+        if (command.contains("выбери колонку")) return selectPlayerByCommand(command);
 
         Device device = SmartHome.getDeviceByRoom(room);
         String firstPlayername = "";
         if (lmsPlayers.players.size() > 0) firstPlayername = lmsPlayers.players.get(0).name;
         if (device == null)
             return "устройство не найдено. скажите навыку, выбери колонку и название колонки, например " + firstPlayername;
-//        Player player = device.lmsGetPlayerByDeviceId();
 
         Player player = lmsPlayers.getPlayerByDeviceId(device.id);
         if (lmsIp == null) return "медиасервер не найден";
@@ -96,7 +94,7 @@ public class SwitchVoiceCommand {
         return JsonUtils.pojoToJson(alice);
     }
 
-    private static String selectPlayer(String command) {
+    private static String selectPlayerByCommand(String command) {
         log.info("ACTION SELECT PLAYER IN ROOM");
         String target = command.replaceAll(".*колонку\\S*\\s", "").replaceAll("\"", "").replaceAll("\\s\\s", " ");
         log.info("target: " + target);
@@ -131,34 +129,65 @@ public class SwitchVoiceCommand {
         return "выбрана колонка " + playerNewName + " в комнате " + SmartHome.getRoomByPlayerName(playerNewName);
     }
 
+
+    private static String selectPlayerByPlayer(String target) {
+        target = target.replaceAll("\"", "").replaceAll("\\s\\s", " ");
+        log.info("SELECT PLAYER IN ROOM " + room + " BY PLAYER IN COMMAND: " + target);
+        List<String> playerNames = lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList());
+        log.info("PLAYERS IN LMS: " + playerNames);
+        String playerNewName = Levenstein.getNearestElementInListW(target, playerNames); // найти имя плеера по имени из фразы
+        if (playerNewName == null) {
+            log.info("PLAYER NOT FOUND: " + playerNewName);
+            return "нет такой колонки";
+        }
+        log.info("FOUND PLAYER NAME IN LMS PLAYERS: " + playerNewName);
+        Player playerNew = lmsPlayers.getPlayerByName(playerNewName);
+        // TODO в lmsPlayers сделать поиск сразу плеера по имени левинштейном
+
+        Player playerNow = lmsPlayers.getPlayerByRoom(room);
+        log.info("SWAP PLAYERS IN ROOM: " + room + " NOW: " + playerNow.name + " ID: " + playerNow.deviceId +
+                " <- NEW: " + playerNew.name + " ID: " + playerNew.deviceId);
+
+        CompletableFuture.supplyAsync(() -> {
+            if (playerNow != null) {
+                String playerNowDeviceId = playerNow.deviceId;
+                log.info("ROOM: " + room + " ID: " + playerNowDeviceId);
+                playerNow.roomPlayer = null;
+                playerNow.deviceId = null;
+                playerNew.roomPlayer = room;
+                playerNew.deviceId = playerNowDeviceId;
+            } else {
+                playerNew.roomPlayer = room;
+                playerNew.deviceId = SmartHome.getDeviceIdByRoom(room);
+            }
+            log.info("TURN ON NEW PLAYER " + playerNew.name);
+            Actions.turnOnMusic(playerNew);
+            if (playerNow != null) {
+                log.info("STOP CURRENT PLAYER " + playerNow.name);
+                playerNow.unsync().pause();
+            }
+            return "";
+        });
+
+        return "выбрана колонка " + playerNewName + " в комнате " + room;
+    }
+
+
     private static String selectRoomWithSpeaker(String command) {
-        log.info("ACTION ROOM CONNECT");
-        String answer;
-//        это комната гостиная с колонкой хомпод
-        String room = command
+        room = command
                 .replaceAll(".*комната", "")
                 .replaceAll("с колонкой.*", "")
-                .replaceAll("\\s", "")
-//                .replaceAll("\"", "")
-//                .replaceAll("\\s\\s", " ")
-                ;
-        log.info("room request: " + room);
-
+                .replaceAll("\\s", "");
         String player = command
                 .replaceAll(".*с колонкой", "")
-                .replaceAll("\\s", "")
-//                .replaceAll("\"", "")
-//                .replaceAll("\\s\\s", " ")
-                ;
-        log.info("speeaker request: " + player);
-
-        selectRoom(room);
-        answer = selectPlayer(player);
-
+                .replaceAll("\\s", "");
+        log.info("SELECT ROOM: " + room + " WITH PLAYER: " + player);
+        selectRoomByRoom(room);
+        String answer = selectPlayerByPlayer(player);
         return answer;
     }
 
-    private static String selectRoom(String command) {
+    private static String selectRoomByCommand(String command) {
         log.info("ACTION ROOM CONNECT");
         String answer;
         String room = command.replaceAll(".*комната\\S*\\s", "").replaceAll("\"", "").replaceAll("\\s\\s", " ");
@@ -173,7 +202,7 @@ public class SwitchVoiceCommand {
         } else {
             // найдена
             log.info("ROOM ID: " + device.id);
-            String playerName = device.takePlayerName();
+            String playerName = device.takePlayerNameById();
             if (playerName == null) playerName = ". колонка в комнате еще не выбрана";
             else playerName = ". с колонкой " + playerName;
             log.info("PLAYER NAME: " + playerName);
@@ -181,12 +210,35 @@ public class SwitchVoiceCommand {
             log.info("ROOM: " + room);
             answer = "это комната " + room + playerName;
             log.info("ANSWER: " + answer);
-            log.info("ROOMS NEW: " + roomsNew);
-            roomsNew.put(aliceId, room);
-            log.info("ROOMS NEW: " + roomsNew);
-            JsonUtils.mapToJsonFile(roomsNew, "rooms_new.json");
+            log.info("ROOMS NEW: " + rooms);
+            rooms.put(aliceId, room);
+            log.info("ROOMS NEW: " + rooms);
+            JsonUtils.mapToJsonFile(rooms, "rooms.json");
 //            SmartHome.write();
             log.info("FINISH");
+        }
+        return answer;
+    }
+
+    private static String selectRoomByRoom(String target) {
+        String answer = "";
+        target = target.replaceAll("\"", "").replaceAll("\\s\\s", " ");
+        log.info("SELECT ROOM BY ROOM IN COMMAND: " + target);
+        Device device = SmartHome.getDeviceByRoomLevenstein(target);
+        if (device == null) {
+            log.info("NOT FOUND DEVICE BY ROOM IN COMMAND: " + target);
+//            answer = "ой, не найдена комната " + target;
+        } else {
+            log.info("DEVICE BY ROOM IN COMMAND. DEVICE ID: " + device.id + " ROOM: " + device.room);
+//            String playerName = lmsPlayers.getPlayerNameByDeviceid(device.id);
+//            if (playerName == null) playerName = ". колонка в комнате еще не выбрана";
+//            else playerName = ". с колонкой " + playerName;
+//            answer = "это комната " + target + playerName;
+//            log.info("ANSWER: " + answer);
+            rooms.put(aliceId, target);
+            JsonUtils.mapToJsonFile(rooms, "rooms.json");
+            log.info("ADD ROOM: " + target + " TO ROOMS");
+            log.info("WRITE TO FILE rooms.json " + rooms);
         }
         return answer;
     }

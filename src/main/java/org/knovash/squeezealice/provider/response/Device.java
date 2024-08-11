@@ -38,9 +38,10 @@ public class Device {
 //        return player;
 //    }
 
-    public String takePlayerName() {
-        log.info("TAKE PLAYER NAME");
-//        Player player = this.lmsGetPlayerByDeviceId();
+
+    // TODO REMOVE BY  lmsPlayers.getPlayerNameByDeviceid(device.id);
+    public String takePlayerNameById() {
+        log.info("TAKE PLAYER NAME BY DEVICE ID");
         Player player = lmsPlayers.getPlayerByDeviceId(id);
         log.info("PLAYER: " + player);
         if (player == null) return null;

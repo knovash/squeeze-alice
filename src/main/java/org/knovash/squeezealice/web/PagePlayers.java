@@ -30,7 +30,7 @@ public class PagePlayers {
                 "  <title>Настройка колонок</title></head><body>" +
                 "<p><a href=\"/\">Home</a></p>" +
 
-                "Yandex Devices: " + SmartHome.devices.size() + " " + SmartHome.devices.stream().map(device -> device.room + ":" + device.id + ":" + device.takePlayerName()).collect(Collectors.toList()) + "<br>" +
+                "Yandex Devices: " + SmartHome.devices.size() + " " + SmartHome.devices.stream().map(device -> device.room + ":" + device.id + ":" + device.takePlayerNameById()).collect(Collectors.toList()) + "<br>" +
                 "LMS Players: " + lmsPlayers.players.size() + " " + lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList()) + "</p>" +
 
                 "  <h2>Настройка колонок</h2>" +

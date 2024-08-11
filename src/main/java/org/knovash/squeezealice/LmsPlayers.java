@@ -142,8 +142,8 @@ public class LmsPlayers {
                 .filter(p -> p.getName().equals(name))
                 .findFirst()
                 .orElse(null);
-        if (player == null) log.info("PLAYER NOT FOUND " + name);
-//        log.info("PLAYER: " + player.name);
+        if (player == null) log.info("PLAYER BY NAME NOT FOUND " + name);
+        log.info("GET PLAYER BY NAME: " + player);
         return player;
     }
 
@@ -322,7 +322,10 @@ public class LmsPlayers {
     }
 
     public Player getPlayerByDeviceId(String id) {
-        if (id == null) return null;
+        if (id == null) {
+            log.info("ERROR NO PLAYER BY ID: " + id);
+            return null;
+        }
         Player player = lmsPlayers.players.stream()
                 .filter(p -> p.roomPlayer != null)
                 .filter(p -> p.deviceId != null)
@@ -331,4 +334,13 @@ public class LmsPlayers {
         log.info("ID: " + id + " PLAYER: " + player);
         return player;
     }
+
+    public String getPlayerNameByDeviceid(String id) {
+        Player player = getPlayerByDeviceId(id);
+        if (player == null) return null;
+        log.info("ID: " + id + " PLAYER NAME: " + player.name);
+        return player.name;
+    }
+
+
 }

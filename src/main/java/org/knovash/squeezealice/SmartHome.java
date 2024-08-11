@@ -54,7 +54,7 @@ public class SmartHome {
 
     public static String getRoomByPlayerName(String playerName) {
         log.info("PLAYER NAME: " + playerName);
-        Device device = devices.stream().filter(d -> d.takePlayerName().toLowerCase().equals(playerName.toLowerCase())).findFirst().orElse(null);
+        Device device = devices.stream().filter(d -> d.takePlayerNameById().toLowerCase().equals(playerName.toLowerCase())).findFirst().orElse(null);
         if (device == null) return null;
         return device.room;
     }
@@ -67,8 +67,8 @@ public class SmartHome {
         if (devices == null) return "---";
         if (devices.size() == 0) return "---";
         Device device = devices.stream()
-                .filter(d -> d.takePlayerName() != null)
-                .filter(d -> d.takePlayerName().equals(playerName))
+                .filter(d -> d.takePlayerNameById() != null)
+                .filter(d -> d.takePlayerNameById().equals(playerName))
                 .findFirst()
                 .orElse(null);
         if (device == null) return "---";
@@ -83,7 +83,7 @@ public class SmartHome {
         List<Device> devices = JsonUtils.jsonFileToList("alice_devices.json", Device.class);
         if (devices != null) SmartHome.devices.addAll(devices);
 //        Main.rooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
-        log.info("DEVICES: " + SmartHome.devices.stream().map(d -> d.takePlayerName() + ":" + d.room).collect(Collectors.toList()));
+        log.info("DEVICES: " + SmartHome.devices.stream().map(d -> d.takePlayerNameById() + ":" + d.room).collect(Collectors.toList()));
     }
 
     public static void clear() {
@@ -92,12 +92,12 @@ public class SmartHome {
     }
 
     public static Integer addNewDevice(Device device, int idd) {
-        log.info("ADD DEVICE: " + device.takePlayerName() + " ID: " + idd);
+        log.info("ADD DEVICE: " + device.takePlayerNameById() + " ID: " + idd);
         int id = SmartHome.devices.size() + 1;
         if (idd != 0) id = idd;
         device.id = String.valueOf(id);
         SmartHome.devices.add(device);
-        log.info("DEVICES: " + SmartHome.devices.stream().map(d -> d.takePlayerName() + " id=" + d.id)
+        log.info("DEVICES: " + SmartHome.devices.stream().map(d -> d.takePlayerNameById() + " id=" + d.id)
                 .collect(Collectors.toList()));
         return id;
     }

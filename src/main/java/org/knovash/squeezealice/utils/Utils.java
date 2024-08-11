@@ -322,20 +322,20 @@ public class Utils {
 
 
     public static void readRooms() {
-        log.info("READ ROOMS FROM rooms_new.json");
-        roomsNew = JsonUtils.jsonFileToMap("rooms_new.json", String.class, String.class);
-        if (roomsNew == null) {
-            roomsNew = new HashMap<>();
+        log.info("READ ROOMS FROM rooms.json");
+        rooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
+        if (rooms == null) {
+            rooms = new HashMap<>();
             log.info("READ NO ROOMS");
             return;
         }
-        log.info("ROOMS: " + Main.roomsNew);
+        log.info("ROOMS: " + Main.rooms);
     }
 
     public static void writeRooms() {
         log.info("WRITE ROOMS TO rooms.json");
-        log.info("ROOMS: " + Main.roomsNew);
-        JsonUtils.mapToJsonFile(roomsNew, "rooms.json");
+        log.info("ROOMS: " + Main.rooms);
+        JsonUtils.mapToJsonFile(rooms, "rooms.json");
     }
 
     public static String listDevicesRooms() {

@@ -21,13 +21,13 @@ public class SpotifyRequests {
     public static String requestWithRetry(String uri) {
         log.info("START");
         String json = SpotifyRequests.requestGetClosable(uri);
-        if (json == "401") {
-            log.info("401");
+        if (json.equals("401")) {
+            log.info("401 RUN REFRESH TOKEN");
             SpotifyAuth.callbackRequestRefresh();
             json = SpotifyRequests.requestGetClosable(uri);
         }
         if (json == null) {
-            log.info("NULL");
+            log.info("REQUEST ERROR");
             return null;
         }
         if (json.equals("204")) {

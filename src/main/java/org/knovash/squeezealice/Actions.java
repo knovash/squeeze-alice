@@ -36,12 +36,6 @@ public class Actions {
 
     public static void turnOnMusic(Player player) {
         log.info("TURN ON MUSIC PLAYER: " + player.name);
-
-        if (player.name.equals("Spotify")) {
-            log.info("ITS SPOTIFY");
-            return;
-        }
-
         player.ifNotPlayUnsyncWakeSet();
         if (player.separate) {
             log.info("PLAYER IS SEPARATED - PLAY LAST");
@@ -96,7 +90,7 @@ public class Actions {
         String mode;
         if (player.playing) {
             lmsPlayers.players.forEach(p -> turnOffMusic(p));
-            mode =  "All players - Stop";
+            mode = "All players - Stop";
         } else {
             turnOnMusic(player);
             mode = "All players - Play";

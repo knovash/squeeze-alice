@@ -21,8 +21,7 @@ public class Main {
     public static int port = Integer.parseInt(bundle.getString("port"));
     public static LmsPlayers lmsPlayers = new LmsPlayers();
     public static Map<String, String> config = new HashMap<>();
-    //    public static Map<String, String> rooms = new HashMap<>();
-    public static Map<String, String> roomsNew = new HashMap<>();
+    public static Map<String, String> rooms = new HashMap<>();
 
     public static void main(String[] args) {
         log.info("CONFIG FROM config.properties");
@@ -40,7 +39,7 @@ public class Main {
         lmsPlayers.updateServerStatus();
         lmsPlayers.write();
         SpotifyAuth.read();
-        SpotifyAuth.callbackRequestRefresh();
+//        SpotifyAuth.callbackRequestRefresh();
         Yandex.read();
         Yandex.getRoomsFromYandexSmartHome();
         JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
