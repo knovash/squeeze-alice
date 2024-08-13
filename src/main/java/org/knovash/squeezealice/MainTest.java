@@ -8,6 +8,8 @@ import org.knovash.squeezealice.utils.Utils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Log4j2
 public class MainTest {
@@ -25,13 +27,13 @@ public class MainTest {
     public static void main(String[] args) {
         log.info("START");
         String command;
-         command = "Алиса, включи колонку";
-         command = "Алиса, включи колонку";
-         command = "Алиса, включи плеер";
+        command = "Алиса, включи колонку";
+        command = "Алиса, включи колонку";
+        command = "Алиса, включи плеер";
 
 
         if (command.contains("включи колонку") || command.contains("выабери колонку") || command.contains("выбери плеер") || command.contains("включи плеер"))
-           log.info("OK1");
+            log.info("OK1");
 
         if (command.matches("включи .*колонку.*|.*плеер.*"))
             log.info("OK2");
@@ -40,5 +42,12 @@ public class MainTest {
             log.info("OK3");
 
         log.info("FINISH");
+
+        command = "это комната веранда с колонкой хомпод";
+        Pattern pattern = Pattern.compile("(?<=комната )[a-zA-Zа-яА-Я]*");
+        Matcher matcher = pattern.matcher(command);
+        if (matcher.find()) log.info(matcher.group());
+
+
     }
 }

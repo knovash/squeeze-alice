@@ -18,6 +18,7 @@ public class Levenstein {
     public static String finalElement;
 
     public static String getNearestElementInList(String value, List<String> list) {
+        log.info("SEARCH: "+ value + " IN: "+ list);
         filalDistance = 100;
         if (Utils.isCyrillic(value) && !Utils.isCyrillic(list.get(0))) {
             value = Utils.convertCyrilic(value);
@@ -28,7 +29,7 @@ public class Levenstein {
         } else {
             list.stream().forEach(name -> Levenstein.compareWordAndFrase(finalValue, name));
         }
-        if (filalDistance > 5) finalElement = null;
+        if (filalDistance > 3) finalElement = null;
         return finalElement;
     }
 
@@ -45,21 +46,24 @@ public class Levenstein {
     }
 
     public static int compareWordAndFrase(String val, String frase) {
+//        log.info("START " + val);
         int d = Arrays.stream(frase.split(" "))
                 .map(word -> dist(val.toLowerCase().toCharArray(), word.toLowerCase().toCharArray()))
                 .sorted().findFirst().get();
-        log.info(val + " & " + frase + " distance= " + d);
+//        log.info(val + " & " + frase + " distance= " + d);
         if (d < filalDistance) {
             filalDistance = d;
             finalElement = frase;
-            log.info("NEAREST: " + finalElement + " DISTANCE: " + filalDistance);
+//            log.info("NEAREST: " + finalElement + " DISTANCE: " + filalDistance);
         }
+        log.info(val + " NEAREST: " + finalElement + " DISTANCE: " + filalDistance);
         return d;
     }
 
     public static int compareWordAndWord(String val, String s2) {
+//        log.info("START " + val);
         int d = dist(val.toLowerCase().toCharArray(), s2.toLowerCase().toCharArray());
-        log.info(val + " & " + s2 + " DISTANCE: " + d);
+//        log.info(val + " & " + s2 + " DISTANCE: " + d);
         if (d < filalDistance) {
             filalDistance = d;
             finalElement = s2;

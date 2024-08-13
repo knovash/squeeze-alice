@@ -33,7 +33,7 @@ public class Handler implements HttpHandler {
         String query = httpExchange.getRequestURI().getQuery();
         log.info("QUERY: " + query);
 
-        HashMap<String, String> queryMap = HandlerUtils.getQueryMap(query);
+        HashMap<String, String> queryMap = HandlerUtils.convertQueryToMap(query);
 
         Context context = new Context();
         context.body = body;

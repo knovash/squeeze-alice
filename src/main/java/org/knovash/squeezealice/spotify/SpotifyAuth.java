@@ -10,6 +10,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.knovash.squeezealice.Context;
+import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.web.PageSpotiCallback;
 
@@ -28,7 +29,7 @@ public class SpotifyAuth {
     public static String client_secret;
     public static String encoded;
     public static String response_type = "code";
-    public static String redirect_uri = "https://unicorn-neutral-badly.ngrok-free.app/spoti_callback";
+    public static String redirect_uri = Main.tunnel+"/spoti_callback";
     public static String show_dialog; // Optional
     public static String scope =
             "app-remote-control " +
@@ -135,7 +136,7 @@ public class SpotifyAuth {
         String jsonResponse = postResultForm.asString();
         access_token = JsonUtils.jsonGetValue(jsonResponse, "access_token");
         bearer_token = "Bearer " + access_token;
-        log.info("SPOTIFY TOKEN: " + bearer_token);
+//        log.info("SPOTIFY TOKEN: " + bearer_token);
     }
 
 
@@ -173,6 +174,6 @@ public class SpotifyAuth {
         refresh_token = map.get("refresh_token");
         expires_in = map.get("expires_in");
         redirect_uri = map.get("redirect_uri");
-        log.info(map);
+//        log.info(map);
     }
 }

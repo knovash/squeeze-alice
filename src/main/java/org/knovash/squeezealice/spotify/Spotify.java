@@ -13,7 +13,7 @@ import org.knovash.squeezealice.spotify.spotify_pojo.spotify_tracks.SpotifyRespo
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 
-import static org.knovash.squeezealice.spotify.SpotifyRequests.requestWithRetry;
+import static org.knovash.squeezealice.spotify.SpotifyRequests.requestWithRetryGet;
 
 @Log4j2
 @Data
@@ -30,7 +30,7 @@ public class Spotify {
         target = target.replace(" ", "%20");
         String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + type + "&limit=" + limit;
         log.info("URI: " + uri);
-        String json = requestWithRetry(uri);
+        String json = requestWithRetryGet(uri);
         if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         switch (type.toString()) {
@@ -88,7 +88,7 @@ public class Spotify {
     public static void requestCurrentlyPlaying() {
         String uri = "https://api.spotify.com/v1/me/player/currently-playing";
         log.info("SPOTIFY REQUEST CURRENTLY PLAYING " + uri);
-        String json = requestWithRetry(uri);
+        String json = requestWithRetryGet(uri);
 //        log.info("JSON " + json);
         if (json == null) {
             currentlyPlaying = null;
@@ -101,7 +101,7 @@ public class Spotify {
     public static void pause() {
         String uri = "https://api.spotify.com/v1/me/player/pause";
         log.info("SPOTIFY PAUSE " + uri);
-        SpotifyRequests.requestPutHttpClient(uri);
+        SpotifyRequests.requestWithRetryPut(uri);
     }
 
     public static void volumeSetAbs(String value) {
@@ -145,7 +145,7 @@ public class Spotify {
         log.info("");
         String uri = "https://api.spotify.com/v1/me/player/";
         log.info("START PLAYER STATE " + uri);
-        String json = requestWithRetry(uri);
+        String json = requestWithRetryGet(uri);
         if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         PlayerState playerState = JsonUtils.jsonToPojo(json, PlayerState.class);
@@ -177,7 +177,7 @@ public class Spotify {
             id = uri.replaceAll("spotify:playlist:", "");
             uri = "https://api.spotify.com/v1/playlists/" + id;
             log.info("SPOTY REQUEST " + uri);
-            json = requestWithRetry(uri);
+            json = requestWithRetryGet(uri);
             if (json == null) return null;
             json = json.replace("\\\"", ""); //  фикс для такого "name"
             PlayerPlaylist playerPlaylist = JsonUtils.jsonToPojo(json, PlayerPlaylist.class);
@@ -187,7 +187,7 @@ public class Spotify {
             id = uri.replaceAll("spotify:artist:", "");
             uri = "https://api.spotify.com/v1/artists/" + id;
             log.info("SPOTY REQUEST " + uri);
-            json = requestWithRetry(uri);
+            json = requestWithRetryGet(uri);
             if (json == null) return null;
             json = json.replace("\\\"", ""); //  фикс для такого "name"
             PlayerArtist playerArtist = JsonUtils.jsonToPojo(json, PlayerArtist.class);
@@ -197,7 +197,7 @@ public class Spotify {
             id = uri.replaceAll("spotify:album:", "");
             uri = "https://api.spotify.com/v1/albums/" + id;
             log.info("SPOTY REQUEST " + uri);
-            json = requestWithRetry(uri);
+            json = requestWithRetryGet(uri);
             if (json == null) return null;
             json = json.replace("\\\"", ""); //  фикс для такого "name"
             PlayerAlbum playerAlbum = JsonUtils.jsonToPojo(json, PlayerAlbum.class);

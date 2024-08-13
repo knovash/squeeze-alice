@@ -30,18 +30,15 @@ public class PagePlayers {
                 "  <title>Настройка колонок</title></head><body>" +
                 "<p><a href=\"/\">Home</a></p>" +
 
-                "Yandex Devices: " + SmartHome.devices.size() + " " + SmartHome.devices.stream().map(device -> device.room + ":" + device.id + ":" + device.takePlayerName()).collect(Collectors.toList()) + "<br>" +
+                "Yandex Devices: " + SmartHome.devices.size() + " " + SmartHome.devices.stream().map(device -> device.room + ":" + device.id + ":" + device.takePlayerNameById()).collect(Collectors.toList()) + "<br>" +
                 "LMS Players: " + lmsPlayers.players.size() + " " + lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList()) + "</p>" +
 
                 "  <h2>Настройка колонок</h2>" +
                 join(lmsPlayers.players.stream().map(p -> "<form action=\"/cmd\" method=\"get\">" +
                         "<b>" + p.name + "</b>" +
                         " Player id = " + p.deviceId +
-                        " Device id = " + SmartHome.getIdByPlayerName(p.name) +
-
-
                         "<br>" +
-                        "<input name=\"room\" id=\"room\" value=\"" + p.roomPlayer + "\" />" +
+                        "<input name=\"room\" id=\"room\" value=\"" + p.room + "\" />" +
                         "<label for=\"room\"> комната</label>" +
 
                         "<br>" +
@@ -62,9 +59,9 @@ public class PagePlayers {
                         "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"player_remove\">" +
                         "<button>remove</button></form>"
                 ).collect(Collectors.toList())) +
-                "<p>последний запрос от Алисы id: " + lmsPlayers.lastAliceId + "</p>" +
-                "<p>SwitchVoiceCommand.aliceId: " + SwitchVoiceCommand.aliceId + "</p>" +
-                "<p>чтобы узнать id Алисы, спросите Алиса скажи раз два, что сейчас играет? и обновите страницу</p>" +
+//                "<p>последний запрос от Алисы id: " + lmsPlayers.lastAliceId + "</p>" +
+//                "<p>SwitchVoiceCommand.aliceId: " + SwitchVoiceCommand.aliceId + "</p>" +
+//                "<p>чтобы узнать id Алисы, спросите Алиса скажи раз два, что сейчас играет? и обновите страницу</p>" +
                 "<p><a href=\"/\">Home</a></p>" +
                 "</body></html>";
 

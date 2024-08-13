@@ -35,7 +35,6 @@ public class SwitchQueryCommand {
         log.info("VALUE: " + value);
         switch (action) {
             case ("channel"):
-//                Actions.actionPlayChannel(player, Integer.valueOf(value));
                 player.playChannel(Integer.valueOf(value));
                 response = "PLAY CHANNEL " + value;
                 break;
@@ -106,15 +105,15 @@ public class SwitchQueryCommand {
                 Spotify.transfer(player);
                 response = "TRANSFER";
                 break;
-            case ("get_rooms"):
-                Utils.listDevicesRooms();
-                response = Utils.listDevicesRooms().toString();
-                break;
+//            case ("get_rooms"):
+//                Utils.listDevicesRooms();
+//                response = Utils.listDevicesRooms().toString();
+//                break;
 
-            case ("log"): // WEB HOME
-                log.info("SHOW LOG");
-                response = Utils.logLastLines(queryParams);
-                break;
+//            case ("log"): // WEB HOME
+//                log.info("SHOW LOG");
+//                response = Utils.logLastLines(queryParams);
+//                break;
             case ("silence"): // TASKER
                 log.info("SILENCE");
                 player.playSilence();
@@ -133,18 +132,18 @@ public class SwitchQueryCommand {
                 log.info("STATE LMS PLAYERS");
                 response = JsonUtils.pojoToJson(lmsPlayers);
                 break;
-            case ("time_volume_get"):
-                log.info("SEND TIME AND VOLUME");
-                response = Utils.timeVolumeGet(player);
-                break;
-            case ("time_volume_set"):
-                log.info("CHANGE TIME AND VOLUME");
-                response = Utils.timeVolumeSet(player, queryParams);
-                break;
-            case ("time_volume_del"):
-                log.info("DELETE TIME AND VOLUME");
-                response = Utils.timeVolumeDel(player, queryParams);
-                break;
+//            case ("time_volume_get"):
+//                log.info("SEND TIME AND VOLUME");
+//                response = Utils.timeVolumeGet(player);
+//                break;
+//            case ("time_volume_set"):
+//                log.info("CHANGE TIME AND VOLUME");
+//                response = Utils.timeVolumeSet(player, queryParams);
+//                break;
+//            case ("time_volume_del"):
+//                log.info("DELETE TIME AND VOLUME");
+//                response = Utils.timeVolumeDel(player, queryParams);
+//                break;
             case ("spotify_save_creds"):
                 log.info("CREDENTIALS SPOTIFY");
                 SpotifyAuth.save(queryParams);
@@ -152,7 +151,7 @@ public class SwitchQueryCommand {
                 break;
             case ("cred_yandex"):
                 log.info("CREDENTIALS YANDEX");
-                Yandex.credentialsYandex(queryParams);
+                Yandex.writeCredentialsYandex(queryParams);
                 response = PageYandex.page();
                 break;
             case ("yandex_save_client_id"):
@@ -167,28 +166,16 @@ public class SwitchQueryCommand {
                 break;
 
 //      WEB PLAYERS
-//            case ("players_update"):
-//                log.info("PLAYERS UPDATE");
-//                lmsPlayers.updateNew();
-//                lmsPlayers.write();
-//                response = Html.formSpeakers();
-//                break;
-//            case ("players_clear"):
-//                log.info("PLAYERS CLEAR");
-//                lmsPlayers.clear();
-//                lmsPlayers.write();
-//                response = Html.formSpeakers();
-//                break;
             case ("player_save"):
                 log.info("PLAYER SAVE");
                 lmsPlayers.playerSave(queryParams);
-                lmsPlayers.write();
+                lmsPlayers.writePlayers();
                 response = PagePlayers.page();
                 break;
             case ("player_remove"):
                 log.info("PLAYER REMOVE");
                 lmsPlayers.playerRemove(queryParams);
-                lmsPlayers.write();
+                lmsPlayers.writePlayers();
                 response = PagePlayers.page();
                 break;
             case ("restart"):

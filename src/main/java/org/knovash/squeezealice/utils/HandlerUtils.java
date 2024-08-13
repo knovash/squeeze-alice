@@ -11,9 +11,7 @@ import java.util.*;
 @Log4j2
 public class HandlerUtils {
 
-
     public static String httpExchangeGetBody(HttpExchange httpExchange) throws IOException {
-//  используется только в хэндлере для получения боди
         InputStreamReader isr = new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
         if (isr == null) return null;
         BufferedReader br = new BufferedReader(isr);
@@ -30,15 +28,13 @@ public class HandlerUtils {
     }
 
     public static String getHeaderValue(HttpExchange httpExchange, String headerKey) {
-//  используется только в хэндлере для получения хедера
         String headerValue = null;
         if (httpExchange.getRequestHeaders().containsKey(headerKey))
             headerValue = httpExchange.getRequestHeaders().get(headerKey).get(0);
         return headerValue;
     }
 
-    public static HashMap<String, String> getQueryMap(String query) {
-//  используется только в хэндлере, пределывает квери в мэп
+    public static HashMap<String, String> convertQueryToMap(String query) {
         if (query == null) return new HashMap<>();
         query = query.replace("+", " ");
         HashMap<String, String> parameters = new HashMap<>();

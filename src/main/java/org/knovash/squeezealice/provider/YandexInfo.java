@@ -1,27 +1,26 @@
 package org.knovash.squeezealice.provider;
 
-import org.knovash.squeezealice.spotify.spotify_pojo.PlayerArtist;
-
 import java.util.ArrayList;
+import java.util.List;
 
 public class YandexInfo {
 
     public String status;
     public String request_id;
-    public ArrayList<Room> rooms;
-    public ArrayList<Group> groups;
-    public ArrayList<Device> devices;
-    public ArrayList<Scenario> scenarios;
-    public ArrayList<Household> households;
+    public List<Room> rooms;
+    public List<Group> groups;
+    public List<Device> devices;
+    public List<Scenario> scenarios;
+    public List<Household> households;
 
 
     public static class Capability {
 
-        public boolean retrievable;
         public String type;
-        public Parameters parameters;
         public State state;
+        public boolean retrievable;
         public boolean reportable;
+        public Parameters parameters;
         public double last_updated;
     }
 
@@ -29,15 +28,15 @@ public class YandexInfo {
 
         public String id;
         public String name;
-        public ArrayList<String> aliases;
+        public String room;
         public String type;
+        public List<Capability> capabilities;
+        public List<Property> properties;
+        public List<String> aliases;
         public String external_id;
         public String skill_id;
         public String household_id;
-        public String room;
-        public ArrayList<String> groups;
-        public ArrayList<Capability> capabilities;
-        public ArrayList<Property> properties;
+        public List<String> groups;
         public QuasarInfo quasar_info;
     }
 

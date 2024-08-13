@@ -5,29 +5,26 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
+import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.SmartHome;
-import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 @Data
 public class Yandex {
 
-    //    public static String bearerToken;
-    public String clientId = "no-------------------";
-    public String clientSecret = "no---------------";
-    public String bearer = "no---------------";
+    public String clientId = "";
+    public String clientSecret = "";
+    public String bearer = "";
+    public String user = "";
     public static Yandex yandex = new Yandex();
+    public static YandexInfo yandexInfo = new YandexInfo();
 
-    public static void credentialsYandex(HashMap<String, String> parameters) {
+    public static void writeCredentialsYandex(HashMap<String, String> parameters) {
         yandex.clientId = parameters.get("client_id");
         yandex.clientSecret = parameters.get("client_secret");
         yandex.bearer = getBearerToken();
@@ -59,7 +56,6 @@ public class Yandex {
         String json = null;
 //      String uri = "https://oauth.yandex.ru/token?grant_type=refresh_token";
         String uri = "https://oauth.yandex.ru/token?grant_type=authorization_code&code=scope";
-
         String urlParameters =
                 "client_id=" + client_id +
                         "&" +
@@ -78,11 +74,9 @@ public class Yandex {
         } catch (IOException e) {
             log.info("YANDEX BEARER TOKEN REQUEST ERROR try check credentials in spotify.json");
             return null;
-//            throw new RuntimeException(e);
         }
         token = JsonUtils.jsonGetValue(json, "access_token");
         log.info("token: " + token);
-        String bearer = "Bearer " + token.replace("\"", "");
         log.info("bearerToken: " + token);
         yandex.bearer = token;
         JsonUtils.pojoToJsonFile(yandex, "yandex.json");
@@ -101,62 +95,42 @@ public class Yandex {
         yandex.clientId = map.get("clientId");
         yandex.clientSecret = map.get("clientSecret");
         yandex.bearer = map.get("bearer");
+        yandex.user = map.get("user");
+        log.info(yandex);
 //        log.info("TOKEN: " + yandex.bearer);
     }
 
-    public static void getRoomsFromYandexSmartHome() {
+    public static void getRoomsAndDevices() {
         log.info("GET ROOMS FROM YANDEX SMART HOME");
-        Response response;
-        String json = null;
-        String oauthToken = "OAuth " + yandex.bearer;
+        String json;
         try {
-            response = Request.Get("https://api.iot.yandex.net/v1.0/user/info")
-                    .setHeader("Authorization", oauthToken)
+            Response response = Request.Get("https://api.iot.yandex.net/v1.0/user/info")
+                    .setHeader("Authorization", "OAuth " + yandex.bearer)
                     .execute();
             json = response.returnContent().asString();
         } catch (IOException e) {
             log.info("YANDEX GET INFO ERROR");
             return;
-//            throw new RuntimeException(e);
         }
-        YandexInfo yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
-        Map<String, String> roomIdRoomName = yandexInfo.rooms.stream()
-                .collect(Collectors.toMap(room -> room.id, room -> room.name));
-        Map<String, String> roomIdRoomExtId = yandexInfo.devices.stream()
+
+        yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
+//        log.info("YANDEX:" + json);
+
+        Main.rooms = yandexInfo.rooms.stream().map(r -> r.name).collect(Collectors.toList());
+        log.info("FOUND ROOMS: " + Main.rooms);
+
+        yandexInfo.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                 .filter(device -> device.name.equals("музыка"))
-                .collect(Collectors.toMap(device -> device.room, device -> device.external_id));
-        Map<String, String> roomNameRoomExtId = roomIdRoomExtId.entrySet().stream()
-                .peek(entry -> log.info("ROOM: " + entry.getKey() + " " + entry.getValue() + " " + roomIdRoomName.get(entry.getKey())))
-                .collect(Collectors.toMap(entry -> roomIdRoomName.get(entry.getKey()), entry -> entry.getValue()));
-
-        if (roomIdRoomExtId.size() > 0) {
-            log.info("CREATE DEVICES");
-            roomNameRoomExtId.entrySet().stream()
-                    .forEach(entry -> {
-                        HashMap<String, String> parameters = new HashMap<>();
-                        parameters.put("room", entry.getKey());
-                        parameters.put("id", entry.getValue());
-                        Device device = SmartHome.create(parameters);
-
-                    });
-        } else {
-            log.info("NO DEVICES IN YANDEX. CREATE NEW DEVICES. THEN YOU NEEED TO ADD THEM IN ALICE APP !!!");
-            lmsPlayers.players.stream()
-                    .filter(player -> player.roomPlayer != null)
-                    .forEach(player -> {
-                        HashMap<String, String> parameters = new HashMap<>();
-//                        parameters.put("speaker_name_lms", player.name);
-                        parameters.put("room", player.roomPlayer);
-                        SmartHome.create(parameters);
-                        return;
-                    });
-
-//            Map<String, String> roomIdRoomName = yandexInfo.rooms.stream()
-//                    .collect(Collectors.toMap(room -> room.id, room -> room.name));
-
-
-            log.info("YANDEX GET INFO FINISH <<<<<<<<<<");
-        }
+                .forEach(device -> SmartHome.create(getRoomNameByRoomId(device.room), Integer.valueOf(device.external_id)));
+        SmartHome.write();
     }
+
+    public static String getRoomNameByRoomId(String roomId) {
+        return yandexInfo.rooms.stream()
+                .filter(r -> r.id.equals(roomId))
+                .findFirst().get().name;
+    }
+
+
 }
