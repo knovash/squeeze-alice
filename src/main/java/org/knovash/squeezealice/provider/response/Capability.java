@@ -14,6 +14,7 @@ public class Capability {
     public Boolean retrievable = true; // Доступен ли для данного умения устройства запрос состояния
     public Boolean reportable = false; // Признак включенного оповещения об изменении состояния умения при помощи сервиса уведомлений
     public Parameters parameters = new Parameters();
+    public double last_updated;
 }
 
 

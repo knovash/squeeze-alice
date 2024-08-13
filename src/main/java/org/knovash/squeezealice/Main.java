@@ -6,9 +6,7 @@ import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 
 @Log4j2
 public class Main {
@@ -21,7 +19,9 @@ public class Main {
     public static int port = Integer.parseInt(bundle.getString("port"));
     public static LmsPlayers lmsPlayers = new LmsPlayers();
     public static Map<String, String> config = new HashMap<>();
-    public static Map<String, String> rooms = new HashMap<>();
+    public static Map<String, String> idRooms = new HashMap<>();
+    public static List<String> rooms = new ArrayList<>();
+    public static String tunnel;
 
     public static void main(String[] args) {
         log.info("CONFIG FROM config.properties");
@@ -33,15 +33,15 @@ public class Main {
             log.info("WRONG LMS IP. RUN SEARCH LMS IP");
             Utils.searchLmsIp();
         }
-        Utils.readRooms();
+        Utils.readIdRooms();
         Utils.writeConfig();
-        lmsPlayers.read();
+        lmsPlayers.readPlayers();
         lmsPlayers.updateServerStatus();
-        lmsPlayers.write();
+        lmsPlayers.writePlayers();
         SpotifyAuth.read();
-//        SpotifyAuth.callbackRequestRefresh();
+        SpotifyAuth.callbackRequestRefresh();
         Yandex.read();
-        Yandex.getRoomsFromYandexSmartHome();
+        Yandex.getRoomsAndDevices();
         JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
         Server.start();
 //        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate);

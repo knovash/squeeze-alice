@@ -17,7 +17,8 @@ public class ProviderUserDevices {
         ResponseYandex responseYandex = new ResponseYandex();
         responseYandex.request_id = xRequestId;
         responseYandex.payload = new Payload();
-        responseYandex.payload.user_id = SmartHome.user_id;
+//        responseYandex.payload.user_id = SmartHome.user_id;
+        responseYandex.payload.user_id = Yandex.yandex.user;
         responseYandex.payload.devices = SmartHome.devices;
         String json = JsonUtils.pojoToJson(responseYandex);
 

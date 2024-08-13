@@ -25,7 +25,7 @@ public class Player {
 
     public String name;
     public String nameInQuery;
-    public String roomPlayer = null; // in Yandex
+    public String room = null; // in Yandex
     public String deviceId; // in Yandex
     public String mac; // mac in LMS
     public Integer volume_step;
@@ -241,7 +241,7 @@ public class Player {
                 .saveLastChannel(channel)
                 .saveLastPath(); // path
 //                .syncAllOtherPlayingToThis(); // получить mode каждого
-        lmsPlayers.write();
+        lmsPlayers.writePlayers();
         return this;
     }
 
@@ -383,27 +383,24 @@ public class Player {
     }
 
     public Player playLast() {
-        log.info("PLAY LAST");
+//        log.info("PLAY LAST");
         String thisPath = this.path();
         String thisLastPath = this.lastPath;
         String commonLastPath = lmsPlayers.lastPath;
-        log.info("THIS PATH: " + thisPath);
-        log.info("LAST PATH: " + thisLastPath);
-        log.info("TRY GLOBAL LAST PATH: " + commonLastPath);
-        log.info("SILENCE PATH: " + silence);
-
+//        log.info("THIS PATH: " + thisPath);
+//        log.info("LAST PATH: " + thisLastPath);
+//        log.info("TRY GLOBAL LAST PATH: " + commonLastPath);
+//        log.info("SILENCE PATH: " + silence);
         if (thisPath != null && !thisPath.equals(silence) && !thisPath.equals("")) {
-            log.info("PLAY THIS PATH");
+            log.info("PLAY THIS PATH: " + this.path());
             this.play().saveLastPath().saveLastTime();
             return this;
         }
-
         if (commonLastPath != null && !commonLastPath.equals(silence) && !commonLastPath.equals("")) {
-            log.info("PLAY COMMON LAST PATH");
+            log.info("PLAY COMMON LAST PATH: " + commonLastPath);
             this.playPath(commonLastPath).saveLastPath().saveLastTime();
             return this;
         }
-
         log.info("PLAY CHANNEL 1");
         this.playChannel(1);
         return this;
@@ -493,7 +490,7 @@ public class Player {
     public Player separate_on() { // отдельно от других
         log.info("SEPARATE ON");
         this.separate = true;
-        lmsPlayers.write();
+        lmsPlayers.writePlayers();
         this.unsync();
         Actions.turnOnMusic(this);
         return this;
@@ -502,7 +499,7 @@ public class Player {
     public Player alone_on() {  // только этот плеер
         log.info("ALONE ON");
         this.separate = true;
-        lmsPlayers.write();
+        lmsPlayers.writePlayers();
         this.unsync();
         Actions.turnOnMusic(this);
         this.stopAllOther();
@@ -515,7 +512,7 @@ public class Player {
         if (this.mode().equals("play")) {
             log.info("ALL SEPARATE SET false");
             lmsPlayers.players.forEach(p -> p.separate = false);
-            lmsPlayers.write();
+            lmsPlayers.writePlayers();
             log.info("SYNC ALL PLAYING TO THIS: " + this.name);
             this.syncAllOtherPlayingToThis();
             log.info("SEPARATE ALONE OFF FINISH <<<<<<<<<<");
@@ -526,7 +523,7 @@ public class Player {
         log.info("PLAYING: " + playing);
         log.info("ALL SEPARATE SET false");
         lmsPlayers.players.forEach(p -> p.separate = false);
-        lmsPlayers.write();
+        lmsPlayers.writePlayers();
 
         if (playing == null) {
             log.info("NO PLAYING. START PLAY THIS: " + this);
@@ -622,7 +619,7 @@ public class Player {
                 .filter(p -> !p.separate)
 //                .peek(p -> log.info("PLAYER: " + p.name + " SYNC TO: " + this.name))
                 .forEach(p -> p.syncTo(this.name));
-        Player playerInGroupe = lmsPlayers.getPlayerByName(firstNameinGroupe);
+        Player playerInGroupe = lmsPlayers.getPlayerByCorrectName(firstNameinGroupe);
         log.info("IF SYNC GROPE - SYNC " + playerInGroupe + " FIRST TO THIS");
         if (playerInGroupe != null && playerInGroupe.playing) playerInGroupe.syncTo(this.name);
         log.info("FINISH <<<");
@@ -645,9 +642,9 @@ public class Player {
     public String toString() {
         return "Player{" +
                 "name='" + name + '\'' +
-                ", mac='" + mac + '\'' +
-                ", room='" + roomPlayer + '\'' +
-                ", id='" + deviceId + '\'' +
+//                ", mac='" + mac + '\'' +
+                ", room='" + room + '\'' +
+                ", deviceid='" + deviceId + '\'' +
                 '}';
     }
 
