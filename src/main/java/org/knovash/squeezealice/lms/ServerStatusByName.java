@@ -46,26 +46,26 @@ public class ServerStatusByName {
         public int isplayer;
         public int canpoweroff;
 
-        @Override
-        public String toString() {
-            return "PlayersLoop{" +
-                    "ip='" + ip + '\'' +
-                    ", uuid=" + uuid +
-                    ", connected=" + connected +
-                    ", modelname=" + modelname + '\'' +
-                    ", name=" + name + '\'' +
-                    ", model=" + model + '\'' +
-                    ", displaytype=" + displaytype + '\'' +
-                    ", power=" + power +
-                    ", playerindex=" + playerindex +
-                    ", seq_no=" + seq_no +
-                    ", isplaying=" + isplaying +
-                    ", mac=" + playerid + '\'' +
-                    ", firmware=" + firmware +
-                    ", isplayer=" + isplayer +
-                    ", canpoweroff=" + canpoweroff +
-                    '}';
-        }
+//        @Override
+//        public String toString() {
+//            return "PlayersLoop{" +
+//                    "ip='" + ip + '\'' +
+//                    ", uuid=" + uuid +
+//                    ", connected=" + connected +
+//                    ", modelname=" + modelname + '\'' +
+//                    ", name=" + name + '\'' +
+//                    ", model=" + model + '\'' +
+//                    ", displaytype=" + displaytype + '\'' +
+//                    ", power=" + power +
+//                    ", playerindex=" + playerindex +
+//                    ", seq_no=" + seq_no +
+//                    ", isplaying=" + isplaying +
+//                    ", mac=" + playerid + '\'' +
+//                    ", firmware=" + firmware +
+//                    ", isplayer=" + isplayer +
+//                    ", canpoweroff=" + canpoweroff +
+//                    '}';
+//        }
     }
 
     public static class Result {
@@ -89,27 +89,27 @@ public class ServerStatusByName {
         public String uuid;
         public int info_total_artists;
 
-        @Override
-        public String toString() {
-            return "Result{" +
-                    "mac='" + mac + '\'' +
-                    ", lastscan='" + lastscan + '\'' +
-                    ", info_total_duration=" + info_total_duration +
-                    ", newplugins='" + newplugins + '\'' +
-                    ", httpport='" + httpport + '\'' +
-                    ", info_total_genres=" + info_total_genres +
-                    ", other_player_count=" + other_player_count +
-                    ", player_count=" + player_count +
-                    ", current_title='" + current_title + '\'' +
-                    ", info_total_albums=" + info_total_albums +
-                    ", progresstotal=" + progresstotal +
-                    ", info_total_songs=" + info_total_songs +
-                    ", version='" + version + '\'' +
-                    ", ip='" + ip + '\'' +
-                    ", players_loop=" + players_loop +
-                    ", uuid='" + uuid + '\'' +
-                    ", info_total_artists=" + info_total_artists +
-                    '}';
-        }
+//        @Override
+//        public String toString() {
+//            return "Result{" +
+//                    "mac='" + mac + '\'' +
+//                    ", lastscan='" + lastscan + '\'' +
+//                    ", info_total_duration=" + info_total_duration +
+//                    ", newplugins='" + newplugins + '\'' +
+//                    ", httpport='" + httpport + '\'' +
+//                    ", info_total_genres=" + info_total_genres +
+//                    ", other_player_count=" + other_player_count +
+//                    ", player_count=" + player_count +
+//                    ", current_title='" + current_title + '\'' +
+//                    ", info_total_albums=" + info_total_albums +
+//                    ", progresstotal=" + progresstotal +
+//                    ", info_total_songs=" + info_total_songs +
+//                    ", version='" + version + '\'' +
+//                    ", ip='" + ip + '\'' +
+//                    ", players_loop=" + players_loop +
+//                    ", uuid='" + uuid + '\'' +
+//                    ", info_total_artists=" + info_total_artists +
+//                    '}';
+//        }
     }
 }

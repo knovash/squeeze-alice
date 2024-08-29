@@ -51,7 +51,7 @@ public class Utils {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        lmsPlayers.writePlayers();
+        lmsPlayers.write();
     }
 
     public static String getPlayerByNameInQuery(String name) {
@@ -64,32 +64,10 @@ public class Utils {
         return name;
     }
 
-//    public static String logLastLines(HashMap<String, String> parameters) {
-//        int lastCount = 50;
-//        if (parameters.containsKey("value")) {
-//            lastCount = Integer.parseInt(parameters.get("value"));
-//        }
-//        log.info("LOG LINES " + lastCount);
-//        String filePath = "log/log.txt";
-//        File file = new File(filePath);
-//        List<String> readfromFile = null;
-//        List<String> lastLines = new ArrayList<>();
-//        try {
-//            readfromFile = Files.readAllLines(Paths.get(filePath));
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//        int start = readfromFile.size() - lastCount;
-//        for (int i = start; i < readfromFile.size(); i++) {
-//            lastLines.add(readfromFile.get(i));
-//        }
-//        String result = lastLines.stream().collect(Collectors.joining("\n"));
-//        return result;
-//    }
 
-//    public static String timeVolumeGet(Player player) {
-//        return player.schedule.entrySet().toString();
-//    }
+    public static String timeVolumeGet(Player player) {
+        return player.schedule.entrySet().toString();
+    }
 //
 //    public static String timeVolumeSet(Player player, HashMap<String, String> parameters) {
 //        Integer time = Integer.valueOf(parameters.get("time"));
@@ -183,7 +161,7 @@ public class Utils {
     }
 
     public static boolean isCyrillic(String text) {
-        Pattern cyril = Pattern.compile(".*[а-ябА-Я]*.*");
+        Pattern cyril = Pattern.compile("[а-ябА-Я\\s]*");
         Matcher matchCyril = cyril.matcher(text);
         Boolean result = matchCyril.matches();
 //        log.info(text + " " + result);
@@ -251,9 +229,10 @@ public class Utils {
     //    https://stackoverflow.com/questions/10893313/how-to-convert-cyrillic-letters-to-english-latin-in-java-string
     public static String convertCyrilic(String message) {
 //        log.info("START " + message);
-        String result = message.replace("дж", "j");
-        char[] abcCyr = {' ', 'а', 'б', 'в', 'г', 'д', 'ѓ', 'е', 'ж', 'з', 'ѕ', 'и', 'ј', 'к', 'л', 'љ', 'м', 'н', 'њ', 'о', 'п', 'р', 'с', 'т', 'ќ', 'у', 'ф', 'х', 'ц', 'ч', 'џ', 'ш', 'А', 'Б', 'В', 'Г', 'Д', 'Ѓ', 'Е', 'Ж', 'З', 'Ѕ', 'И', 'Ј', 'К', 'Л', 'Љ', 'М', 'Н', 'Њ', 'О', 'П', 'Р', 'С', 'Т', 'Ќ', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Џ', 'Ш', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '/', '-'};
-        String[] abcLat = {" ", "a", "b", "v", "g", "d", "]", "e", "zh", "z", "y", "i", "j", "k", "l", "q", "m", "n", "w", "o", "p", "r", "s", "t", "'", "u", "f", "h", "c", "ch", "x", "{", "A", "B", "V", "G", "D", "}", "E", "Zh", "Z", "Y", "I", "J", "K", "L", "Q", "M", "N", "W", "O", "P", "R", "S", "T", "KJ", "U", "F", "H", "C", ":", "X", "{", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "/", "-"};
+        String result = message.replace("дж", "j")
+                .replace("у", "oo");
+        char[] abcCyr =   {' ', 'а', 'б', 'в', 'г', 'д', 'ѓ', 'е', 'ж',  'з', 'ѕ', 'и', 'ј', 'к', 'л', 'љ', 'м', 'н', 'њ', 'о', 'п', 'р', 'с', 'т', 'ќ', 'у', 'ф', 'х', 'ц', 'ч',  'џ', 'ш', 'э', 'ю', 'я', 'А', 'Б', 'В', 'Г', 'Д', 'Ѓ', 'Е', 'Ж',  'З', 'Ѕ', 'И', 'Ј', 'К', 'Л', 'Љ', 'М', 'Н', 'Њ', 'О', 'П', 'Р', 'С', 'Т', 'Ќ',  'У', 'Ф', 'Х', 'Ц', 'Ч', 'Џ', 'Ш', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '/', '-'};
+        String[] abcLat = {" ", "a", "b", "v", "g", "d", "]", "e", "zh", "z", "y", "i", "j", "k", "l", "q", "m", "n", "w", "o", "p", "r", "s", "t", "'", "u", "f", "h", "c", "ch", "x", "{", "e", "u", "y", "A", "B", "V", "G", "D", "}", "E", "Zh", "Z", "Y", "I", "J", "K", "L", "Q", "M", "N", "W", "O", "P", "R", "S", "T", "KJ", "U", "F", "H", "C", ":", "X", "{", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "/", "-"};
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < result.length(); i++) {
             for (int x = 0; x < abcCyr.length; x++) {
@@ -263,7 +242,7 @@ public class Utils {
             }
         }
         result = builder.toString();
-        log.info(message + " -> " + result);
+//        log.info(message + " -> " + result);
         return result;
     }
 
@@ -304,8 +283,6 @@ public class Utils {
         Main.silence = config.get("silence");
         Main.tunnel = config.get("tunnel");
         Main.lmsUrl = "http://" + Main.lmsIp + ":" + Main.lmsPort + "/jsonrpc.js/";
-//        log.info("LMS IP: " + Main.lmsIp);
-//        log.info("LMS PORT: " + Main.lmsPort);
         log.info("LMS URL: " + Main.lmsUrl);
         log.info("THIS PORT: " + Main.port);
         log.info("SILENCE: " + Main.silence);

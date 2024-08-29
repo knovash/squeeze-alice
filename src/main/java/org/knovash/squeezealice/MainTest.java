@@ -1,15 +1,18 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.Yandex;
-import org.knovash.squeezealice.spotify.SpotifyAuth;
-import org.knovash.squeezealice.utils.Utils;
+import org.apache.http.client.fluent.Request;
 
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+
+import static org.knovash.squeezealice.provider.Yandex.yandex;
 
 @Log4j2
 public class MainTest {
@@ -26,28 +29,56 @@ public class MainTest {
 
     public static void main(String[] args) {
         log.info("START");
-        String command;
-        command = "Алиса, включи колонку";
-        command = "Алиса, включи колонку";
-        command = "Алиса, включи плеер";
+
+//        runInFuture(() -> func1());
+//        runInFuture(MainTest::func2);
+
+//        CompletableFuture.supplyAsync(() -> {
+//            try {
+//                Request.Post("https://api.iot.yandex.net/v1.0/scenarios/f2ddb649-62e7-4fe2-be01-23d477dd2974/actions")
+//                        .setHeader("Authorization", "OAuth " + yandex.bearer)
+//                        .execute();
+//            } catch (IOException e) {
+//                log.info("SAY ERROR");
+//            }
+//            return "";
+//        });
 
 
-        if (command.contains("включи колонку") || command.contains("выабери колонку") || command.contains("выбери плеер") || command.contains("включи плеер"))
-            log.info("OK1");
-
-        if (command.matches("включи .*колонку.*|.*плеер.*"))
-            log.info("OK2");
-
-        if (command.matches(".*включи (колонку|плеер)"))
-            log.info("OK3");
-
-        log.info("FINISH");
-
-        command = "это комната веранда с колонкой хомпод";
-        Pattern pattern = Pattern.compile("(?<=комната )[a-zA-Zа-яА-Я]*");
-        Matcher matcher = pattern.matcher(command);
-        if (matcher.find()) log.info(matcher.group());
+        CompletableFuture.runAsync(() -> func1());
+        CompletableFuture.runAsync(() -> func2());
 
 
     }
+
+
+    public static Boolean func1() {
+        log.info("SAY ERRO45345345345R");
+        return true;
+    }
+
+    public static Boolean func2() {
+        log.info("SAY ERROdfgdfgdfgdfgdR");
+        return true;
+    }
+
+    public static <T> void runInFuture(Predicate<T> function) {
+        function.test(null);
+    }
+
+
+    public static void complete() {
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                Request.Post("https://api.iot.yandex.net/v1.0/scenarios/f2ddb649-62e7-4fe2-be01-23d477dd2974/actions")
+                        .setHeader("Authorization", "OAuth " + yandex.bearer)
+                        .execute();
+            } catch (IOException e) {
+                log.info("SAY ERROR");
+            }
+            return "";
+        });
+    }
+
+
 }

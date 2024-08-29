@@ -10,7 +10,11 @@ import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Log4j2
@@ -112,13 +116,10 @@ public class Yandex {
             log.info("YANDEX GET INFO ERROR");
             return;
         }
-
         yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
 //        log.info("YANDEX:" + json);
-
         Main.rooms = yandexInfo.rooms.stream().map(r -> r.name).collect(Collectors.toList());
         log.info("FOUND ROOMS: " + Main.rooms);
-
         yandexInfo.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                 .filter(device -> device.name.equals("музыка"))
@@ -132,5 +133,55 @@ public class Yandex {
                 .findFirst().get().name;
     }
 
+    public static void sayOn() {
+        try {
+            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/d04255d2-607e-4805-981e-5ce676dc8482/actions")
+                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+                    .execute();
+        } catch (IOException e) {
+            log.info("SAY ERROR");
+        }
+    }
 
+    public static void sayOff() {
+        try {
+            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/266db447-2238-4d84-beff-f635b0693953/actions")
+                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+                    .execute();
+        } catch (IOException e) {
+            log.info("SAY ERROR");
+        }
+    }
+
+    public static void sayBeep() {
+        CompletableFuture.runAsync(() -> {
+            try {
+                Request.Post("https://api.iot.yandex.net/v1.0/scenarios/f2ddb649-62e7-4fe2-be01-23d477dd2974/actions")
+                        .setHeader("Authorization", "OAuth " + yandex.bearer)
+                        .execute();
+            } catch (IOException e) {
+                log.info("SAY ERROR");
+            }
+        });
+    }
+
+    public static void sayServerStart() {
+        try {
+            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/11ad405a-1b80-4031-ae7c-9bada79e276d/actions")
+                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+                    .execute();
+        } catch (IOException e) {
+            log.info("SAY ERROR");
+        }
+    }
+
+    public static void sayWait() {
+        try {
+            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/0e2c7cf4-3db9-416e-b17a-f6e2d501f257/actions")
+                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+                    .execute();
+        } catch (IOException e) {
+            log.info("SAY ERROR");
+        }
+    }
 }

@@ -6,7 +6,11 @@ import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.*;
+
+import static java.time.temporal.ChronoUnit.MINUTES;
 
 @Log4j2
 public class Main {
@@ -22,8 +26,11 @@ public class Main {
     public static Map<String, String> idRooms = new HashMap<>();
     public static List<String> rooms = new ArrayList<>();
     public static String tunnel;
+    public static ZoneId zoneId = ZoneId.of( "Europe/Minsk" );
 
     public static void main(String[] args) {
+        log.info("USER TIME ZONE: " + zoneId);
+        log.info("USER TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
         log.info("CONFIG FROM config.properties");
         log.info("LMS URL: " + lmsUrl);
         log.info("THIS PORT: " + port);
@@ -35,14 +42,15 @@ public class Main {
         }
         Utils.readIdRooms();
         Utils.writeConfig();
-        lmsPlayers.readPlayers();
+        lmsPlayers.read();
         lmsPlayers.updateServerStatus();
-        lmsPlayers.writePlayers();
+        lmsPlayers.write();
         SpotifyAuth.read();
         SpotifyAuth.callbackRequestRefresh();
         Yandex.read();
         Yandex.getRoomsAndDevices();
         JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
+        Yandex.sayServerStart();
         Server.start();
 //        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate);
     }

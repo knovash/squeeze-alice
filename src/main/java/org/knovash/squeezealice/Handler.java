@@ -29,9 +29,9 @@ public class Handler implements HttpHandler {
         String xRequestId = HandlerUtils.getHeaderValue(httpExchange, "X-request-id");
 //        log.info("XREQUESTID: " + xRequestId);
         String body = HandlerUtils.httpExchangeGetBody(httpExchange);
-        log.info("BODY: " + body);
+        if (body != null) log.info("BODY: " + body);
         String query = httpExchange.getRequestURI().getQuery();
-        log.info("QUERY: " + query);
+        if (query != null) log.info("QUERY: " + query);
 
         HashMap<String, String> queryMap = HandlerUtils.convertQueryToMap(query);
 
@@ -43,16 +43,13 @@ public class Handler implements HttpHandler {
         context.query = query;
         context.queryMap = queryMap;
 
-        log.info("SWITCH PATH: " + path);
+//        log.info("SWITCH PATH: " + path);
         switch (path) {
             case ("/"):
                 context = PageIndex.action(context);
                 break;
             case ("/players"):
                 context = PagePlayers.action(context);
-                break;
-            case ("/monitor"):
-                context = PageMonitor.action(context);
                 break;
             case ("/spotify"):
                 context = PageSpotify.action(context);
@@ -91,7 +88,6 @@ public class Handler implements HttpHandler {
                 context = SpotifyAuth.requestUserAuthorization(context);
                 break;
             case ("/spoti_callback"):
-                log.info("SPOTI CALLBACK");
                 context = SpotifyAuth.callback(context);
                 break;
             default:

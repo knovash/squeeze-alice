@@ -21,6 +21,7 @@ public class Spotify {
 
     public static PlayerState playerState = new PlayerState();
     public static CurrentlyPlaying currentlyPlaying = new CurrentlyPlaying();
+    public static Boolean active = false;
 
     public static String getLink(String target, Type type) {
         log.info("TARGET: " + target);
@@ -104,6 +105,24 @@ public class Spotify {
         SpotifyRequests.requestWithRetryPut(uri);
     }
 
+    public static void play() {
+        String uri = "https://api.spotify.com/v1/me/player/play";
+        log.info("SPOTIFY PLAY " + uri);
+        SpotifyRequests.requestWithRetryPut(uri);
+    }
+
+    public static void next() {
+        String uri = "https://api.spotify.com/v1/me/player/next";
+        log.info("SPOTIFY PLAY " + uri);
+        SpotifyRequests.requestWithRetryPost(uri);
+    }
+
+    public static void prev() {
+        String uri = "https://api.spotify.com/v1/me/player/previous";
+        log.info("SPOTIFY PLAY " + uri);
+        SpotifyRequests.requestWithRetryPost(uri);
+    }
+
     public static void volumeSetAbs(String value) {
         log.info("SPOTIFY VOLUME SET ABSOLUTE: " + value);
         String uri = "https://api.spotify.com/v1/me/player/volume?volume_percent=" + value;
@@ -141,10 +160,30 @@ public class Spotify {
         log.info("FINISH\n");
     }
 
+    public static void volumeGeneral(String value, Boolean relative) {
+        log.info("PLAYER NOT PLAYING");
+        if (Spotify.ifPlaying()) {
+            log.info("SPOTIFY IF PLAYING");
+            if (relative != null && relative.equals(true)) {
+                log.info("VOLUME rel: " + value);
+                if (value.contains("-")) {
+                    Spotify.volumeRelOrAbs(value);
+                } else {
+                    Spotify.volumeRelOrAbs("+" + value);
+                }
+            }
+            if (relative != null && relative.equals(false)) {
+                log.info("VOLUME abs: " + value);
+                Spotify.volumeRelOrAbs(value);
+            } else {
+                log.info("PLAYER PLAYING. SPOTY VOLUME SKIP");
+            }
+        }
+    }
+
     public static PlayerState requestPlayerState() {
-        log.info("");
         String uri = "https://api.spotify.com/v1/me/player/";
-        log.info("START PLAYER STATE " + uri);
+        log.info("PLAYER STATE " + uri);
         String json = requestWithRetryGet(uri);
         if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
@@ -155,10 +194,13 @@ public class Spotify {
     }
 
     public static Boolean ifPlaying() {
-        log.info("SPOTIFY IF PLAYING");
+//        log.info("SPOTIFY IF PLAYING");
         playerState = requestPlayerState();
-        if (playerState == null) return false;
-        log.info("SPOTIFY IS PLAYING: " + playerState.is_playing + "\n");
+        if (playerState == null) {
+            log.info("SPOTIFY NOT PLAYING");
+            return false;
+        }
+        log.info("SPOTIFY IS PLAYING");
         return playerState.is_playing;
     }
 
@@ -172,9 +214,10 @@ public class Spotify {
         String json;
         String uri = currentlyPlaying.context.uri;
         String type = currentlyPlaying.context.type;
-        log.info("SPOTY REQUEST BY TYPE: " + type);
+        log.info("SPOTY REQUEST BY TYPE: " + type + " URI: " + uri);
         if (type.equals("playlist")) {
-            id = uri.replaceAll("spotify:playlist:", "");
+            id = uri.replaceAll("spotify.*:", "");
+            log.info("SPOTY ID: " + id);
             uri = "https://api.spotify.com/v1/playlists/" + id;
             log.info("SPOTY REQUEST " + uri);
             json = requestWithRetryGet(uri);
@@ -184,7 +227,9 @@ public class Spotify {
             name = playerPlaylist.name;
         }
         if (type.equals("artist")) {
-            id = uri.replaceAll("spotify:artist:", "");
+//            id = uri.replaceAll("spotify:artist:", "");
+            id = uri.replaceAll("spotify.*:", "");
+            log.info("SPOTY ID: " + id);
             uri = "https://api.spotify.com/v1/artists/" + id;
             log.info("SPOTY REQUEST " + uri);
             json = requestWithRetryGet(uri);
@@ -194,7 +239,9 @@ public class Spotify {
             name = playerArtist.name;
         }
         if (type.equals("album")) {
-            id = uri.replaceAll("spotify:album:", "");
+//            id = uri.replaceAll("spotify:album:", "");
+            id = uri.replaceAll("spotify.*:", "");
+            log.info("SPOTY ID: " + id);
             uri = "https://api.spotify.com/v1/albums/" + id;
             log.info("SPOTY REQUEST " + uri);
             json = requestWithRetryGet(uri);
@@ -212,7 +259,8 @@ public class Spotify {
         requestCurrentlyPlaying();
         if (currentlyPlaying == null || !currentlyPlaying.is_playing) {
             log.info("SPOTIFY NOT PLAY. STOP TRANSFER");
-            return false;}
+            return false;
+        }
         log.info("RUN TRANSFER. TYPE: " + currentlyPlaying.context.type +
                 " TRACK NUMBER: " + currentlyPlaying.item.track_number +
                 " TITLE: " + currentlyPlaying.item.name);
@@ -222,7 +270,9 @@ public class Spotify {
         player.playPath(playingUri);
         player.waitFor(1000);
         player.pause();
-        Integer index = currentlyPlaying.item.track_number-1;
+        Integer index = currentlyPlaying.item.track_number - 1;
+
+        log.info("TYPE: " + currentlyPlaying.context.type);
 
         if (!currentlyPlaying.context.type.equals("album")) {
 
@@ -232,14 +282,17 @@ public class Spotify {
 //        Player.playerStatus.result.playlist_loop.stream()
 //                .forEach(playlistLoop -> log.info("-----" + playlistLoop.playlist_index + " " + playlistLoop.title + " = " + name));
             log.info("FILTER INDEX BY NAME: " + name);
-            PlaylistLoop playlistLoop = Player.playerStatus.result.playlist_loop.stream()
-                .peek(pl -> log.info("ALL: " + pl.playlist_index + " " + pl.title + " = " + name))
-                    .filter(pl -> pl.title.equals(name))
-                .peek(pl -> log.info("FILTER: " + pl.playlist_index + " " + pl.title + " = " + name))
-                    .findFirst()
-                    .orElse(null);
-            index = 0;
-            if (playlistLoop != null) index = playlistLoop.playlist_index;
+            log.info("LOOP: " + Player.playerStatus.result.playlist_loop);
+            if (Player.playerStatus.result.playlist_loop != null) {
+                PlaylistLoop playlistLoop = Player.playerStatus.result.playlist_loop.stream()
+                        .peek(pl -> log.info("ALL: " + pl.playlist_index + " " + pl.title + " = " + name))
+                        .filter(pl -> pl.title.equals(name))
+                        .peek(pl -> log.info("FILTER: " + pl.playlist_index + " " + pl.title + " = " + name))
+                        .findFirst()
+                        .orElse(null);
+                index = 0;
+                if (playlistLoop != null) index = playlistLoop.playlist_index;
+            }
         }
 
         log.info("INDEX: " + index + " TITLE: " + name);
