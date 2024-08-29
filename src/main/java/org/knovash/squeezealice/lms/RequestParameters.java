@@ -124,8 +124,8 @@ public class RequestParameters {
         return RequestToLms.create("", new String[]{"serverstatus", "name"});
     }
 
-    public static RequestToLms status(String player) {
+    public static RequestToLms status(String player, Integer tracks) {
 //        {"id": 1, "method": "slim.request", "params":["HomePod2", ["status", "1", "1"]]}
-        return RequestToLms.create(player, new String[]{"status", "0", "100"});
+        return RequestToLms.create(player, new String[]{"status", "0", String.valueOf(tracks)});
     }
 }

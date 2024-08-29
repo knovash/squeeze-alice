@@ -4,13 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.provider.YandexInfo;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 @Data
@@ -29,13 +25,6 @@ public class Device {
     public String skill_id;
     public String household_id;
     public List<String> groups;
-    public YandexInfo.QuasarInfo quasar_info;
+//    public YandexInfo.QuasarInfo quasar_info;
 
-    // TODO REMOVE BY  lmsPlayers.getPlayerNameByDeviceid(device.id);
-    public String takePlayerNameById() {
-        Player player = lmsPlayers.getPlayerByDeviceId(id);
-        if (player == null) return null;
-        log.info("GET BY ID PLAYER NAME: " + player.name);
-        return player.name;
-    }
 }

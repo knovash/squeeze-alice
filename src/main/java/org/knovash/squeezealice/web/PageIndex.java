@@ -29,8 +29,12 @@ public class PageIndex {
                 "<p><strong>Squeeze-Alice</strong></p> \n" +
 
                 "LMS: " + Main.lmsIp + ":" + Main.lmsPort + "<br>" +
-                "Devices: " + SmartHome.devices.size() + " " + SmartHome.devices.stream().map(device -> device.room + ":" + device.id + ":" + device.takePlayerNameById()).collect(Collectors.toList()) + "<br>" +
-                "Players: " + lmsPlayers.players.size() + " " + lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList()) + "</p>" +
+                "Yandex Devices: " + SmartHome.devices.size() + " " +
+                SmartHome.devices.stream().map(device -> device.id + " " + device.room + " "
+                                + lmsPlayers.getPlayerNameByDeviceId(device.id))
+                        .collect(Collectors.toList()) + "<br>" +
+                "LMS Players: " + lmsPlayers.players.size() + " " + lmsPlayers.players.stream().map(player -> player.name)
+                .collect(Collectors.toList()) + "</p>" +
 
                 "<p><a href=\\players>Настройка колонок</a></p> \n" +
                 "<p><a href=\\spotify>Настройка Spotify</a></p> \n" +
@@ -38,10 +42,10 @@ public class PageIndex {
                 "<p><a href=\\cmd?action=state_devices>Посмотреть настройки Devices</a></p> \n" +
                 "<p><a href=\\cmd?action=state_players>Посмотреть настройки Players</a></p> \n" +
 
-                "<p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
-                "<p><a href=\\cmd?action=reset_players>Reset players</a></p> \n" +
-                "<p><a href=\\cmd?action=restart>Restart server service</a></p> \n" +
-                "<p><a href=\\cmd?action=reboot>Reboot device</a></p> \n" +
+//                "<p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
+//                "<p><a href=\\cmd?action=reset_players>Reset players</a></p> \n" +
+//                "<p><a href=\\cmd?action=restart>Restart server service</a></p> \n" +
+//                "<p><a href=\\cmd?action=reboot>Reboot device</a></p> \n" +
                 "<p><b>" + "Комманды через навык:</b></p>" +
                 "<p>" +
                 "Алиса, скажи раз-два, что играет<br>" +

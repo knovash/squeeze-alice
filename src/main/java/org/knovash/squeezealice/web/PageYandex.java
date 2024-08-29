@@ -43,18 +43,6 @@ public class PageYandex {
                 "</div>" + "</form>" +
                 "<p></p>" +
 
-
-//                "<form action=\"/cmd\" method=\"get\">" + "<div>" +
-//                "<input name=\"client_id\" id=\"client_id\" value=\"" + yandex.clientId + "\"/>" +
-//                "<label for=\"client_id\"> client id</label>" + "</div>" + "<div>" + "<br>" +
-//                "<input name=\"client_secret\" id=\"client_secret\" value=\"" + yandex.clientSecret + "\"/>" +
-//                "<label for=\"client_secret\"> client secret</label>" + "</div>" +
-//                "<p>Yandex bearer token: " + yandex.bearer + "</p>" +
-//                "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"cred_yandex\">" + "<div>" +
-//                "<br><button>save</button>" +
-//                "</div>" + "</form>" +
-
-
                 "<p><a href=\"/\">Home</a></p>" +
                 "</body></html>";
         return page;

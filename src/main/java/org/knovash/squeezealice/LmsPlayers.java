@@ -11,13 +11,11 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 
-import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.knovash.squeezealice.Main.lmsPlayers;
-import static org.knovash.squeezealice.Main.silence;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 @Data
@@ -25,31 +23,20 @@ import static org.knovash.squeezealice.Main.silence;
 @AllArgsConstructor
 public class LmsPlayers {
 
-    //    public Integer counter;
     public List<Player> players;
     public List<String> playersNames = new ArrayList<>();
     public List<String> playersNamesOnLine = new ArrayList<>();
     public List<String> playersNamesOffLine = new ArrayList<>();
     public String lastPath;
     public int lastChannel = 1;
-    //    public String lastAliceId;
     public String btPlayerInQuery = "homepod";
     public String btPlayerName = "HomePod";
     public int delayUpdate = 5; // MINUTES
     public int delayExpire = 10; // MINUTES
     public static ServerStatusByName serverStatusByName = new ServerStatusByName();
 
-//    public void count() {
-//        Response response = Requests.postToLmsForResponse(RequestParameters.count().toString());
-//        if (response == null) {
-//            log.info("ERROR NO RESPONSE FROM LMS check that the server is running on http://" + lmsIp + ":" + lmsPort);
-//            lmsPlayers.counter = 0;
-//            return;
-//        }
-//        lmsPlayers.counter = Integer.parseInt(response.result._count);
-//    }
-
     public List<String> favorites() {
+        log.info("START");
         String playerName = lmsPlayers.players.get(0).name;
         Response response = Requests.postToLmsForResponse(RequestParameters.favorites(playerName, 10).toString());
         List<String> playlist = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
@@ -57,10 +44,10 @@ public class LmsPlayers {
     }
 
     public void updateServerStatus() {
-        log.info("UPDATE SERVER STATUS FROM LMS");
-        LocalTime time1 = LocalTime.now();
+//        log.info("UPDATE SERVER STATUS FROM LMS");
+        LocalTime time1 = LocalTime.now(zoneId);
         playersNames = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
-        log.info("PLAYERS NAMES: " + playersNames);
+//        log.info("PLAYERS: " + playersNames);
         playersNamesOffLine = new ArrayList<>();
         playersNamesOffLine.addAll(playersNames);
         playersNamesOnLine = new ArrayList<>();
@@ -72,7 +59,7 @@ public class LmsPlayers {
         log.info("SEARCH AND ADD NEW PLAYERS FROM LMS");
         if (serverStatusByName == null) return;
         serverStatusByName.result.players_loop.forEach(p -> updatePlayer(p));
-        log.info("PLAYERS ONLINE: " + lmsPlayers.playersNamesOnLine + " " + Duration.between(time1, LocalTime.now()));
+//        log.info("PLAYERS ONLINE: " + lmsPlayers.playersNamesOnLine + " " + Duration.between(time1, LocalTime.now(zoneId)));
     }
 
     public void updatePlayer(ServerStatusByName.PlayersLoop p) {
@@ -105,12 +92,12 @@ public class LmsPlayers {
 //                " PLAYING: " + p.isplaying);
     }
 
-    public void writePlayers() {
+    public void write() {
         log.info("WRITE FILE lms_players.json");
         JsonUtils.pojoToJsonFile(lmsPlayers, "lms_players.json");
     }
 
-    public void readPlayers() {
+    public void read() {
         log.info("READ LMS PLAYERS FROM lms_players.json");
         lmsPlayers.players = new ArrayList<>();
         LmsPlayers lp = JsonUtils.jsonFileToPojo("lms_players.json", LmsPlayers.class);
@@ -141,11 +128,11 @@ public class LmsPlayers {
     }
 
     public Player getPlayerByCorrectRoom(String room) {
-//        log.info("ROOM: " + room);
+        log.info("ROOM: " + room);
         Player player = new Player();
         Optional optionalPlayer = lmsPlayers.players.stream()
-//                .peek(p -> log.info("0: " + p.name + " " + p.room))
                 .filter(p -> (p.room != null))
+                .peek(p -> log.info("0: " + p.name + " " + p.room + " = " + room + " " + p.room.equals(room)))
                 .filter(p -> p.room.equals(room))
                 .filter(Objects::nonNull).findFirst();
         player = (Player) optionalPlayer.orElse(null);
@@ -155,7 +142,7 @@ public class LmsPlayers {
     }
 
     public Player getPlayerByNameInQuery(String name) {
-        log.info("NAME: " + name);
+//        log.info("NAME: " + name);
         if (name == null) return null;
         if (name.equals("btremote")) {
             log.info("BT PLAYER: " + btPlayerInQuery);
@@ -169,13 +156,13 @@ public class LmsPlayers {
     }
 
     public Player getPlayingPlayer(String exceptName) {
-        LocalTime time1 = LocalTime.now();
+        LocalTime time1 = LocalTime.now(zoneId);
         log.info("SEARCH FOR PLAYING. EXCEPT " + exceptName);
         lmsPlayers.updateServerStatus();
         Player playing = lmsPlayers.players.stream()
 //                .peek(p -> log.info("PLAYER: " + p.name + " SEPARATE: " + p.separate + " ONLINE: " + p.connected + " PLAYING: " + p.playing))
                 .filter(p -> !p.separate)
-                .filter(p -> p.connected)
+//                .filter(p -> p.connected)
                 .filter(p -> p.playing)
                 .filter(p -> !p.name.equals(exceptName))
                 .filter(p -> {
@@ -196,9 +183,7 @@ public class LmsPlayers {
         String room = parameters.get("room");
         String delay = parameters.get("delay");
         String schedule = parameters.get("schedule");
-
         Player player = lmsPlayers.getPlayerByCorrectName(name);
-
         player.delay = Integer.valueOf(delay);
         player.schedule = Utils.stringSplitToIntMap(schedule, ",", ":");
         log.info("PLAYER: " + player);
@@ -208,18 +193,10 @@ public class LmsPlayers {
         log.info("schedule: " + parameters.get("schedule"));
         log.info(Utils.stringSplitToIntMap(parameters.get("schedule"), ",", ":"));
 
-//        log.info("CHECK IF ROOM&DEVICE EXISTS IN SMARTHOME " + room);
-//        if (SmartHome.getDeviceByCorrectRoom(room) == null) {
-//            log.info("CREATE NEW DEVICE IN SMARTHOME ROOM: " + room);
-////            HashMap<String, String> parameters2 = new HashMap<>();
-////            parameters2.put("room", room);
-//            Device device = SmartHome.create(room, null);
-//        }
-
         SwitchVoiceCommand.room = room;
         SwitchVoiceCommand.selectPlayerByCorrectPlayer(name);
 
-        writePlayers();
+        write();
         return "OK";
     }
 
@@ -227,27 +204,18 @@ public class LmsPlayers {
         log.info("PARAMETERS: " + parameters);
         String name = parameters.get("name");
         Player player = lmsPlayers.getPlayerByCorrectName(name);
-        log.info("PLAYER FOR EDIT: " + player);
-        log.info("name: " + parameters.get("name"));
+        log.info("PLAYER REMOVE: " + player);
         lmsPlayers.players.remove(player);
-        writePlayers();
+        write();
         return "OK";
-    }
-
-    public void resetPlayers() {
-        lmsPlayers.players = new ArrayList<>();
-        SmartHome.devices = new LinkedList<>();
-        lmsPlayers.updateServerStatus();
-        lmsPlayers.writePlayers();
     }
 
     public List<String> getSeparatePlayers(Player excludePlayer) {
         log.info("TRY GET SEPARATED PLAYERS");
         lmsPlayers.updateServerStatus();
-//        log.info("GET SEPARATED PLAYERS");
         List<String> separatePlayers =
                 lmsPlayers.players.stream()
-//                        .peek(p -> log.info(p.name + " separate " + p.separate))
+                        .peek(p -> log.info(p.name + " separate " + p.separate))
                         .filter(p -> p.separate)
                         .filter(p -> !p.name.equals(excludePlayer.name))
 //                        .peek(p -> log.info(p.name + " filter separate " + p.separate))
@@ -272,5 +240,11 @@ public class LmsPlayers {
                 .findFirst().orElse(null);
         log.info("ID: " + id + " PLAYER: " + player);
         return player;
+    }
+
+    public String getPlayerNameByDeviceId(String id) {
+        Player player = getPlayerByDeviceId(id);
+        if (player == null) return "";
+        return player.name;
     }
 }

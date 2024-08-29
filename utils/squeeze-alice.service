@@ -7,9 +7,8 @@ After=network-online.target
 Type=simple
 User=root
 WorkingDirectory=/opt/squeeze-alice-1.0/
-Restart=yes
 Restart=always
-#RestartSec=5
+RestartSec=10
 ExecStart=java -jar /opt/squeeze-alice-1.0/squeeze-alice-1.0.jar
 [Install]
 WantedBy=multi-user.target

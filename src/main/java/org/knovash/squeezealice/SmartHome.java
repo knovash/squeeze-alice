@@ -9,15 +9,12 @@ import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Log4j2
 @Data
 public class SmartHome {
 
-    //    public static String user_id = "konstantin";
     public static List<Device> devices = new ArrayList<>();
 
     public static Device getDeviceById(int deviceId) {
@@ -32,15 +29,13 @@ public class SmartHome {
         log.info("SEARCH BY ROOM: " + room + " IN DEVICES: " + devices.size());
         Device device = devices.stream()
                 .filter(d -> (d.room != null))
-                .peek(p -> log.info("NOT NULL: " + p.room + " ID: " + p.id + " " + p.name))
                 .filter(d -> d.room.toLowerCase().equals(room.toLowerCase()))
-                .peek(p -> log.info("EQUALS: " + p.room + " ID: " + p.id + " " + p.name))
                 .findFirst().orElse(null);
         if (device == null) {
             log.info("NO DEVICE WITH ROOM: " + room);
             return null;
         }
-        log.info("DEVICE: " + device.room + " ID: " + device.id + " " + device.name);
+        log.info("DEVICE: " + device.room + " ID: " + device.id);
         return device;
     }
 

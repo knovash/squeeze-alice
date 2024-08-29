@@ -1,6 +1,7 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.spotify.Spotify;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
 
@@ -13,7 +14,7 @@ public class Actions {
         if (player.separate) {
             log.info("PLAYER IS SEPARATED - PLAY LAST");
             player.playLast(); // include last path & time
-            lmsPlayers.writePlayers();
+            lmsPlayers.write();
             return;
         }
         Player playing = lmsPlayers.getPlayingPlayer(player.name);
@@ -24,7 +25,7 @@ public class Actions {
             log.info("SYNC TO PLAYING " + playing);
             player.syncTo(playing.name); //.saveLastPath().saveLastTime();
         }
-        lmsPlayers.writePlayers();
+        lmsPlayers.write();
     }
 
     public static void turnOffMusic(Player player) {
@@ -34,12 +35,22 @@ public class Actions {
                 .pause()
                 .saveLastTime()
                 .saveLastPath();
-        lmsPlayers.writePlayers();
+        lmsPlayers.write();
     }
 
     public static String toggleMusic(Player player) {
-        log.info("START TOGGLE MUSIC PLAYER: " + player.name);
-        player.status(); // TODO двойной запрос состояния плеера
+        log.info("TOGGLE MUSIC PLAYER: " + player.name);
+        if (Spotify.ifPlaying()) {
+            Spotify.pause();
+            Spotify.active = true;
+            return "";
+        }
+        if (Spotify.active && !Spotify.ifPlaying()) {
+            Spotify.play();
+            Spotify.active = true;
+            return "";
+        }
+        player.status();
         String status;
         if (player.playing) {
             turnOffMusic(player);
@@ -48,11 +59,12 @@ public class Actions {
             turnOnMusic(player);
             status = player.name + " - Play - " + player.title;
         }
+        log.info("STATUS: " + status);
         return status;
     }
 
     public static String toggleMusicAll(Player player) {
-        player.status(); // TODO двойной запрос состояния плеера
+        player.status();
         String status;
         if (player.playing) {
             lmsPlayers.players.forEach(p -> turnOffMusic(p));
@@ -67,5 +79,37 @@ public class Actions {
     public static String stopMusicAll() {
         lmsPlayers.players.forEach(p -> turnOffMusic(p));
         return "All players - Stop";
+    }
+
+    public static String next(Player player) {
+        if (Spotify.ifPlaying()) {
+            Spotify.next();
+            return "Spotify - Next";
+        } else {
+            player.next().status(50);
+            return player.name + " - Next - " + player.title;
+        }
+    }
+
+    public static String prev(Player player) {
+        if (Spotify.ifPlaying()) {
+            Spotify.prev();
+            return "Spotify - Next";
+        } else {
+            player.prev().status(50);
+            return player.name + " - Prev - " + player.title;
+        }
+    }
+
+    public static void channel(Player player, String value, Boolean relative) {
+        int channel;
+        if (relative != null && relative.equals(true)) {
+            if (player.lastChannel != 0) channel = player.lastChannel + 1;
+            else channel = lmsPlayers.lastChannel + 1;
+        } else {
+            channel = Integer.parseInt(value);
+        }
+        player.playChannel(channel);
+        lmsPlayers.lastChannel = channel;
     }
 }
