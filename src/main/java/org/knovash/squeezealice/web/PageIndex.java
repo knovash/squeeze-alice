@@ -8,6 +8,7 @@ import org.knovash.squeezealice.SmartHome;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.Main.rooms;
 
 @Log4j2
 public class PageIndex {
@@ -28,13 +29,15 @@ public class PageIndex {
                 "<body> \n" +
                 "<p><strong>Squeeze-Alice</strong></p> \n" +
 
-                "LMS: " + Main.lmsIp + ":" + Main.lmsPort + "<br>" +
+                "LMS IP: " + Main.lmsIp + ":" + Main.lmsPort + "<br>" +
+                "Yandex Rooms: " + rooms + "<br>" +
                 "Yandex Devices: " + SmartHome.devices.size() + " " +
-                SmartHome.devices.stream().map(device -> device.id + " " + device.room + " "
-                                + lmsPlayers.getPlayerNameByDeviceId(device.id))
+                SmartHome.devices.stream().map(d ->
+                                d.id + ":" + d.room + ":" + lmsPlayers.getPlayerNameByDeviceId(d.id))
                         .collect(Collectors.toList()) + "<br>" +
                 "LMS Players: " + lmsPlayers.players.size() + " " + lmsPlayers.players.stream().map(player -> player.name)
                 .collect(Collectors.toList()) + "</p>" +
+
 
                 "<p><a href=\\players>Настройка колонок</a></p> \n" +
                 "<p><a href=\\spotify>Настройка Spotify</a></p> \n" +
@@ -46,24 +49,25 @@ public class PageIndex {
 //                "<p><a href=\\cmd?action=reset_players>Reset players</a></p> \n" +
 //                "<p><a href=\\cmd?action=restart>Restart server service</a></p> \n" +
 //                "<p><a href=\\cmd?action=reboot>Reboot device</a></p> \n" +
-                "<p><b>" + "Комманды через навык:</b></p>" +
+                "<p><b>" + "Комманды:</b></p>" +
                 "<p>" +
-                "Алиса, скажи раз-два, что играет<br>" +
-                "Алиса, скажи раз-два, включи {исполнитель} - включит исполнителя из Spotify<br>" +
-                "Алиса, скажи раз-два, Spotify - Spotify transfer на колонку в комнате<br>" +
-                "Алиса, скажи раз-два, канал {название} - включит закладку в избранном LMS<br>" +
-                "Алиса, скажи раз-два, дальше - следущий трек плейлиста или закладка в избранном<br>" +
-                "Алиса, скажи раз-два, отдельно - отключит колонку от группы<br>" +
-                "Алиса, скажи раз-два, только тут - отключит все остальные колонки<br>" +
-                "Алиса, скажи раз-два, вместе - подключить колонку в группу<br>" +
-                "Алиса, скажи раз-два, добавь в избранное - добавит закладку в избранное LMS</p>" +
-
-                "<br>" +
-                "Алиса, скажи раз-два, это комната {название комнаты} - связать Алису и комнату<br>" +
-                "Алиса, скажи раз-два, включи колонку {название в LMS} - связать колонку и комнату<br>" +
-                "Алиса, скажи раз-два, где пульт<br>" +
-                "Алиса, скажи раз-два, включи пульт - связать пульт и колонку в комнате<br>" +
-
+                "Алиса, что играет<br>" +
+                "Алиса, включи музыку<br>" +
+                "Алиса, выключи музыку<br>" +
+                "Алиса, громче<br>" +
+                "Алиса, музыку громче на 5<br>" +
+                "Алиса, канал 4<br>" +
+                "Алиса, переключи канал<br>" +
+                "Алиса, скажи раз-два, включи Кровосток<br>" +
+                "Алиса, дальше<br>" +
+                "Алиса, скажи раз-два, добавь в избранное<br>" +
+                "Алиса, переключи музыку сюда<br>" +
+                "Алиса, включи отдельно<br>" +
+                "Алиса, включи только тут<br>" +
+                "Алиса, включи вместе<br>" +
+                "Алиса, скажи раз-два, выбери колонку Радиотехника<br>" +
+                "Алиса, где пульт<br>" +
+                "Алиса, включи пульт <br>" +
                 "<p></p>" +
                 "</body>\n" +
                 "</html>";

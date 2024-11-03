@@ -176,12 +176,13 @@ public class Yandex {
     }
 
     public static void sayWait() {
-        try {
-            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/0e2c7cf4-3db9-416e-b17a-f6e2d501f257/actions")
-                    .setHeader("Authorization", "OAuth " + yandex.bearer)
-                    .execute();
-        } catch (IOException e) {
-            log.info("SAY ERROR");
-        }
+//        log.info("SAY WAIT");
+//        try {
+//            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/0e2c7cf4-3db9-416e-b17a-f6e2d501f257/actions")
+//                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+//                    .execute();
+//        } catch (IOException e) {
+//            log.info("SAY ERROR");
+//        }
     }
 }

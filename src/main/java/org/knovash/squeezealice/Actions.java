@@ -10,10 +10,11 @@ public class Actions {
 
     public static void turnOnMusic(Player player) {
         log.info("TURN ON MUSIC PLAYER: " + player.name);
-        player.ifNotPlayUnsyncWakeSet();
+//        CompletableFuture.runAsync(() -> {
+        player.ifExpiredOrNotPlayUnsyncWakeSet();
         if (player.separate) {
             log.info("PLAYER IS SEPARATED - PLAY LAST");
-            player.playLast(); // include last path & time
+            player.playLast();
             lmsPlayers.write();
             return;
         }
@@ -21,11 +22,13 @@ public class Actions {
         if (playing == null) {
             log.info("NO PLAYING. PLAY LAST");
             player.playLast();
+//                player.syncAllOtherPlayingToThis();
         } else {
             log.info("SYNC TO PLAYING " + playing);
             player.syncTo(playing.name); //.saveLastPath().saveLastTime();
         }
         lmsPlayers.write();
+//        });
     }
 
     public static void turnOffMusic(Player player) {
@@ -38,78 +41,85 @@ public class Actions {
         lmsPlayers.write();
     }
 
-    public static String toggleMusic(Player player) {
+    public static String queryToggleMusic(Player player) {
         log.info("TOGGLE MUSIC PLAYER: " + player.name);
-        if (Spotify.ifPlaying()) {
-            Spotify.pause();
-            Spotify.active = true;
-            return "";
-        }
-        if (Spotify.active && !Spotify.ifPlaying()) {
-            Spotify.play();
-            Spotify.active = true;
-            return "";
-        }
+//        if (Spotify.ifPlaying()) {
+//            Spotify.pause();
+//            Spotify.active = true;
+//            return "";
+//        }
         player.status();
         String status;
         if (player.playing) {
-            turnOffMusic(player);
+            player.turnOffMusic();
+            player.status();
+            player.title();
             status = player.name + " - Stop - " + player.title;
         } else {
-            turnOnMusic(player);
+            player.turnOnMusic()
+                    .syncAllOtherPlayingToThis();
+            player.status();
+            player.title();
             status = player.name + " - Play - " + player.title;
         }
         log.info("STATUS: " + status);
         return status;
     }
 
-    public static String toggleMusicAll(Player player) {
+    public static String queryToggleMusicAll(Player player) {
         player.status();
         String status;
         if (player.playing) {
-            lmsPlayers.players.forEach(p -> turnOffMusic(p));
+            lmsPlayers.players.forEach(p -> p.turnOffMusic());
             status = "All players - Stop";
         } else {
-            turnOnMusic(player);
+            player.turnOnMusic().syncAllOtherPlayingToThis();
             status = "All players - Play";
         }
         return status;
     }
 
-    public static String stopMusicAll() {
-        lmsPlayers.players.forEach(p -> turnOffMusic(p));
+    public static String queryStopMusicAll() {
+        log.info("STOP ALL");
+        lmsPlayers.updateServerStatus();
+        lmsPlayers.players.stream()
+                .filter(player -> player.connected)
+                .peek(p -> log.info(p.name + " " + p.connected))
+                .forEach(p -> p.turnOffMusic());
         return "All players - Stop";
     }
 
-    public static String next(Player player) {
-        if (Spotify.ifPlaying()) {
-            Spotify.next();
-            return "Spotify - Next";
-        } else {
+    public static String queryNext(Player player) {
+//        if (Spotify.ifPlaying()) {
+//            Spotify.next();
+//            return "Spotify - Next";
+//        } else {
             player.next().status(50);
             return player.name + " - Next - " + player.title;
-        }
+//        }
     }
 
-    public static String prev(Player player) {
-        if (Spotify.ifPlaying()) {
-            Spotify.prev();
-            return "Spotify - Next";
-        } else {
+    public static String queryPrev(Player player) {
+//        if (Spotify.ifPlaying()) {
+//            Spotify.prev();
+//            return "Spotify - Next";
+//        } else {
             player.prev().status(50);
             return player.name + " - Prev - " + player.title;
-        }
+//        }
     }
 
-    public static void channel(Player player, String value, Boolean relative) {
-        int channel;
-        if (relative != null && relative.equals(true)) {
-            if (player.lastChannel != 0) channel = player.lastChannel + 1;
-            else channel = lmsPlayers.lastChannel + 1;
-        } else {
-            channel = Integer.parseInt(value);
-        }
-        player.playChannel(channel);
-        lmsPlayers.lastChannel = channel;
-    }
+
+
+//    public static void providerChannelPlay(Player player, String value, Boolean relative) {
+//        log.info("CANNEL: " + value + " RELATIVE: " + relative);
+//        int channel;
+//        if (relative != null && relative.equals(true)) {
+//            if (player.lastChannel != 0) channel = player.lastChannel + 1;
+//            else channel = lmsPlayers.lastChannel + 1;
+//        } else {
+//            channel = Integer.parseInt(value);
+//        }
+//        queryChannelPlay(player, String.valueOf(channel));
+//    }
 }

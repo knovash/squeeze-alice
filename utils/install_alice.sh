@@ -5,7 +5,7 @@ echo "START INSTALL ALICE"
 
 sudo systemctl stop squeeze-alice.service
 sleep 1
-rm -r /opt/squeeze-alice*
+#rm -r /opt/squeeze-alice*
 cd /root
 sudo tar xzvf squeeze-alice-1.0.tar.gz -C /opt/
 

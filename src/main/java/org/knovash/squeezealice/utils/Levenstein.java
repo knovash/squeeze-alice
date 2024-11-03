@@ -46,7 +46,7 @@ public class Levenstein {
 //        log.info("START " + val);
         if (Utils.isCyrillic(word1) && !Utils.isCyrillic(word2)) word1 = Utils.convertCyrilic(word1);
         int d = dist(word1.toLowerCase().toCharArray(), word2.toLowerCase().toCharArray());
-        log.info(word1 + " & " + word2 + " DISTANCE: " + d);
+//        log.info(word1 + " & " + word2 + " DISTANCE: " + d);
         if (d < filalDistance) {
             filalDistance = d;
             finalElement = word2;
@@ -62,16 +62,16 @@ public class Levenstein {
     }
 
     public static String getNearestElementInListWord(String value, List<String> list) {
-        log.info("SEARCH: '" + value + "' IN: " + list);
+//        log.info("SEARCH: '" + value + "' IN: " + list);
         filalDistance = 100;
         list.stream().forEach(name -> Levenstein.getDistanceWordAndWord(value, name));
         if (filalDistance > 2) finalElement = null;
-        log.info("RESULT: " + finalElement + " DISTANCE: " + filalDistance);
+//        log.info("RESULT: " + finalElement + " DISTANCE: " + filalDistance);
         return finalElement;
     }
 
     public static String search(String text, List<String> list) {
-        log.info("TEXT: " + text);
+        log.info("SEARCH TEXT: " + text + " IN: " + list);
 
         List<String> words = Stream.of(text.split(" "))
                 .filter(w -> w != "")
@@ -79,13 +79,13 @@ public class Levenstein {
                 .filter(w -> !(w.length() < 3))
                 .collect(Collectors.toList());
 
-        log.info("WORDS: " + words + " SIZE: " + words.size());
+//        log.info("WORDS: " + words + " SIZE: " + words.size());
         String result = null;
         result = words.stream()
                 .map(w -> Levenstein.getNearestElementInListWord(w, list))
                 .filter(w -> w != null)
                 .findFirst().orElse(null);
-        log.info("RESULT: " + result);
+//        log.info("RESULT: " + result);
 
         if (result == null)
             result = words.stream()

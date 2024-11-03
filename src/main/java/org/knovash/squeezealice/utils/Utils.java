@@ -5,6 +5,8 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
+import org.knovash.squeezealice.provider.Yandex;
+import org.knovash.squeezealice.provider.YandexInfo;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -231,7 +233,7 @@ public class Utils {
 //        log.info("START " + message);
         String result = message.replace("дж", "j")
                 .replace("у", "oo");
-        char[] abcCyr =   {' ', 'а', 'б', 'в', 'г', 'д', 'ѓ', 'е', 'ж',  'з', 'ѕ', 'и', 'ј', 'к', 'л', 'љ', 'м', 'н', 'њ', 'о', 'п', 'р', 'с', 'т', 'ќ', 'у', 'ф', 'х', 'ц', 'ч',  'џ', 'ш', 'э', 'ю', 'я', 'А', 'Б', 'В', 'Г', 'Д', 'Ѓ', 'Е', 'Ж',  'З', 'Ѕ', 'И', 'Ј', 'К', 'Л', 'Љ', 'М', 'Н', 'Њ', 'О', 'П', 'Р', 'С', 'Т', 'Ќ',  'У', 'Ф', 'Х', 'Ц', 'Ч', 'Џ', 'Ш', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '/', '-'};
+        char[] abcCyr = {' ', 'а', 'б', 'в', 'г', 'д', 'ѓ', 'е', 'ж', 'з', 'ѕ', 'и', 'ј', 'к', 'л', 'љ', 'м', 'н', 'њ', 'о', 'п', 'р', 'с', 'т', 'ќ', 'у', 'ф', 'х', 'ц', 'ч', 'џ', 'ш', 'э', 'ю', 'я', 'А', 'Б', 'В', 'Г', 'Д', 'Ѓ', 'Е', 'Ж', 'З', 'Ѕ', 'И', 'Ј', 'К', 'Л', 'Љ', 'М', 'Н', 'Њ', 'О', 'П', 'Р', 'С', 'Т', 'Ќ', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Џ', 'Ш', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '/', '-'};
         String[] abcLat = {" ", "a", "b", "v", "g", "d", "]", "e", "zh", "z", "y", "i", "j", "k", "l", "q", "m", "n", "w", "o", "p", "r", "s", "t", "'", "u", "f", "h", "c", "ch", "x", "{", "e", "u", "y", "A", "B", "V", "G", "D", "}", "E", "Zh", "Z", "Y", "I", "J", "K", "L", "Q", "M", "N", "W", "O", "P", "R", "S", "T", "KJ", "U", "F", "H", "C", ":", "X", "{", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "/", "-"};
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < result.length(); i++) {
@@ -301,7 +303,6 @@ public class Utils {
         JsonUtils.mapToJsonFile(config, "config.json");
     }
 
-
     public static void readIdRooms() {
         log.info("READ ROOMS FROM rooms.json");
         idRooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
@@ -311,5 +312,44 @@ public class Utils {
             return;
         }
         log.info("ROOMS: " + Main.idRooms);
+    }
+
+    public static String widget() {
+        log.info("WIDGET");
+        Yandex.getRoomsAndDevices();
+        YandexInfo.Device ddd = Yandex.yandexInfo.devices.stream()
+                .filter(device -> device.name.equals("душ"))
+                .filter(device -> device.type.equals("devices.types.sensor"))
+                .peek(device -> log.info(device.name + " " + device.properties.get(0).state.value))
+                .findFirst()
+                .orElse(null);
+        log.info(ddd);
+
+        return ddd.properties.get(0).state.value.toString();
+
+    }
+
+    public static String getCorrectRoomName(String approxRoomName) {
+        log.info("GET CORRECT ROOM NAME BY: " + approxRoomName);
+//        String correctRoom = Levenstein.getNearestElementInList(target, rooms);
+        String correctRoom = Levenstein.search(approxRoomName, rooms);
+        if (correctRoom == null) {
+            log.info("ERROR ROOM NOT EXISTS IN YANDEX SMART HOME " + approxRoomName);
+            return null;
+        }
+        log.info("CORRECT ROOM: " + approxRoomName + " -> " + correctRoom);
+        return correctRoom;
+    }
+
+    public static String getCorrectPlayerName(String player) {
+        log.info("START: " + player);
+        List<String> players = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
+        player = Utils.convertCyrilic(player);
+//        String correctPlayer = Levenstein.getNearestElementInList(player, players);
+        String correctPlayer = Levenstein.getNearestElementInListWord(player, players);
+//        String correctPlayer = Levenstein.search(player, players);
+        if (correctPlayer == null) log.info("ERROR PLAYER NOT EXISTS IN LMS ");
+        log.info("CORRECT PLAYER: " + player + " -> " + correctPlayer);
+        return correctPlayer;
     }
 }
