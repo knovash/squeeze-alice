@@ -22,6 +22,8 @@ public class Spotify {
     public static PlayerState playerState = new PlayerState();
     public static CurrentlyPlaying currentlyPlaying = new CurrentlyPlaying();
     public static Boolean active = false;
+    public static String lastPath;
+    public static String lastTitle;
 
     public static String getLink(String target, Type type) {
         log.info("TARGET: " + target);
@@ -89,14 +91,66 @@ public class Spotify {
     public static void requestCurrentlyPlaying() {
         String uri = "https://api.spotify.com/v1/me/player/currently-playing";
         log.info("SPOTIFY REQUEST CURRENTLY PLAYING " + uri);
+        log.info("REQUEST TRY");
         String json = requestWithRetryGet(uri);
-//        log.info("JSON " + json);
+        log.info("REQUEST OK");
+        log.info("JSON " + json);
         if (json == null) {
+            log.info("JSON NULL");
             currentlyPlaying = null;
             return;
         }
+        log.info("REPLACE TRY");
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
+        log.info("REPLACE OK");
         currentlyPlaying = JsonUtils.jsonToPojo(json, CurrentlyPlaying.class);
+        log.info("CURRENT OK");
+    }
+
+    public static String getNameById(String id) {
+        log.info("ID: " + id);
+        String name = "";
+        if (id.contains("album")) {
+            log.info("ALBUM");
+            id = id.replace("spotify:album:", "");
+            String uri = "https://api.spotify.com/v1/albums/" + id + "?fields=name,artists.name";
+            log.info("URI: " + uri);
+            String json = requestWithRetryGet(uri);
+            log.info("JSON: " + json);
+            if (json == null) {
+                return null;
+            }
+            AlbumsArtistTitle albumsArtistTitle = JsonUtils.jsonToPojo(json, AlbumsArtistTitle.class);
+            String artistName = albumsArtistTitle.artists.get(0).name;
+            String albumName = albumsArtistTitle.name;
+            name = artistName + " - " + albumName;
+        }
+        if (id.contains("artist")) {
+            log.info("ARTIST");
+            id = id.replace("spotify:artist:", "");
+            String uri = "https://api.spotify.com/v1/artists/" + id + "?fields=name";
+            log.info("URI: " + uri);
+            String json = requestWithRetryGet(uri);
+            log.info("JSON: " + json);
+            if (json == null) {
+                return null;
+            }
+            name = JsonUtils.jsonGetValue(json, "name");
+        }
+        if (id.contains("playlist")) {
+            log.info("PLAYLIST");
+            id = id.replace("spotify:playlist:", "");
+            String uri = "https://api.spotify.com/v1/playlists/" + id + "?fields=name";
+            log.info("URI: " + uri);
+            String json = requestWithRetryGet(uri);
+            log.info("JSON: " + json);
+            if (json == null) {
+                return null;
+            }
+            name = JsonUtils.jsonGetValue(json, "name");
+        }
+        log.info("NAME: " + name);
+        return name;
     }
 
     public static void pause() {
@@ -162,29 +216,30 @@ public class Spotify {
 
     public static void volumeGeneral(String value, Boolean relative) {
         log.info("PLAYER NOT PLAYING");
-        if (Spotify.ifPlaying()) {
-            log.info("SPOTIFY IF PLAYING");
-            if (relative != null && relative.equals(true)) {
-                log.info("VOLUME rel: " + value);
-                if (value.contains("-")) {
-                    Spotify.volumeRelOrAbs(value);
-                } else {
-                    Spotify.volumeRelOrAbs("+" + value);
-                }
-            }
-            if (relative != null && relative.equals(false)) {
-                log.info("VOLUME abs: " + value);
+//        if (Spotify.ifPlaying()) {
+        log.info("SPOTIFY IF PLAYING");
+        if (relative != null && relative.equals(true)) {
+            log.info("VOLUME rel: " + value);
+            if (value.contains("-")) {
                 Spotify.volumeRelOrAbs(value);
             } else {
-                log.info("PLAYER PLAYING. SPOTY VOLUME SKIP");
+                Spotify.volumeRelOrAbs("+" + value);
             }
         }
+        if (relative != null && relative.equals(false)) {
+            log.info("VOLUME abs: " + value);
+            Spotify.volumeRelOrAbs(value);
+        } else {
+            log.info("PLAYER PLAYING. SPOTY VOLUME SKIP");
+        }
+//        }
     }
 
     public static PlayerState requestPlayerState() {
         String uri = "https://api.spotify.com/v1/me/player/";
         log.info("PLAYER STATE " + uri);
         String json = requestWithRetryGet(uri);
+        log.info(json);
         if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         PlayerState playerState = JsonUtils.jsonToPojo(json, PlayerState.class);
@@ -257,28 +312,42 @@ public class Spotify {
     public static Boolean transfer(Player player) {
         log.info("SPOTIFY TRANSFER TO " + player.name);
         requestCurrentlyPlaying();
+        log.info("PLAY OK " + currentlyPlaying + " " + currentlyPlaying.is_playing);
         if (currentlyPlaying == null || !currentlyPlaying.is_playing) {
             log.info("SPOTIFY NOT PLAY. STOP TRANSFER");
             return false;
         }
-        log.info("RUN TRANSFER. TYPE: " + currentlyPlaying.context.type +
-                " TRACK NUMBER: " + currentlyPlaying.item.track_number +
-                " TITLE: " + currentlyPlaying.item.name);
-        String name = currentlyPlaying.item.name;
-        String playingUri = currentlyPlaying.context.uri;
-        player.ifNotPlayUnsyncWakeSet();
+        String name;
+        String playingUri;
+        if (currentlyPlaying.context == null) {
+            log.info("CONTEXT NULL");
+            log.info(" TITLE: " + currentlyPlaying.item.name);
+            log.info("RUN TRANSFER. TYPE: " + currentlyPlaying.item.type);
+            name = currentlyPlaying.item.name;
+            playingUri = currentlyPlaying.item.uri;
+        } else {
+            log.info("CONTEXT OK");
+            log.info(" TITLE: " + currentlyPlaying.item.name);
+            log.info("RUN TRANSFER. TYPE: " + currentlyPlaying.context.type);
+            log.info(" TRACK NUMBER: " + currentlyPlaying.item.track_number);
+            name = currentlyPlaying.item.name;
+            playingUri = currentlyPlaying.context.uri;
+        }
+        lastPath = playingUri;
+        lastTitle = Spotify.getNameById(lastPath);
+        log.info("LAST PATH: " + lastPath);
+        log.info("LAST TITLE: " + lastTitle);
+        player.ifExpiredOrNotPlayUnsyncWakeSet();
         player.playPath(playingUri);
         player.waitFor(1000);
         player.pause();
         Integer index = currentlyPlaying.item.track_number - 1;
-
         log.info("TYPE: " + currentlyPlaying.context.type);
-
         if (!currentlyPlaying.context.type.equals("album")) {
-
             log.info("PLAYER STATUS FOR PLAYLIST");
             player.waitFor(3000);
             player.status();
+            player.title();
 //        Player.playerStatus.result.playlist_loop.stream()
 //                .forEach(playlistLoop -> log.info("-----" + playlistLoop.playlist_index + " " + playlistLoop.title + " = " + name));
             log.info("FILTER INDEX BY NAME: " + name);
@@ -294,10 +363,9 @@ public class Spotify {
                 if (playlistLoop != null) index = playlistLoop.playlist_index;
             }
         }
-
         log.info("INDEX: " + index + " TITLE: " + name);
         player.playTrackNumber(String.valueOf(index));
-//        player.syncAllOtherPlayingToThis();
+        player.syncAllOtherPlayingToThis();
         Utils.sleep(5);
         Spotify.pause();
         return true;

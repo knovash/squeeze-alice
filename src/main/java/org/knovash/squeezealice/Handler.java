@@ -25,7 +25,7 @@ public class Handler implements HttpHandler {
         String host = HandlerUtils.getHeaderValue(httpExchange, "Host");
         log.info("REQUEST: " + method + " " + "http://" + host + path);
         Headers headers = httpExchange.getRequestHeaders();
-//        log.info("HEADERS: " + headers.entrySet());
+        log.info("HEADERS: " + headers.entrySet());
         String xRequestId = HandlerUtils.getHeaderValue(httpExchange, "X-request-id");
 //        log.info("XREQUESTID: " + xRequestId);
         String body = HandlerUtils.httpExchangeGetBody(httpExchange);

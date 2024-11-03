@@ -7,11 +7,16 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{HH:mm:ss} %c.%method] - %msg%n"/>
         </Console>
+        <File name="File2" fileName="${sys:user.home}/log_voice.txt" append="true">
+            <PatternLayout pattern="[%d{YYYY.MM.dd HH:mm:ss} %c.%method] - %msg%n"/>
+        </File>
     </Appenders>
     <Loggers>
         <Root level="info">
-            <AppenderRef ref="Console"/>
-            <AppenderRef ref="File"/>
+            <AppenderRef ref="Console" level="info"/>
+            <AppenderRef ref="File" level="info"/>
+            <AppenderRef ref="File2" level="error"/>
         </Root>
+
     </Loggers>
 </Configuration>

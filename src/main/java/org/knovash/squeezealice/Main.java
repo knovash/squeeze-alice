@@ -35,6 +35,9 @@ public class Main {
         log.info("LMS URL: " + lmsUrl);
         log.info("THIS PORT: " + port);
         log.info("SILENCE: " + silence);
+        log.info("OS: " + System.getProperty("os.name") + ", USER DIRECTORY: " + System.getProperty("user.home"));
+        System.setProperty("userApp.root", System.getProperty("user.home"));
+        log.info("SILENCE: " + System.getProperty("userApp.root"));
         Utils.readConfig();
         if (!Utils.checkLmsIp(lmsIp)) {
             log.info("WRONG LMS IP. RUN SEARCH LMS IP");
@@ -50,8 +53,10 @@ public class Main {
         Yandex.read();
         Yandex.getRoomsAndDevices();
         JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
-        Yandex.sayServerStart();
+//        Yandex.sayServerStart();
         Server.start();
 //        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate);
     }
+
+
 }

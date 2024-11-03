@@ -81,7 +81,7 @@ public class RequestParameters {
     }
 
     public static RequestToLms syncgroups() {
-        return RequestToLms.create("", new String[]{"syncgroups", "?"});
+            return RequestToLms.create("", new String[]{"syncgroups", "?"});
     }
 
     public static RequestToLms unsync(String player) {
