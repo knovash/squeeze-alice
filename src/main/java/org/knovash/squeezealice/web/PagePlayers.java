@@ -50,6 +50,13 @@ public class PagePlayers {
                 "<button>save</button></form>" + "<br>" +
 
                 "<form action=\"/cmd\" method=\"get\">" +
+                "<label for=\"autoremote_value\">AutoRemote URL</label>" + "<br>" +
+                "<label for=\"autoremote_value\">https://autoremotejoaomgcd.appspot.com/sendmessage?key=...&message=re</label>" + "<br>" +
+                "<input                 name=\"autoremote_value\" value= \"" + lmsPlayers.autoRemoteRefresh + "\" />" + "<br>" +
+                "<input type=\"hidden\" name=\"action\"             value= \"autoremote_save\">" +
+                "<button>save</button></form>" + "<br>" +
+
+                "<form action=\"/cmd\" method=\"get\">" +
                 "<label for=\"alt_sync_value\">Синхронизация альтернативная. Если di.fm работает нормально должно быть false</label><br>" +
                 "<select name=\"alt_sync_value\">" +
                 "<option value=" + lmsPlayers.syncAlt + ">" + lmsPlayers.syncAlt + "</option>" +

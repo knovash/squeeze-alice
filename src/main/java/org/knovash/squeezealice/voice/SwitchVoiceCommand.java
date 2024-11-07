@@ -248,7 +248,8 @@ public class SwitchVoiceCommand {
         if (start) {
             CompletableFuture.runAsync(() -> {
                 log.info("TURN ON NEW PLAYER " + playerNew.name);
-                Actions.turnOnMusic(playerNew);
+//                Actions.turnOnMusic(playerNew);
+                playerNew.turnOnMusic();
                 if (playerNow != null) {
                     log.info("STOP CURRENT PLAYER " + playerNow.name);
                     playerNow.unsync().pause();
@@ -257,19 +258,6 @@ public class SwitchVoiceCommand {
         }
         return playerNew;
     }
-
-//    public static String correctRoomName(String target) {
-//        log.info("START: " + target);
-////        String correctRoom = Levenstein.getNearestElementInList(target, rooms);
-//        String correctRoom = Levenstein.search(target, rooms);
-//        if (correctRoom == null) {
-//            log.info("ERROR ROOM NOT EXISTS IN YANDEX SMART HOME " + target);
-//            return null;
-//        }
-////        room = correctRoom;
-//        log.info("CORRECT ROOM: " + target + " -> " + correctRoom);
-//        return correctRoom;
-//    }
 
     public static String correctPlayerName(String player) {
         log.info("START: " + player);
@@ -347,7 +335,9 @@ public class SwitchVoiceCommand {
         if (player.status() == null) return "медиасервер не работает";
         player.title();
         String title = player.title;
-        if (player.playerStatus.result.player_connected == 0)
+
+        if (player.connected)
+//        if (player.playerStatus.result.player_connected == 0)
             return "плеер " + player.name + "  не подключен к медиасерверу";
         if (title == null) return "медиасервер не отвечает";
         log.info("TITLE: " + title);

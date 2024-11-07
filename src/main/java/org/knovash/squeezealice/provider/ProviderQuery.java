@@ -17,7 +17,6 @@ public class ProviderQuery {
 
     private static Player player;
 
-
     public static Context action(Context context) {
         String body = context.body;
         String xRequestId = context.xRequestId;

@@ -61,11 +61,11 @@ public class Player {
         this.volume_high = 25;
         this.delay = 10000;
         this.schedule = new HashMap<>(Map.of(
-                0, 5,
-                7, 5,
-                9, 10,
-                20, 10,
-                22, 5));
+                0, 10,
+                7, 15,
+                9, 20,
+                20, 15,
+                22, 10));
     }
 
     public static String name(String index) {
@@ -235,7 +235,7 @@ public class Player {
         return this;
     }
 
-    public void volumeRelativeOrAbsolute(String value, Boolean relative) {
+    public String volumeRelativeOrAbsolute(String value, Boolean relative) {
         log.info("PLAYER: " + this.name + " VOLUME: " + value + " RELATIVE: " + relative);
 //        if (Spotify.ifPlaying()) {
 //            Spotify.volumeGeneral(value, relative);
@@ -251,25 +251,60 @@ public class Player {
         if (relative != null && relative.equals(false)) {
             this.volumeSet(value);
         }
+        log.info("VOLUME " + this.volume);
+        return this.name + "-" + this.volume;
     }
 
     public Player play() {
         log.info("PLAYER: " + this.name + " PLAY");
         Spotify.active = false;
-        log.info("PLAY");
         Requests.postToLmsForStatus(RequestParameters.play(this.name).toString());
         return this;
     }
 
     public Player turnOnMusic() {
         Spotify.active = false;
-        Actions.turnOnMusic(this);
+
+//        Actions.turnOnMusic(this);
+
+        log.info("TURN ON MUSIC PLAYER: " + this.name);
+//        CompletableFuture.runAsync(() -> {
+        this.ifExpiredOrNotPlayUnsyncWakeSet();
+        if (this.separate) {
+            log.info("PLAYER IS SEPARATED - PLAY LAST");
+            this.playLast();
+            lmsPlayers.write();
+            return this;
+        }
+        Player playing = lmsPlayers.getPlayingPlayer(this.name);
+        if (playing == null) {
+            log.info("NO PLAYING. PLAY LAST");
+            this.playLast();
+//                player.syncAllOtherPlayingToThis();
+        } else {
+            log.info("SYNC TO PLAYING " + playing);
+            this.syncTo(playing.name); //.saveLastPath().saveLastTime();
+        }
+        lmsPlayers.write();
+//        });
+        Requests.autoRemoteRefresh();
+
         return this;
     }
 
     public Player turnOffMusic() {
         Spotify.active = false;
         Actions.turnOffMusic(this);
+        return this;
+    }
+
+    public Player stop() {
+        Spotify.active = false;
+        this
+                .unsync()
+                .pause()
+                .saveLastTime()
+                .saveLastPath();
         return this;
     }
 
@@ -535,7 +570,7 @@ public class Player {
         log.info("");
         log.info("WAKE START >>>");
         log.info("PLAYER: " + this.name + " WAIT: " + this.delay);
-        Yandex.sayWait();
+        Yandex.runScenario("музыка подождите");
         this
                 .playSilence()
                 .volumeSet("+1")
@@ -562,17 +597,16 @@ public class Player {
         String thisLastPath = this.lastPath;
         String commonLastPath = lmsPlayers.lastPath;
         String lastPath;
-        log.info("THIS PATH: " + thisPath);
-        log.info("THIS LAST PATH: " + thisLastPath);
-        log.info("TRY GLOBAL LAST PATH: " + commonLastPath);
-        log.info("SILENCE PATH: " + silence);
-
-        log.info("LAST THIS STATE: " + lmsPlayers.lastThis);
+//        log.info("THIS PATH: " + thisPath);
+//        log.info("THIS LAST PATH: " + thisLastPath);
+//        log.info("TRY GLOBAL LAST PATH: " + commonLastPath);
+//        log.info("SILENCE PATH: " + silence);
+//        log.info("LAST THIS STATE: " + lmsPlayers.lastThis);
         if (lmsPlayers.lastThis) lastPath = thisLastPath;
         else lastPath = commonLastPath;
 
         if (thisPath != null && !thisPath.equals(silence) && !thisPath.equals("")) {
-            log.info("PLAY THIS PATH: " + thisPath);
+            log.info("PUSH PLAY BUTTON: " + thisPath);
             this.play().saveLastPath().saveLastTime();
             return this;
         }
@@ -716,14 +750,17 @@ public class Player {
             log.info("REQUEST ERROR json invalid");
             return false;
         }
-//        title();
+//        this.title();
         log.info(this.name + " MODE: " + playerStatus.result.mode + " VOLUME: " + playerStatus.result.mixer_volume);
-        this.playing = false;
-        this.mode = "stop";
+        this.volume = String.valueOf(playerStatus.result.mixer_volume);
         if (playerStatus.result.mode.equals("play")) {
             this.playing = true;
             this.mode = "play";
+        } else {
+            this.playing = false;
+            this.mode = "stop";
         }
+
         return true;
     }
 
@@ -738,6 +775,9 @@ public class Player {
         if ((title == null) || (title == "")) title = this.artistName();
         if (title == null) title = "херпоймичё";
         if (title.length() > 20) title = title.substring(1, 20);
+        title = title.replaceAll(",", " ");
+        title = title.replaceAll(":", " ");
+        title = title.replaceAll("  ", " ");
         this.title = title;
         log.info("TITLE: " + this.title);
     }

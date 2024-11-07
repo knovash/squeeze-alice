@@ -32,24 +32,31 @@ public class SwitchQueryCommand {
         String playerInQuery = queryParams.get("player");
         String roomInQuery = queryParams.get("room");
         log.info("PLAYER: " + playerInQuery + " ROOM: " + roomInQuery);
-
-        Player player;
-        if (roomInQuery != null) player = lmsPlayers.getPlayerByNearestRoom(roomInQuery);
-        else player = lmsPlayers.getPlayerByNameInQuery(playerInQuery);
-        log.info("PLAYER: " + player);
-
+        Player player = null;
+        if (playerInQuery != null) {
+            if (playerInQuery.equals("btremote")) {
+                Yandex.runScenario("уведомление клик");
+                log.info("BT PLAYER: " + lmsPlayers.btPlayerName);
+                playerInQuery = lmsPlayers.btPlayerName;
+            }
+            player = lmsPlayers.getPlayerByNearestName(playerInQuery);
+            if (player == null) player = lmsPlayers.getPlayerByNearestRoom(playerInQuery);
+        }
 
         String value = queryParams.get("value");
-        Yandex.sayBeep();
         String playerName;
         String roomName;
+        log.info("START SWITCH CASE action: " + action);
+
+
+
         switch (action) {
             case ("channel"):
-//                response = Actions.queryChannelPlay(player, value);
                 response = player.playChannelRelativeOrAbsolute(value, false);
                 break;
             case ("play"):
-                CompletableFuture.runAsync(() -> player.turnOnMusic().syncAllOtherPlayingToThis());
+                Player finalPlayer = player;
+                CompletableFuture.runAsync(() -> finalPlayer.turnOnMusic().syncAllOtherPlayingToThis());
                 response = "PLAY";
                 break;
             case ("toggle_music"):
@@ -87,12 +94,10 @@ public class SwitchQueryCommand {
                 response = "PREV";
                 break;
             case ("volume_dn"):
-                player.volumeRelativeOrAbsolute("-3", true);
-                response = "VOLUME DN";
+                response = player.volumeRelativeOrAbsolute("-3", true);
                 break;
             case ("volume_up"):
-                player.volumeRelativeOrAbsolute("3", true);
-                response = "VOLUME UP";
+                response = player.volumeRelativeOrAbsolute("3", true);
                 break;
             case ("separate_on"):
                 player.separateOn();
@@ -123,15 +128,18 @@ public class SwitchQueryCommand {
             case ("get_player"):
                 response = lmsPlayers.getPlayerByNearestRoom(value).name;
                 break;
-            case ("get_rooms_players"):
-                response = lmsPlayers.roomsAndPlayersAllWidgets();
-                break;
+//            case ("get_rooms_players"):
+//                response = lmsPlayers.roomsAndPlayersAllWidgets();
+//                break;
             case ("get_room_player"):
                 response = lmsPlayers.getPlayerNameByWidgetName(value);
                 break;
-            case ("get_players_list"):
-                response = lmsPlayers.playerVolumeModeTitle();
+            case ("get_super_refresh"):
+                response = lmsPlayers.getSuperRefresh();
                 break;
+//            case ("get_players_list"):
+//                response = lmsPlayers.playerVolumeModeTitle();
+//                break;
             case ("get_last"):
                 response = lmsPlayers.getLastTitle(player);
                 break;
@@ -185,6 +193,10 @@ public class SwitchQueryCommand {
                 break;
             case ("delay_expire_save"):
                 lmsPlayers.delayExpireSave(queryParams);
+                response = PagePlayers.page();
+                break;
+            case ("autoremote_save"):
+                lmsPlayers.autoremoteSave(queryParams);
                 response = PagePlayers.page();
                 break;
             case ("alt_sync_save"):

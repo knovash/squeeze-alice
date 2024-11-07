@@ -12,9 +12,9 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Log4j2
@@ -27,6 +27,7 @@ public class Yandex {
     public String user = "";
     public static Yandex yandex = new Yandex();
     public static YandexInfo yandexInfo = new YandexInfo();
+    public static Map<String, String> scenariosIds = new HashMap<>();
 
     public static void writeCredentialsYandex(HashMap<String, String> parameters) {
         yandex.clientId = parameters.get("client_id");
@@ -126,6 +127,57 @@ public class Yandex {
                 .forEach(device -> SmartHome.create(getRoomNameByRoomId(device.room), Integer.valueOf(device.external_id)));
         SmartHome.write();
     }
+
+    public static String getScenarioIdByName(String scenarioName) {
+        log.info("GET SCENARIO ID BY NAME: " + scenarioName);
+        String scenarioId = null;
+        scenarioId = scenariosIds.get(scenarioName);
+        if (scenarioId != null) return scenarioId;
+        log.info("GO SEARCH IN YANDEX INFO....");
+        String json;
+        try {
+            Response response = Request.Get("https://api.iot.yandex.net/v1.0/user/info")
+                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+                    .execute();
+            json = response.returnContent().asString();
+        } catch (IOException e) {
+            log.info("YANDEX GET INFO ERROR");
+            return "";
+        }
+        yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
+        List<String> scenarios = yandexInfo.scenarios.stream().map(r -> r.name).collect(Collectors.toList());
+//        log.info("SCENARIOS: " + scenarios);
+        YandexInfo.Scenario scenario = yandexInfo.scenarios.stream()
+                .filter(s -> s.name.equals(scenarioName))
+                .findFirst()
+                .orElseGet(null);
+
+        if (scenario != null) scenarioId = scenario.id;
+        scenariosIds.put(scenarioName, scenarioId);
+        log.info("ID " + scenarioId);
+        log.info("IDS " + scenariosIds);
+        log.info("GET ID " + scenariosIds.get(scenarioName));
+        scenariosIds.get(scenarioName);
+
+        return scenarioId;
+    }
+
+    public static void runScenario(String scenarioName) {
+        log.info("RUN SCENARIO NAME: " + scenarioName);
+        String scenarioId = getScenarioIdByName(scenarioName);
+        log.info("RUN SCENARIO ID: " + scenarioId);
+        if (scenarioId == null) return;
+        CompletableFuture.runAsync(() -> {
+            try {
+                Request.Post("https://api.iot.yandex.net/v1.0/scenarios/" + scenarioId + "/actions")
+                        .setHeader("Authorization", "OAuth " + yandex.bearer)
+                        .execute();
+            } catch (IOException e) {
+                log.info("ERROR " + e);
+            }
+        });
+    }
+
 
     public static String getRoomNameByRoomId(String roomId) {
         return yandexInfo.rooms.stream()

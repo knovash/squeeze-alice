@@ -1,18 +1,16 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.apache.http.client.fluent.Request;
+import org.knovash.squeezealice.provider.Yandex;
+import org.knovash.squeezealice.spotify.SpotifyAuth;
+import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.utils.Utils;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.*;
 
-import static org.knovash.squeezealice.provider.Yandex.yandex;
+import static java.time.temporal.ChronoUnit.MINUTES;
 
 @Log4j2
 public class MainTest {
@@ -25,63 +23,50 @@ public class MainTest {
     public static int port = Integer.parseInt(bundle.getString("port"));
     public static LmsPlayers lmsPlayers = new LmsPlayers();
     public static Map<String, String> config = new HashMap<>();
-    public static Map<String, String> rooms = new HashMap<>();
+    public static Map<String, String> idRooms = new HashMap<>();
+    public static List<String> rooms = new ArrayList<>();
+    public static String tunnel;
+    public static ZoneId zoneId = ZoneId.of( "Europe/Minsk" );
 
     public static void main(String[] args) {
-        log.info("START");
+        log.info("USER TIME ZONE: " + zoneId);
+        log.info("USER TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
+        log.info("CONFIG FROM config.properties");
+        log.info("LMS URL: " + lmsUrl);
+        log.info("THIS PORT: " + port);
+        log.info("SILENCE: " + silence);
+        log.info("OS: " + System.getProperty("os.name") + ", USER DIRECTORY: " + System.getProperty("user.home"));
+        System.setProperty("userApp.root", System.getProperty("user.home"));
+        log.info("SILENCE: " + System.getProperty("userApp.root"));
+        Utils.readConfig();
+        if (!Utils.checkLmsIp(lmsIp)) {
+            log.info("WRONG LMS IP. RUN SEARCH LMS IP");
+            Utils.searchLmsIp();
+        }
+        Utils.readIdRooms();
+        Utils.writeConfig();
+        lmsPlayers.read();
+        lmsPlayers.updateServerStatus();
+        lmsPlayers.write();
+        SpotifyAuth.read();
+        SpotifyAuth.callbackRequestRefresh();
+        Yandex.read();
+        Yandex.getRoomsAndDevices();
+        JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
 
-//        runInFuture(() -> func1());
-//        runInFuture(MainTest::func2);
+//
 
-//        CompletableFuture.supplyAsync(() -> {
-//            try {
-//                Request.Post("https://api.iot.yandex.net/v1.0/scenarios/f2ddb649-62e7-4fe2-be01-23d477dd2974/actions")
-//                        .setHeader("Authorization", "OAuth " + yandex.bearer)
-//                        .execute();
-//            } catch (IOException e) {
-//                log.info("SAY ERROR");
-//            }
-//            return "";
-//        });
+        Yandex.runScenario("свет гостиная лампа переключить на столике");
+  Yandex.runScenario("акваланг");
+//        Yandex.runScenario("свет душ авто ночной");
+//
+//
+//        Yandex.runScenario("свет душ авто ночной");
 
-
-        CompletableFuture.runAsync(() -> func1());
-        CompletableFuture.runAsync(() -> func2());
-
-
-    }
-
-
-    public static Boolean func1() {
-        log.info("SAY ERRO45345345345R");
-        return true;
-    }
-
-    public static Boolean func2() {
-        log.info("SAY ERROdfgdfgdfgdfgdR");
-        return true;
-    }
-
-    public static <T> void runInFuture(Predicate<T> function) {
-        function.test(null);
-    }
-
-
-    public static void complete() {
-        CompletableFuture.supplyAsync(() -> {
-            try {
-                Request.Post("https://api.iot.yandex.net/v1.0/scenarios/f2ddb649-62e7-4fe2-be01-23d477dd2974/actions")
-                        .setHeader("Authorization", "OAuth " + yandex.bearer)
-                        .execute();
-            } catch (IOException e) {
-                log.info("SAY ERROR");
-            }
-            return "";
-        });
+//        Yandex.sayServerStart();
+//        Server.start();
+//        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate);
     }
 
 
 }
-
-
-

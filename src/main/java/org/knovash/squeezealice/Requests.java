@@ -89,4 +89,20 @@ public class Requests {
         }
         return content.asString();
     }
+
+//    https://autoremotejoaomgcd.appspot.com/sendmessage?key=fovfKw-pC3A:APA91bFz1IHu4FIo9BpJaxwW0HgOulJtoXHF-khXptkSmn6QjhBIywkgi0-w9f4DvMK5y-hoOOTWsXDrv7ASE4S4BADhV8SQz6Y0XOJ5XWbF0pmprdOdmA7aEZ5hfQAWZ2Cd9RW_rShf&message=re
+
+    public static void autoRemoteRefresh() {
+        log.info("TASKER AURO REMOTE REFRESH");
+        String uri = "https://autoremotejoaomgcd.appspot.com/sendmessage?key=fovfKw-pC3A:APA91bFz1IHu4FIo9BpJaxwW0HgOulJtoXHF-khXptkSmn6QjhBIywkgi0-w9f4DvMK5y-hoOOTWsXDrv7ASE4S4BADhV8SQz6Y0XOJ5XWbF0pmprdOdmA7aEZ5hfQAWZ2Cd9RW_rShf&message=re";
+        try {
+            Request.Post(uri)
+//                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+                    .execute();
+        } catch (IOException e) {
+            log.info("SAY ERROR");
+        }
+    }
+
+
 }

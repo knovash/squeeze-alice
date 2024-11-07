@@ -51,7 +51,6 @@ public class ProviderAction {
                 CompletableFuture.runAsync(() -> player.volumeRelativeOrAbsolute(value, relative));
                 break;
             case ("channel"):
-//                CompletableFuture.runAsync(() -> Actions.providerChannelPlay(player, value, relative));
                 CompletableFuture.runAsync(() -> player.playChannelRelativeOrAbsolute(value, relative));
                 break;
             case ("on"):

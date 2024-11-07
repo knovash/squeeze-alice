@@ -29,6 +29,7 @@ public class Actions {
         }
         lmsPlayers.write();
 //        });
+        Requests.autoRemoteRefresh();
     }
 
     public static void turnOffMusic(Player player) {
@@ -39,6 +40,7 @@ public class Actions {
                 .saveLastTime()
                 .saveLastPath();
         lmsPlayers.write();
+        Requests.autoRemoteRefresh();
     }
 
     public static String queryToggleMusic(Player player) {
@@ -63,6 +65,7 @@ public class Actions {
             status = player.name + " - Play - " + player.title;
         }
         log.info("STATUS: " + status);
+        Requests.autoRemoteRefresh();
         return status;
     }
 
@@ -76,6 +79,7 @@ public class Actions {
             player.turnOnMusic().syncAllOtherPlayingToThis();
             status = "All players - Play";
         }
+        Requests.autoRemoteRefresh();
         return status;
     }
 
@@ -85,41 +89,21 @@ public class Actions {
         lmsPlayers.players.stream()
                 .filter(player -> player.connected)
                 .peek(p -> log.info(p.name + " " + p.connected))
-                .forEach(p -> p.turnOffMusic());
+                .forEach(p -> p.stop());
+        Requests.autoRemoteRefresh();
         return "All players - Stop";
     }
 
     public static String queryNext(Player player) {
-//        if (Spotify.ifPlaying()) {
-//            Spotify.next();
-//            return "Spotify - Next";
-//        } else {
-            player.next().status(50);
-            return player.name + " - Next - " + player.title;
-//        }
+        player.next().status(50);
+        Requests.autoRemoteRefresh();
+        return player.name + " - Next - " + player.title;
+
     }
 
     public static String queryPrev(Player player) {
-//        if (Spotify.ifPlaying()) {
-//            Spotify.prev();
-//            return "Spotify - Next";
-//        } else {
-            player.prev().status(50);
-            return player.name + " - Prev - " + player.title;
-//        }
+        player.prev().status(50);
+        Requests.autoRemoteRefresh();
+        return player.name + " - Prev - " + player.title;
     }
-
-
-
-//    public static void providerChannelPlay(Player player, String value, Boolean relative) {
-//        log.info("CANNEL: " + value + " RELATIVE: " + relative);
-//        int channel;
-//        if (relative != null && relative.equals(true)) {
-//            if (player.lastChannel != 0) channel = player.lastChannel + 1;
-//            else channel = lmsPlayers.lastChannel + 1;
-//        } else {
-//            channel = Integer.parseInt(value);
-//        }
-//        queryChannelPlay(player, String.valueOf(channel));
-//    }
 }

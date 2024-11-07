@@ -7,8 +7,7 @@ import org.knovash.squeezealice.Context;
 public class ProviderCheck {
 
     public static Context action(Context context) {
-        log.info("");
-        // ответить 200 OK
+        log.info("200 OK");
         context.json = "OK";
         context.code = 200;
         return context;
