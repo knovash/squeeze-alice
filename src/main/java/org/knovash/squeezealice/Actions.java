@@ -50,18 +50,16 @@ public class Actions {
 //            Spotify.active = true;
 //            return "";
 //        }
-        player.status();
+        player.status(); //TODO заменить на MODE возможно быстрее
         String status;
         if (player.playing) {
             player.turnOffMusic();
             player.status();
-            player.title();
             status = player.name + " - Stop - " + player.title;
         } else {
             player.turnOnMusic()
                     .syncAllOtherPlayingToThis();
             player.status();
-            player.title();
             status = player.name + " - Play - " + player.title;
         }
         log.info("STATUS: " + status);
@@ -88,7 +86,8 @@ public class Actions {
         lmsPlayers.updateServerStatus();
         lmsPlayers.players.stream()
                 .filter(player -> player.connected)
-                .peek(p -> log.info(p.name + " " + p.connected))
+                .filter(player -> player.playing)
+//                .peek(p -> log.info(p.name + " " + p.connected))
                 .forEach(p -> p.stop());
         Requests.autoRemoteRefresh();
         return "All players - Stop";

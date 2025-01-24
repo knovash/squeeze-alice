@@ -23,7 +23,7 @@ public class ProviderAction {
         responseYandex.request_id = xRequestId;
 //        responseYandex.payload.devices.forEach(d -> deviseSetResult(d));
         String json = JsonUtils.pojoToJson(responseYandex);
-        log.info("RUN INSTANCE FOR DEVICES: " + responseYandex.payload.devices.size());
+        log.info("DEVICES COUNT: " + responseYandex.payload.devices.size());
         responseYandex.payload.devices.forEach(d -> runInstance(d));
         context.json = json;
         context.code = 200;
@@ -43,7 +43,6 @@ public class ProviderAction {
         String value = device.capabilities.get(0).state.value;
         Boolean relative = device.capabilities.get(0).state.relative;
         log.info("ID: " + id + " INSTANCE: " + instance + " VALUE: " + value + " RELATIVE: " + relative);
-        log.error("ID: " + id + " INSTANCE: " + instance + " VALUE: " + value + " RELATIVE: " + relative);
         Player player = lmsPlayers.getPlayerByDeviceId(id);
         if (player == null) return;
         switch (instance) {

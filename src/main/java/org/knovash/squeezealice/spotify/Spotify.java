@@ -347,7 +347,6 @@ public class Spotify {
             log.info("PLAYER STATUS FOR PLAYLIST");
             player.waitFor(3000);
             player.status();
-            player.title();
 //        Player.playerStatus.result.playlist_loop.stream()
 //                .forEach(playlistLoop -> log.info("-----" + playlistLoop.playlist_index + " " + playlistLoop.title + " = " + name));
             log.info("FILTER INDEX BY NAME: " + name);

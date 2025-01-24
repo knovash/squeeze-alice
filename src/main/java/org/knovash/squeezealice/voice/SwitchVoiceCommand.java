@@ -332,41 +332,34 @@ public class SwitchVoiceCommand {
     public static String whatsPlaying(Player player) {
         String answer = "";
         log.info("WHATS PLAYING ON " + player.name);
-        if (player.status() == null) return "медиасервер не работает";
-        player.title();
-        String title = player.title;
-
-        if (player.connected)
-//        if (player.playerStatus.result.player_connected == 0)
-            return "плеер " + player.name + "  не подключен к медиасерверу";
-        if (title == null) return "медиасервер не отвечает";
-        log.info("TITLE: " + title);
+        if (player == null) return "плеер не найден";
+        if (player.status() == null) return "медиасервер не отвечает";
+        if (player.status() != true) return "медиасервер не отвечает";
+        if (!player.connected) return "плеер " + player.name + "  не подключен к медиасерверу";
+        if (player.title == null) return "медиасервер не отвечает";
+        log.info("TITLE: " + player.title);
         String separate = "";
         if (player.separate) separate = "отдельно ";
         List<String> separatePlayers = lmsPlayers.getSeparatePlayers(player);
         String separateAnswer = "";
         if (separatePlayers.size() != 0) separateAnswer = ", отдельно " + String.join(", ", separatePlayers);
-        String mode = player.playerStatus.result.mode;
-        int volume = player.playerStatus.result.mixer_volume;
-
-//        watsInGroup(player);
 
         log.info("SPOTIFY TRY GET CURRENT TITLE");
         String spotyCurrentName = Spotify.getCurrentTitle();
         log.info("SPOTIFY CURRENT TITLE: " + spotyCurrentName);
         String spotyAnswer = "";
         if (spotyCurrentName != null) spotyAnswer = ". на спотифай играет " + spotyCurrentName;
-        if (mode.equals("play")) {
-            answer = "сейчас на " + player.name + " играет " + separate + title + " громкость " + volume;
+        if (player.mode.equals("play")) {
+            answer = "сейчас на " + player.name + " играет " + separate + player.title + " громкость " + player.volume;
         }
-        if (!mode.equals("play")) {
+
+        if (!player.mode.equals("play")) {
             Player playing = lmsPlayers.getPlayingPlayer(player.name);
             if (playing != null) {
                 playing.status();
-                playing.title();
-                answer = "сейчас на " + player.name + " не играет " + separate + title +
+                answer = "сейчас на " + player.name + " не играет " + separate + player.title +
                         ". на " + playing.name + " играет " + separate + playing.title;
-            } else answer = "сейчас на " + player.name + " не играет " + separate + title;
+            } else answer = "сейчас на " + player.name + " не играет " + separate + player.title;
         }
         answer = answer + separateAnswer + spotyAnswer;
         log.info("ANSWER: " + answer);

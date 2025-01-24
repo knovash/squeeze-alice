@@ -29,7 +29,7 @@ public class SmartHome {
         log.info("SEARCH BY ROOM: " + room + " IN DEVICES: " + devices.size());
         Device device = devices.stream()
                 .filter(d -> (d.room != null))
-                .filter(d -> d.room.toLowerCase().equals(room.toLowerCase()))
+                .filter(d -> d.room.equalsIgnoreCase(room))
                 .findFirst().orElse(null);
         if (device == null) {
             log.info("NO DEVICE WITH ROOM: " + room);
@@ -104,12 +104,4 @@ public class SmartHome {
         log.info("WRITE devices.json");
         JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
     }
-
-//    public static void read() {
-//        log.info("READ ALICE DEVICES FROM alice_devices.json");
-//        SmartHome.devices = new ArrayList<>();
-//        List<Device> devices = JsonUtils.jsonFileToList("devices.json", Device.class);
-//        if (devices != null) SmartHome.devices.addAll(devices);
-//        log.info("DEVICES: " + SmartHome.devices.stream().map(d -> d.takePlayerNameById() + ":" + d.room).collect(Collectors.toList()));
-//    }
 }

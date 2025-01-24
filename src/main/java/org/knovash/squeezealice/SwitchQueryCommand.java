@@ -24,7 +24,7 @@ public class SwitchQueryCommand {
     public static Context action(Context context) {
         HashMap<String, String> queryParams = context.queryMap;
         log.info("QUERY: " + queryParams);
-        String response;
+
         context.json = "BAD REQUEST NO ACTION IN QUERY";
         if (!queryParams.containsKey("action")) return context;
         context.code = 200;
@@ -49,108 +49,114 @@ public class SwitchQueryCommand {
         log.info("START SWITCH CASE action: " + action);
 
 
+        String response = "null";
+        if (player != null)
+            switch (action) {
+                case ("channel"):
+                    response = player.playChannelRelativeOrAbsolute(value, false);
+                    break;
+                case ("play"):
+                    Player finalPlayer = player;
+                    CompletableFuture.runAsync(() -> finalPlayer.turnOnMusic().syncAllOtherPlayingToThis());
+                    response = "PLAY";
+                    break;
+                case ("toggle_music"):
+                case ("play_pause"):
+                    response = Actions.queryToggleMusic(player);
+                    break;
+                case ("toggle_music_all"):
+                case ("play_pause_all"):
+                    response = Actions.queryToggleMusicAll(player);
+                    break;
+                case ("next"):
+                    response = Actions.queryNext(player);
+                    break;
+                case ("prev"):
+                    response = Actions.queryPrev(player);
+                    break;
+                case ("next_track"):
+                    player.nextTrack().status(50);
+                    response = player.name + " - Next track - " + player.title;
+                    break;
+                case ("prev_track"):
+                    player.prevTrack().status(50);
+                    response = player.name + " - Next track - " + player.title;
+                    break;
+                case ("next_channel"):
+                    player.nextChannel();
+                    response = "NEXT";
+                    break;
+                case ("prev_channel"):
+                    player.prevChannel();
+                    response = "PREV";
+                    break;
+                case ("volume_dn"):
+                    response = player.volumeRelativeOrAbsolute("-3", true);
+                    break;
+                case ("volume_up"):
+                    response = player.volumeRelativeOrAbsolute("3", true);
+                    break;
+                case ("separate_on"):
+                    player.separateOn();
+                    response = "SEPARATE ON";
+                    break;
+                case ("separate_off"):
+                    player.separateOff();
+                    response = "SEPARATE OFF";
+                    break;
+                case ("transfer"):
+                case ("switch_here"):
+                    player.switchToHere();
+                    response = "SWITCH HERE";
+                    break;
+                case ("shuffle_on"):
+                    player.shuffleOn();
+                    response = "SHUFFLE ON";
+                    break;
+                case ("shuffle_off"):
+                    player.shuffleOff();
+                    response = "SHUFFLE OFF";
+                    break;
+                case ("favorites_add"):
+                    log.info("CASE FAVORITES ADD");
+                    player.favoritesAdd();
+                    response = "FAVORITES ADD";
+                    break;
+                case ("get_last"):
+                    response = lmsPlayers.getLastTitle(player);
+                    break;
+                case ("get_players"):
+                    List<String> sss = rooms.stream()
+                            .map(r -> r + ":" + lmsPlayers.getPlayerByCorrectRoom(r))
+                            .collect(Collectors.toList());
+                    log.info(sss);
+                    String lll = sss.toString();
+                    player.prevTrack().status(50);
+                    response = lll;
+                    break;
+                default:
+                    log.info("ACTION NOT FOUND: " + action);
+                    response = "ACTION NOT FOUND: " + action;
+                    break;
+            }
+        if (response != "null") {
+            context.json = response;
+            return context;
+        }
 
         switch (action) {
-            case ("channel"):
-                response = player.playChannelRelativeOrAbsolute(value, false);
-                break;
-            case ("play"):
-                Player finalPlayer = player;
-                CompletableFuture.runAsync(() -> finalPlayer.turnOnMusic().syncAllOtherPlayingToThis());
-                response = "PLAY";
-                break;
-            case ("toggle_music"):
-            case ("play_pause"):
-                response = Actions.queryToggleMusic(player);
-                break;
-            case ("toggle_music_all"):
-            case ("play_pause_all"):
-                response = Actions.queryToggleMusicAll(player);
-                break;
             case ("stop_all"):
             case ("pause_all"):
                 response = Actions.queryStopMusicAll();
                 break;
-            case ("next"):
-                response = Actions.queryNext(player);
-                break;
-            case ("prev"):
-                response = Actions.queryPrev(player);
-                break;
-            case ("next_track"):
-                player.nextTrack().status(50);
-                response = player.name + " - Next track - " + player.title;
-                break;
-            case ("prev_track"):
-                player.prevTrack().status(50);
-                response = player.name + " - Next track - " + player.title;
-                break;
-            case ("next_channel"):
-                player.nextChannel();
-                response = "NEXT";
-                break;
-            case ("prev_channel"):
-                player.prevChannel();
-                response = "PREV";
-                break;
-            case ("volume_dn"):
-                response = player.volumeRelativeOrAbsolute("-3", true);
-                break;
-            case ("volume_up"):
-                response = player.volumeRelativeOrAbsolute("3", true);
-                break;
-            case ("separate_on"):
-                player.separateOn();
-                response = "SEPARATE ON";
-                break;
-            case ("separate_off"):
-                player.separateOff();
-                response = "SEPARATE OFF";
-                break;
-            case ("transfer"):
-            case ("switch_here"):
-                player.switchToHere();
-                response = "SWITCH HERE";
-                break;
-            case ("shuffle_on"):
-                player.shuffleOn();
-                response = "SHUFFLE ON";
-                break;
-            case ("shuffle_off"):
-                player.shuffleOff();
-                response = "SHUFFLE OFF";
-                break;
-            case ("favorites_add"):
-                log.info("CASE FAVORITES ADD");
-                player.favoritesAdd();
-                response = "FAVORITES ADD";
-                break;
             case ("get_player"):
                 response = lmsPlayers.getPlayerByNearestRoom(value).name;
                 break;
-//            case ("get_rooms_players"):
-//                response = lmsPlayers.roomsAndPlayersAllWidgets();
-//                break;
             case ("get_room_player"):
                 response = lmsPlayers.getPlayerNameByWidgetName(value);
                 break;
             case ("get_super_refresh"):
                 response = lmsPlayers.getSuperRefresh();
-                break;
-//            case ("get_players_list"):
-//                response = lmsPlayers.playerVolumeModeTitle();
-//                break;
-            case ("get_last"):
-                response = lmsPlayers.getLastTitle(player);
-                break;
-            case ("get_players"):
-                List<String> sss = rooms.stream()
-                        .map(r -> r + ":" + lmsPlayers.getPlayerByCorrectRoom(r))
-                        .collect(Collectors.toList());
-                log.info(sss);
-                String lll = sss.toString();
-                player.prevTrack().status(50);
-                response = lll;
                 break;
             case ("select"):
                 log.info("SSSS  " + roomInQuery + " " + playerInQuery);
@@ -163,7 +169,6 @@ public class SwitchQueryCommand {
                 } else
                     response = "SELECT ERROR";
                 break;
-
 //            WEB
             case ("state_devices"):
                 response = JsonUtils.pojoToJson(SmartHome.devices);
@@ -221,14 +226,6 @@ public class SwitchQueryCommand {
                 break;
             case ("widget"):
                 response = Utils.widget();
-                break;
-            case ("test"):
-                log.info("TEST");
-//                player.syncAllOtherPlayingToThis();
-                response = "TEST";
-                break;
-            case ("say"):
-                response = Actions.queryToggleMusic(player);
                 break;
             default:
                 log.info("ACTION NOT FOUND: " + action);

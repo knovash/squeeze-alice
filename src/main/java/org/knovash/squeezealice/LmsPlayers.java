@@ -195,15 +195,16 @@ public class LmsPlayers {
                 lmsPlayers.players.stream()
 //                .peek(p -> log.info("PLAYER: " + p.name + " SEPARATE: " + p.separate + " ONLINE: " + p.connected + " PLAYING: " + p.playing))
                         .filter(p -> !p.separate)
-//                .filter(p -> p.connected)
                         .filter(p -> p.playing)
                         .filter(p -> !p.name.equals(exceptName))
-                        .filter(p -> {
-                            String pp = p.path();
-                            if (pp == null) return false;
-                            if (pp.equals(silence)) return false;
-                            return true;
-                        })
+                        .filter(p -> p.path() != null)
+                        .filter(p -> !p.path().equals(silence))
+//                        .filter(p -> {
+//                            String pp = p.path();
+//                            if (pp == null) return false;
+//                            if (pp.equals(silence)) return false;
+//                            return true;
+//                        })
                         .collect(Collectors.toList());
 //        log.info("AFTER FILTER: " + playingPlayers);
         if (playingPlayers == null || playingPlayers.size() == 0) {
@@ -307,11 +308,9 @@ public class LmsPlayers {
     }
 
     public String getSuperRefresh() {
-        log.info("ROOMS&PLAYERS NAMES START");
-        lmsPlayers.updateServerStatus();
-        log.info("SYNCGROUPS START");
+        log.info("SUPER REFRESH START >>>");
+        lmsPlayers.updateServerStatus(); //TODO совместить со статусами плееров
         lmsPlayers.syncgroups();
-        log.info("SYNCGROUPS FINISH");
         List<String> roomNames = rooms;
         List<String> playersNames = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
         List<String> roomsAndPlayersNames = new ArrayList<>();
@@ -327,9 +326,7 @@ public class LmsPlayers {
                 .map(r -> lmsPlayers.getPlayerByCorrectRoom(r))
                 .peek(p -> {
                     if (p != null) {
-//                        log.info("/// " + p.name + " " + p.mode + " " + p.sync + " " + p.title);
                         p.status();
-                        p.title();
                         roomsAndPlayersModes.add(p.mode);
                         roomsAndPlayersSyncs.add(String.valueOf(p.sync));
                         roomsAndPlayersTitles.add(p.title);
@@ -345,13 +342,10 @@ public class LmsPlayers {
                 .map(r -> lmsPlayers.getPlayerByCorrectName(r))
                 .peek(p -> {
                     if (p != null) {
-//                        log.info("/// " + p.name + " " + p.mode + " " + p.sync + " " + p.title);
-                        p.status();
-                        p.title();
                         roomsAndPlayersModes.add(p.mode);
                         roomsAndPlayersSyncs.add(String.valueOf(p.sync));
                         roomsAndPlayersTitles.add(p.title);
-                        playersVolModTit.add(p.name + "-" + p.volumeGet() + "-" + p.mode + "-" + p.title);
+                        playersVolModTit.add(p.name + "-" + p.volume + "-" + p.mode + "-" + p.title);
                     } else {
                         roomsAndPlayersModes.add("null");
                         roomsAndPlayersSyncs.add(String.valueOf(false));
@@ -375,6 +369,7 @@ public class LmsPlayers {
                 + joinedRoomsAndPlayersSyncs + ":"
                 + joinedRoomsAndPlayersTitles + ":"
                 + joinedPlayersVolModTit;
+        log.info("SUPER REFRESH FINISH <<<");
         return response;
     }
 
@@ -418,34 +413,19 @@ public class LmsPlayers {
 
     public List<List<String>> syncgroups() {
         Response response = Requests.postToLmsForResponse(RequestParameters.syncgroups().toString());
-
-        this.players.stream().forEach(p -> {
-            p.sync = false;
-//            log.info("PLAYER SYNC CLEAR: " + p);
-        });
-
-        if (response == null) {
-            log.info("REQUEST ERROR");
-            return null;
-        }
-        if (response.result.syncgroups_loop == null) {
-            log.info("REQUEST syncgroups_loop NULL");
-
-            return null;
-        }
+        this.players.forEach(p -> p.sync = false);
+        if (response == null) return null;
+        if (response.result.syncgroups_loop == null) return null;
         log.info("SYNCGROUPS: " + response.result.syncgroups_loop);
-//        List<String> lll = List.of("kj giu oio".split(" "));
         List<List<String>> syncMemberNames = response.result.syncgroups_loop.stream()
                 .map(syncgroupsLoop -> syncgroupsLoop.sync_member_names)
                 .map(s -> List.of(s.split(",")))
                 .collect(Collectors.toList());
         List<Object> result = new ArrayList<>();
         syncMemberNames.forEach(result::addAll);
-        this.players.stream().forEach(p -> {
-            if (result.contains(p.name)) p.sync = true;
-            else p.sync = false;
-            log.info("PLAYER SYNC: " + p);
-        });
+        this.players.stream()
+                .filter(p -> result.contains(p.name))
+                .forEach(p -> p.sync = true);
         log.info("syncMemberNames: " + result);
         return syncMemberNames;
     }
