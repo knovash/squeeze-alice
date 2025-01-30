@@ -7,6 +7,7 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.*;
 import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.utils.HandlerUtils;
+import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 import org.knovash.squeezealice.web.*;
 
@@ -46,6 +47,10 @@ public class Handler implements HttpHandler {
 //        log.info("SWITCH PATH: " + path);
         switch (path) {
             case ("/"):
+                context = PageIndex.action(context);
+                break;
+            case ("/refresh"):
+                PageIndex.refresh();
                 context = PageIndex.action(context);
                 break;
             case ("/players"):

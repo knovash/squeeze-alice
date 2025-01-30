@@ -8,14 +8,15 @@ import org.apache.http.entity.ContentType;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.web.PageIndex;
 
 import java.io.IOException;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
+import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.web.PageIndex.msgSqa;
 
 @Log4j2
 @Data
@@ -28,6 +29,7 @@ public class Yandex {
     public static Yandex yandex = new Yandex();
     public static YandexInfo yandexInfo = new YandexInfo();
     public static Map<String, String> scenariosIds = new HashMap<>();
+    public static int devicesMusicCounter;
 
     public static void writeCredentialsYandex(HashMap<String, String> parameters) {
         yandex.clientId = parameters.get("client_id");
@@ -120,11 +122,51 @@ public class Yandex {
         yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
 //        log.info("YANDEX:" + json);
         Main.rooms = yandexInfo.rooms.stream().map(r -> r.name).collect(Collectors.toList());
-        log.info("FOUND ROOMS: " + Main.rooms);
+        log.info("ROOMS ALL: " + Main.rooms);
+//        SmartHome.devices = new ArrayList<>();
+
+        log.info("DEVICES ALL SIZE: " + yandexInfo.devices.size());
+
+        int yandexMusicDevCounter =
+                (int) yandexInfo.devices.stream()
+                        .filter(device -> device.type.equals("devices.types.media_device.receiver"))
+                        .filter(device -> device.name.equals("музыка")).count();
+
+        log.info("DEVICES MUSIC SIZE: " + yandexMusicDevCounter);
+        if (SmartHome.devices != null) log.info("SmartHome.devices.size(): " + SmartHome.devices.size());
+
+        if (SmartHome.devices.size() == 0)
+            msgSqa = "SQA нет плееров, добавте плееры в /players";
+        else
+            msgSqa = "SQA подключено " + SmartHome.devices.size() + " плееров " + SmartHome.devices.stream().map(d ->
+                            " id=" + d.id + " " + d.room + "-" + lmsPlayers.getPlayerNameByDeviceId(d.id))
+                    .collect(Collectors.toList());
+        log.info(msgSqa);
+
+        if (yandexMusicDevCounter == 0) {
+            if (SmartHome.devices.size() == 0) PageIndex.msgUdy = "УДЯ нет плееров. Сначала добавьте плееры в SQA /playeers";
+            else PageIndex.msgUdy = "УДЯ нет плееров. Обновите список устройств навыка в приложениии УДЯ";
+            log.info(PageIndex.msgUdy);
+            return;
+        }
+
+//        getRoomNameByRoomId(device.room)
+
+        List<String> yandexMusicDevList = yandexInfo.devices.stream()
+                .filter(device -> device.type.equals("devices.types.media_device.receiver"))
+                .filter(device -> device.name.equals("музыка"))
+                .map(device -> "id=" + device.external_id + " " + getRoomNameByRoomId(device.room))
+                .collect(Collectors.toList());
+if (SmartHome.devices.size() > yandexMusicDevCounter)
+        PageIndex.msgUdy = "УДЯ подключено " + yandexMusicDevCounter + " плееров " + yandexMusicDevList+ " Обновите устройства в УДЯ";
+else
+    PageIndex.msgUdy = "УДЯ подключено " + yandexMusicDevCounter + " плееров " + yandexMusicDevList;
+
         yandexInfo.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                 .filter(device -> device.name.equals("музыка"))
                 .forEach(device -> SmartHome.create(getRoomNameByRoomId(device.room), Integer.valueOf(device.external_id)));
+        log.info("SMARTHOME DEVICES: " + SmartHome.devices);
         SmartHome.write();
     }
 

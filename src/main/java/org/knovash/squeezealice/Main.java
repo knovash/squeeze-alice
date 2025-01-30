@@ -48,10 +48,15 @@ public class Main {
         lmsPlayers.read();
         lmsPlayers.updateServerStatus();
         lmsPlayers.write();
+
+        SmartHome.read();
+
         SpotifyAuth.read();
         SpotifyAuth.callbackRequestRefresh();
+
         Yandex.read();
         Yandex.getRoomsAndDevices();
+
         JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
 //        Yandex.sayServerStart();
         Server.start();

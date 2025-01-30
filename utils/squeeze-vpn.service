@@ -1,0 +1,15 @@
+[Unit]
+Description=Squeeze Alice VPN
+#After=multi-user.target
+After=network.target
+After=network-online.target
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/
+Restart=always
+RestartSec=10
+#ExecStart=java -jar /opt/squeeze-alice-1.0/squeeze-alice-1.0.jar
+ExecStart=openvpn --config France-tcp.ovpn --auth-user-pass pass_fran.txt
+[Install]
+WantedBy=multi-user.target

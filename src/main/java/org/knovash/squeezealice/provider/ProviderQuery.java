@@ -44,10 +44,12 @@ public class ProviderQuery {
     }
 
     public static Device updateDevice(Device device) {
+        log.info("DEVICE UPDATE " + device.room + " " + device.id);
         // обратиться к девайсу и обновить все его значения
-//        player = device.lmsGetPlayerByDeviceId();
         player = lmsPlayers.getPlayerByDeviceId(device.id);
-        device.capabilities.forEach(capability -> changeCapability(capability));
+        log.info("DEVICE PLAYER " + player);
+        if (player != null) device.capabilities.forEach(capability -> changeCapability(capability));
+        else device.capabilities.forEach(capability -> changeCapabilityOff(capability));
         log.info("DEVICE UPDATED\n" + device);
         return device;
     }
@@ -75,6 +77,34 @@ public class ProviderQuery {
             case ("pause"):
                 if (player.mode().equals("play")) power = true;
                 capability.state.value = String.valueOf(power);
+                break;
+            default:
+                log.info("ACTION NOT FOUND: ");
+                break;
+        }
+    }
+
+//    если плеер для комнаты не выбран. в УДЯ показывать выключенный плеер
+    private static void changeCapabilityOff(Capability capability) {
+        log.info("CAPABILITY " + capability);
+        capability.state = new State();
+        capability.state.instance = capability.parameters.instance;
+        capability.state.action_result.error_code = "";
+        capability.state.action_result.error_message = "";
+        capability.state.value = "";
+        capability.reportable = true;
+        switch (capability.parameters.instance) {
+            case ("volume"):
+                capability.state.value = "1";
+                break;
+            case ("on"):
+                capability.state.value = String.valueOf(false);
+                break;
+            case ("channel"):
+                capability.state.value = "1";
+                break;
+            case ("pause"):
+                capability.state.value = String.valueOf(true);
                 break;
             default:
                 log.info("ACTION NOT FOUND: ");

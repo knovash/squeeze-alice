@@ -125,7 +125,12 @@ public class SwitchVoiceCommand {
 //      СПОТИФАЙ
         if (command.matches("(включи )?(дальше|следующий)")) return playlistNextTrack(player);
         if (command.contains("включи альбом")) return spotifyPlayAlbum(command, player);
+
+        if (command.contains("включи трэк") || command.contains("включи трек")) return spotifyPlayTrack(command, player);
+
         if (command.contains("включи") && !(command.contains("альбом") ||
+                command.contains("трэк") ||
+                command.contains("трек") ||
                 command.contains("канал") ||
                 command.contains("random") ||
                 command.contains("shuffle") ||
@@ -413,7 +418,10 @@ public class SwitchVoiceCommand {
         String target;
         target = command.replaceAll(".*включи\\S*\\s", "").replaceAll("\"", "").replaceAll("\\s\\s", " ");
         log.info("TARGET SPOTIFY: " + target);
-        String link = Spotify.getLink(target, Type.playlist);
+
+        String link;
+        link = Spotify.getLinkArtist(target, Type.playlist);
+
         log.info("LINK SPOTIFY: " + link);
         if (link == null) return "настройте спотифай";
         CompletableFuture.runAsync(() -> {
@@ -429,7 +437,23 @@ public class SwitchVoiceCommand {
         String target;
         target = command.replaceAll(".*включи\\S*\\s", "").replaceAll("\"", "").replaceAll("\\s\\s", " ");
         log.info("TARGET SPOTIFY: " + target);
-        String link = Spotify.getLink(target, Type.album);
+        String link = Spotify.getLinkArtist(target, Type.album);
+        log.info("LINK SPOTIFY: " + link);
+        if (link == null) return "настройте спотифай";
+        CompletableFuture.runAsync(() -> player.playPath(link));
+        answer = "сейчас, мой господин, включаю " + target;
+        return answer;
+    }
+
+    public static String spotifyPlayTrack(String command, Player player) {
+        String answer;
+        String target;
+        target = command.replaceAll(".*включи\\S*\\s", "")
+                .replaceAll("трэк", "")
+                .replaceAll("трек", "")
+                .replaceAll("\"", "").replaceAll("\\s\\s", " ");
+        log.info("TARGET SPOTIFY: " + target);
+        String link = Spotify.getLinkTrack(target);
         log.info("LINK SPOTIFY: " + link);
         if (link == null) return "настройте спотифай";
         CompletableFuture.runAsync(() -> player.playPath(link));

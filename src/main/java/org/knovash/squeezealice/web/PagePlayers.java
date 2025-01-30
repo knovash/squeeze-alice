@@ -4,6 +4,7 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.SmartHome;
+import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.utils.Utils;
 
 import java.util.List;
@@ -26,20 +27,18 @@ public class PagePlayers {
     public static String page() {
         log.info("START GENER PAGE");
         lmsPlayers.updateServerStatus();
+        Utils.readIdRooms();
         String page2 = "<!DOCTYPE html><html lang=\"en\">" +
                 "<head><meta charset=\"UTF-8\" />" +
                 "<title>Настройка колонок</title></head><body>" +
                 "<p><a href=\"/\">Home</a></p>" +
 
                 "LMS IP: " + Main.lmsIp + ":" + Main.lmsPort + "<br>" +
-                "Yandex Rooms: " + rooms + "<br>" +
-                "Yandex Devices: " + SmartHome.devices.size() + " " +
-                SmartHome.devices.stream().map(d ->
-                                d.id + ":" + d.room + ":" + lmsPlayers.getPlayerNameByDeviceId(d.id))
-                        .collect(Collectors.toList()) + "<br>" +
-                "LMS Players: " + lmsPlayers.players.size() + " " + lmsPlayers.players.stream().map(player -> player.name)
-                .collect(Collectors.toList()) + "</p>" +
+                PageIndex.msgLms + "<br>" +
+                PageIndex.msgSqa + "<br>" +
 
+                "УДЯ комнаты: " + rooms + "<br>" +
+                PageIndex.msgUdy + "<br>" +
 
                 "  <h2>Настройка колонок</h2>" +
 

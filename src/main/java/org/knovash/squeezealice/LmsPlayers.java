@@ -7,10 +7,13 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.lms.ServerStatusByName;
+import org.knovash.squeezealice.provider.YandexInfo;
+import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
+import org.knovash.squeezealice.web.PageIndex;
 
 import java.time.LocalTime;
 import java.util.*;
@@ -74,6 +77,14 @@ public class LmsPlayers {
             p.mode = "stop";
         });
         serverStatus.result.players_loop.forEach(pl -> updatePlayer(pl));
+
+        if (lmsPlayers.players != null && lmsPlayers.players.size() > 0)
+            PageIndex.msgLms = "LMS подключено " + lmsPlayers.players.size() + " плееров "
+                     + lmsPlayers.players.stream().map(player -> player.name)
+                    .collect(Collectors.toList()) ;
+        else
+            PageIndex.msgLms = "LMS нет плееров. Подключите плееры http://192.168.1.110:9000";
+
 //        log.info("PLAYERS ONLINE: " + lmsPlayers.playersNamesOnLine + " " + Duration.between(time1, LocalTime.now(zoneId)));
     }
 
@@ -141,7 +152,7 @@ public class LmsPlayers {
                 .findFirst()
                 .orElse(null);
         if (player == null) log.info("PLAYER NOT FOUND BY NAME: " + name);
-        log.info("PLAYER: " + player);
+//        log.info("PLAYER: " + player);
         return player;
     }
 
@@ -241,8 +252,15 @@ public class LmsPlayers {
         log.info("PARAMETERS: " + parameters);
         String name = parameters.get("name");
         Player player = lmsPlayers.getPlayerByCorrectName(name);
+        log.info("PLAYER DEVICE ID: " + player.deviceId);
+        int id = Integer.parseInt(player.deviceId);
         log.info("PLAYER REMOVE: " + player);
         lmsPlayers.players.remove(player);
+
+
+       Device device = SmartHome.getDeviceById(id);
+       SmartHome.devices.remove(device);
+
         write();
         return "OK";
     }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -39,11 +40,14 @@ public class JsonUtils {
     }
 
     public static <T> T jsonToPojo(String json, Class<T> clazz) {
-        log.debug("JSON: " + json);
+        log.info("JSON: " + json);
         json = json.replace("\\", "");
         //        catch (JsonMappingException e){}
         try {
             return objectMapper.readValue(json, clazz);
+        } catch (MismatchedInputException e) {
+            log.info("ERROR " + e);
+            return null;
         } catch (JsonMappingException e) {
             log.info("ERROR " + e);
             return null;

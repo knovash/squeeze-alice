@@ -61,6 +61,12 @@ public class Levenstein {
         return null;
     }
 
+    public static Boolean compareWordAndWordBool(String wordNearest, String wordCorrect) {
+        int dist = getDistanceWordAndWord(wordNearest, wordCorrect);
+        if (dist < 3) return true;
+        return false;
+    }
+
     public static String getNearestElementInListWord(String value, List<String> list) {
 //        log.info("SEARCH: '" + value + "' IN: " + list);
         filalDistance = 100;

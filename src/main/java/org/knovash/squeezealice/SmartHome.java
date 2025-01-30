@@ -10,6 +10,9 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 @Data
@@ -40,10 +43,26 @@ public class SmartHome {
     }
 
     public static Device create(String room, Integer index) {
-        log.info("CREATE DEVICE ROOM: " + room + " ID: " + index);
+        log.info(" ADD IN ROOM: " + room + " MUSIC RECIVER ID: " + index);
         Device device = new Device();
         device.type = "devices.types.media_device.receiver";
         device.room = room;
+        int conteinsCounter =
+                (int) SmartHome.devices.stream()
+                        .filter(device1 -> device1.room.equals(device.room))
+                        .count();
+        log.info("DEVICE: " + device.room + " " + device.id);
+        SmartHome.devices.stream().forEach(device1 -> log.info(device1.room + " " + device1.id));
+        log.info("CONTEINS: " + conteinsCounter);
+
+        if (conteinsCounter > 0) {
+            log.info("EXISTS STOP");
+            return null;}
+
+
+
+
+
 
         Capability volume = new Capability();
         volume.type = "devices.capabilities.range"; // Тип умения. channel     volume
@@ -75,7 +94,8 @@ public class SmartHome {
         on_of.reportable = true; // Признак включенного оповещения об изменении состояния умения
         on_of.parameters.instance = "on"; // Название функции для данного умения. volume channel
         device.capabilities.add(on_of);
-        Integer id = null;
+
+        Integer id;
         Integer idByParameters = null;
         if (index != null) {
             idByParameters = index;
@@ -94,10 +114,19 @@ public class SmartHome {
                 log.info("NEW ID IN SMART HOME: " + id);
             }
         } else id = idByParameters;
+
         device.id = String.valueOf(id);
-        log.info("NEW DEVICE: " + "room=" + device.room + " id=" + device.id + " type=" + device.type);
         SmartHome.devices.add(device);
+        SmartHome.write();
         return device;
+    }
+
+    public static void read() {
+        log.info("READ DEVICES");
+        log.info("DEVICES: " + devices);
+        devices = JsonUtils.jsonFileToList("devices.json", Device.class);
+        if (devices == null) devices = new ArrayList<>();
+        log.info("DEVICES: " + devices);
     }
 
     public static void write() {

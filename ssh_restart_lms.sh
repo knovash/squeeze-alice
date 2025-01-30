@@ -7,6 +7,7 @@ echo -e ${BGreen}"REMOTE IP "$remote${NC}
 # $remote
 
 #ssh root@$remote systemctl daemon-reload
-ssh root@$remote systemctl restart logitechmediaserver.service
+#ssh root@$remote systemctl restart logitechmediaserver.service
+ssh root@$remote systemctl restart lyrionmusicserver.service 
 
 sleep 10

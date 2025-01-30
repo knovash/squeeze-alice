@@ -11,6 +11,7 @@ import org.knovash.squeezealice.spotify.spotify_pojo.spotify_playlist.Item;
 import org.knovash.squeezealice.spotify.spotify_pojo.spotify_playlist.SpotifyPlaylists;
 import org.knovash.squeezealice.spotify.spotify_pojo.spotify_tracks.SpotifyResponseTracks;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.utils.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
 
 import static org.knovash.squeezealice.spotify.SpotifyRequests.requestWithRetryGet;
@@ -25,16 +26,92 @@ public class Spotify {
     public static String lastPath;
     public static String lastTitle;
 
-    public static String getLink(String target, Type type) {
+    public static String getLinkArtist(String target, Type type) {
+        log.info("TARGET: " + target);
+        log.info("TYPE: " + type);
+        String link = null;
+        String limit = "50";
+        target = target.replace(" ", "%20");
+        String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "artist" + "&limit=" + "5";
+        log.info("URI: " + uri);
+        String json = requestWithRetryGet(uri);
+        log.info("JSON: " + json);
+        if (json == null || json.equals("400")) return null;
+        log.info("11111");
+        json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
+//        SpotifyPlaylists spotifyPlaylists = JsonUtils.jsonToPojo(json, SpotifyPlaylists.class);
+        SpotifyArtists spotifyArtists = JsonUtils.jsonToPojo(json, SpotifyArtists.class);
+        String finalTarget = target;
+        org.knovash.squeezealice.spotify.spotify_pojo.spotify_artists.Item item = spotifyArtists.artists.items
+                .stream()
+                .peek(it -> log.info("PLAYLIST: " + it.name))
+                .filter(it -> Levenstein.compareWordAndWordBool(it.name, finalTarget))
+                .findFirst()
+//                .orElse(null);
+                .orElse(spotifyArtists.artists.items.get(0));
+        log.info("FINAL PLAYLIST: " + item.name);
+        link = item.external_urls.spotify;
+        log.info("LINK: " + link);
+        log.info("FINISH\n");
+        return link;
+    }
+
+
+    public static String getLinkTrack(String target) {
+        log.info("TARGET: " + target);
+        String link = null;
+        String limit = "50";
+        target = target.replace(" ", "%20");
+        String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "track" + "&limit=" + "1";
+        log.info("URI: " + uri);
+        String json = requestWithRetryGet(uri);
+        log.info("JSON: " + json);
+        if (json == null || json.equals("400")) return null;
+        log.info("11111");
+        json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
+//        SpotifyPlaylists spotifyPlaylists = JsonUtils.jsonToPojo(json, SpotifyPlaylists.class);
+        SpotifySearchTrack spotifySearchTrack = JsonUtils.jsonToPojo(json, SpotifySearchTrack.class);
+
+        String finalTarget = target;
+//        org.knovash.squeezealice.spotify.spotify_pojo.spotify_artists.Item item = spotifySearchTrack.tracks.items
+//                .stream()
+//                .peek(it -> log.info("PLAYLIST: " + it.name))
+//                .filter(it -> Levenstein.compareWordAndWordBool(it.name, finalTarget))
+//                .findFirst()
+////                .orElse(null);
+//                .orElse(spotifySearchTrack.tracks.items.get(0));
+
+//        spotifySearchTrack.tracks.items.get(0).external_urls.spotify;
+//        log.info("FINAL PLAYLIST: " + item.name);
+//        link = item.external_urls.spotify;
+
+        link =  spotifySearchTrack.tracks.items.get(0).external_urls.spotify;
+        log.info("LINK: " + link);
+        log.info("FINISH\n");
+        return link;
+    }
+
+    public static String getLinkold(String target, Type type) {
         log.info("TARGET: " + target);
         log.info("TYPE: " + type);
         String link = null;
         String limit = "10";
         target = target.replace(" ", "%20");
+
         String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + type + "&limit=" + limit;
+
+//        http GET 'https://api.spotify.com/v1/search?q=depechemode&type=artist' \
+//  Authorization:'Bearer 1POdFZRZbvb...qqillRxMr2z'
+
+//        http GET 'https://api.spotify.com/v1/search?q=depechemode&type=playlist' \
+//  Authorization:'Bearer 1POdFZRZbvb...qqillRxMr2z'
+
+
         log.info("URI: " + uri);
         String json = requestWithRetryGet(uri);
-        if (json == null) return null;
+        log.info("JSON: " + json);
+        if (json == null || json.equals("400")) return null;
+        log.info("11111");
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         switch (type.toString()) {
             case ("album"):
