@@ -16,7 +16,6 @@ import static org.knovash.squeezealice.Main.*;
 public class Requests {
 
     public static HttpResponse headToUriForHttpResponse(String uri) {
-//  получить хедер для проверки это LMS или нет
         HttpResponse response = null;
         try {
             response = Request.Head(uri)
@@ -28,24 +27,6 @@ public class Requests {
 //            throw new RuntimeException(e);
         }
         return response;
-    }
-
-    public static String postToLmsForStatus(String json) {
-        log.info("REQUEST TO LMS: " + json);
-        String status = null;
-        try {
-            status = Request.Post(lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
-                    .connectTimeout(1000)
-                    .socketTimeout(1000)
-                    .execute()
-                    .returnResponse()
-                    .getStatusLine()
-                    .toString();
-        } catch (IOException e) {
-            log.info("REQUEST ERROR " + e);
-            return null;
-        }
-        return status;
     }
 
     public static Response postToLmsForResponse(String json) {
@@ -72,6 +53,24 @@ public class Requests {
         return response;
     }
 
+    public static String postToLmsForStatus(String json) {
+        log.info("REQUEST TO LMS: " + json);
+        String status = null;
+        try {
+            status = Request.Post(lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
+                    .connectTimeout(1000)
+                    .socketTimeout(1000)
+                    .execute()
+                    .returnResponse()
+                    .getStatusLine()
+                    .toString();
+        } catch (IOException e) {
+            log.info("REQUEST ERROR " + e);
+            return null;
+        }
+        return status;
+    }
+
     public static String postToLmsForJsonBody(String json) {
 //  все запросы плеера для получения информации из Response response.result._artist
         log.info("REQUEST TO LMS: " + json);
@@ -89,4 +88,17 @@ public class Requests {
         }
         return content.asString();
     }
+
+    public static void autoRemoteRefresh() {
+        log.info("TASKER AUTO REMOTE REFRESH");
+        String uri = "https://autoremotejoaomgcd.appspot.com/sendmessage?key=fovfKw-pC3A:APA91bFz1IHu4FIo9BpJaxwW0HgOulJtoXHF-khXptkSmn6QjhBIywkgi0-w9f4DvMK5y-hoOOTWsXDrv7ASE4S4BADhV8SQz6Y0XOJ5XWbF0pmprdOdmA7aEZ5hfQAWZ2Cd9RW_rShf&message=re";
+        try {
+            Request.Post(uri)
+                    .execute();
+        } catch (IOException e) {
+            log.info("TASKER ERROR");
+        }
+    }
+
+
 }

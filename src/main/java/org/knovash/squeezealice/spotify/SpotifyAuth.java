@@ -60,6 +60,14 @@ public class SpotifyAuth {
                 "redirect_uri=" + redirect_uri + "&" +      // Required
                 "state=" + state + "&" +                    // Optional
                 "scope=" + scope;                           // Optional
+
+        log.info("client_id: " + client_id);
+        log.info("response_type: " + response_type);
+        log.info("redirect_uri: " + redirect_uri);
+        log.info("state: " + state);
+        log.info("scope: " + scope);
+
+
         log.info("REDIRECTURI: " + location);
         Headers headers = new Headers();
         headers.add("Location", location);

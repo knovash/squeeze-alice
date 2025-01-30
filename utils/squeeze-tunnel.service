@@ -1,8 +1,9 @@
 [Unit]
 Description=Tunnel
-#After=multi-user.target
-#After=network.target
-#After=network-online.target
+After=multi-user.target
+After=network.target
+After=network-online.target
+After=squeeze-vpn.service
 [Service]
 Type=simple
 User=root

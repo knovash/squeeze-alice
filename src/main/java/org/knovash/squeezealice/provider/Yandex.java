@@ -8,14 +8,15 @@ import org.apache.http.entity.ContentType;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.web.PageIndex;
 
 import java.io.IOException;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.web.PageIndex.msgSqa;
 
 @Log4j2
 @Data
@@ -27,6 +28,8 @@ public class Yandex {
     public String user = "";
     public static Yandex yandex = new Yandex();
     public static YandexInfo yandexInfo = new YandexInfo();
+    public static Map<String, String> scenariosIds = new HashMap<>();
+    public static int devicesMusicCounter;
 
     public static void writeCredentialsYandex(HashMap<String, String> parameters) {
         yandex.clientId = parameters.get("client_id");
@@ -119,13 +122,104 @@ public class Yandex {
         yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
 //        log.info("YANDEX:" + json);
         Main.rooms = yandexInfo.rooms.stream().map(r -> r.name).collect(Collectors.toList());
-        log.info("FOUND ROOMS: " + Main.rooms);
+        log.info("ROOMS ALL: " + Main.rooms);
+//        SmartHome.devices = new ArrayList<>();
+
+        log.info("DEVICES ALL SIZE: " + yandexInfo.devices.size());
+
+        int yandexMusicDevCounter =
+                (int) yandexInfo.devices.stream()
+                        .filter(device -> device.type.equals("devices.types.media_device.receiver"))
+                        .filter(device -> device.name.equals("музыка")).count();
+
+        log.info("DEVICES MUSIC SIZE: " + yandexMusicDevCounter);
+        if (SmartHome.devices != null) log.info("SmartHome.devices.size(): " + SmartHome.devices.size());
+
+        if (SmartHome.devices.size() == 0)
+            msgSqa = "SQA нет плееров, добавте плееры в /players";
+        else
+            msgSqa = "SQA подключено " + SmartHome.devices.size() + " плееров " + SmartHome.devices.stream().map(d ->
+                            " id=" + d.id + " " + d.room + "-" + lmsPlayers.getPlayerNameByDeviceId(d.id))
+                    .collect(Collectors.toList());
+        log.info(msgSqa);
+
+        if (yandexMusicDevCounter == 0) {
+            if (SmartHome.devices.size() == 0) PageIndex.msgUdy = "УДЯ нет плееров. Сначала добавьте плееры в SQA /playeers";
+            else PageIndex.msgUdy = "УДЯ нет плееров. Обновите список устройств навыка в приложениии УДЯ";
+            log.info(PageIndex.msgUdy);
+            return;
+        }
+
+//        getRoomNameByRoomId(device.room)
+
+        List<String> yandexMusicDevList = yandexInfo.devices.stream()
+                .filter(device -> device.type.equals("devices.types.media_device.receiver"))
+                .filter(device -> device.name.equals("музыка"))
+                .map(device -> "id=" + device.external_id + " " + getRoomNameByRoomId(device.room))
+                .collect(Collectors.toList());
+if (SmartHome.devices.size() > yandexMusicDevCounter)
+        PageIndex.msgUdy = "УДЯ подключено " + yandexMusicDevCounter + " плееров " + yandexMusicDevList+ " Обновите устройства в УДЯ";
+else
+    PageIndex.msgUdy = "УДЯ подключено " + yandexMusicDevCounter + " плееров " + yandexMusicDevList;
+
         yandexInfo.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                 .filter(device -> device.name.equals("музыка"))
                 .forEach(device -> SmartHome.create(getRoomNameByRoomId(device.room), Integer.valueOf(device.external_id)));
+        log.info("SMARTHOME DEVICES: " + SmartHome.devices);
         SmartHome.write();
     }
+
+    public static String getScenarioIdByName(String scenarioName) {
+        log.info("GET SCENARIO ID BY NAME: " + scenarioName);
+        String scenarioId = null;
+        scenarioId = scenariosIds.get(scenarioName);
+        if (scenarioId != null) return scenarioId;
+        log.info("GO SEARCH IN YANDEX INFO....");
+        String json;
+        try {
+            Response response = Request.Get("https://api.iot.yandex.net/v1.0/user/info")
+                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+                    .execute();
+            json = response.returnContent().asString();
+        } catch (IOException e) {
+            log.info("YANDEX GET INFO ERROR");
+            return "";
+        }
+        yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
+        List<String> scenarios = yandexInfo.scenarios.stream().map(r -> r.name).collect(Collectors.toList());
+//        log.info("SCENARIOS: " + scenarios);
+        YandexInfo.Scenario scenario = yandexInfo.scenarios.stream()
+                .filter(s -> s.name.equals(scenarioName))
+                .findFirst()
+                .orElseGet(null);
+
+        if (scenario != null) scenarioId = scenario.id;
+        scenariosIds.put(scenarioName, scenarioId);
+        log.info("ID " + scenarioId);
+        log.info("IDS " + scenariosIds);
+        log.info("GET ID " + scenariosIds.get(scenarioName));
+        scenariosIds.get(scenarioName);
+
+        return scenarioId;
+    }
+
+    public static void runScenario(String scenarioName) {
+        log.info("RUN SCENARIO NAME: " + scenarioName);
+        String scenarioId = getScenarioIdByName(scenarioName);
+        log.info("RUN SCENARIO ID: " + scenarioId);
+        if (scenarioId == null) return;
+        CompletableFuture.runAsync(() -> {
+            try {
+                Request.Post("https://api.iot.yandex.net/v1.0/scenarios/" + scenarioId + "/actions")
+                        .setHeader("Authorization", "OAuth " + yandex.bearer)
+                        .execute();
+            } catch (IOException e) {
+                log.info("ERROR " + e);
+            }
+        });
+    }
+
 
     public static String getRoomNameByRoomId(String roomId) {
         return yandexInfo.rooms.stream()

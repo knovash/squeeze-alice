@@ -7,6 +7,7 @@ import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.provider.YandexInfo;
+import org.knovash.squeezealice.web.PageIndex;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -158,6 +159,7 @@ public class Utils {
             Main.lmsUrl = "http://" + Main.lmsIp + ":" + Main.lmsPort + "/jsonrpc.js/";
             return true;
         }
+        PageIndex.msgLms = "LMS сервер не найден https://lyrion.org" ;
         log.info("LMS NOT FOUND. please check \"config.json\"");
         return false;
     }

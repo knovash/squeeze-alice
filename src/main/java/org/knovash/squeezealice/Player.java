@@ -61,11 +61,11 @@ public class Player {
         this.volume_high = 25;
         this.delay = 10000;
         this.schedule = new HashMap<>(Map.of(
-                0, 5,
-                7, 5,
-                9, 10,
-                20, 10,
-                22, 5));
+                0, 10,
+                7, 15,
+                9, 20,
+                20, 15,
+                22, 10));
     }
 
     public static String name(String index) {
@@ -98,29 +98,6 @@ public class Player {
         if (response.result._mode.equals("play")) this.playing = true;
         log.info("PLAYER: " + this.name + " MODE: " + response.result._mode);
         return response.result._mode;
-    }
-
-    public static List<List<String>> syncgroups() {
-        Response response = Requests.postToLmsForResponse(RequestParameters.syncgroups().toString());
-        if (response == null) {
-            log.info("REQUEST ERROR");
-            return null;
-        }
-        if (response.result.syncgroups_loop == null) {
-            log.info("REQUEST syncgroups_loop NULL");
-            return null;
-        }
-        log.info("SYNCGROUPS: " + response.result.syncgroups_loop);
-//        List<String> lll = List.of("kj giu oio".split(" "));
-        List<List<String>> syncMemberNames = response.result.syncgroups_loop.stream()
-                .map(syncgroupsLoop -> syncgroupsLoop.sync_member_names)
-                .map(s -> List.of(s.split(",")))
-                .collect(Collectors.toList());
-        lmsPlayers.players.stream().forEach(p -> {
-            if (syncMemberNames.contains(p.name)) p.sync = true;
-            else p.sync = false;
-        });
-        return syncMemberNames;
     }
 
     public String path() {
@@ -221,7 +198,6 @@ public class Player {
                 return this;
             }
         }
-//        this.volumeSet("1");
 
         if (!playerStatus.result.mode.equals("play")) {
             if (!value.contains("+") && !value.contains("-")) {
@@ -235,7 +211,7 @@ public class Player {
         return this;
     }
 
-    public void volumeRelativeOrAbsolute(String value, Boolean relative) {
+    public String volumeRelativeOrAbsolute(String value, Boolean relative) {
         log.info("PLAYER: " + this.name + " VOLUME: " + value + " RELATIVE: " + relative);
 //        if (Spotify.ifPlaying()) {
 //            Spotify.volumeGeneral(value, relative);
@@ -251,25 +227,58 @@ public class Player {
         if (relative != null && relative.equals(false)) {
             this.volumeSet(value);
         }
+        log.info("VOLUME " + this.volume);
+        return this.name + "-" + this.volume;
     }
 
     public Player play() {
         log.info("PLAYER: " + this.name + " PLAY");
         Spotify.active = false;
-        log.info("PLAY");
         Requests.postToLmsForStatus(RequestParameters.play(this.name).toString());
         return this;
     }
 
     public Player turnOnMusic() {
         Spotify.active = false;
-        Actions.turnOnMusic(this);
+
+        log.info("TURN ON MUSIC PLAYER: " + this.name);
+//        CompletableFuture.runAsync(() -> {
+        this.ifExpiredOrNotPlayUnsyncWakeSet();
+        if (this.separate) {
+            log.info("PLAYER IS SEPARATED - PLAY LAST");
+            this.playLast();
+            lmsPlayers.write();
+            return this;
+        }
+        Player playing = lmsPlayers.getPlayingPlayer(this.name);
+        if (playing == null) {
+            log.info("NO PLAYING. PLAY LAST");
+            this.playLast();
+//                player.syncAllOtherPlayingToThis();
+        } else {
+            log.info("SYNC TO PLAYING " + playing);
+            this.syncTo(playing.name); //.saveLastPath().saveLastTime();
+        }
+        lmsPlayers.write();
+//        });
+        Requests.autoRemoteRefresh();
         return this;
     }
 
     public Player turnOffMusic() {
         Spotify.active = false;
         Actions.turnOffMusic(this);
+        return this;
+    }
+
+    public Player stop() {
+        log.info("PLAYER: " + this.name + " STOP");
+        Spotify.active = false;
+        this
+                .unsync()
+                .pause()
+                .saveLastTime()
+                .saveLastPath();
         return this;
     }
 
@@ -299,18 +308,6 @@ public class Player {
         return this;
     }
 
-//    public static String queryChannelPlay(Player player, String channel) {
-//        log.info("PLAYER: " + player.name + " PLAY CHANNEL: " + channel);
-//        player.ifExpiredOrNotPlayUnsyncWakeSet();
-//        Player playing = lmsPlayers.getPlayingPlayer(player.name);
-//        if (playing != null) player.syncTo(playing.name);
-//        player.playChannel(Integer.valueOf(channel));
-//        player.waitFor(2000);
-//        lmsPlayers.lastChannel = Integer.parseInt(channel);
-//        player.syncAllOtherPlayingToThis();
-//        return "PLAY CHANNEL " + channel;
-//    }
-
     public String playChannelRelativeOrAbsolute(String value, Boolean relative) {
 //        log.info("CANNEL: " + value + " RELATIVE: " + relative);
         int channel;
@@ -320,7 +317,6 @@ public class Player {
         } else {
             channel = Integer.parseInt(value);
         }
-//        queryChannelPlay(this, String.valueOf(channel));
         log.info("PLAYER: " + this.name + " CHANNEL: " + channel + " RELATIVE: " + relative);
         this.ifExpiredOrNotPlayUnsyncWakeSet();
         Player playing = lmsPlayers.getPlayingPlayer(this.name);
@@ -329,6 +325,8 @@ public class Player {
         this.waitFor(2000);
         lmsPlayers.lastChannel = channel;
         this.syncAllOtherPlayingToThis();
+
+        Requests.autoRemoteRefresh();
         return "PLAY CHANNEL " + channel;
     }
 
@@ -387,6 +385,8 @@ public class Player {
         log.info("PLAY PREV CHANNEL: " + channel + " LAST CHANNEL: " + lmsPlayers.lastChannel);
         this.ifExpiredOrNotPlayUnsyncWakeSet();
         this.playChannel(channel);
+
+        Requests.autoRemoteRefresh();
         return this;
     }
 
@@ -415,9 +415,10 @@ public class Player {
         }
         if (channel > favSize) channel = 1;
         log.info("PLAY CHANNEL: " + channel);
-//        Actions.actionPlayChannel(this, channel);
         this.ifExpiredOrNotPlayUnsyncWakeSet();
         this.playChannel(channel);
+
+        Requests.autoRemoteRefresh();
         return this;
     }
 
@@ -449,12 +450,10 @@ public class Player {
 
     public String favoritesAdd() {
         log.info("START ADD ON " + this.name);
-        String playerName = this.name;
-        String title = "";
-        String url = this.path();
         this.status();
-        this.title();
-        title = this.title;
+        String playerName = this.name;
+        String url = this.path();
+        String title = this.title;
         log.info("NOW PATH: " + url);
         if (url.contains("spotify")) {
             url = Spotify.lastPath;
@@ -464,7 +463,7 @@ public class Player {
         int size = this.favorites().size() + 1;
         log.info("FAVORITES BEFORE SIZE: " + size);
         title = size + " " + title;
-        Response response = Requests.postToLmsForResponse(RequestParameters.favoritesAdd(playerName, url, title).toString());
+        Requests.postToLmsForResponse(RequestParameters.favoritesAdd(playerName, url, title).toString());
         log.info("FAVORITES ADD");
         return title;
     }
@@ -482,9 +481,6 @@ public class Player {
     }
 
     public Player syncTo(String toPlayerName) {
-//  пока сломанана синхронизация di.fm в LMS
-//  https://forums.slimdevices.com/forum/user-forums/logitech-media-server/1673928-logitech-media-server-8-4-0-released?p=1675699#post1675699
-//  https://github.com/Logitech/slimserver/issues/993
         log.info("START SYNC " + this.name + " TO " + toPlayerName);
         if (lmsPlayers.syncAlt) {
             String path = lmsPlayers.getPlayerByCorrectName(toPlayerName).path();
@@ -535,7 +531,7 @@ public class Player {
         log.info("");
         log.info("WAKE START >>>");
         log.info("PLAYER: " + this.name + " WAIT: " + this.delay);
-        Yandex.sayWait();
+        Yandex.runScenario("музыка подождите");
         this
                 .playSilence()
                 .volumeSet("+1")
@@ -562,17 +558,16 @@ public class Player {
         String thisLastPath = this.lastPath;
         String commonLastPath = lmsPlayers.lastPath;
         String lastPath;
-        log.info("THIS PATH: " + thisPath);
-        log.info("THIS LAST PATH: " + thisLastPath);
-        log.info("TRY GLOBAL LAST PATH: " + commonLastPath);
-        log.info("SILENCE PATH: " + silence);
-
-        log.info("LAST THIS STATE: " + lmsPlayers.lastThis);
+//        log.info("THIS PATH: " + thisPath);
+//        log.info("THIS LAST PATH: " + thisLastPath);
+//        log.info("TRY GLOBAL LAST PATH: " + commonLastPath);
+//        log.info("SILENCE PATH: " + silence);
+//        log.info("LAST THIS STATE: " + lmsPlayers.lastThis);
         if (lmsPlayers.lastThis) lastPath = thisLastPath;
         else lastPath = commonLastPath;
 
         if (thisPath != null && !thisPath.equals(silence) && !thisPath.equals("")) {
-            log.info("PLAY THIS PATH: " + thisPath);
+            log.info("PUSH PLAY BUTTON: " + thisPath);
             this.play().saveLastPath().saveLastTime();
             return this;
         }
@@ -635,7 +630,6 @@ public class Player {
             log.info("SAVE LAST PATH: " + this.lastPath);
         }
         this.status();
-        this.title();
         this.lastTitle = this.title;
         lmsPlayers.lastTitle = this.title;
         return this;
@@ -646,7 +640,6 @@ public class Player {
         lmsPlayers.lastChannel = channel;
         this.lastChannel = channel;
         this.status();
-        this.title();
         this.lastTitle = this.title;
         lmsPlayers.lastTitle = this.title;
         return this;
@@ -684,14 +677,16 @@ public class Player {
         } else {
             log.info("SEPARATE FLAG OFF AND TURN ON ALL OTHER");
             lmsPlayers.updateServerStatus();
-            lmsPlayers.players.forEach(p -> {
-                p.separateFlagFalse();
-                log.info(p.name + " MODE: " + p.playing + " SEPARATE: " + p.separate);
-//                if (p.mode().equals("play") && !p.name.equals(this.name)) p.turnOnMusic();
-//                CompletableFuture.runAsync(() -> Actions.turnOnMusic(player));
-//                if (p.playing && !p.name.equals(this.name)) p.turnOnMusic();
-                if (p.playing && !p.name.equals(this.name)) CompletableFuture.runAsync(() -> p.turnOnMusic());
-            });
+            lmsPlayers.players
+                    .stream().map(p -> p.separateFlagFalse())
+                    .filter(p -> !p.name.equals(this.name))
+                    .filter(p -> p.playing)
+                    .forEach(p -> CompletableFuture.runAsync(() -> p.turnOnMusic()));
+//                    .forEach(p -> {
+//                p.separateFlagFalse();
+//                log.info(p.name + " MODE: " + p.playing + " SEPARATE: " + p.separate);
+//                if (p.playing && !p.name.equals(this.name)) CompletableFuture.runAsync(() -> p.turnOnMusic());
+//            });
         }
         log.info("FINISH");
         lmsPlayers.write();
@@ -703,12 +698,12 @@ public class Player {
     }
 
     public Boolean status(Integer tracks) {
-//        log.info("PLAYER STATUS " + this.name);
+//        log.info("STATUS PLAYER " + this.name);
         if (tracks == null) tracks = 0;
         String json = Requests.postToLmsForJsonBody(RequestParameters.status(this.name, tracks).toString());
         if (json == null) {
             log.info("REQUEST ERROR request null");
-            return false;
+            return null;
         }
         json = json.replaceAll("(\"\\w*)(\\s)(\\w*\":)", "$1_$3");
         playerStatus = JsonUtils.jsonToPojo(json, PlayerStatus.class);
@@ -716,14 +711,22 @@ public class Player {
             log.info("REQUEST ERROR json invalid");
             return false;
         }
-//        title();
-        log.info(this.name + " MODE: " + playerStatus.result.mode + " VOLUME: " + playerStatus.result.mixer_volume);
-        this.playing = false;
-        this.mode = "stop";
+        this.title();
+        this.volume = String.valueOf(playerStatus.result.mixer_volume);
         if (playerStatus.result.mode.equals("play")) {
             this.playing = true;
             this.mode = "play";
+        } else {
+            this.playing = false;
+            this.mode = "stop";
         }
+        log.info("STATUS PLAYER: " + this.name +
+                " MODE: " + this.mode +
+                " " + this.playing +
+                " VOLUME: " + this.volume +
+                " SYNC: " + this.sync +
+                " CONNECTED: " + this.connected +
+                " TITLE: " + this.title);
         return true;
     }
 
@@ -731,6 +734,7 @@ public class Player {
 //  запрашивать "playlist", "name" для Soma и Di. для Spoty нету. запросить "artist"
 //        log.info("PLAYER: " + this.name + " TITLE: " + this.title);
         String title = this.playerStatus.result.current_title;
+//        log.info("CURRENT TITLE: " + this.title);
         if ((title != null) && (title != "")) {
             if (title.contains(": ")) title = title.replaceAll(":.*", "");
             if (title.contains(" - ")) title = title.replaceAll(" - .*", "");
@@ -738,19 +742,11 @@ public class Player {
         if ((title == null) || (title == "")) title = this.artistName();
         if (title == null) title = "херпоймичё";
         if (title.length() > 20) title = title.substring(1, 20);
+        title = title.replaceAll(",", " ");
+        title = title.replaceAll(":", " ");
+        title = title.replaceAll("  ", " ");
         this.title = title;
-        log.info("TITLE: " + this.title);
-    }
-
-    public Boolean ifPlaying() {
-        log.info("CHECK IF PLAYING " + this.name);
-//        this.status();
-        if (this.playerStatus.result.mode.equals("play")) {
-            log.info(this.name + " IS PLAYING: true");
-            return true;
-        }
-        log.info("IS PLAYING: false");
-        return false;
+//        log.info("TITLE: " + this.title);
     }
 
     public Player syncAllOtherPlayingToThis() {
@@ -783,7 +779,7 @@ public class Player {
         LocalTime nowTime = LocalTime.now(zoneId).truncatedTo(MINUTES);
         long diff = playerTime.until(nowTime, MINUTES);
         Boolean expired = diff > delayExpire || diff < 0;
-        log.info("EXPIRED: " + expired + " DIFF:" + diff + " > DELAY:" + delayExpire);
+        log.info("EXPIRED: " + expired + " DIFF:" + diff + " DELAY:" + delayExpire);
         return expired;
     }
 
