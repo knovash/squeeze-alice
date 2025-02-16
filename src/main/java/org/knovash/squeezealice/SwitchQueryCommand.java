@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
 import static org.knovash.squeezealice.Main.rooms;
+import static org.knovash.squeezealice.provider.Yandex.runScenario;
 
 @Log4j2
 public class SwitchQueryCommand {
@@ -35,7 +36,7 @@ public class SwitchQueryCommand {
         Player player = null;
         if (playerInQuery != null) {
             if (playerInQuery.equals("btremote")) {
-                Yandex.runScenario("уведомление клик");
+                runScenario("уведомление клик");
                 log.info("BT PLAYER: " + lmsPlayers.btPlayerName);
                 playerInQuery = lmsPlayers.btPlayerName;
             }

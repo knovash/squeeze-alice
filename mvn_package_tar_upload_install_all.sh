@@ -3,6 +3,9 @@
 BGreen='\033[1;32m'
 NC='\033[0m' # No Color
 
+export JAVA_HOME=~/.jdks/corretto-18.0.2
+export PATH=$JAVA_HOME/bin:$PATH
+
 echo -e ${BGreen}"READ FROM set_remote_ip.txt"${NC}
 printf '%s\n' "DIR: ${PWD##*/}"
 

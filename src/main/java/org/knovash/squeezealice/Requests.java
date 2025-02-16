@@ -5,6 +5,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
 
@@ -31,7 +32,15 @@ public class Requests {
 
     public static Response postToLmsForResponse(String json) {
 //  все запросы плеера для получения информации из Response response.result._artist
-        log.info("REQUEST TO LMS: " + json);
+//        log.info(">>>>>>>>>>>> REQUEST TO LMS: " + json);
+//                ОТПРАВИТЬ ОТВЕТ ОТ СЕРВЕРА В БРОКЕР
+//        try {
+//            log.info("TRY PUBLISH");
+//            CombinedServer.publishToMqtt("test", "TO LMS: " + json);
+//        } catch (MqttException e) {
+//            throw new RuntimeException(e);
+//        }
+
         Content content = null;
         Response response = null;
         try {
@@ -50,11 +59,22 @@ public class Requests {
             log.info("ERROR RESPONSE IS EMPTY");
             return null;
         }
+        log.info("RESPONSE LMS FINISH <<<<<<<<<<<<<<");
         return response;
     }
 
     public static String postToLmsForStatus(String json) {
         log.info("REQUEST TO LMS: " + json);
+
+//        log.info(">>>>>>>>>>>> REQUEST TO LMS: " + json);
+//                ОТПРАВИТЬ ОТВЕТ ОТ СЕРВЕРА В БРОКЕР
+//        try {
+//            log.info("TRY PUBLISH");
+//            CombinedServer.publishToMqtt("test", "TO LMS: " + json);
+//        } catch (MqttException e) {
+//            throw new RuntimeException(e);
+//        }
+
         String status = null;
         try {
             status = Request.Post(lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
@@ -74,6 +94,16 @@ public class Requests {
     public static String postToLmsForJsonBody(String json) {
 //  все запросы плеера для получения информации из Response response.result._artist
         log.info("REQUEST TO LMS: " + json);
+
+//        log.info(">>>>>>>>>>>> REQUEST TO LMS: " + json);
+//                ОТПРАВИТЬ ОТВЕТ ОТ СЕРВЕРА В БРОКЕР
+//        try {
+//            log.info("TRY PUBLISH");
+//            CombinedServer.publishToMqtt("test", "TO LMS: " + json);
+//        } catch (MqttException e) {
+//            throw new RuntimeException(e);
+//        }
+
         Content content = null;
         Response response = null;
         try {

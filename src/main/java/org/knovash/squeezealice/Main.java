@@ -16,6 +16,7 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 public class Main {
 
     private static final ResourceBundle bundle = ResourceBundle.getBundle("config");
+    public static String state = bundle.getString("state"); // home remote
     public static String lmsIp = bundle.getString("lmsIp");
     public static String lmsPort = bundle.getString("lmsPort");
     public static String lmsUrl = "http://" + lmsIp + ":" + lmsPort + "/jsonrpc.js/";
@@ -26,7 +27,7 @@ public class Main {
     public static Map<String, String> idRooms = new HashMap<>();
     public static List<String> rooms = new ArrayList<>();
     public static String tunnel;
-    public static ZoneId zoneId = ZoneId.of( "Europe/Minsk" );
+    public static ZoneId zoneId = ZoneId.of("Europe/Minsk");
 
     public static void main(String[] args) {
         log.info("USER TIME ZONE: " + zoneId);
@@ -39,6 +40,7 @@ public class Main {
         System.setProperty("userApp.root", System.getProperty("user.home"));
         log.info("SILENCE: " + System.getProperty("userApp.root"));
         Utils.readConfig();
+
         if (!Utils.checkLmsIp(lmsIp)) {
             log.info("WRONG LMS IP. RUN SEARCH LMS IP");
             Utils.searchLmsIp();
@@ -58,7 +60,6 @@ public class Main {
         Yandex.getRoomsAndDevices();
 
         JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
-//        Yandex.sayServerStart();
         Server.start();
 //        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate);
     }

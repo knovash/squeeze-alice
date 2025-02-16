@@ -33,7 +33,11 @@ public class SpotifyRequests {
             return null;
         }
         if (json.equals("204")) {
-//            log.info("204");
+//            log.info(json);
+            return null;
+        }
+        if (json.equals("400")) {
+//            log.info(json);
             return null;
         }
         return json;

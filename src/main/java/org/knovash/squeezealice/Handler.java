@@ -1,50 +1,57 @@
 package org.knovash.squeezealice;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.knovash.squeezealice.provider.*;
 import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.utils.HandlerUtils;
-import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
-import org.knovash.squeezealice.web.*;
+import org.knovash.squeezealice.web.PageIndex;
+import org.knovash.squeezealice.web.PagePlayers;
+import org.knovash.squeezealice.web.PageSpotify;
+import org.knovash.squeezealice.web.PageYandex;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.Arrays;
 import java.util.HashMap;
 
 @Log4j2
 public class Handler implements HttpHandler {
 
+    public static HttpExchange httpExchange2;
+    public static Headers headers;
+
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         log.info("START ---------------------------------------------");
-        String method = httpExchange.getRequestMethod();
-        String path = httpExchange.getRequestURI().getPath();
-        String host = HandlerUtils.getHeaderValue(httpExchange, "Host");
-        log.info("REQUEST: " + method + " " + "http://" + host + path);
-        Headers headers = httpExchange.getRequestHeaders();
-        log.info("HEADERS: " + headers.entrySet());
-        String xRequestId = HandlerUtils.getHeaderValue(httpExchange, "X-request-id");
-//        log.info("XREQUESTID: " + xRequestId);
-        String body = HandlerUtils.httpExchangeGetBody(httpExchange);
-        if (body != null) log.info("BODY: " + body);
-        String query = httpExchange.getRequestURI().getQuery();
-        if (query != null) log.info("QUERY: " + query);
+        Context context = HandlerUtils.contextCreate(httpExchange);
+//          обработка контекста и обращение в LMS
+        context = Handler.switchContext(context);
+//          вернуть ответ от сервера
+        String json = context.json;
+        int code = context.code;
+        log.info("CODE: " + code);
+        httpExchange2.getResponseHeaders().putAll(context.headers);
+        httpExchange2.sendResponseHeaders(code, json.getBytes().length);
+        OutputStream outputStream = httpExchange2.getResponseBody();
+        outputStream.write(json.getBytes());
+        outputStream.flush();
+        outputStream.close();
+        log.info("FINISH");
+    }
 
-        HashMap<String, String> queryMap = HandlerUtils.convertQueryToMap(query);
+    public static Context switchContext(Context context) {
+        String path = context.path;
+        log.info("SWITCH PATH: " + path);
 
-        Context context = new Context();
-        context.body = body;
-        context.headers = headers;
-        context.path = path;
-        context.xRequestId = xRequestId;
-        context.query = query;
-        context.queryMap = queryMap;
-
-//        log.info("SWITCH PATH: " + path);
         switch (path) {
             case ("/"):
                 context = PageIndex.action(context);
@@ -100,18 +107,11 @@ public class Handler implements HttpHandler {
                 context = PageIndex.action(context);
                 break;
         }
-
-        String json = context.json;
-        int code = context.code;
-//        log.info("CODE: " + code);
-        httpExchange.getResponseHeaders().putAll(context.headers);
-//        log.info("HEADERS: " + httpExchange.getResponseHeaders().entrySet());
-//        log.info("RESPONSE: " + json);
-        httpExchange.sendResponseHeaders(code, json.getBytes().length);
-        OutputStream outputStream = httpExchange.getResponseBody();
-        outputStream.write(json.getBytes());
-        outputStream.flush();
-        outputStream.close();
-        log.info("FINISH");
+        log.info("FINISH SWITCH CONTEXT");
+        return context;
     }
+
+
+
+
 }

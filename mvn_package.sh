@@ -23,22 +23,6 @@ echo -e "\n"${BGreen}"MVN PACKAGE"${NC}"\n"
 printf '%s\n' "DIR: ${PWD##*/}"
 mvn package
 
-echo -e "\n"${BGreen}"TAR"${NC}"\n"
-printf '%s\n' "DIR: ${PWD##*/}"
-sh tar.sh
-
-echo -e "\n"${BGreen}"COPY TAR TO REMOTE "$remote${NC}"\n"
-printf '%s\n' "DIR: ${PWD##*/}"
-sshpass -p "12345" scp *.gz root@$remote:/root/
-
-echo -e "\n"${BGreen}"UNTAR to root"${NC}"\n"
-printf '%s\n' "DIR: ${PWD##*/}"
-ssh root@$remote sudo tar xzvf squeeze-alice-pak.tar.gz -C /root
-
-echo -e "\n"${BGreen}"RUN INSTALL ALICE"${NC}"\n"
-printf '%s\n' "DIR: ${PWD##*/}"
-ssh root@$remote sh install_alice.sh
-
 echo -e "\n"${BGreen}"FINISH"${NC}"\n"
-sleep 15
-#$SHELL
+#sleep 15
+$SHELL
