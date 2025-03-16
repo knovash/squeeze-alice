@@ -278,7 +278,7 @@ public class Utils {
     }
 
     public static void readIdRooms() {
-        log.info("READ ROOMS FROM rooms.json");
+        log.debug("READ ROOMS FROM rooms.json");
         idRooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
         if (idRooms == null) {
             idRooms = new HashMap<>();

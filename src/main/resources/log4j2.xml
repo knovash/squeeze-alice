@@ -12,10 +12,10 @@
         </File>
     </Appenders>
     <Loggers>
-        <Root level="info">
+        <Root level="debug">
             <AppenderRef ref="Console" level="info"/>
-            <AppenderRef ref="File" level="info"/>
-            <AppenderRef ref="File2" level="error"/>
+            <AppenderRef ref="File" level="debug"/>
+            <AppenderRef ref="File2" level="info"/>
         </Root>
 
     </Loggers>

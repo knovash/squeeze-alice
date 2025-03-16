@@ -29,7 +29,7 @@ public class SwitchVoiceCommand {
         String answer = "проверка связи";
         log.info("ANSWER MOCK:------- " + answer);
 
-        String sss ="{\n" +
+        String sss = "{\n" +
                 "  \"response\": {\n" +
                 "    \"text\": \"Сейчас играет техно\",\n" +
                 "    \"tts\": \"Сейчас играет техно\",\n" +
@@ -89,7 +89,15 @@ public class SwitchVoiceCommand {
     public static String switchVoice(String roomId, String command) {
         log.info("SWITCH VOICE COMMAND: " + roomId + " " + command);
 //      НАСТРОЙКА
-//        if (command.contains("повтори")) return repeat(command);
+        if (command.equals(""))
+            return "Я умею управлять плеерами подключенными в Logitech Media Server. Спросите у навыка," +
+                    "что играет и я отвечу что сейчас играет или подскажу как настроить плееры";
+        if (command.contains("помощь") || command.contains("Помощь"))
+            return "У вас локально должен быть установлен Logitech Media Server и приложение навыка, например в докере";
+        if (command.contains("что ты умеешь") || command.contains("Что ты умеешь"))
+            return "Я умею управлять плеерами подключенными в Logitech Media Server";
+
+
         if (command.contains("найди сервер")) return searchServer();
         if (command.contains("найди колонки")) return searchPlayers();
         if (command.matches("это комната.*с колонкой.*")) return selectRoomWithSpeaker(command);
@@ -225,13 +233,9 @@ public class SwitchVoiceCommand {
     }
 
     public static void selectRoomByCorrectRoom(String target) {
-        log.info("START SELECT ROOM: " +target);
+        log.info("START SELECT ROOM: " + target);
         idRooms.put(aliceId, target);
-        log.info("TRY WRITE TO rooms.json ID: " + idRooms);
         JsonUtils.mapToJsonFile(idRooms, "rooms.json");
-        log.info("WRITE OK");
-//        log.info("ADD TO ROOMS: " + target + " WHITH ID: " + aliceId);
-        log.info("WRITE FILE rooms.json");
     }
 
     public static String selectPlayerByCommand(String command) {

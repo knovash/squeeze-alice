@@ -14,7 +14,7 @@ import static org.knovash.squeezealice.Main.*;
 public class ProviderAction {
 
     public static Context providerActionRun(Context context) {
-        log.info("ACTION CONTEXT: " + context);
+        log.debug("ACTION START CONTEXT: " + context);
         if (config.lmsIp == null) return null;
         String body = context.body;
 
@@ -31,7 +31,7 @@ public class ProviderAction {
         responseYandex.request_id = xRequestId;
 //        responseYandex.payload.devices.forEach(d -> deviseSetResult(d));
         String json = JsonUtils.pojoToJson(responseYandex);
-        log.info("DEVICES COUNT: " + responseYandex.payload.devices.size());
+        log.info("DEVICES IN PAYLOAD: " + responseYandex.payload.devices.size());
         responseYandex.payload.devices.forEach(d -> runInstance(d));
         context.bodyResponse = json;
         context.code = 200;
@@ -45,7 +45,7 @@ public class ProviderAction {
         String instance = device.capabilities.get(0).state.instance;
         String value = device.capabilities.get(0).state.value;
         Boolean relative = device.capabilities.get(0).state.relative;
-        log.info("ID: " + id + " INSTANCE: " + instance + " VALUE: " + value + " RELATIVE: " + relative);
+        log.info("DEVICE ID: " + id + " INSTANCE: " + instance + " VALUE: " + value + " RELATIVE: " + relative);
         Player player = lmsPlayers.getPlayerByDeviceId(id);
         if (player == null) return;
         switch (instance) {

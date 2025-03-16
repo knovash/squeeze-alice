@@ -80,8 +80,8 @@ public class LmsPlayers {
 
         if (lmsPlayers.players != null && lmsPlayers.players.size() > 0)
             PageIndex.msgLms = "LMS подключено " + lmsPlayers.players.size() + " плееров "
-                     + lmsPlayers.players.stream().map(player -> player.name)
-                    .collect(Collectors.toList()) ;
+                    + lmsPlayers.players.stream().map(player -> player.name)
+                    .collect(Collectors.toList());
         else
             PageIndex.msgLms = "LMS нет плееров. Подключите плееры http://192.168.1.110:9000";
 
@@ -258,8 +258,8 @@ public class LmsPlayers {
         lmsPlayers.players.remove(player);
 
 
-       Device device = SmartHome.getDeviceById(id);
-       SmartHome.devices.remove(device);
+        Device device = SmartHome.getDeviceById(id);
+        SmartHome.devices.remove(device);
 
         write();
         return "OK";
@@ -293,7 +293,7 @@ public class LmsPlayers {
                 .filter(p -> p.deviceId != null)
                 .filter(p -> p.deviceId.equals(id))
                 .findFirst().orElse(null);
-        log.info("ID: " + id + " PLAYER: " + player);
+        if (player != null) log.info("ID: " + id + " PLAYER: " + player.name);
         return player;
     }
 

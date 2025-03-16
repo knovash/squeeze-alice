@@ -15,7 +15,6 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 @Log4j2
 public class Main {
 
-    public static final ResourceBundle bundle = ResourceBundle.getBundle("config");
     public static LmsPlayers lmsPlayers = new LmsPlayers();
     public static Map<String, String> idRooms = new HashMap<>();
     public static List<String> rooms = new ArrayList<>();

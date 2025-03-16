@@ -618,7 +618,7 @@ public class Player {
 
     public Player saveLastTime() {
         this.lastPlayTime = LocalTime.now(zoneId).truncatedTo(MINUTES).toString();
-        log.info("SAVE LAST TIME: " + this.lastPlayTime);
+        log.debug("SAVE LAST TIME: " + this.lastPlayTime);
         return this;
     }
 

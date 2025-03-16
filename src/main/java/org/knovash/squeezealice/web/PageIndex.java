@@ -58,6 +58,7 @@ public class PageIndex {
                 "<p><a href=\\players>Настройка колонок</a></p> \n" +
                 "<p><a href=\\spotify>Настройка New</a></p> \n" +
                 "<p><a href=\\spotify>Настройка Spotify</a></p> \n" +
+                "<p><a href=\\hive>Настройка Hive</a></p> \n" +
                 "<p><a href=\\yandex>Настройка Yandex</a></p> \n" +
                 "<p><a href=\\cmd?action=state_devices>Посмотреть настройки Devices</a></p> \n" +
                 "<p><a href=\\cmd?action=state_players>Посмотреть настройки Players</a></p> \n" +

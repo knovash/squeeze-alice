@@ -10,9 +10,6 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 @Data
@@ -43,7 +40,7 @@ public class SmartHome {
     }
 
     public static Device create(String room, Integer index) {
-        log.info(" ADD IN ROOM: " + room + " MUSIC RECIVER ID: " + index);
+        log.debug(" ADD IN ROOM: " + room + " MUSIC RECIVER ID: " + index);
         Device device = new Device();
         device.type = "devices.types.media_device.receiver";
         device.room = room;
@@ -52,17 +49,10 @@ public class SmartHome {
                         .filter(device1 -> device1.room.equals(device.room))
                         .count();
         log.info("DEVICE: " + device.room + " " + device.id);
-//        SmartHome.devices.stream().forEach(device1 -> log.info(device1.room + " " + device1.id));
-//        log.info("CONTEINS: " + conteinsCounter);
-
         if (conteinsCounter > 0) {
-            log.info("EXISTS STOP");
-            return null;}
-
-
-
-
-
+            log.debug("EXISTS STOP");
+            return null;
+        }
 
         Capability volume = new Capability();
         volume.type = "devices.capabilities.range"; // Тип умения. channel     volume
@@ -122,12 +112,10 @@ public class SmartHome {
     }
 
     public static void read() {
-        log.info("READ DEVICES");
-        log.info("DEVICES: " + devices.size());
         devices = JsonUtils.jsonFileToList("devices.json", Device.class);
         if (devices == null) devices = new ArrayList<>();
         log.info("DEVICES: " + devices.size());
-//        log.info("DEVICES: " + devices);
+        log.debug("DEVICES: " + devices);
     }
 
     public static void write() {

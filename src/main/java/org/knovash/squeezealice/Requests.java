@@ -31,15 +31,6 @@ public class Requests {
     }
 
     public static Response postToLmsForResponse(String json) {
-//  все запросы плеера для получения информации из Response response.result._artist
-//        log.info(">>>>>>>>>>>> REQUEST TO LMS: " + json);
-//                ОТПРАВИТЬ ОТВЕТ ОТ СЕРВЕРА В БРОКЕР
-//        try {
-//            log.info("TRY PUBLISH");
-//            CombinedServer.publishToMqtt("test", "TO LMS: " + json);
-//        } catch (MqttException e) {
-//            throw new RuntimeException(e);
-//        }
 
         Content content = null;
         Response response = null;
@@ -59,7 +50,7 @@ public class Requests {
             log.info("ERROR RESPONSE IS EMPTY");
             return null;
         }
-        log.info("RESPONSE LMS FINISH <<<<<<<<<<<<<<");
+
         return response;
     }
 

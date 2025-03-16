@@ -12,27 +12,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-import static org.knovash.squeezealice.Main.config;
 
 @Log4j2
-//public class HandlerAlice implements HttpHandler {
 public class HandlerAll implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        log.info("START ---------------------------------------------");
+        log.info("HTTP HANDLER START >>>>>>>>>>>>");
 //        извлечение данных из запроса в контекст
         Context context = Context.contextCreate(httpExchange);
-
-        if (config.inCloud) {
-            context = HandlerAll.processContextCloud(context);
-        } else {
-            context = HandlerAll.processContext(context);
-        }
-
-        log.info("CONTEXT AFTER: " + context);
+        context = HandlerAll.processContext(context);
         String response = context.bodyResponse;
-//        log.info("RESPONSE BODY FROM CONTEXT: " + response);
 
 //        отправка ответа сервера
         byte[] responseBytes = response.getBytes(StandardCharsets.UTF_8);
@@ -41,30 +31,12 @@ public class HandlerAll implements HttpHandler {
         try (OutputStream outputStream = httpExchange.getResponseBody()) {
             outputStream.write(responseBytes);
         }
-        log.info("FINISH");
-    }
-
-
-    public static Context processContextCloud(Context context) {
-        String path = context.path;
-        log.info("SWITCH PATH CLOUD: " + path);
-        switch (path) {
-            case ("/cloud"):
-                log.info("CLOUD PAGE");
-                return PageIndexCloud.action(context);
-//            case ("/alice/"):
-//                log.info("ALICE VOICE");
-//              return SwitchVoiceCommand.action(context);
-            default:
-                log.info("SEND MQTT TO HOME LMS PROVIDER");
-                String contextJson = Hive.sendToTopicContextWaitForContext("to_lms_id", context);
-                return Context.fromJson(contextJson);
-        }
+        log.info("HTTP HANDLER FINISH <<<<<<<<<<<");
     }
 
     public static Context processContext(Context context) {
         String path = context.path;
-        log.info("SWITCH PATH LMS: " + path);
+        log.info("SWITCH CONTEXT PATH: " + path);
         switch (path) {
             case ("/"):
                 return PageIndex.action(context);
@@ -75,6 +47,8 @@ public class HandlerAll implements HttpHandler {
                 return PagePlayers.action(context);
             case ("/spotify"):
                 return PageSpotify.action(context);
+            case ("/hive"):
+                return PageHive.action(context);
             case ("/yandex"):
                 return PageYandex.action(context);
             case ("/cmd"):
@@ -116,7 +90,7 @@ public class HandlerAll implements HttpHandler {
                 context = PageIndex.action(context);
                 break;
         }
-        log.info("FINISH SWITCH CONTEXT");
+        log.info("FINISH SWITCH PATH. RETURN CONTEXT");
         return context;
     }
 }

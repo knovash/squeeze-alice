@@ -108,7 +108,7 @@ public class Yandex {
     }
 
     public static void getRoomsAndDevices() {
-        log.info("GET ROOMS FROM YANDEX SMART HOME");
+        log.debug("GET ROOMS FROM YANDEX SMART HOME");
         String json;
         try {
             Response response = Request.Get("https://api.iot.yandex.net/v1.0/user/info")
@@ -122,23 +122,23 @@ public class Yandex {
         yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
 //        log.info("YANDEX:" + json);
         Main.rooms = yandexInfo.rooms.stream().map(r -> r.name).collect(Collectors.toList());
-        log.info("ROOMS ALL: " + Main.rooms);
+        log.info("YANDEX ROOMS: " + Main.rooms);
 //        SmartHome.devices = new ArrayList<>();
 
-        log.info("DEVICES ALL SIZE: " + yandexInfo.devices.size());
+        log.debug("DEVICES ALL: " + yandexInfo.devices.size());
 
         int yandexMusicDevCounter =
                 (int) yandexInfo.devices.stream()
                         .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                         .filter(device -> device.name.equals("музыка")).count();
 
-        log.info("DEVICES MUSIC SIZE: " + yandexMusicDevCounter);
+        log.info("DEVICES MUSIC: " + yandexMusicDevCounter);
         if (SmartHome.devices != null) log.info("SmartHome.devices.size(): " + SmartHome.devices.size());
 
         if (SmartHome.devices.size() == 0)
-            msgSqa = "SQA нет плееров, добавте плееры в /players";
+            msgSqa = "нет плееров, добавте плееры в /players";
         else
-            msgSqa = "SQA подключено " + SmartHome.devices.size() + " плееров " + SmartHome.devices.stream().map(d ->
+            msgSqa = "подключено " + SmartHome.devices.size() + " плееров " + SmartHome.devices.stream().map(d ->
                             " id=" + d.id + " " + d.room + "-" + lmsPlayers.getPlayerNameByDeviceId(d.id))
                     .collect(Collectors.toList());
         log.info(msgSqa);

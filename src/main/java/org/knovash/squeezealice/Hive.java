@@ -7,7 +7,6 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 
 import java.io.IOException;
@@ -24,35 +23,24 @@ import static org.knovash.squeezealice.voice.SwitchVoiceCommand.aliceId;
 @Log4j2
 public class Hive {
 
-    private static final String HIVE_BROKER = "ssl://811c56b338f24aeea3215cd680851784.s1.eu.hivemq.cloud:8883";
-    private static final String HIVE_USERNAME = "novashki";
-    private static final String HIVE_PASSWORD = "Darthvader0";
+    public static  String hiveBroker = "ssl://811c56b338f24aeea3215cd680851784.s1.eu.hivemq.cloud:8883";
+    public static  String hiveUsername = "novashki";
+    public static  String hivePassword = "Darthvader0";
     private static MqttClient mqttClient;
     private static final ResponseManager responseManager = new ResponseManager();
 
     public static void start() {
-        log.info("MQTT STARTING...");
+        log.debug("MQTT STARTING...");
         try {
-            mqttClient = new MqttClient(HIVE_BROKER, MqttClient.generateClientId(), new MemoryPersistence());
+            mqttClient = new MqttClient(hiveBroker, MqttClient.generateClientId(), new MemoryPersistence());
             MqttConnectOptions options = new MqttConnectOptions();
-            options.setUserName(HIVE_USERNAME);
-            options.setPassword(HIVE_PASSWORD.toCharArray());
+            options.setUserName(hiveUsername);
+            options.setPassword(hivePassword.toCharArray());
             mqttClient.connect(options);
-
-            // Подписка на топики ответов
-            if (config.inCloud) {
-//                подписаться на топики для как сервер в облаке
-//                mqttClient.subscribe("from_lms", (topic, message) -> handleMqttMessageJson(topic, message));
-                mqttClient.subscribe("from_lms_id", (topic, message) -> handleMqttMessageId(topic, message));
-            } else {
-//                подписаться на топики для как сервер дома для ЛМС
-//                mqttClient.subscribe("to_lms", (topic, message) -> handleMqttMessageJson(topic, message));
-                mqttClient.subscribe("to_lms_id", (topic, message) -> handleMqttMessageIdSendToCloud2(topic, message));
+                mqttClient.subscribe("to_lms_id", (topic, message) -> handleMqttFromUdyMessage(topic, message));
                 mqttClient.subscribe("to_lms_voice_id", (topic, message) -> handleVoiceRequestAndSendAnswer(topic, message));
-//                mqttClient.subscribe("to_lms_voice_id", (topic, message) -> handleAliceRequestAndSendResponse(topic, message));
-            }
             log.info("MQTT STARTED OK");
-            sendToTopicText("INFO", "CONNECTED! V.1.5 OS: " + System.getProperty("os.name") + " INCLOUD: " + config.inCloud);
+            sendToTopicText("INFO", "CONNECTED! V.1.5 OS: " + System.getProperty("os.name"));
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -81,18 +69,6 @@ public class Hive {
                     correlationId, contextJson);
             mqttClient.publish(topic, new MqttMessage(payload.getBytes()));
 //            log.info("MQTT PUBLISH OK");
-            if (config.inCloud) {
-                // Ожидание ответа
-                CompletableFuture<String> future = responseManager.waitForResponse(correlationId);
-                try {
-//                log.info("MQTT WAIT FOR RESPONSE...");
-                    responseBody = future.get(15, TimeUnit.SECONDS);
-                    log.info("MQTT CONTEXT RECIEVED: " + responseBody);
-                } catch (TimeoutException e) {
-                    log.info("MQTT ERROR NO RESPONSE :(");
-                    responseBody = "---";
-                }
-            }
         } catch (Exception e) {
         }
         return responseBody;
@@ -127,21 +103,19 @@ public class Hive {
         }
     }
 
-    private static void handleMqttMessageIdSendToCloud2(String topic, MqttMessage message) {
-        log.info("GET MESSAGE FROM TOPIC ID: " + topic);
-        log.info("MESSAGE : " + message);
+    private static void handleMqttFromUdyMessage(String topic, MqttMessage message) {
+        log.info("RECIEVED MESSAGE FROM TOPIC: " + topic);
+        log.debug("MESSAGE : " + message);
         String payload = new String(message.getPayload());
         Map<String, String> params = parseParams(payload);
-        log.info("Received message: " + payload);
 //        получить json context из сообщения
         String contextJson = "";
         String correlationId = "";
         if (params.containsKey("correlationId")) {
             correlationId = params.get("correlationId");
-            log.info("ID : " + correlationId);
             contextJson = params.getOrDefault("context", "");
-            log.info("CONTEXT JSON : " + contextJson);
-//            responseManager.completeResponse(correlationId, contextJson);
+            log.debug("CONTEXT JSON : " + contextJson);
+            responseManager.completeResponse(correlationId, contextJson);
         }
 //      получить объект контекст из json
         Context context = Context.fromJson(contextJson);
@@ -151,7 +125,7 @@ public class Hive {
         payload = String.format("correlationId=%s&context=%s",
                 correlationId, context.toJson());
 
-        log.info("Send message: " + payload);
+//        log.info("Send message: " + payload);
         try {
             MqttMessage responseMessage = new MqttMessage(payload.getBytes());
             mqttClient.publish("from_lms_id", responseMessage);
