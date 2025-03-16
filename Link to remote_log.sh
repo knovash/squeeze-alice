@@ -1,1 +1,0 @@
-/home/konstantin/IdeaProjects/squeeze-alice/remote_log.sh

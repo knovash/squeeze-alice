@@ -627,7 +627,7 @@ public class Player {
         if (path != null && !path.equals(config.silence)) {
             this.lastPath = path;
             lmsPlayers.lastPath = this.lastPath;
-            log.info("SAVE LAST PATH: " + this.lastPath);
+            log.debug("SAVE LAST PATH: " + this.lastPath);
         }
         this.status();
         this.lastTitle = this.title;
@@ -636,7 +636,7 @@ public class Player {
     }
 
     public Player saveLastChannel(int channel) {
-        log.info("SAVE LAST CHANNEL: " + channel);
+        log.debug("SAVE LAST CHANNEL: " + channel);
         lmsPlayers.lastChannel = channel;
         this.lastChannel = channel;
         this.status();

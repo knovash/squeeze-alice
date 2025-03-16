@@ -30,7 +30,7 @@ public class Hive {
     private static final ResponseManager responseManager = new ResponseManager();
 
     public static void start() {
-        log.debug("MQTT STARTING...");
+        log.info("MQTT STARTING...");
         try {
             mqttClient = new MqttClient(hiveBroker, MqttClient.generateClientId(), new MemoryPersistence());
             MqttConnectOptions options = new MqttConnectOptions();
@@ -137,49 +137,33 @@ public class Hive {
 
     private static void handleVoiceRequestAndSendAnswer(String topic, MqttMessage request) {
         log.info("GET MESSAGE FROM TOPIC ID: " + topic);
-        log.info("MESSAGE : " + request);
+        log.debug("MESSAGE : " + request);
         String payload = new String(request.getPayload());
         Map<String, String> params = parseParams(payload);
-//        log.info("Received message: " + payload);
-
         String contextJson = "";
         String correlationId = "";
-
 //        получить из реквеста ID и CONTEXT
         if (params.containsKey("correlationId")) {
             correlationId = params.get("correlationId");
-            log.info("ID : " + correlationId);
+            log.debug("ID : " + correlationId);
             contextJson = params.getOrDefault("context", "");
-//            log.info("TEXT COMMAND : " + contextJson);
-
-
-
             Context context = Context.fromJson(contextJson);
-//            log.info("CONTEXT 2: " + context);
-//            log.info("CONTEXT 2 BODY: " + context.body);
-//            log.info("USER_ID : " + context.body);
-
             AliceRequest aliceRequest = AliceRequest.fromJson(context.body);
             String userId = aliceRequest.session.userId;
             String applicationId = aliceRequest.session.application.applicationId;
             String command = aliceRequest.request.command;
-            log.info("APPID : " + applicationId);
-            log.info("USERID : " + userId);
+            log.debug("APPID : " + applicationId);
             log.info("command : " + command);
-
             aliceId = applicationId;
-
 
 //          выполнить голосовую команду c ID колонки(комнаты) и получить ответ
                 String answer = SwitchVoiceCommand.switchVoice(applicationId, command);
                 log.info("ANSWER : " + answer);
+
 //         положить в пэйлоад сообщения ид и ответ
                 payload = String.format("correlationId=%s&context=%s",
                         correlationId, answer);
 
-
-//            Utils.sleep(1);
-//            log.info("Send message: " + payload);
             try {
                 MqttMessage responseMessage = new MqttMessage(payload.getBytes());
                 mqttClient.publish("from_lms_id", responseMessage);

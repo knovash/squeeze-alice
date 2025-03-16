@@ -87,7 +87,7 @@ public class SwitchVoiceCommand {
     }
 
     public static String switchVoice(String roomId, String command) {
-        log.info("SWITCH VOICE COMMAND: " + roomId + " " + command);
+        log.info("SWITCH VOICE COMMAND: " + " " + command);
 //      НАСТРОЙКА
         if (command.equals(""))
             return "Я умею управлять плеерами подключенными в Logitech Media Server. Спросите у навыка," +

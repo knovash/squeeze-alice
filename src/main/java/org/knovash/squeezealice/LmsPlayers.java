@@ -180,7 +180,7 @@ public class LmsPlayers {
                 .filter(Objects::nonNull).findFirst();
         player = (Player) optionalPlayer.orElse(null);
         if (player != null) log.info("ROOM: " + room + " PLAYER: " + player.name);
-        if (player == null) log.info("PLAYER NOT FOUND WHITH ROOM " + room);
+        if (player == null) log.debug("PLAYER NOT FOUND WHITH ROOM " + room);
         return player;
     }
 
@@ -270,7 +270,7 @@ public class LmsPlayers {
         lmsPlayers.updateServerStatus();
         List<String> separatePlayers =
                 lmsPlayers.players.stream()
-                        .peek(p -> log.info(p.name + " separate " + p.separate))
+                        .peek(p -> log.debug(p.name + " separate " + p.separate))
                         .filter(p -> p.separate)
                         .filter(p -> !p.name.equals(excludePlayer.name))
 //                        .peek(p -> log.info(p.name + " filter separate " + p.separate))
@@ -372,10 +372,10 @@ public class LmsPlayers {
                 })
                 .collect(Collectors.toList());
 
-        log.info("ROOMS&PLAYERS NAMES: " + roomsAndPlayersNames);
-        log.info("ROOMS&PLAYERS MODES: " + roomsAndPlayersModes);
-        log.info("ROOMS&PLAYERS SYNCS: " + roomsAndPlayersSyncs);
-        log.info("ROOMS&PLAYERS TITLES: " + roomsAndPlayersTitles);
+        log.debug("ROOMS&PLAYERS NAMES: " + roomsAndPlayersNames);
+        log.debug("ROOMS&PLAYERS MODES: " + roomsAndPlayersModes);
+        log.debug("ROOMS&PLAYERS SYNCS: " + roomsAndPlayersSyncs);
+        log.debug("ROOMS&PLAYERS TITLES: " + roomsAndPlayersTitles);
         String joinedRoomsAndPlayersNames = String.join(",", roomsAndPlayersNames);
         String joinedRoomsAndPlayersModes = String.join(",", roomsAndPlayersModes);
         String joinedRoomsAndPlayersSyncs = String.join(",", roomsAndPlayersSyncs);
