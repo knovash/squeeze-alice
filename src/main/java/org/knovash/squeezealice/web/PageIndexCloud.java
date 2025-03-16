@@ -9,7 +9,7 @@ import org.knovash.squeezealice.utils.Utils;
 import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
-public class PageIndex {
+public class PageIndexCloud {
 
     public static String msgLms = "LMS сервер не найден https://lyrion.org";
     public static String msgSqa = "SQA добавьте плееры http://localhost:8010/players";
@@ -47,25 +47,16 @@ public class PageIndex {
                 "<body> \n" +
                 "<p><strong>Squeeze-Alice</strong></p> \n" +
 
-                "LMS IP: " + config.lmsIp + ":" + config.lmsPort + "<br>" +
-                PageIndex.msgLms + "<br>" +
-                PageIndex.msgSqa + "<br>" +
-                "Колонки Алиса: "+Main.idRooms +"<br>" +
-                "УДЯ комнаты: " + rooms + "<br>" +
-                PageIndex.msgUdy + "<br>" +
 
-                "<p><a href=\\refresh>Обновить</a></p> \n" +
-                "<p><a href=\\players>Настройка колонок</a></p> \n" +
-                "<p><a href=\\spotify>Настройка New</a></p> \n" +
-                "<p><a href=\\spotify>Настройка Spotify</a></p> \n" +
+                "<p><a href=\\refresh>222222222222222222222</a></p> \n" +
+                "<p><a href=\\players>Настрffffffffffffffойка колонок</a></p> \n" +
+                "<p><a href=\\spotify>Настрfffffffffffffffffойка New</a></p> \n" +
+                "<p><a href=\\spotify>Настffffffffffffffffffройка Spotify</a></p> \n" +
                 "<p><a href=\\yandex>Настройка Yandex</a></p> \n" +
                 "<p><a href=\\cmd?action=state_devices>Посмотреть настройки Devices</a></p> \n" +
                 "<p><a href=\\cmd?action=state_players>Посмотреть настройки Players</a></p> \n" +
 
-//                "<p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
-//                "<p><a href=\\cmd?action=reset_players>Reset players</a></p> \n" +
-//                "<p><a href=\\cmd?action=restart>Restart server service</a></p> \n" +
-//                "<p><a href=\\cmd?action=reboot>Reboot device</a></p> \n" +
+
                 "<p><b>" + "Комманды:</b></p>" +
                 "<p>" +
                 "Алиса, что играет<br>" +

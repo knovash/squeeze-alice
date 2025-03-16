@@ -52,8 +52,8 @@ public class SmartHome {
                         .filter(device1 -> device1.room.equals(device.room))
                         .count();
         log.info("DEVICE: " + device.room + " " + device.id);
-        SmartHome.devices.stream().forEach(device1 -> log.info(device1.room + " " + device1.id));
-        log.info("CONTEINS: " + conteinsCounter);
+//        SmartHome.devices.stream().forEach(device1 -> log.info(device1.room + " " + device1.id));
+//        log.info("CONTEINS: " + conteinsCounter);
 
         if (conteinsCounter > 0) {
             log.info("EXISTS STOP");
@@ -123,10 +123,11 @@ public class SmartHome {
 
     public static void read() {
         log.info("READ DEVICES");
-        log.info("DEVICES: " + devices);
+        log.info("DEVICES: " + devices.size());
         devices = JsonUtils.jsonFileToList("devices.json", Device.class);
         if (devices == null) devices = new ArrayList<>();
-        log.info("DEVICES: " + devices);
+        log.info("DEVICES: " + devices.size());
+//        log.info("DEVICES: " + devices);
     }
 
     public static void write() {

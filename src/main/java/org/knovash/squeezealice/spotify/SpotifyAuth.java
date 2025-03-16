@@ -10,7 +10,6 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.knovash.squeezealice.Context;
-import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.web.PageSpotiCallback;
 
@@ -18,6 +17,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 
+import static org.knovash.squeezealice.Main.config;
 import static org.knovash.squeezealice.spotify.SpotifyRequests.requestPost;
 
 
@@ -29,7 +29,7 @@ public class SpotifyAuth {
     public static String client_secret;
     public static String encoded;
     public static String response_type = "code";
-    public static String redirect_uri = Main.tunnel+"/spoti_callback";
+    public static String redirect_uri = config.domain + "/spoti_callback";
     public static String show_dialog; // Optional
     public static String scope =
             "app-remote-control " +
@@ -52,7 +52,7 @@ public class SpotifyAuth {
 //  https://developer.spotify.com/dashboard/f45a18e2bcfe456dbd9e7b73e74514af/settings
         log.info("");
         log.info("REQUEST AUTH REDIRECT");
-        context.json = "REDIRECT";
+        context.bodyResponse = "REDIRECT";
         context.code = 302;
         String location = "https://accounts.spotify.com/authorize?" +
                 "client_id=" + client_id + "&" +            // Required
@@ -113,7 +113,7 @@ public class SpotifyAuth {
         state = context.queryMap.get("state");
         requestAccessToken();
         String json = PageSpotiCallback.page();
-        context.json = json;
+        context.bodyResponse = json;
         context.code = 200;
         log.info("FINISH\n");
         return context;

@@ -1,7 +1,6 @@
 package org.knovash.squeezealice.provider;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.Actions;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.provider.response.*;
@@ -9,15 +8,24 @@ import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.util.concurrent.CompletableFuture;
 
-import static org.knovash.squeezealice.Main.lmsIp;
-import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 public class ProviderAction {
 
-    public static Context action(Context context) {
-        if (lmsIp == null) return null;
+    public static Context providerActionRun(Context context) {
+        log.info("ACTION CONTEXT: " + context);
+        if (config.lmsIp == null) return null;
         String body = context.body;
+
+        if (body.equals("")|| body.equals(null)){
+            log.info("BODY NULL");
+//            json = "{\"request_id\":\"" + xRequestId + "\",\"payload\":{\"devices\":[]}}";
+//            context.bodyResponse = json;
+            context.code = 200;
+            return context;
+        }
+
         String xRequestId = context.xRequestId;
         ResponseYandex responseYandex = JsonUtils.jsonToPojo(body, ResponseYandex.class);
         responseYandex.request_id = xRequestId;
@@ -25,17 +33,12 @@ public class ProviderAction {
         String json = JsonUtils.pojoToJson(responseYandex);
         log.info("DEVICES COUNT: " + responseYandex.payload.devices.size());
         responseYandex.payload.devices.forEach(d -> runInstance(d));
-        context.json = json;
+        context.bodyResponse = json;
         context.code = 200;
         return context;
     }
 
-//    public static void deviseSetResult(Device device) {
-//        device.capabilities.get(0).state.action_result = new ActionResult();
-//        device.capabilities.get(0).state.action_result.status = "DONE";
-//    }
-
-    public static void runInstance(Device device) {
+    private static void runInstance(Device device) {
         device.capabilities.get(0).state.action_result = new ActionResult();
         device.capabilities.get(0).state.action_result.status = "DONE";
         String id = device.id;

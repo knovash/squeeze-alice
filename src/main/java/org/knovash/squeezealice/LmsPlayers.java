@@ -209,7 +209,7 @@ public class LmsPlayers {
                         .filter(p -> p.playing)
                         .filter(p -> !p.name.equals(exceptName))
                         .filter(p -> p.path() != null)
-                        .filter(p -> !p.path().equals(silence))
+                        .filter(p -> !p.path().equals(config.silence))
 //                        .filter(p -> {
 //                            String pp = p.path();
 //                            if (pp == null) return false;

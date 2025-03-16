@@ -340,7 +340,7 @@ public class Player {
 
     public Player playSilence() {
         log.info("PLAYER: " + this.name + " PLAY SILENCE");
-        Requests.postToLmsForStatus(RequestParameters.play(this.name, silence).toString());
+        Requests.postToLmsForStatus(RequestParameters.play(this.name, config.silence).toString());
         return this;
     }
 
@@ -566,12 +566,12 @@ public class Player {
         if (lmsPlayers.lastThis) lastPath = thisLastPath;
         else lastPath = commonLastPath;
 
-        if (thisPath != null && !thisPath.equals(silence) && !thisPath.equals("")) {
+        if (thisPath != null && !thisPath.equals(config.silence) && !thisPath.equals("")) {
             log.info("PUSH PLAY BUTTON: " + thisPath);
             this.play().saveLastPath().saveLastTime();
             return this;
         }
-        if (commonLastPath != null && !commonLastPath.equals(silence) && !commonLastPath.equals("")) {
+        if (commonLastPath != null && !commonLastPath.equals(config.silence) && !commonLastPath.equals("")) {
             log.info("PLAY COMMON LAST PATH: " + commonLastPath);
             this.playPath(lastPath).saveLastPath().saveLastTime();
             return this;
@@ -624,7 +624,7 @@ public class Player {
 
     public Player saveLastPath() {
         String path = this.path();
-        if (path != null && !path.equals(silence)) {
+        if (path != null && !path.equals(config.silence)) {
             this.lastPath = path;
             lmsPlayers.lastPath = this.lastPath;
             log.info("SAVE LAST PATH: " + this.lastPath);

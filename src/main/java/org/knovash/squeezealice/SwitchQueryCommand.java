@@ -26,7 +26,7 @@ public class SwitchQueryCommand {
         HashMap<String, String> queryParams = context.queryMap;
         log.info("QUERY: " + queryParams);
 
-        context.json = "BAD REQUEST NO ACTION IN QUERY";
+        context.bodyResponse = "BAD REQUEST NO ACTION IN QUERY";
         if (!queryParams.containsKey("action")) return context;
         context.code = 200;
         String action = queryParams.get("action");
@@ -141,7 +141,7 @@ public class SwitchQueryCommand {
                     break;
             }
         if (response != "null") {
-            context.json = response;
+            context.bodyResponse = response;
             return context;
         }
 
@@ -233,7 +233,7 @@ public class SwitchQueryCommand {
                 response = "ACTION NOT FOUND: " + action;
                 break;
         }
-        context.json = response;
+        context.bodyResponse = response;
         return context;
     }
 }

@@ -20,9 +20,9 @@ import java.nio.charset.StandardCharsets;
 public class SpotifyRequests {
 
     public static String requestWithRetryGet(String uri) {
-        log.info("START");
+//        log.info("START");
         String json = SpotifyRequests.requestGetClosable(uri);
-        log.info("JSON="+json);
+//        log.info("JSON="+json);
         if (json.equals("401")) {
             log.info("401 RUN REFRESH TOKEN");
             SpotifyAuth.callbackRequestRefresh();
@@ -114,7 +114,7 @@ public class SpotifyRequests {
     }
 
     public static String requestGetClosable(String uri) {
-        log.info("START");
+//        log.info("START");
         Header[] headers = {
                 new BasicHeader("Authorization", SpotifyAuth.bearer_token)
         };
@@ -125,7 +125,7 @@ public class SpotifyRequests {
             httpGet.setHeaders(headers);
             try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
                 code = response.getStatusLine().getStatusCode();
-                log.info("CODE: " + code);
+//                log.info("CODE: " + code);
                 if (code != 200) return String.valueOf(code);
                 json = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
             }

@@ -15,14 +15,25 @@ echo -e "\n"${BGreen}"MVN PACKAGE > TAR > UPLOAD > INSTALL"${NC}"\n"
 
 echo -e "\n"${BGreen}"CLEAR TARGET DIR"${NC}"\n"
 printf '%s\n' "DIR: ${PWD##*/}"
-#rm -r target
-
-cp *.json target
+rm -r target
 
 echo -e "\n"${BGreen}"MVN PACKAGE"${NC}"\n"
 printf '%s\n' "DIR: ${PWD##*/}"
 mvn package
+cp *.json target
+mv target/*.jar target/app.jar
 
-echo -e "\n"${BGreen}"FINISH"${NC}"\n"
-#sleep 15
-$SHELL
+
+echo -e "\n"${BGreen}"FINISH MVN"${NC}"\n"
+
+# Соберите образ локально
+docker build -t knovash/sqa-server-test:latest .
+echo -e "\n"${BGreen}"FINISH DOCKER BUILD"${NC}"\n"
+
+# Загрузите образ:
+#docker push your-username/your-image-name:tag
+docker push knovash/sqa-server-test:latest
+echo -e "\n"${BGreen}"FINISH DOCKER PUSH"${NC}"\n"
+
+sleep 15
+#$SHELL

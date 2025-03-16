@@ -9,7 +9,7 @@ public class YandexToken {
     public static Context action(Context context) {
         String json = " {\"access_token\":\"" + "token12345" + "\",\"token_type\":\"bearer\",\"expires_in\":4294967296}";
         log.info("JSON"+json);
-        context.json = json;
+        context.bodyResponse = json;
         context.code = 200;
         return context;
     }

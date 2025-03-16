@@ -1,13 +1,8 @@
 package org.knovash.squeezealice.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.sun.net.httpserver.HttpExchange;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.knovash.squeezealice.Context;
-import org.knovash.squeezealice.Handler;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.provider.Yandex;
@@ -92,7 +87,7 @@ public class Utils {
 
     public static boolean checkLmsIp(String ip) {
         log.info("CHECK LMS IP: " + ip);
-        String uri = "http://" + ip + ":" + lmsPort;
+        String uri = "http://" + ip + ":" + config.lmsPort;
         HttpResponse response = headToUriForHttpResponse(uri);
         if (response == null) return false;
         Header[] server = response.getHeaders("Server");
@@ -160,11 +155,11 @@ public class Utils {
         log.info("LMS IP: " + lmsIp);
         if (lmsIp != null) {
             JsonUtils.valueToJsonFile("lms_ip", lmsIp);
-            Main.lmsIp = lmsIp;
-            Main.lmsUrl = "http://" + Main.lmsIp + ":" + Main.lmsPort + "/jsonrpc.js/";
+            config.lmsIp = lmsIp;
+            config.lmsUrl = "http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/";
             return true;
         }
-        PageIndex.msgLms = "LMS сервер не найден https://lyrion.org" ;
+        PageIndex.msgLms = "LMS сервер не найден https://lyrion.org";
         log.info("LMS NOT FOUND. please check \"config.json\"");
         return false;
     }
@@ -282,34 +277,6 @@ public class Utils {
         exec.scheduleAtFixedRate(drawRunnable, 5, priod, TimeUnit.MINUTES);
     }
 
-    public static void readConfig() {
-        log.info("READ CONFIG FROM config.json");
-        config = JsonUtils.jsonFileToMap("config.json", String.class, String.class);
-        if (config == null) return;
-        Main.lmsIp = config.get("lmsIp");
-        Main.lmsPort = config.get("lmsPort");
-        Main.port = Integer.parseInt(config.get("port"));
-        Main.silence = config.get("silence");
-        Main.tunnel = config.get("tunnel");
-        Main.lmsUrl = "http://" + Main.lmsIp + ":" + Main.lmsPort + "/jsonrpc.js/";
-        log.info("LMS URL: " + Main.lmsUrl);
-        log.info("THIS PORT: " + Main.port);
-        log.info("SILENCE: " + Main.silence);
-        log.info("TUNNEL: " + Main.tunnel);
-    }
-
-    public static void writeConfig() {
-        log.info("WRITE CONFIG TO config.json");
-        config = new HashMap<>();
-        config.put("lmsIp", lmsIp);
-        config.put("lmsPort", lmsPort);
-        config.put("port", String.valueOf(port));
-        config.put("silence", silence);
-        config.put("tunnel", tunnel);
-        log.info(config);
-        JsonUtils.mapToJsonFile(config, "config.json");
-    }
-
     public static void readIdRooms() {
         log.info("READ ROOMS FROM rooms.json");
         idRooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
@@ -333,7 +300,6 @@ public class Utils {
         log.info(ddd);
 
         return ddd.properties.get(0).state.value.toString();
-
     }
 
     public static String getCorrectRoomName(String approxRoomName) {

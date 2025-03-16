@@ -44,7 +44,7 @@ public class Requests {
         Content content = null;
         Response response = null;
         try {
-            content = Request.Post(lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
+            content = Request.Post(config.lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -77,7 +77,7 @@ public class Requests {
 
         String status = null;
         try {
-            status = Request.Post(lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
+            status = Request.Post(config.lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -107,7 +107,7 @@ public class Requests {
         Content content = null;
         Response response = null;
         try {
-            content = Request.Post(lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
+            content = Request.Post(config.lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()

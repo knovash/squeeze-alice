@@ -9,7 +9,7 @@ public class PageSpotify {
 
     public static Context action(Context context) {
         String json = page();
-        context.json = json;
+        context.bodyResponse = json;
         context.code = 200;
         return context;
     }

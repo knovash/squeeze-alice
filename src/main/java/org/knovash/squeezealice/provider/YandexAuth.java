@@ -9,7 +9,7 @@ public class YandexAuth {
 
     public static Context action(Context context) {
         log.info("/AUTH");
-        context.json = "REDIRECT";
+        context.bodyResponse = "REDIRECT";
         context.code = 302;
         log.info("REDIRECT: " + context.queryMap.get("redirect_uri"));
         log.info("STATE: " + context.queryMap.get("state"));

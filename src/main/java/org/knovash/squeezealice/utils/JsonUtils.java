@@ -41,6 +41,7 @@ public class JsonUtils {
 
     public static <T> T jsonToPojo(String json, Class<T> clazz) {
 //        log.info("JSON: " + json);
+        if (json.equals("") || json.equals(null)) return null;
         json = json.replace("\\", "");
         //        catch (JsonMappingException e){}
         try {

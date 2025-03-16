@@ -3,15 +3,12 @@ package org.knovash.squeezealice.web;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Main;
-import org.knovash.squeezealice.SmartHome;
-import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.utils.Utils;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.knovash.squeezealice.Main.lmsPlayers;
-import static org.knovash.squeezealice.Main.rooms;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 public class PagePlayers {
@@ -19,7 +16,7 @@ public class PagePlayers {
     public static Context action(Context context) {
         log.info("PAGE SPEAKERS");
         String json = page();
-        context.json = json;
+        context.bodyResponse = json;
         context.code = 200;
         return context;
     }
@@ -33,7 +30,7 @@ public class PagePlayers {
                 "<title>Настройка колонок</title></head><body>" +
                 "<p><a href=\"/\">Home</a></p>" +
 
-                "LMS IP: " + Main.lmsIp + ":" + Main.lmsPort + "<br>" +
+                "LMS IP: " + config.lmsIp + ":" + config.lmsPort + "<br>" +
                 PageIndex.msgLms + "<br>" +
                 PageIndex.msgSqa + "<br>" +
 

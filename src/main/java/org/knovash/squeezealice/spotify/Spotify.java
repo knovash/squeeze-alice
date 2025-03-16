@@ -29,16 +29,16 @@ public class Spotify {
     public static String getLinkArtist(String target) {
         log.info("ARTIST TARGET: " + target);
         target = target.replace(" ", "%20");
-        String url = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "artist" + "&limit=" + "5" + "&market=ES";
+        String url = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "artist" + "&limit=" + "3" + "&market=ES";
         String json = requestWithRetryGet(url);
         if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         SpotifyArtists spotifyArtists = JsonUtils.jsonToPojo(json, SpotifyArtists.class);
-        spotifyArtists.artists.items.forEach(it -> log.info("ARTIST: " + it.name));
+//        spotifyArtists.artists.items.forEach(it -> log.info("ARTIST: " + it.name));
         String uri = spotifyArtists.artists.items.get(0).uri;
         SwitchVoiceCommand.artist = spotifyArtists.artists.items.get(0).name;
         log.info("ARTIST: " + SwitchVoiceCommand.artist);
-        log.info("URI: " + uri);
+//        log.info("URI: " + uri);
         return uri;
     }
 

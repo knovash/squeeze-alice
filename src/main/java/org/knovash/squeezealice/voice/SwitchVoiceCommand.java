@@ -24,10 +24,34 @@ public class SwitchVoiceCommand {
     public static String album;
     public static String track;
 
-    public static Context action(Context context) {
-        String answer = switchVoiceCommand(context);
-        context.json = createResponse(answer);
+    public static Context actionMock(Context context) {
+        log.info("SWITCH VOICE COMMAND MOCK");
+        String answer = "проверка связи";
+        log.info("ANSWER MOCK:------- " + answer);
+
+        String sss ="{\n" +
+                "  \"response\": {\n" +
+                "    \"text\": \"Сейчас играет техно\",\n" +
+                "    \"tts\": \"Сейчас играет техно\",\n" +
+                "    \"end_session\": false\n" +
+                "  },\n" +
+                "  \"version\": \"1.0\"\n" +
+                "}";
+        context.bodyResponse = sss;
+
+//        context.bodyResponse = createResponse(answer);
         context.code = 200;
+//        log.info("CONTEXT ANSWER: " + context);
+        return context;
+    }
+
+    public static Context action(Context context) {
+        log.info("SWITCH VOICE COMMAND");
+        String answer = switchVoiceCommand(context);
+        log.info("ANSWER: " + answer);
+        context.bodyResponse = createResponse(answer);
+        context.code = 200;
+        log.info("CONTEXT ANSWER: " + context);
         return context;
     }
 
@@ -39,8 +63,11 @@ public class SwitchVoiceCommand {
         if (clientType.equals("browser")) responseAlice.end_session = false;
         alice.version = "1.0";
         alice.response = responseAlice;
-        return JsonUtils.pojoToJson(alice);
+        String json = JsonUtils.pojoToJson(alice);
+        json = json.replaceAll("\\n", "");
+        return json;
     }
+
 
     public static String switchVoiceCommand(Context context) {
         String body = context.body;
@@ -48,25 +75,28 @@ public class SwitchVoiceCommand {
         String clientId = JsonUtils.jsonGetValue(body, "client_id");
         log.info("COMMAND: " + command);
         log.error("COMMAND: " + command);
-
         if (clientId.contains("browser")) clientType = "browser";
         else clientType = "speaker";
-
         log.info("CLIENT_ID: " + clientId);
         log.info("CLIENT_TYPE: " + clientType);
-
         if (command == null) return "я не поняла команду";
         aliceId = JsonUtils.jsonGetValue(body, "application_id");
-        log.info("ALICE ID: " + aliceId);
+//        log.info("ALICE ID: " + aliceId);
 //        lmsPlayers.lastAliceId = aliceId;
+        return switchVoice(aliceId, command);
+    }
 
+    public static String switchVoice(String roomId, String command) {
+        log.info("SWITCH VOICE COMMAND: " + roomId + " " + command);
 //      НАСТРОЙКА
 //        if (command.contains("повтори")) return repeat(command);
         if (command.contains("найди сервер")) return searchServer();
         if (command.contains("найди колонки")) return searchPlayers();
         if (command.matches("это комната.*с колонкой.*")) return selectRoomWithSpeaker(command);
+//        ретурн должен возвращать текс ответа Answer
         if (command.contains("это комната")) return selectRoomByCommand(command);
-        room = Main.idRooms.get(aliceId);
+
+        room = Main.idRooms.get(roomId);
         log.info("ROOM: " + room);
         String firstRoomname = "";
         if (SmartHome.devices.size() > 0) firstRoomname = SmartHome.devices.get(0).room;
@@ -98,7 +128,7 @@ public class SwitchVoiceCommand {
         if (device == null)
             return "устройство не найдено. скажите навыку, выбери колонку и название колонки, например " + firstPlayername;
         Player player = lmsPlayers.getPlayerByDeviceId(device.id);
-        if (lmsIp == null) return "медиасервер не найден";
+        if (config.lmsIp == null) return "медиасервер не найден";
         if (player == null) return "в комнате " + room + " колонка еще не выбрана. " +
                 "скажите навыку, выбери колонку и название колонки, например " + firstPlayername;
 
@@ -126,12 +156,9 @@ public class SwitchVoiceCommand {
         }
 
 //      СПОТИФАЙ
-
 //        включи кровосток
 //        включи трэк усынови бомжа
 //        включи кровосток трэк наука
-
-
         log.info("TRY SPOTY");
         if (command.matches("(включи )?(дальше|следующий)")) return playlistNextTrack(player);
         if (command.contains("включи альбом")) return spotifyPlayAlbum(command, player);
@@ -181,9 +208,15 @@ public class SwitchVoiceCommand {
                 .replaceAll("\"", "")
                 .replaceAll("\\s\\s", " ");
         target = Utils.getCorrectRoomName(target);
+        log.info("TARGET: " + target);
         if (target == null) return "нет такой комнаты";
         room = target;
+        log.info("ROOM: " + room);
+
+//        selectRoomByCorrectRoom] - TRY WRITE TO rooms.json ID: {null=Веранда}
         selectRoomByCorrectRoom(target);
+
+        log.info("SELECT ROOM OK");
         String whithPlayerName = "";
         Player player = lmsPlayers.getPlayerByCorrectRoom(room);
         if (player != null) whithPlayerName = ". с колонкой " + player.name;
@@ -192,9 +225,12 @@ public class SwitchVoiceCommand {
     }
 
     public static void selectRoomByCorrectRoom(String target) {
+        log.info("START SELECT ROOM: " +target);
         idRooms.put(aliceId, target);
+        log.info("TRY WRITE TO rooms.json ID: " + idRooms);
         JsonUtils.mapToJsonFile(idRooms, "rooms.json");
-        log.info("ADD TO ROOMS: " + target + " WHITH ID: " + aliceId);
+        log.info("WRITE OK");
+//        log.info("ADD TO ROOMS: " + target + " WHITH ID: " + aliceId);
         log.info("WRITE FILE rooms.json");
     }
 
@@ -300,8 +336,8 @@ public class SwitchVoiceCommand {
         log.info("SEARCH SERVER");
         CompletableFuture.runAsync(() -> {
             Utils.searchLmsIp();
-            log.info("LMS IP " + lmsIp);
-            if (lmsIp != null) lmsPlayers.updateServerStatus();
+            log.info("LMS IP " + config.lmsIp);
+            if (config.lmsIp != null) lmsPlayers.updateServerStatus();
         });
         answer = "сейчас найду";
         return answer;
@@ -349,7 +385,7 @@ public class SwitchVoiceCommand {
         log.info("WHATS PLAYING ON " + player.name);
         if (player == null) return "плеер не найден";
         if (player.status() == null) return "медиасервер не отвечает";
-        if (player.status() != true) return "медиасервер не отвечает";
+//        if (player.status() != true) return "медиасервер не отвечает";
         if (!player.connected) return "плеер " + player.name + "  не подключен к медиасерверу";
         if (player.title == null) return "медиасервер не отвечает";
         log.info("TITLE: " + player.title);
@@ -359,11 +395,12 @@ public class SwitchVoiceCommand {
         String separateAnswer = "";
         if (separatePlayers.size() != 0) separateAnswer = ", отдельно " + String.join(", ", separatePlayers);
 
-        log.info("SPOTIFY TRY GET CURRENT TITLE");
-        String spotyCurrentName = Spotify.getCurrentTitle();
-        log.info("SPOTIFY CURRENT TITLE: " + spotyCurrentName);
-        String spotyAnswer = "";
-        if (spotyCurrentName != null) spotyAnswer = ". на спотифай играет " + spotyCurrentName;
+//        log.info("SPOTIFY TRY GET CURRENT TITLE");
+//        String spotyCurrentName = Spotify.getCurrentTitle();
+//        log.info("SPOTIFY CURRENT TITLE: " + spotyCurrentName);
+//        String spotyAnswer = "";
+//        if (spotyCurrentName != null) spotyAnswer = ". на спотифай играет " + spotyCurrentName;
+
         if (player.mode.equals("play")) {
             answer = "сейчас на " + player.name + " играет " + separate + player.title + " громкость " + player.volume;
         }
@@ -376,7 +413,8 @@ public class SwitchVoiceCommand {
                         ". на " + playing.name + " играет " + separate + playing.title;
             } else answer = "сейчас на " + player.name + " не играет " + separate + player.title;
         }
-        answer = answer + separateAnswer + spotyAnswer;
+//        answer = answer + separateAnswer + spotyAnswer;
+        answer = answer + separateAnswer;
         log.info("ANSWER: " + answer);
         return answer;
     }

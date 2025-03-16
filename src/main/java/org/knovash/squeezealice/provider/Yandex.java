@@ -166,7 +166,7 @@ else
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                 .filter(device -> device.name.equals("музыка"))
                 .forEach(device -> SmartHome.create(getRoomNameByRoomId(device.room), Integer.valueOf(device.external_id)));
-        log.info("SMARTHOME DEVICES: " + SmartHome.devices);
+        log.info("SMARTHOME DEVICES: " + SmartHome.devices.size());
         SmartHome.write();
     }
 
