@@ -21,6 +21,8 @@ public class HandlerAll implements HttpHandler {
         log.info("HTTP HANDLER START >>>>>>>>>>>>");
 //        извлечение данных из запроса в контекст
         Context context = Context.contextCreate(httpExchange);
+        log.info("CLIENT ID IN QUERY: " + context.queryMap.get("client_id"));
+
         context = HandlerAll.processContext(context);
         String response = context.bodyResponse;
 
@@ -40,13 +42,20 @@ public class HandlerAll implements HttpHandler {
         switch (path) {
             case ("/"):
                 return PageIndex.action(context);
-            case ("/refresh"):
-                PageIndex.refresh();
-                return PageIndex.action(context);
+//            case ("/refresh"):
+//                PageIndex.refresh();
+//                return PageIndex.action(context);
             case ("/players"):
                 return PagePlayers.action(context);
+            case ("/manual"):
+                return PageManual.action(context);
             case ("/spotify"):
                 return PageSpotify.action(context);
+//            case ("/favicon.ico"):
+//                context.code = 204;
+//                return context;
+            case ("/lms"):
+                return PageLms.action(context);
             case ("/hive"):
                 return PageHive.action(context);
             case ("/yandex"):
@@ -73,17 +82,24 @@ public class HandlerAll implements HttpHandler {
             case ("/v1.0/user/devices/action"):
                 context = ProviderAction.providerActionRun(context);
                 break;
-            case ("/auth"): // сюда первый запрос от Яндекса для привязки акаунта
-                context = YandexAuth.action(context);
-                break;
-            case ("/token"): // сюда второй запрос от Яндекса для привязки акаунта
-                context = YandexToken.action(context);
-                break;
-            case ("/spoti_auth"):
-                context = SpotifyAuth.requestUserAuthorization(context);
-                break;
+//            case ("/auth"): // сюда первый запрос от Яндекса для привязки акаунта
+//                log.info("CASE /auth");
+//                context = YandexAuth.action(context);
+//                break;
+//            case ("/token"): // сюда второй запрос от Яндекса для привязки акаунта
+//                context = YandexToken.action(context);
+//                break;
+//            case ("/spoti_auth"):
+//                context = SpotifyAuth.requestUserAuthorization();
+//                break;
             case ("/spoti_callback"):
                 context = SpotifyAuth.callback(context);
+                break;
+
+            case ("/request_ya_auth_and_get_user_id"):
+//                Yandex.getBearerToken();
+                Yandex.requestYaAuthAndGetUserId();
+//                context = SpotifyAuth.callback(context);
                 break;
             default:
                 log.info("PATH ERROR " + path);

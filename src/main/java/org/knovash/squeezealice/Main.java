@@ -20,30 +20,32 @@ public class Main {
     public static List<String> rooms = new ArrayList<>();
     public static ZoneId zoneId = ZoneId.of("Europe/Minsk");
     public static Config config = new Config();
+    public static Boolean lmsServerOnline;
+
+    public static Users hiveUsers = new Users();
 
     public static void main(String[] args) {
-        log.info("USER TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
+        log.info("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
         log.info("OS: " + System.getProperty("os.name") + ", user.home: " + System.getProperty("user.home"));
         System.setProperty("userApp.root", System.getProperty("user.home"));
         log.info("userApp.root: " + System.getProperty("userApp.root"));
-        config.readProperties();
-        log.info("CONFIG PROPERTIES: " + config);
+        config.readConfigProperties();
         config.readConfigJson();
-        log.info("CONFIG JSON: " + config);
-        if (!Utils.checkLmsIp(config.lmsIp)) {
-            log.info("WRONG LMS IP. RUN SEARCH LMS IP");
-            Utils.searchLmsIp();
-            config.writeConfig();
-        }
-        Utils.readIdRooms();
-        lmsPlayers.read();
-        lmsPlayers.updateServerStatus();
+        lmsPlayers.searchForLmsIp();
+        Utils.readAliceIdInRooms();
+        lmsPlayers.readPlayersSettings();
+        lmsPlayers.updateLmsPlayers();
         lmsPlayers.write();
         SmartHome.read();
+
+
         SpotifyAuth.read();
         SpotifyAuth.callbackRequestRefresh();
+
         Yandex.read();
         Yandex.getRoomsAndDevices();
+
+
         JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
         Server.start();
         Hive.start();

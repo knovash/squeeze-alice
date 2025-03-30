@@ -18,22 +18,22 @@ import java.util.HashMap;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Context {
+public class ContextForm {
 
     public String bodyResponse;
     public int code;
     public String path;
     public Headers headers;
 
-//    public Headers requestHeaders = new Headers();
-//    public Headers responseHeaders = new Headers();
+    public Headers requestHeaders = new Headers();
+    public Headers responseHeaders = new Headers();
 
     public String body;
     public String xRequestId;
     public String query;
     public HashMap<String, String> queryMap;
 
-    public static Context contextCreate(HttpExchange httpExchange) {
+    public static ContextForm contextCreate(HttpExchange httpExchange) {
 //      METHOD
         String method = httpExchange.getRequestMethod();
 //      PATH
@@ -65,7 +65,7 @@ public class Context {
         log.info("QUERY: " + query);
 //        log.info("QUERY MAP: " + queryMap);
 
-        Context context = new Context();
+        ContextForm context = new ContextForm();
         context.body = body;
         context.headers = headers;
         context.path = path;
@@ -73,8 +73,8 @@ public class Context {
         context.query = query;
         context.queryMap = queryMap;
 
-//        context.requestHeaders = httpExchange.getRequestHeaders(); // Заголовки запроса
-//        context.responseHeaders = new Headers(); // Инициализация заголовков ответа
+        context.requestHeaders = httpExchange.getRequestHeaders(); // Заголовки запроса
+        context.responseHeaders = new Headers(); // Инициализация заголовков ответа
 
 //        context.responseHeaders.forEach((k, v) ->
 //                httpExchange.getResponseHeaders().put(k, v);
@@ -115,12 +115,12 @@ public class Context {
     }
 
     // Статический метод для создания объекта из JSON
-    public static Context fromJson(String json) {
+    public static ContextForm fromJson(String json) {
 //        log.info("CONTEXT FROM JSON START");
 //        log.info("JSON: " + json);
         try {
             ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(json, Context.class);
+            return mapper.readValue(json, ContextForm.class);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
             return null;
@@ -128,9 +128,9 @@ public class Context {
     }
 
 
-//    public void setRedirect(String location) {
-//        this.code = 302;
-//        this.responseHeaders.set("Location", location);
-//        this.bodyResponse = ""; // Важно очистить тело ответа
-//    }
+    public void setRedirect(String location) {
+        this.code = 302;
+        this.responseHeaders.set("Location", location);
+        this.bodyResponse = ""; // Важно очистить тело ответа
+    }
 }

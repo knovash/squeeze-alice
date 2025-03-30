@@ -27,12 +27,12 @@ mv target/*.jar target/app.jar
 echo -e "\n"${BGreen}"FINISH MVN"${NC}"\n"
 
 # Соберите образ локально
-docker build -t knovash/sqa-server:latest .
+docker build -t knovash/squeeze-alice:latest .
 echo -e "\n"${BGreen}"FINISH DOCKER BUILD"${NC}"\n"
 
 # Загрузите образ:
 #docker push your-username/your-image-name:tag
-docker push knovash/sqa-server:latest
+docker push knovash/squeeze-alice:latest
 echo -e "\n"${BGreen}"FINISH DOCKER PUSH"${NC}"\n"
 
 sleep 15

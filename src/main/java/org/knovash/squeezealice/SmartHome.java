@@ -114,7 +114,7 @@ public class SmartHome {
     public static void read() {
         devices = JsonUtils.jsonFileToList("devices.json", Device.class);
         if (devices == null) devices = new ArrayList<>();
-        log.info("DEVICES: " + devices.size());
+        log.info("DEVICES FROM devices.json: " + devices.size());
         log.debug("DEVICES: " + devices);
     }
 

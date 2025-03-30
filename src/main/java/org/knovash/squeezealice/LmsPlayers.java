@@ -7,7 +7,6 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.lms.ServerStatusByName;
-import org.knovash.squeezealice.provider.YandexInfo;
 import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Levenstein;
@@ -15,7 +14,6 @@ import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 import org.knovash.squeezealice.web.PageIndex;
 
-import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,18 +51,22 @@ public class LmsPlayers {
         return playlist;
     }
 
-    public void updateServerStatus() {
-        log.info("SEARCH AND ADD NEW PLAYERS FROM LMS");
-        //"connected": 1,
-        //"name": "Homepod1",
-        //"isplaying": 0, обновить playing=true, mode="play"
-        LocalTime time1 = LocalTime.now(zoneId);
+    public void updateLmsPlayers() {
+        log.info("UPDATE PLAYERS FROM LMS");
+        if (!lmsServerOnline) {
+            log.info("LMS OFFLINE");
+            return;
+        }
+        String countPlayers = Player.count();
+        if (countPlayers.equals("0")) {
+            log.info("LMS NO PLAYERS");
+            lmsPlayers.players = new ArrayList<>();
+            return;
+        }
+
         playersNames = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
-//        log.info("PLAYERS: " + playersNames);
-        playersNamesOffLine = new ArrayList<>();
-        playersNamesOffLine.addAll(playersNames);
-        playersNamesOnLine = new ArrayList<>();
         String json = Requests.postToLmsForJsonBody(RequestParameters.serverstatusname().toString());
+        log.debug("JSON: " + json);
         if (json == null) return;
         json = JsonUtils.replaceSpace(json);
         json = json.replaceAll("\"newversion.*</a>\\.\"", "\"newversion\": \"--\"");
@@ -79,18 +81,18 @@ public class LmsPlayers {
         serverStatus.result.players_loop.forEach(pl -> updatePlayer(pl));
 
         if (lmsPlayers.players != null && lmsPlayers.players.size() > 0)
-            PageIndex.msgLms = "LMS подключено " + lmsPlayers.players.size() + " плееров "
+            PageIndex.msgLmsPlayers = "LMS подключено " + lmsPlayers.players.size() + " плееров "
                     + lmsPlayers.players.stream().map(player -> player.name)
                     .collect(Collectors.toList());
         else
-            PageIndex.msgLms = "LMS нет плееров. Подключите плееры http://192.168.1.110:9000";
+            PageIndex.msgLmsPlayers = "LMS нет плееров. Подключите плееры http://192.168.1.110:9000";
 
 //        log.info("PLAYERS ONLINE: " + lmsPlayers.playersNamesOnLine + " " + Duration.between(time1, LocalTime.now(zoneId)));
     }
 
     public void updatePlayer(ServerStatusByName.PlayersLoop playersLoop) {
         playersNamesOnLine.add(playersLoop.name);
-        playersNamesOffLine.remove(playersLoop.name);
+//        playersNamesOffLine.remove(playersLoop.name);
         Player existsPlayer = lmsPlayers.getPlayerByCorrectName(playersLoop.name);
         if (existsPlayer == null) { // если нет то создать новый плеер и добавить
             log.info("ADD NEW PLAYER: " + playersLoop.name);
@@ -126,8 +128,8 @@ public class LmsPlayers {
         JsonUtils.pojoToJsonFile(lmsPlayers, "lms_players.json");
     }
 
-    public void read() {
-        log.info("READ LMS PLAYERS FROM lms_players.json");
+    public void readPlayersSettings() {
+        log.debug("READ LMS PLAYERS FROM lms_players.json");
         lmsPlayers.players = new ArrayList<>();
         LmsPlayers lp = JsonUtils.jsonFileToPojo("lms_players.json", LmsPlayers.class);
         if (lp == null) {
@@ -138,11 +140,11 @@ public class LmsPlayers {
 //            log.info("LAST CHANNEL: " + lmsPlayers.lastChannel);
 //            log.info("BT REMOTE: " + lmsPlayers.btPlayerInQuery);
         }
-        log.info("PLAYERS: " + lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList()));
+        log.info("PLAYERS FROM lms_players.json: " + lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList()));
     }
 
     public Player getPlayerByCorrectName(String name) {
-//        log.info("BY NAME: " + name);
+        log.debug("BY NAME: " + name);
         Player player = new Player();
         if (name == null) return null;
         if (lmsPlayers.players == null) return null;
@@ -152,7 +154,7 @@ public class LmsPlayers {
                 .findFirst()
                 .orElse(null);
         if (player == null) log.info("PLAYER NOT FOUND BY NAME: " + name);
-//        log.info("PLAYER: " + player);
+        log.info("BY NAME: " + name +" GET PLAYER: " + player);
         return player;
     }
 
@@ -200,7 +202,7 @@ public class LmsPlayers {
 
     public List<Player> getPlayingPlayers(String exceptName) {
         log.info("SEARCH FOR PLAYING. EXCEPT " + exceptName);
-        lmsPlayers.updateServerStatus();
+        lmsPlayers.updateLmsPlayers();
         List<Player> playingPlayers = null;
         playingPlayers =
                 lmsPlayers.players.stream()
@@ -228,19 +230,25 @@ public class LmsPlayers {
 
     public String playerSave(HashMap<String, String> parameters) {
         log.info("PLAYER SAVE PARAMETERS: " + parameters);
-        String playerName = parameters.get("name");
+        String playerName = parameters.get("player_name");
         String roomName = parameters.get("room");
         String delay = parameters.get("delay");
         String schedule = parameters.get("schedule");
+
+        log.info("name: " + playerName);
+        log.info("room: " + roomName);
+        log.info("delay: " + delay);
+        log.info("schedule: " + schedule);
+
+
         Player player = lmsPlayers.getPlayerByCorrectName(playerName);
-        player.delay = Integer.valueOf(delay);
-        player.schedule = Utils.stringSplitToIntMap(schedule, ",", ":");
         log.info("PLAYER: " + player);
-        log.info("name: " + parameters.get("name"));
-        log.info("room: " + parameters.get("room"));
-        log.info("delay: " + parameters.get("delay"));
-        log.info("schedule: " + parameters.get("schedule"));
-        log.info(Utils.stringSplitToIntMap(parameters.get("schedule"), ",", ":"));
+
+        player.delay = Integer.valueOf(delay);
+        player.schedule = Utils.stringSplitToIntMap2(schedule, ",", ":");
+        log.info("PLAYER SHEDULE: " + schedule);
+
+//        log.info(Utils.stringSplitToIntMap(parameters.get("schedule"), ",", ":"));
         SwitchVoiceCommand.room = roomName;
         Player playerNew = SwitchVoiceCommand.selectPlayerInRoom(playerName, roomName, false);
         log.info("SELECT PLAYER NEW: " + playerNew);
@@ -267,7 +275,7 @@ public class LmsPlayers {
 
     public List<String> getSeparatePlayers(Player excludePlayer) {
         log.info("TRY GET SEPARATED PLAYERS");
-        lmsPlayers.updateServerStatus();
+        lmsPlayers.updateLmsPlayers();
         List<String> separatePlayers =
                 lmsPlayers.players.stream()
                         .peek(p -> log.debug(p.name + " separate " + p.separate))
@@ -305,7 +313,8 @@ public class LmsPlayers {
 
     public void delayExpireSave(HashMap<String, String> parameters) {
         delayExpire = Integer.parseInt(parameters.get("delay_expire_value"));
-        lmsPlayers.write();
+        JsonUtils.pojoToJsonFile(lmsPlayers, "lms_players.json");
+        lmsPlayers.write(); // ПОЧЕМУ ВЫЗЫВАЕТ СУПЕР РЕФРЕШ???
     }
 
     public void autoremoteSave(HashMap<String, String> parameters) {
@@ -318,6 +327,19 @@ public class LmsPlayers {
         lmsPlayers.write();
     }
 
+    public void lmsSave(HashMap<String, String> parameters) {
+        config.lmsIp = parameters.get("lms_ip_value");
+        config.lmsPort = parameters.get("lms_port_value");
+        config.writeConfig();
+
+        lmsPlayers.searchForLmsIp();
+        lmsPlayers.updateLmsPlayers();
+
+//        Utils.checkIpIsLms(config.lmsIp);
+//        lmsPlayers.write();
+    }
+
+
     public void lastThisSave(HashMap<String, String> parameters) {
         log.info(parameters);
         lastThis = Boolean.parseBoolean(parameters.get("last_this_value"));
@@ -325,71 +347,71 @@ public class LmsPlayers {
         log.info(lmsPlayers.lastThis);
     }
 
-    public String getSuperRefresh() {
-        log.info("SUPER REFRESH START >>>");
-        lmsPlayers.updateServerStatus(); //TODO совместить со статусами плееров
-        lmsPlayers.syncgroups();
-        List<String> roomNames = rooms;
-        List<String> playersNames = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
-        List<String> roomsAndPlayersNames = new ArrayList<>();
-        roomsAndPlayersNames.addAll(roomNames);
-        roomsAndPlayersNames.addAll(playersNames);
-        List<String> roomsAndPlayersModes = new ArrayList<>();
-        List<String> roomsAndPlayersSyncs = new ArrayList<>();
-        List<String> roomsAndPlayersTitles = new ArrayList<>();
-        List<String> playersVolModTit = new ArrayList<>();
-        log.info("roomNames: " + roomNames);
-        log.info("playersNames: " + playersNames);
-        roomNames.stream()
-                .map(r -> lmsPlayers.getPlayerByCorrectRoom(r))
-                .peek(p -> {
-                    if (p != null) {
-                        p.status();
-                        roomsAndPlayersModes.add(p.mode);
-                        roomsAndPlayersSyncs.add(String.valueOf(p.sync));
-                        roomsAndPlayersTitles.add(p.title);
-                    } else {
-                        roomsAndPlayersModes.add("null");
-                        roomsAndPlayersSyncs.add(String.valueOf(false));
-                        roomsAndPlayersTitles.add("null");
-                    }
-                })
-                .collect(Collectors.toList());
-
-        playersNames.stream()
-                .map(r -> lmsPlayers.getPlayerByCorrectName(r))
-                .peek(p -> {
-                    if (p != null) {
-                        roomsAndPlayersModes.add(p.mode);
-                        roomsAndPlayersSyncs.add(String.valueOf(p.sync));
-                        roomsAndPlayersTitles.add(p.title);
-                        playersVolModTit.add(p.name + "-" + p.volume + "-" + p.mode + "-" + p.title);
-                    } else {
-                        roomsAndPlayersModes.add("null");
-                        roomsAndPlayersSyncs.add(String.valueOf(false));
-                        roomsAndPlayersTitles.add("null");
-                    }
-                })
-                .collect(Collectors.toList());
-
-        log.debug("ROOMS&PLAYERS NAMES: " + roomsAndPlayersNames);
-        log.debug("ROOMS&PLAYERS MODES: " + roomsAndPlayersModes);
-        log.debug("ROOMS&PLAYERS SYNCS: " + roomsAndPlayersSyncs);
-        log.debug("ROOMS&PLAYERS TITLES: " + roomsAndPlayersTitles);
-        String joinedRoomsAndPlayersNames = String.join(",", roomsAndPlayersNames);
-        String joinedRoomsAndPlayersModes = String.join(",", roomsAndPlayersModes);
-        String joinedRoomsAndPlayersSyncs = String.join(",", roomsAndPlayersSyncs);
-        String joinedRoomsAndPlayersTitles = String.join(",", roomsAndPlayersTitles);
-        String joinedPlayersVolModTit = String.join(",", playersVolModTit);
-
-        String response = joinedRoomsAndPlayersNames + ":"
-                + joinedRoomsAndPlayersModes + ":"
-                + joinedRoomsAndPlayersSyncs + ":"
-                + joinedRoomsAndPlayersTitles + ":"
-                + joinedPlayersVolModTit;
-        log.info("SUPER REFRESH FINISH <<<");
-        return response;
-    }
+//    public String getSuperRefresh() {
+//        log.info("SUPER REFRESH START >>>");
+//        lmsPlayers.updateLmsPlayers(); //TODO совместить со статусами плееров
+//        lmsPlayers.syncgroups();
+//        List<String> roomNames = rooms;
+//        List<String> playersNames = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
+//        List<String> roomsAndPlayersNames = new ArrayList<>();
+//        roomsAndPlayersNames.addAll(roomNames);
+//        roomsAndPlayersNames.addAll(playersNames);
+//        List<String> roomsAndPlayersModes = new ArrayList<>();
+//        List<String> roomsAndPlayersSyncs = new ArrayList<>();
+//        List<String> roomsAndPlayersTitles = new ArrayList<>();
+//        List<String> playersVolModTit = new ArrayList<>();
+//        log.info("roomNames: " + roomNames);
+//        log.info("playersNames: " + playersNames);
+//        roomNames.stream()
+//                .map(r -> lmsPlayers.getPlayerByCorrectRoom(r))
+//                .peek(p -> {
+//                    if (p != null) {
+//                        p.status();
+//                        roomsAndPlayersModes.add(p.mode);
+//                        roomsAndPlayersSyncs.add(String.valueOf(p.sync));
+//                        roomsAndPlayersTitles.add(p.title);
+//                    } else {
+//                        roomsAndPlayersModes.add("null");
+//                        roomsAndPlayersSyncs.add(String.valueOf(false));
+//                        roomsAndPlayersTitles.add("null");
+//                    }
+//                })
+//                .collect(Collectors.toList());
+//
+//        playersNames.stream()
+//                .map(r -> lmsPlayers.getPlayerByCorrectName(r))
+//                .peek(p -> {
+//                    if (p != null) {
+//                        roomsAndPlayersModes.add(p.mode);
+//                        roomsAndPlayersSyncs.add(String.valueOf(p.sync));
+//                        roomsAndPlayersTitles.add(p.title);
+//                        playersVolModTit.add(p.name + "-" + p.volume + "-" + p.mode + "-" + p.title);
+//                    } else {
+//                        roomsAndPlayersModes.add("null");
+//                        roomsAndPlayersSyncs.add(String.valueOf(false));
+//                        roomsAndPlayersTitles.add("null");
+//                    }
+//                })
+//                .collect(Collectors.toList());
+//
+//        log.debug("ROOMS&PLAYERS NAMES: " + roomsAndPlayersNames);
+//        log.debug("ROOMS&PLAYERS MODES: " + roomsAndPlayersModes);
+//        log.debug("ROOMS&PLAYERS SYNCS: " + roomsAndPlayersSyncs);
+//        log.debug("ROOMS&PLAYERS TITLES: " + roomsAndPlayersTitles);
+//        String joinedRoomsAndPlayersNames = String.join(",", roomsAndPlayersNames);
+//        String joinedRoomsAndPlayersModes = String.join(",", roomsAndPlayersModes);
+//        String joinedRoomsAndPlayersSyncs = String.join(",", roomsAndPlayersSyncs);
+//        String joinedRoomsAndPlayersTitles = String.join(",", roomsAndPlayersTitles);
+//        String joinedPlayersVolModTit = String.join(",", playersVolModTit);
+//
+//        String response = joinedRoomsAndPlayersNames + ":"
+//                + joinedRoomsAndPlayersModes + ":"
+//                + joinedRoomsAndPlayersSyncs + ":"
+//                + joinedRoomsAndPlayersTitles + ":"
+//                + joinedPlayersVolModTit;
+//        log.info("SUPER REFRESH FINISH <<<");
+//        return response;
+//    }
 
     public String getLastTitle(Player player) {
         String selectLast = null;
@@ -447,4 +469,36 @@ public class LmsPlayers {
         log.info("syncMemberNames: " + result);
         return syncMemberNames;
     }
+
+    public void searchForLmsIp() {
+        log.info("SEARCH FOR LMS IP");
+
+        String lmsIp = LmsSearchForIp.findServerIp();
+
+        if (lmsIp != null) {
+            log.info("LMS HAS BEEN FOUND: " + lmsIp);
+            lmsServerOnline = true;
+            config.lmsIp = lmsIp;
+            config.writeConfig();
+        } else {
+            log.info("LMS WAS NOT FOUND");
+            lmsServerOnline = false;
+        }
+
+    }
 }
+
+
+//        else {
+//            Integer start = 1;
+//            while (lmsIp == null && start < 150) {
+//                lmsIp = IntStream
+//                        .range(start, start + 50)
+//                        .boxed()
+//                        .map(index -> CompletableFuture.supplyAsync(() -> Utils.checkIp(myip, Integer.valueOf(index))))
+//                        .collect(Collectors.collectingAndThen(Collectors.toList(), cfs -> cfs.stream().map(CompletableFuture::join)))
+//                        .filter(Objects::nonNull)
+//                        .findFirst().orElse(null);
+//                start = start + 50;
+//            }
+//        }

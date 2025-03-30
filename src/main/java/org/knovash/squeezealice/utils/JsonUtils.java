@@ -106,9 +106,10 @@ public class JsonUtils {
             return objectMapper.readValue(file, clazz);
         } catch (IOException | InaccessibleObjectException e) {
             log.info("ERROR READ lms_players.json" + e);
+            return null;
 //            throw new RuntimeException(e);
         }
-        return null;
+//        return null;
     }
 
     public static <T> List<T> jsonFileToList(String fileName, Class<T> clazz) {

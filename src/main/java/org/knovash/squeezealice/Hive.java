@@ -1,5 +1,6 @@
 package org.knovash.squeezealice;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -7,9 +8,9 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.knovash.squeezealice.provider.YandexToken;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 
-import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -23,24 +24,39 @@ import static org.knovash.squeezealice.voice.SwitchVoiceCommand.aliceId;
 @Log4j2
 public class Hive {
 
-    public static  String hiveBroker = "ssl://811c56b338f24aeea3215cd680851784.s1.eu.hivemq.cloud:8883";
-    public static  String hiveUsername = "novashki";
-    public static  String hivePassword = "Darthvader0";
-    private static MqttClient mqttClient;
+
     private static final ResponseManager responseManager = new ResponseManager();
+
+    public static String hiveBroker = config.hiveBroker;
+    public static String hiveUsername = config.hiveUsername;
+    public static String hivePassword = config.hivePassword;
+    public static String hiveUserId = config.hiveUserId;
+    public static String topicRecieveDevice = "to_lms_id"; // подписаться
+    public static String topicRecieveVoice = "to_lms_voice_id"; // подписаться
+    public static String topicRecieveDeviceUserId = Hive.hiveUserId + "to_lms_id"; // подписаться
+
+    public static String topicPublish = "from_lms_id"; // отправить сюда
+    public static String topicService = "INFO"; // отправить сюда
+
+    private static MqttClient mqttClient;
 
     public static void start() {
         log.info("MQTT STARTING...");
         try {
             mqttClient = new MqttClient(hiveBroker, MqttClient.generateClientId(), new MemoryPersistence());
             MqttConnectOptions options = new MqttConnectOptions();
+            options.setAutomaticReconnect(true);
+            options.setCleanSession(true);
+            options.setConnectionTimeout(10);
             options.setUserName(hiveUsername);
             options.setPassword(hivePassword.toCharArray());
             mqttClient.connect(options);
-                mqttClient.subscribe("to_lms_id", (topic, message) -> handleMqttFromUdyMessage(topic, message));
-                mqttClient.subscribe("to_lms_voice_id", (topic, message) -> handleVoiceRequestAndSendAnswer(topic, message));
+            mqttClient.subscribe(topicRecieveDevice, (topic, message) -> handleDeviceMqttRequestAndPublishAnswer(topic, message));
+            mqttClient.subscribe(topicRecieveVoice, (topic, message) -> handleVoiceMqttRequestAndPublishAnswer(topic, message));
+//            mqttClient.subscribe(hiveUserId + topicRecieveDevice, (topic, message) -> handleDeviceMqttRequestAndPublishAnswer(topic, message));
+//            mqttClient.subscribe(hiveUserId + topicRecieveVoice, (topic, message) -> handleVoiceMqttRequestAndPublishAnswer(topic, message));
             log.info("MQTT STARTED OK");
-            sendToTopicText("INFO", "CONNECTED! V.1.5 OS: " + System.getProperty("os.name"));
+            sendToTopicText(topicService, "CONNECTED! V.1.5 OS: " + System.getProperty("os.name"));
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -54,124 +70,131 @@ public class Hive {
         }
     }
 
-    public static String sendToTopicContextWaitForContext(String topic, Context context) {
-        log.info("MQTT PUBLISH TO TOPIC: " + topic);
-//        log.info("CONTEXT: " + context);
-        String correlationId = UUID.randomUUID().toString();
-        String responseBody = "";
-        String contextJson = context.toJson();
-        log.info("CONTEXT JSON: " + contextJson);
-
-        try {
-            // Отправка запроса в MQTT
-//            log.info("MQTT PUBLISH TRY...");
-            String payload = String.format("correlationId=%s&context=%s",
-                    correlationId, contextJson);
-            mqttClient.publish(topic, new MqttMessage(payload.getBytes()));
-//            log.info("MQTT PUBLISH OK");
-        } catch (Exception e) {
-        }
-        return responseBody;
-    }
-
-    private static void handleMqttMessageJson(String topic, MqttMessage jsonInput) {
-        log.info("GET MESSAGE FROM TOPIC: " + topic);
-        log.info("MESSAGE : " + jsonInput);
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            log.info("TRY MAPPER");
-            Context context = mapper.readValue(jsonInput.getPayload(), Context.class);
-            log.info("CONTEXT : " + context);
-        } catch (IOException e) {
-            log.info("ERROR MAPPER");
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static void handleMqttMessageId(String topic, MqttMessage message) {
-        log.info("RECIEVED MESSAGE FROM TOPIC ID: " + topic);
-        log.info("MESSAGE : " + message);
-        String payload = new String(message.getPayload());
-        Map<String, String> params = parseParams(payload);
-
-        if (params.containsKey("correlationId")) {
-            String correlationId = params.get("correlationId");
-//            log.info("ID : " + correlationId);
-            String contextJson = params.getOrDefault("context", "");
-//            log.info("CONTEXT JSON : " + contextJson);
-            responseManager.completeResponse(correlationId, contextJson);
-        }
-    }
-
-    private static void handleMqttFromUdyMessage(String topic, MqttMessage message) {
-        log.info("RECIEVED MESSAGE FROM TOPIC: " + topic);
+    private static void handleDeviceMqttRequestAndPublishAnswer(String topicRecieved, MqttMessage message) {
+        log.info("RECIEVED MESSAGE FROM TOPIC: " + topicRecieved);
         log.debug("MESSAGE : " + message);
         String payload = new String(message.getPayload());
         Map<String, String> params = parseParams(payload);
-//        получить json context из сообщения
         String contextJson = "";
         String correlationId = "";
+        String recievedUserId = "";
         if (params.containsKey("correlationId")) {
             correlationId = params.get("correlationId");
             contextJson = params.getOrDefault("context", "");
-            log.debug("CONTEXT JSON : " + contextJson);
-            responseManager.completeResponse(correlationId, contextJson);
+            recievedUserId = params.getOrDefault("userId", "");
         }
+        log.info("correlationId : " + correlationId);
+        log.info("hiveUserId : " + hiveUserId);
 //      получить объект контекст из json
         Context context = Context.fromJson(contextJson);
-        //        обработка контекста
+//      обработка контекста
         context = HandlerAll.processContext(context);
-//         положить в пэйлоад сообщения ид и контекст
-        payload = String.format("correlationId=%s&context=%s",
-                correlationId, context.toJson());
-
-//        log.info("Send message: " + payload);
+//      положить в пэйлоад сообщения ид и контекст
+        payload = "correlationId=" + correlationId + "&" +
+                "hiveUserId=" + hiveUserId + "&" +
+                "context=" + context.toJson();
         try {
             MqttMessage responseMessage = new MqttMessage(payload.getBytes());
-            mqttClient.publish("from_lms_id", responseMessage);
+            mqttClient.publish(topicPublish, responseMessage);
         } catch (MqttException e) {
             e.printStackTrace();
         }
     }
 
-
-    private static void handleVoiceRequestAndSendAnswer(String topic, MqttMessage request) {
-        log.info("GET MESSAGE FROM TOPIC ID: " + topic);
+    private static void handleVoiceMqttRequestAndPublishAnswer(String topicRecieved, MqttMessage request) {
+        log.info("RECIEVED MESSAGE FROM TOPIC: " + topicRecieved);
         log.debug("MESSAGE : " + request);
         String payload = new String(request.getPayload());
         Map<String, String> params = parseParams(payload);
         String contextJson = "";
         String correlationId = "";
-//        получить из реквеста ID и CONTEXT
         if (params.containsKey("correlationId")) {
             correlationId = params.get("correlationId");
-            log.debug("ID : " + correlationId);
             contextJson = params.getOrDefault("context", "");
+
             Context context = Context.fromJson(contextJson);
             AliceRequest aliceRequest = AliceRequest.fromJson(context.body);
-            String userId = aliceRequest.session.userId;
             String applicationId = aliceRequest.session.application.applicationId;
             String command = aliceRequest.request.command;
-            log.debug("APPID : " + applicationId);
+            log.debug("applicationId : " + applicationId);
             log.info("command : " + command);
             aliceId = applicationId;
-
 //          выполнить голосовую команду c ID колонки(комнаты) и получить ответ
-                String answer = SwitchVoiceCommand.switchVoice(applicationId, command);
-                log.info("ANSWER : " + answer);
+            String answer = SwitchVoiceCommand.switchVoice(applicationId, command);
+            log.info("ANSWER : " + answer);
 
 //         положить в пэйлоад сообщения ид и ответ
-                payload = String.format("correlationId=%s&context=%s",
-                        correlationId, answer);
-
+            payload = "correlationId=" + correlationId + "&" +
+                    "hiveUserId=" + hiveUserId + "&" +
+                    "context=" + answer;
             try {
                 MqttMessage responseMessage = new MqttMessage(payload.getBytes());
-                mqttClient.publish("from_lms_id", responseMessage);
+                mqttClient.publish(topicPublish, responseMessage);
             } catch (MqttException e) {
                 e.printStackTrace();
             }
-            log.info("FINISH");
         }
+    }
+
+    public static String publishCommandWaitForAnswer(String topic, String command) {
+        log.info("MQTT PUBLISH TO TOPIC: " + topic);
+//        сгенерировать ключ сообщения в брокер, и ожидать ответа с этим ключом в топике названном как ключ
+        String correlationId = UUID.randomUUID().toString();
+//        подписаться на топик с названием такимже как ключ
+        try {
+            mqttClient.subscribe(topicRecieveVoice, (tocorrelationIdpic, message) -> handleVoiceMqttRequestAndPublishAnswer(topic, message));
+        } catch (MqttException e) {
+            throw new RuntimeException(e);
+        }
+//
+        String responseBody = "";
+//        String contextJson = context.toJson();
+        try {
+//       отправить в брокер Ключ и Команду (запуск аутентификации в Яндекс и возврат User ID)
+            String payload =
+                    "correlationId=" + correlationId + "&" +
+                            "command=" + command;
+            mqttClient.publish("command_to_cloud", new MqttMessage(payload.getBytes()));
+
+            // Ожидание ответа
+            CompletableFuture<String> future = responseManager.waitForResponse(correlationId);
+            try {
+                responseBody = future.get(15, TimeUnit.SECONDS);
+            } catch (TimeoutException e) {
+                log.info("MQTT ERROR NO RESPONSE");
+                responseBody = "---";
+            }
+        } catch (Exception e) {
+        }
+        log.info("RESPONSE: " + responseBody);
+//        String answer = extractBodyResponse(responseBody);
+        return "answer";
+    }
+
+
+    public static String publishContextWaitForContext(String topic, Context context) {
+        log.info("MQTT PUBLISH TO TOPIC: " + topic);
+        String correlationId = UUID.randomUUID().toString();
+        String responseBody = "";
+        String contextJson = context.toJson();
+        try {
+            // Отправка запроса в MQTT
+            String payload = String.format("correlationId=%s&context=%s",
+                    correlationId, contextJson);
+            mqttClient.publish(topic, new MqttMessage(payload.getBytes()));
+            // Ожидание ответа
+            CompletableFuture<String> future = responseManager.waitForResponse(correlationId);
+            try {
+                log.info("MQTT WAIT FOR RESPONSE...");
+                responseBody = future.get(15, TimeUnit.SECONDS);
+                log.info("MQTT CONTEXT RECIEVED: " + responseBody);
+            } catch (TimeoutException e) {
+                log.info("MQTT ERROR NO RESPONSE: " + e);
+                responseBody = "---";
+            }
+        } catch (Exception e) {
+        }
+        return responseBody;
     }
 
     private static Map<String, String> parseParams(String message) {
@@ -192,12 +215,12 @@ public class Hive {
                 result.put(key, value);
             }
         }
-
         // Извлекаем context как всю оставшуюся часть строки
         String contextValue = message.substring(ctxStart + "context=".length());
         result.put("context", URLDecoder.decode(contextValue, StandardCharsets.UTF_8));
         return result;
     }
+
 
     private static class ResponseManager {
 
@@ -220,6 +243,22 @@ public class Hive {
                 future.complete(contextJson);
 //                log.info("FUTURE: " + future);
             }
+        }
+    }
+
+    public static String extractBodyResponse(String rawJson) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(rawJson);
+            // Получаем значение bodyResponse напрямую из корневого узла
+            JsonNode bodyResponseNode = rootNode.get("bodyResponse");
+            if (bodyResponseNode != null && bodyResponseNode.isTextual()) {
+                return bodyResponseNode.asText();
+            }
+            return null;
+        } catch (Exception e) {
+            System.err.println("Error parsing JSON: " + e.getMessage());
+            return null;
         }
     }
 }

@@ -7,7 +7,6 @@ import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.provider.YandexInfo;
-import org.knovash.squeezealice.web.PageIndex;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -18,14 +17,12 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.knovash.squeezealice.Main.*;
 import static org.knovash.squeezealice.Requests.headToUriForHttpResponse;
@@ -85,20 +82,15 @@ public class Utils {
 //        return "REMOVED time:" + time;
 //    }
 
-    public static boolean checkLmsIp(String ip) {
-        log.info("CHECK LMS IP: " + ip);
+    public static boolean checkIpIsLms(String ip) {
         String uri = "http://" + ip + ":" + config.lmsPort;
         HttpResponse response = headToUriForHttpResponse(uri);
         if (response == null) return false;
         Header[] server = response.getHeaders("Server");
         if (server == null) return false;
         String header = server[0].toString();
-        log.info("CHECK LMS HEADER: " + header);
-        if (header.contains("Logitech Media Server") || header.contains("Lyrion Music Server")) {
-            log.info("CHECK LMS IP OK " + ip);
-            return true;
-        }
-        log.info("IP NOT LMS");
+        log.info("IP: " + ip + " HEADER: " + header);
+        if (header.contains("Logitech Media Server") || header.contains("Lyrion Music Server")) return true;
         return false;
     }
 
@@ -131,38 +123,6 @@ public class Utils {
         return myip;
     }
 
-    public static boolean searchLmsIp() {
-        log.info("");
-        log.info("SEARCH LMS IP");
-        String lmsIp = null;
-        String myip = Utils.getMyIpAddres();
-        if (Utils.checkLmsIp(myip)) {
-            lmsIp = myip;
-        } else {
-
-            Integer start = 1;
-            while (lmsIp == null && start < 150) {
-                lmsIp = IntStream
-                        .range(start, start + 50)
-                        .boxed()
-                        .map(index -> CompletableFuture.supplyAsync(() -> Utils.checkIp(myip, Integer.valueOf(index))))
-                        .collect(Collectors.collectingAndThen(Collectors.toList(), cfs -> cfs.stream().map(CompletableFuture::join)))
-                        .filter(Objects::nonNull)
-                        .findFirst().orElse(null);
-                start = start + 50;
-            }
-        }
-        log.info("LMS IP: " + lmsIp);
-        if (lmsIp != null) {
-            JsonUtils.valueToJsonFile("lms_ip", lmsIp);
-            config.lmsIp = lmsIp;
-            config.lmsUrl = "http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/";
-            return true;
-        }
-        PageIndex.msgLms = "LMS сервер не найден https://lyrion.org";
-        log.info("LMS NOT FOUND. please check \"config.json\"");
-        return false;
-    }
 
     public static boolean isCyrillic(String text) {
         Pattern cyril = Pattern.compile("[а-ябА-Я\\s]*");
@@ -193,7 +153,7 @@ public class Utils {
         try {
             InetAddress address = InetAddress.getByAddress(ip);
             ipTry = address.toString().substring(1);
-            if (address.isReachable(1000) && checkLmsIp(ipTry)) {
+            if (address.isReachable(1000) && checkIpIsLms(ipTry)) {
                 log.info("LMS IP OK: " + ipTry);
                 return ipTry;
             }
@@ -208,6 +168,20 @@ public class Utils {
                 .collect(Collectors.toMap(s -> s[0], s -> s[1]))
                 .entrySet().stream()
                 .collect(Collectors.toMap(entry -> Integer.valueOf(entry.getKey()), entry -> Integer.valueOf(entry.getValue())));
+    }
+
+    public static Map<Integer, Integer> stringSplitToIntMap2(String text, String split1, String split2) {
+        if (text == null || text.isEmpty()) {
+            return new HashMap<>();
+        }
+        return Arrays.stream(text.split(split1))
+                .map(s -> s.split(split2))
+                .filter(arr -> arr.length == 2) // Игнорировать некорректные элементы
+                .collect(Collectors.toMap(
+                        arr -> Integer.parseInt(arr[0]),
+                        arr -> Integer.parseInt(arr[1]),
+                        (oldVal, newVal) -> newVal // Обработка дубликатов: берем последнее значение
+                ));
     }
 
     public static String mapToString(Map<Integer, Integer> headerMap) {
@@ -270,22 +244,22 @@ public class Utils {
         log.info("TIMER REQUEST PLAYERS STATE UPDATE");
         Runnable drawRunnable = new Runnable() {
             public void run() {
-                lmsPlayers.updateServerStatus();
+                lmsPlayers.updateLmsPlayers();
             }
         };
         ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
         exec.scheduleAtFixedRate(drawRunnable, 5, priod, TimeUnit.MINUTES);
     }
 
-    public static void readIdRooms() {
-        log.debug("READ ROOMS FROM rooms.json");
+    public static void readAliceIdInRooms() {
+        log.debug("READ ALICE IN ROOMS FROM rooms.json");
         idRooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
         if (idRooms == null) {
             idRooms = new HashMap<>();
             log.info("READ NO ROOMS");
             return;
         }
-        log.info("ROOMS: " + Main.idRooms);
+        log.info("ALICE IN ROOMS FROM rooms.json: " + Main.idRooms);
     }
 
     public static String widget() {

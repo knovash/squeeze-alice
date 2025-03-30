@@ -9,6 +9,8 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import java.time.ZoneId;
 import java.util.ResourceBundle;
 
+import static org.knovash.squeezealice.Main.config;
+
 @Log4j2
 @Data
 @NoArgsConstructor
@@ -23,8 +25,13 @@ public class Config {
     public String domain;
     public ZoneId zoneId;
 
-    public void readProperties() {
-        log.info("READ CONFIG FROM config.properties");
+    public String hiveBroker;
+    public String hiveUsername;
+    public String hivePassword;
+    public String hiveUserId;
+
+    public void readConfigProperties() {
+        log.debug("READ CONFIG FROM config.properties");
         ResourceBundle bundle = ResourceBundle.getBundle("config");
         this.port = Integer.parseInt(bundle.getString("port"));
         this.lmsIp = bundle.getString("lmsIp");
@@ -32,11 +39,21 @@ public class Config {
         this.silence = bundle.getString("silence");
         this.domain = bundle.getString("domain");
         this.lmsUrl = "http://" + lmsIp + ":" + lmsPort + "/jsonrpc.js/";
+
+        this.hiveBroker = bundle.getString("hiveBroker");
+        this.hiveUsername = bundle.getString("hiveUsername");
+        this.hivePassword = bundle.getString("hivePassword");
+        this.hiveUserId = bundle.getString("hiveUserId");
+        log.info("CONFIG FROM config.properties : " + config);
     }
 
     public void readConfigJson() {
-        log.info("READ CONFIG FROM config.json");
+        log.debug("READ CONFIG FROM config.json");
         Config jsonConfig = JsonUtils.jsonFileToPojo("config.json", Config.class);
+        if(jsonConfig == null){
+            log.info("NO FILE config.json WRITE NEW");
+            config.writeConfig();
+            return;}
 
         this.port = jsonConfig.port;
         this.lmsIp = jsonConfig.lmsIp;
@@ -45,6 +62,12 @@ public class Config {
         this.domain = jsonConfig.domain;
         this.zoneId = jsonConfig.zoneId;
         this.lmsUrl = "http://" + lmsIp + ":" + lmsPort + "/jsonrpc.js/";
+
+        this.hiveBroker = jsonConfig.hiveBroker;
+        this.hiveUsername = jsonConfig.hiveUsername;
+        this.hivePassword = jsonConfig.hivePassword;
+        this.hiveUserId = jsonConfig.hiveUserId;
+        log.info("CONFIG FROM config.json : " + config);
     }
 
     @Override
@@ -53,10 +76,13 @@ public class Config {
                 " port = " + port + "\n" +
                 " lmsIp = " + lmsIp + "\n" +
                 " lmsPort = " + lmsPort + "\n" +
-                " lmsUrl = " + lmsUrl + "\n" +
+                " lmsUrl = " + "http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/" + "\n" +
                 " silence = " + silence + "\n" +
                 " domain = " + domain + "\n" +
-                " zoneId = " + zoneId + "\n" +
+                " hiveBroker = " + hiveBroker + "\n" +
+                " hiveUsername = " + hiveUsername + "\n" +
+                " hivePassword = " + hivePassword + "\n" +
+                " hiveUserId = " + hiveUserId + "\n" +
                 '}';
     }
 

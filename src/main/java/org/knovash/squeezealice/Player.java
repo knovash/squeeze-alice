@@ -59,13 +59,23 @@ public class Player {
         this.volume_step = 5;
         this.volume_low = 10;
         this.volume_high = 25;
-        this.delay = 10000;
+        this.delay = 10;
         this.schedule = new HashMap<>(Map.of(
                 0, 10,
                 7, 15,
                 9, 20,
                 20, 15,
                 22, 10));
+    }
+
+    public static String count() {
+        Response response = Requests.postToLmsForResponse(RequestParameters.count().toString());
+        if (response == null) {
+            log.info("REQUEST ERROR");
+            return null;
+        }
+        log.info("COUNT PLAYERS IN LMS: " + response.result._count);
+        return response.result._count;
     }
 
     public static String name(String index) {
@@ -531,12 +541,12 @@ public class Player {
         log.info("");
         log.info("WAKE START >>>");
         log.info("PLAYER: " + this.name + " WAIT: " + this.delay);
-        Yandex.runScenario("музыка подождите");
+//        Yandex.runScenario("музыка подождите");
         this
                 .playSilence()
                 .volumeSet("+1")
                 .setVolumeByTime()
-                .waitForWake()
+                .waitForWakeSeconds()
                 .volumeSet("-1")
                 .setVolumeByTime()
                 .pause();
@@ -595,10 +605,10 @@ public class Player {
         return this;
     }
 
-    public Player waitForWake() {
+    public Player waitForWakeSeconds() {
         log.info("WAIT " + delay + " . . . . .");
         try {
-            Thread.sleep(this.delay);
+            Thread.sleep(this.delay*1000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -676,7 +686,7 @@ public class Player {
             this.separateFlagFalse().turnOnMusic().syncAllOtherPlayingToThis();
         } else {
             log.info("SEPARATE FLAG OFF AND TURN ON ALL OTHER");
-            lmsPlayers.updateServerStatus();
+            lmsPlayers.updateLmsPlayers();
             lmsPlayers.players
                     .stream().map(p -> p.separateFlagFalse())
                     .filter(p -> !p.name.equals(this.name))

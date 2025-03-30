@@ -65,6 +65,9 @@ public class SwitchVoiceCommand {
         alice.response = responseAlice;
         String json = JsonUtils.pojoToJson(alice);
         json = json.replaceAll("\\n", "");
+
+        json = text;
+
         return json;
     }
 
@@ -329,7 +332,7 @@ public class SwitchVoiceCommand {
     private static String searchPlayers() {
         String answer;
         log.info("BEFORE UPDATE " + lmsPlayers.playersNamesOnLine.toString());
-        lmsPlayers.updateServerStatus();
+        lmsPlayers.updateLmsPlayers();
         log.info("AFTER UPDATE " + lmsPlayers.playersNamesOnLine.toString());
         answer = "найдено плееров " + lmsPlayers.playersNamesOnLine.size() + ", " + String.join(", ", lmsPlayers.playersNamesOnLine);
         return answer;
@@ -338,11 +341,11 @@ public class SwitchVoiceCommand {
     private static String searchServer() {
         String answer;
         log.info("SEARCH SERVER");
-        CompletableFuture.runAsync(() -> {
-            Utils.searchLmsIp();
-            log.info("LMS IP " + config.lmsIp);
-            if (config.lmsIp != null) lmsPlayers.updateServerStatus();
-        });
+//        CompletableFuture.runAsync(() -> {
+//            Utils.searchLmsIp();
+//            log.info("LMS IP " + config.lmsIp);
+//            if (config.lmsIp != null) lmsPlayers.updateLmsPlayers();
+//        });
         answer = "сейчас найду";
         return answer;
     }
