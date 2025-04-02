@@ -3,7 +3,6 @@ package org.knovash.squeezealice.web;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Hive;
-import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.utils.Utils;
@@ -77,7 +76,6 @@ public class PageIndex {
                 ">Инструкция</a></p>" +
                 "<p><a href=\\lms>Настройка LMS</a></p>" +
                 "<p><a href=\\players>Настройка плееров</a></p>" +
-//                "<p><a href=\"/hive\">Настройка MQTT</a></p>" +
                 "<p><a href=\\yandex>Настройка Yandex</a></p>" +
                 "<p><a href=\\spotify>Настройка Spotify</a></p>" +
                 "<p><b>" + "Комманды:</b></p>" +
@@ -100,7 +98,6 @@ public class PageIndex {
                 "Алиса, где пульт<br>" +
                 "Алиса, включи пульт <br>";
 
-
         String page = pageOuter(pageInner, "Squeeze-Alice", "Squeeze-Alice");
 
         return page;
@@ -117,7 +114,6 @@ public class PageIndex {
             PageIndex.msgLmsPlayers = "LMS плееры не найдены";
         }
 
-
         List<String> aliceInRoomsList = idRooms.entrySet().stream().map(rooms -> {
             try {
                 return URLDecoder.decode(rooms.getValue(), "UTF-8");
@@ -130,7 +126,6 @@ public class PageIndex {
 
             aliceInRooms = "SA Навык еще незнает в какой он комнате. Скажите навыку Это комната Гостиная";
         }
-
 
         String bar = "<fieldset>" +
                 "<legend><b>" + "Информация" + "</b></legend>" +
@@ -151,7 +146,6 @@ public class PageIndex {
                 "</fieldset>";
         return bar;
     }
-
 
     public static String pageOuter(String pageInner, String title, String header) {
         String page = "<!DOCTYPE html><html lang=\"ru\">" + // Изменили lang на "ru"

@@ -7,9 +7,9 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.provider.YandexAuth;
 import org.knovash.squeezealice.spotify.SpotifyAuth;
-import org.knovash.squeezealice.web.PageHive;
 import org.knovash.squeezealice.web.PageIndex;
 import org.knovash.squeezealice.web.PagePlayers;
+import org.knovash.squeezealice.web.PageYandex;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -72,9 +72,9 @@ public class HandlerForm implements HttpHandler {
 //                    context.code = 302;
 //                    context.setRedirect("/spotify");
                     break;
-                case ("hive_save_user"):
-                    hiveUsers.createUser(bodyMap);
-                    context.bodyResponse = PageHive.page();
+                case ("hive_save_email"):
+                    hiveUsers.saveEmail(bodyMap);
+                    context.bodyResponse = PageYandex.page();
                     break;
                 case ("delay_expire_save"):
                     lmsPlayers.delayExpireSave((HashMap<String, String>) bodyMap);

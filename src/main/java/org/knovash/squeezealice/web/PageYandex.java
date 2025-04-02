@@ -21,7 +21,7 @@ public class PageYandex {
 
     public static String page() {
         String clientId = "9aa97fffe29849bb945db5b82b3ee015";
-        String redirectUri = "http://alice-lms.zeabur.app/callback";
+        String redirectUri = "https://alice-lms.zeabur.app/callbackweb";
         String authUrl = "https://oauth.yandex.ru/authorize" +
                 "?response_type=code" +
                 "&client_id=" + clientId +
@@ -33,17 +33,32 @@ public class PageYandex {
 
 
         String pageInner = "<br>" +
-                "<a href=\"" + authUrl + "\" target=\"_blank\" rel=\"noopener noreferrer\">" +
-                "Войти в Yandex и получить User ID</a>" +
-                "<br>" +
 
-                "<p>Введите User ID</p> \n" +
 
+                "<p>Введите Yandex e-mail ID" + Hive.hiveYandexEmail + "</p>" +
+
+                "<p>Введите Yandex e-mail ID</p> \n" +
+
+//                novashki@yandex.ru
                 "<form method='POST' action='/form'>" +
-                "<input name='name' placeholder='" + Hive.hiveUserId + "' required> Имя<br>" +
-                "<input name='action' type='hidden'  value='hive_save_user'>" +
+                "<input name='email' placeholder='" + Hive.hiveYandexEmail + "' required> e-mail<br>" +
+                "<input name='action' type='hidden'  value='hive_save_email'>" +
                 "<button type='submit'>Сохранить</button>" +
                 "</form>" +
+
+                "<br>" +
+
+//                "<a href=\"" + authUrl + "\" target=\"_blank\" rel=\"noopener noreferrer\">" +
+//                "Войти в Yandex и получить User ID</a>" +
+//                "<br>" +
+//
+//                "<p>Введите User ID</p> \n" +
+//
+//                "<form method='POST' action='/form'>" +
+//                "<input name='name' placeholder='" + Hive.hiveUserId + "' required> Имя<br>" +
+//                "<input name='action' type='hidden'  value='hive_save_user'>" +
+//                "<button type='submit'>Сохранить</button>" +
+//                "</form>" +
 
                 "";
 

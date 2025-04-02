@@ -31,10 +31,12 @@ public class Hive {
     public static String hiveUsername = config.hiveUsername;
     public static String hivePassword = config.hivePassword;
     public static String hiveUserId = config.hiveUserId;
-    public static String topicRecieveDevice = "to_lms_id"; // подписаться
-    public static String topicRecieveVoice = "to_lms_voice_id"; // подписаться
-    public static String topicRecieveDeviceUserId = Hive.hiveUserId + "to_lms_id"; // подписаться
 
+    public static String hiveYandexEmail = "";
+    public static String topicRecieveDevice = "to_lms_idnovashki@yandex.ru"; // подписаться
+    public static String topicRecieveVoice = "to_lms_voice_idnovashki@yandex.ru"; // подписаться
+//    public static String topicRecieveDevice = "to_lms_idnovashki@yandex.ru"; // подписаться
+//    public static String topicRecieveVoice = "to_lms_voice_idnovashki@yandex.ru" + l; // подписаться
     public static String topicPublish = "from_lms_id"; // отправить сюда
     public static String topicService = "INFO"; // отправить сюда
 
@@ -51,10 +53,11 @@ public class Hive {
             options.setUserName(hiveUsername);
             options.setPassword(hivePassword.toCharArray());
             mqttClient.connect(options);
+            log.info("SUBSCRIBE");
+            log.info("HIVE topicRecieveDevice: <" + topicRecieveDevice + ">");
+            log.info("HIVE topicRecieveVoice: <" + topicRecieveVoice + ">");
             mqttClient.subscribe(topicRecieveDevice, (topic, message) -> handleDeviceMqttRequestAndPublishAnswer(topic, message));
             mqttClient.subscribe(topicRecieveVoice, (topic, message) -> handleVoiceMqttRequestAndPublishAnswer(topic, message));
-//            mqttClient.subscribe(hiveUserId + topicRecieveDevice, (topic, message) -> handleDeviceMqttRequestAndPublishAnswer(topic, message));
-//            mqttClient.subscribe(hiveUserId + topicRecieveVoice, (topic, message) -> handleVoiceMqttRequestAndPublishAnswer(topic, message));
             log.info("MQTT STARTED OK");
             sendToTopicText(topicService, "CONNECTED! V.1.5 OS: " + System.getProperty("os.name"));
         } catch (MqttException e) {

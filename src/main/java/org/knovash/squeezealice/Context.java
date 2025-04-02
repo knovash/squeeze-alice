@@ -24,10 +24,6 @@ public class Context {
     public int code;
     public String path;
     public Headers headers;
-
-//    public Headers requestHeaders = new Headers();
-//    public Headers responseHeaders = new Headers();
-
     public String body;
     public String xRequestId;
     public String query;
@@ -50,7 +46,7 @@ public class Context {
         log.info("REQUEST: " + method + " " + "http://" + host + path);
         log.info("PATH: " + path);
 //        log.info("HEADERS: " + headers.entrySet());
-        log.info("XREQUESTID: " + xRequestId);
+//        log.info("XREQUESTID: " + xRequestId);
 //      BODY
         String body = null;
         try {

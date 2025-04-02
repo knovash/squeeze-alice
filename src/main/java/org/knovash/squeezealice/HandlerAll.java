@@ -56,8 +56,6 @@ public class HandlerAll implements HttpHandler {
 //                return context;
             case ("/lms"):
                 return PageLms.action(context);
-            case ("/hive"):
-                return PageHive.action(context);
             case ("/yandex"):
                 return PageYandex.action(context);
             case ("/cmd"):

@@ -6,14 +6,42 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.knovash.squeezealice.Hive.*;
 import static org.knovash.squeezealice.Main.config;
 import static org.knovash.squeezealice.Main.hiveUsers;
 
 @Log4j2
 public class Users {
+
     private final List<User> users = new ArrayList<>();
 
-    public  boolean createUser(Map<String, String> userData) {
+
+    public boolean saveEmail(Map<String, String> userData) {
+        log.info("GET MAP: " + userData.entrySet());
+        log.info("USERS: " + hiveUsers.getUsers().size());
+        // Проверка обязательных полей
+        if (!userData.containsKey("email")) {
+            log.info("ERROR USER NO NAME");
+            return false;
+        }
+        String email = userData.get("email");
+        log.info("USER email: " + email);
+        Hive.hiveYandexEmail = email;
+
+        topicRecieveDevice = "to_lms_id" + email;
+        topicRecieveVoice = "to_lms_voice_id" + email;
+        Hive.start();
+        log.info("HIVE: <" + topicRecieveDevice + ">");
+        log.info("HIVE: <" + topicRecieveVoice + ">");
+
+        config.hiveYandexEmail = email;
+        config.writeConfig();
+        log.info("FINISH EMAIL");
+        return true;
+    }
+
+
+    public boolean createUser(Map<String, String> userData) {
         log.info("GET MAP: " + userData.entrySet());
         log.info("USERS: " + hiveUsers.getUsers().size());
         // Проверка обязательных полей
@@ -64,6 +92,7 @@ public class Users {
 
 
     class User {
+
         private final String name;
         private final String email;
         private final String login;
@@ -79,10 +108,24 @@ public class Users {
         }
 
         // Геттеры
-        public String getName() { return name; }
-        public String getEmail() { return email; }
-        public String getLogin() { return login; }
-        public String getPassword() { return password; }
-        public String getTopic() { return topic; }
+        public String getName() {
+            return name;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public String getLogin() {
+            return login;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public String getTopic() {
+            return topic;
+        }
     }
 }

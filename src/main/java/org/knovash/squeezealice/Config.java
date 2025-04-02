@@ -29,6 +29,7 @@ public class Config {
     public String hiveUsername;
     public String hivePassword;
     public String hiveUserId;
+    public String hiveYandexEmail;
 
     public void readConfigProperties() {
         log.debug("READ CONFIG FROM config.properties");
