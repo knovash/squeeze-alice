@@ -5,6 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
+import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Hive;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.SmartHome;
@@ -16,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static org.knovash.squeezealice.Main.config;
 import static org.knovash.squeezealice.Main.lmsPlayers;
 import static org.knovash.squeezealice.web.PageIndex.msgSqa;
 
@@ -109,17 +111,20 @@ public class Yandex {
     }
 
     public static void getRoomsAndDevices() {
-        if (yandex.bearer == null) {
-            log.info("NO YANDEX CREDENTIALS");
+        if (config.hiveYandexToken == null && config.hiveYandexToken.equals("")) {
+            log.info("NO YANDEX TOKEN");
             return;
         }
 
         log.debug("GET ROOMS FROM YANDEX SMART HOME");
 
         String json;
+//        String bearer = "y0__xDzxbXDARi79i4g1Kq52BLBrH5AiuK_6jAmQvamADVB964geA";
+        String bearer = config.hiveYandexToken;
         try {
             Response response = Request.Get("https://api.iot.yandex.net/v1.0/user/info")
-                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+//                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+                    .setHeader("Authorization", "OAuth " + bearer)
                     .execute();
             json = response.returnContent().asString();
         } catch (IOException e) {
@@ -230,60 +235,60 @@ public class Yandex {
                 .findFirst().get().name;
     }
 
-    public static void sayOn() {
-        try {
-            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/d04255d2-607e-4805-981e-5ce676dc8482/actions")
-                    .setHeader("Authorization", "OAuth " + yandex.bearer)
-                    .execute();
-        } catch (IOException e) {
-            log.info("SAY ERROR");
-        }
-    }
-
-    public static void sayOff() {
-        try {
-            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/266db447-2238-4d84-beff-f635b0693953/actions")
-                    .setHeader("Authorization", "OAuth " + yandex.bearer)
-                    .execute();
-        } catch (IOException e) {
-            log.info("SAY ERROR");
-        }
-    }
-
-    public static void sayBeep() {
-        CompletableFuture.runAsync(() -> {
-            try {
-                Request.Post("https://api.iot.yandex.net/v1.0/scenarios/f2ddb649-62e7-4fe2-be01-23d477dd2974/actions")
-                        .setHeader("Authorization", "OAuth " + yandex.bearer)
-                        .execute();
-            } catch (IOException e) {
-                log.info("SAY ERROR");
-            }
-        });
-    }
-
-    public static void sayServerStart() {
-        try {
-            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/11ad405a-1b80-4031-ae7c-9bada79e276d/actions")
-                    .setHeader("Authorization", "OAuth " + yandex.bearer)
-                    .execute();
-        } catch (IOException e) {
-            log.info("SAY ERROR");
-        }
-    }
-
-    public static void sayWait() {
-//        log.info("SAY WAIT");
+//    public static void sayOn() {
 //        try {
-//            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/0e2c7cf4-3db9-416e-b17a-f6e2d501f257/actions")
+//            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/d04255d2-607e-4805-981e-5ce676dc8482/actions")
 //                    .setHeader("Authorization", "OAuth " + yandex.bearer)
 //                    .execute();
 //        } catch (IOException e) {
 //            log.info("SAY ERROR");
 //        }
-    }
+//    }
 
-    public static void requestYaAuthAndGetUserId() {
-        Hive.publishCommandWaitForAnswer("","");
-    }
+//    public static void sayOff() {
+//        try {
+//            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/266db447-2238-4d84-beff-f635b0693953/actions")
+//                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+//                    .execute();
+//        } catch (IOException e) {
+//            log.info("SAY ERROR");
+//        }
+//    }
+
+//    public static void sayBeep() {
+//        CompletableFuture.runAsync(() -> {
+//            try {
+//                Request.Post("https://api.iot.yandex.net/v1.0/scenarios/f2ddb649-62e7-4fe2-be01-23d477dd2974/actions")
+//                        .setHeader("Authorization", "OAuth " + yandex.bearer)
+//                        .execute();
+//            } catch (IOException e) {
+//                log.info("SAY ERROR");
+//            }
+//        });
+//    }
+
+//    public static void sayServerStart() {
+//        try {
+//            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/11ad405a-1b80-4031-ae7c-9bada79e276d/actions")
+//                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+//                    .execute();
+//        } catch (IOException e) {
+//            log.info("SAY ERROR");
+//        }
+//    }
+
+//    public static void sayWait() {
+////        log.info("SAY WAIT");
+////        try {
+////            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/0e2c7cf4-3db9-416e-b17a-f6e2d501f257/actions")
+////                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+////                    .execute();
+////        } catch (IOException e) {
+////            log.info("SAY ERROR");
+////        }
+//    }
+
+//    public static void requestYaAuthAndGetUserId() {
+//        Hive.publishCommandWaitForAnswer("","");
+//    }
 }

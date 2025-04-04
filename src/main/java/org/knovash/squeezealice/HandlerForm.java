@@ -18,9 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.knovash.squeezealice.Main.hiveUsers;
 import static org.knovash.squeezealice.Main.lmsPlayers;
-import static org.knovash.squeezealice.provider.Yandex.yandex;
 
 @Log4j2
 public class HandlerForm implements HttpHandler {
@@ -73,7 +71,7 @@ public class HandlerForm implements HttpHandler {
 //                    context.setRedirect("/spotify");
                     break;
                 case ("hive_save_email"):
-                    hiveUsers.saveEmail(bodyMap);
+                    Hive.saveEmail(bodyMap);
                     context.bodyResponse = PageYandex.page();
                     break;
                 case ("delay_expire_save"):

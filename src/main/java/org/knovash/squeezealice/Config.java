@@ -28,8 +28,8 @@ public class Config {
     public String hiveBroker;
     public String hiveUsername;
     public String hivePassword;
-    public String hiveUserId;
     public String hiveYandexEmail;
+    public String hiveYandexToken;
 
     public void readConfigProperties() {
         log.debug("READ CONFIG FROM config.properties");
@@ -44,17 +44,18 @@ public class Config {
         this.hiveBroker = bundle.getString("hiveBroker");
         this.hiveUsername = bundle.getString("hiveUsername");
         this.hivePassword = bundle.getString("hivePassword");
-        this.hiveUserId = bundle.getString("hiveUserId");
+//        this.hiveYandexEmail = bundle.getString("hiveYandexEmail");
         log.info("CONFIG FROM config.properties : " + config);
     }
 
     public void readConfigJson() {
         log.debug("READ CONFIG FROM config.json");
         Config jsonConfig = JsonUtils.jsonFileToPojo("config.json", Config.class);
-        if(jsonConfig == null){
+        if (jsonConfig == null) {
             log.info("NO FILE config.json WRITE NEW");
             config.writeConfig();
-            return;}
+            return;
+        }
 
         this.port = jsonConfig.port;
         this.lmsIp = jsonConfig.lmsIp;
@@ -67,7 +68,8 @@ public class Config {
         this.hiveBroker = jsonConfig.hiveBroker;
         this.hiveUsername = jsonConfig.hiveUsername;
         this.hivePassword = jsonConfig.hivePassword;
-        this.hiveUserId = jsonConfig.hiveUserId;
+        this.hiveYandexEmail = jsonConfig.hiveYandexEmail;
+        this.hiveYandexToken = jsonConfig.hiveYandexToken;
         log.info("CONFIG FROM config.json : " + config);
     }
 
@@ -83,7 +85,8 @@ public class Config {
                 " hiveBroker = " + hiveBroker + "\n" +
                 " hiveUsername = " + hiveUsername + "\n" +
                 " hivePassword = " + hivePassword + "\n" +
-                " hiveUserId = " + hiveUserId + "\n" +
+                " hiveYandexEmail = " + hiveYandexEmail + "\n" +
+                " hiveYandexToken = " + hiveYandexToken + "\n" +
                 '}';
     }
 

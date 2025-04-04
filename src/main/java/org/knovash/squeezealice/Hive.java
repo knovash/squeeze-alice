@@ -1,15 +1,11 @@
 package org.knovash.squeezealice;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.knovash.squeezealice.provider.YandexToken;
-import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -19,28 +15,19 @@ import java.util.UUID;
 import java.util.concurrent.*;
 
 import static org.knovash.squeezealice.Main.config;
-import static org.knovash.squeezealice.voice.SwitchVoiceCommand.aliceId;
 
 @Log4j2
 public class Hive {
 
-
+    private static MqttClient mqttClient;
+    private static final String hiveBroker = config.hiveBroker;
+    private static final String hiveUsername = config.hiveUsername;
+    private static final String hivePassword = config.hivePassword;
     private static final ResponseManager responseManager = new ResponseManager();
 
-    public static String hiveBroker = config.hiveBroker;
-    public static String hiveUsername = config.hiveUsername;
-    public static String hivePassword = config.hivePassword;
-    public static String hiveUserId = config.hiveUserId;
-
-    public static String hiveYandexEmail = "";
     public static String topicRecieveDevice = "to_lms_idnovashki@yandex.ru"; // подписаться
-    public static String topicRecieveVoice = "to_lms_voice_idnovashki@yandex.ru"; // подписаться
-//    public static String topicRecieveDevice = "to_lms_idnovashki@yandex.ru"; // подписаться
-//    public static String topicRecieveVoice = "to_lms_voice_idnovashki@yandex.ru" + l; // подписаться
     public static String topicPublish = "from_lms_id"; // отправить сюда
-    public static String topicService = "INFO"; // отправить сюда
 
-    private static MqttClient mqttClient;
 
     public static void start() {
         log.info("MQTT STARTING...");
@@ -53,151 +40,67 @@ public class Hive {
             options.setUserName(hiveUsername);
             options.setPassword(hivePassword.toCharArray());
             mqttClient.connect(options);
-            log.info("SUBSCRIBE");
-            log.info("HIVE topicRecieveDevice: <" + topicRecieveDevice + ">");
-            log.info("HIVE topicRecieveVoice: <" + topicRecieveVoice + ">");
-            mqttClient.subscribe(topicRecieveDevice, (topic, message) -> handleDeviceMqttRequestAndPublishAnswer(topic, message));
-            mqttClient.subscribe(topicRecieveVoice, (topic, message) -> handleVoiceMqttRequestAndPublishAnswer(topic, message));
+
+            // Подписка на топик ответа
+            log.info("SUBSCRIBE topicRecieveDevice: <" + topicRecieveDevice + ">");
+//            log.info("SUBSCRIBE topicRecieveVoice: <" + topicRecieveVoice + ">");
+            mqttClient.subscribe(topicRecieveDevice, (topic, message) -> handleDeviceAndPublish(topic, message));
+//            mqttClient.subscribe(topicRecieveVoice, (topic, message) -> handleVoiceAndPublish(topic, message));
             log.info("MQTT STARTED OK");
-            sendToTopicText(topicService, "CONNECTED! V.1.5 OS: " + System.getProperty("os.name"));
         } catch (MqttException e) {
             e.printStackTrace();
         }
     }
 
-    public static void sendToTopicText(String topic, String payload) {
-        try {
-            mqttClient.publish(topic, new MqttMessage(payload.getBytes()));
-        } catch (MqttException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static void handleDeviceMqttRequestAndPublishAnswer(String topicRecieved, MqttMessage message) {
+    private static void handleDeviceAndPublish(String topicRecieved, MqttMessage message) {
         log.info("RECIEVED MESSAGE FROM TOPIC: " + topicRecieved);
         log.debug("MESSAGE : " + message);
         String payload = new String(message.getPayload());
-        Map<String, String> params = parseParams(payload);
+
+
+//        Map<String, String> params = parseParams(payload);
+        Map<String, String> params = Parser.run(payload);
+
         String contextJson = "";
         String correlationId = "";
-        String recievedUserId = "";
-        if (params.containsKey("correlationId")) {
-            correlationId = params.get("correlationId");
-            contextJson = params.getOrDefault("context", "");
-            recievedUserId = params.getOrDefault("userId", "");
+        if (!params.containsKey("correlationId")) return;
+        correlationId = params.get("correlationId");
+
+
+//      получить токен
+        if (params.containsKey("token")) {
+            log.info("RECIEVED TOKEN");
+            String token = params.getOrDefault("token", null);
+            if (token == null) return;
+
+            Main.yandexToken = token;
+            config.hiveYandexToken = token;
+            config.hiveYandexEmail = YandexJwtUtils.getValueByTokenAndKey(token, "email");
+            config.writeConfig();
+
+            log.info("TOKEN: " + token);
+            responseManager.completeResponse(correlationId, "OK");
+            return;
         }
-        log.info("correlationId : " + correlationId);
-        log.info("hiveUserId : " + hiveUserId);
-//      получить объект контекст из json
+
+
+//        полученный контекст
+        contextJson = params.getOrDefault("context", "");
         Context context = Context.fromJson(contextJson);
+
 //      обработка контекста
         context = HandlerAll.processContext(context);
-//      положить в пэйлоад сообщения ид и контекст
+
+//      положить в пэйлоад ответа: ид, топик,  контекст
         payload = "correlationId=" + correlationId + "&" +
-                "hiveUserId=" + hiveUserId + "&" +
+                "userTopicId=" + topicRecieveDevice + "&" +
                 "context=" + context.toJson();
         try {
             MqttMessage responseMessage = new MqttMessage(payload.getBytes());
             mqttClient.publish(topicPublish, responseMessage);
         } catch (MqttException e) {
-            e.printStackTrace();
+            log.info("ERROR: " + e);
         }
-    }
-
-    private static void handleVoiceMqttRequestAndPublishAnswer(String topicRecieved, MqttMessage request) {
-        log.info("RECIEVED MESSAGE FROM TOPIC: " + topicRecieved);
-        log.debug("MESSAGE : " + request);
-        String payload = new String(request.getPayload());
-        Map<String, String> params = parseParams(payload);
-        String contextJson = "";
-        String correlationId = "";
-        if (params.containsKey("correlationId")) {
-            correlationId = params.get("correlationId");
-            contextJson = params.getOrDefault("context", "");
-
-            Context context = Context.fromJson(contextJson);
-            AliceRequest aliceRequest = AliceRequest.fromJson(context.body);
-            String applicationId = aliceRequest.session.application.applicationId;
-            String command = aliceRequest.request.command;
-            log.debug("applicationId : " + applicationId);
-            log.info("command : " + command);
-            aliceId = applicationId;
-//          выполнить голосовую команду c ID колонки(комнаты) и получить ответ
-            String answer = SwitchVoiceCommand.switchVoice(applicationId, command);
-            log.info("ANSWER : " + answer);
-
-//         положить в пэйлоад сообщения ид и ответ
-            payload = "correlationId=" + correlationId + "&" +
-                    "hiveUserId=" + hiveUserId + "&" +
-                    "context=" + answer;
-            try {
-                MqttMessage responseMessage = new MqttMessage(payload.getBytes());
-                mqttClient.publish(topicPublish, responseMessage);
-            } catch (MqttException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public static String publishCommandWaitForAnswer(String topic, String command) {
-        log.info("MQTT PUBLISH TO TOPIC: " + topic);
-//        сгенерировать ключ сообщения в брокер, и ожидать ответа с этим ключом в топике названном как ключ
-        String correlationId = UUID.randomUUID().toString();
-//        подписаться на топик с названием такимже как ключ
-        try {
-            mqttClient.subscribe(topicRecieveVoice, (tocorrelationIdpic, message) -> handleVoiceMqttRequestAndPublishAnswer(topic, message));
-        } catch (MqttException e) {
-            throw new RuntimeException(e);
-        }
-//
-        String responseBody = "";
-//        String contextJson = context.toJson();
-        try {
-//       отправить в брокер Ключ и Команду (запуск аутентификации в Яндекс и возврат User ID)
-            String payload =
-                    "correlationId=" + correlationId + "&" +
-                            "command=" + command;
-            mqttClient.publish("command_to_cloud", new MqttMessage(payload.getBytes()));
-
-            // Ожидание ответа
-            CompletableFuture<String> future = responseManager.waitForResponse(correlationId);
-            try {
-                responseBody = future.get(15, TimeUnit.SECONDS);
-            } catch (TimeoutException e) {
-                log.info("MQTT ERROR NO RESPONSE");
-                responseBody = "---";
-            }
-        } catch (Exception e) {
-        }
-        log.info("RESPONSE: " + responseBody);
-//        String answer = extractBodyResponse(responseBody);
-        return "answer";
-    }
-
-
-    public static String publishContextWaitForContext(String topic, Context context) {
-        log.info("MQTT PUBLISH TO TOPIC: " + topic);
-        String correlationId = UUID.randomUUID().toString();
-        String responseBody = "";
-        String contextJson = context.toJson();
-        try {
-            // Отправка запроса в MQTT
-            String payload = String.format("correlationId=%s&context=%s",
-                    correlationId, contextJson);
-            mqttClient.publish(topic, new MqttMessage(payload.getBytes()));
-            // Ожидание ответа
-            CompletableFuture<String> future = responseManager.waitForResponse(correlationId);
-            try {
-                log.info("MQTT WAIT FOR RESPONSE...");
-                responseBody = future.get(15, TimeUnit.SECONDS);
-                log.info("MQTT CONTEXT RECIEVED: " + responseBody);
-            } catch (TimeoutException e) {
-                log.info("MQTT ERROR NO RESPONSE: " + e);
-                responseBody = "---";
-            }
-        } catch (Exception e) {
-        }
-        return responseBody;
     }
 
     private static Map<String, String> parseParams(String message) {
@@ -224,44 +127,74 @@ public class Hive {
         return result;
     }
 
+    public static void saveEmail(Map<String, String> userData) {
+        log.info("SAVE USER YANDEX EMAIL");
+        if (!userData.containsKey("email")) {
+            log.info("ERROR USER NO NAME");
+            return;
+        }
+        String email = userData.get("email");
+        log.info("USER email: " + email);
+        config.hiveYandexEmail = email;
+        config.writeConfig();
+        topicRecieveDevice = "to_lms_id" + email;
+        Hive.start();
+        log.info("HIVE: <" + topicRecieveDevice + ">");
+        log.info("FINISH EMAIL");
+    }
+
+//    ----------------- это для паблиша
+
+    //    ЭТО РАБОЧИЙ СЕЙЧАС МЕТОД ДЛЯ УДЯ КОМАНД
+    public static String publishContextWaitForContext(String topic, Context context, Integer timeout, String action, String correlationId) {
+        log.info("MQTT PUBLISH TO TOPIC: " + topic);
+        if (correlationId == null) correlationId = UUID.randomUUID().toString();
+        String responseBody = "";
+        String contextJson = context.toJson();
+        try {
+            //             Отправка запроса в MQTT
+//            String payload = String.format("correlationId=%s&context=%s", correlationId, contextJson);
+            String payload = "correlationId=" + correlationId + "&" +
+                    "callbackTopic=" + topicRecieveDevice + "&" +
+                    "action=" + action + "&" +
+                    "context=" + contextJson;
+
+            mqttClient.publish(topic, new MqttMessage(payload.getBytes()));
+//             Ожидание ответа
+            CompletableFuture<String> future = responseManager.waitForResponse(correlationId);
+            //            Получение ответа
+            try {
+                log.info("MQTT WAIT FOR RESPONSE...");
+//                если таймаут больше 4 то навык ответит раньше что Навык не отвечает
+//                4 - недождалась ответа, но иногда может быть Навык неотвечает
+//                для УДЯ было 10
+                responseBody = future.get(timeout, TimeUnit.SECONDS);
+                log.info("MQTT RESPONSE RECIEVED OK");
+            } catch (TimeoutException e) {
+                log.info("MQTT ERROR NO RESPONSE: " + e);
+                responseBody = "---";
+            }
+        } catch (Exception e) {
+        }
+        return responseBody;
+    }
 
     private static class ResponseManager {
 
         private final ConcurrentMap<String, CompletableFuture<String>> responses = new ConcurrentHashMap<>();
 
         public CompletableFuture<String> waitForResponse(String correlationId) {
-            log.info("WAIT FOR RESPONSE ID: " + correlationId);
             CompletableFuture<String> future = new CompletableFuture<>();
             responses.put(correlationId, future);
-//            log.info("FUTURE: " + future);
             return future;
         }
 
         public void completeResponse(String correlationId, String contextJson) {
-//            log.info("COMPLETE RESPONSE ID: " + correlationId + " RECIEVED CONTEXT JSON");
             CompletableFuture<String> future = responses.remove(correlationId);
-//            log.info("FUTURE: " + future.toString());
             if (future != null) {
-//                log.info("FUTURE != NULL: " + future);
                 future.complete(contextJson);
-//                log.info("FUTURE: " + future);
             }
         }
     }
 
-    public static String extractBodyResponse(String rawJson) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(rawJson);
-            // Получаем значение bodyResponse напрямую из корневого узла
-            JsonNode bodyResponseNode = rootNode.get("bodyResponse");
-            if (bodyResponseNode != null && bodyResponseNode.isTextual()) {
-                return bodyResponseNode.asText();
-            }
-            return null;
-        } catch (Exception e) {
-            System.err.println("Error parsing JSON: " + e.getMessage());
-            return null;
-        }
-    }
 }

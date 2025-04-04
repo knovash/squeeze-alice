@@ -94,11 +94,11 @@ public class HandlerAll implements HttpHandler {
                 context = SpotifyAuth.callback(context);
                 break;
 
-            case ("/request_ya_auth_and_get_user_id"):
-//                Yandex.getBearerToken();
-                Yandex.requestYaAuthAndGetUserId();
-//                context = SpotifyAuth.callback(context);
-                break;
+//            case ("/request_ya_auth_and_get_user_id"):
+////                Yandex.getBearerToken();
+//                Yandex.requestYaAuthAndGetUserId();
+////                context = SpotifyAuth.callback(context);
+//                break;
             default:
                 log.info("PATH ERROR " + path);
                 context = PageIndex.action(context);

@@ -26,6 +26,15 @@ public class Server {
         server.createContext("/", new HandlerAll());
         server.createContext("/form", new HandlerForm());
         server.createContext("/html", new HandlerHtml());
+
+
+//        server.createContext("/auth", new HandlerInitAuth());
+//        server.createContext("/auth", new LocalAuthServer.AuthHandler());
+
+        server.createContext("/auth", new LocalAuthServer.AuthHandler());
+        server.createContext("/store-token", new LocalAuthServer.TokenHandler());
+
+
         server.setExecutor(Executors.newCachedThreadPool());
         server.start();
         log.info("SERVER STARTED OK http://localhost:" + config.port);

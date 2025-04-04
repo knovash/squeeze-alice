@@ -76,7 +76,12 @@ public class PageIndex {
                 ">Инструкция</a></p>" +
                 "<p><a href=\\lms>Настройка LMS</a></p>" +
                 "<p><a href=\\players>Настройка плееров</a></p>" +
-                "<p><a href=\\yandex>Настройка Yandex</a></p>" +
+//                "<p><a href=\\yandex>Настройка Yandex</a></p>" +
+
+                "<p><a href=\\auth " +
+                "target=\"_blank\" rel=\"noopener noreferrer\"" +
+                ">Авторизация в Яндекс</a></p>" +
+
                 "<p><a href=\\spotify>Настройка Spotify</a></p>" +
                 "<p><b>" + "Комманды:</b></p>" +
                 "<p>" +
@@ -136,7 +141,7 @@ public class PageIndex {
 
                 "УДЯ все комнаты " + rooms + "<br>" +
                 PageIndex.msgUdy + "<br>" +
-                "Пользователь: " + Hive.hiveUserId +
+                "Пользователь: " + config.hiveYandexEmail +
 
                 "<form method='POST' action='/form'>" +
                 "<input name='action' type='hidden'  value='statusbar_refresh'>" +

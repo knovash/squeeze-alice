@@ -8,12 +8,15 @@ import org.knovash.squeezealice.utils.Utils;
 
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 
 @Log4j2
-public class Main {
+public class MainTest {
 
     public static LmsPlayers lmsPlayers = new LmsPlayers();
     public static Map<String, String> idRooms = new HashMap<>();
@@ -27,23 +30,33 @@ public class Main {
     public static void main(String[] args) {
         log.info("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
         log.info("OS: " + System.getProperty("os.name") + ", user.home: " + System.getProperty("user.home"));
-        System.setProperty("userApp.root", System.getProperty("user.home"));
-        log.info("userApp.root: " + System.getProperty("userApp.root"));
-        config.readConfigProperties();
-        config.readConfigJson();
-        lmsPlayers.searchForLmsIp();
-        Utils.readAliceIdInRooms();
-        lmsPlayers.readPlayersSettings();
-        lmsPlayers.updateLmsPlayers();
-        lmsPlayers.write();
-        SmartHome.read();
-        SpotifyAuth.read();
-        SpotifyAuth.callbackRequestRefresh();
+//        System.setProperty("userApp.root", System.getProperty("user.home"));
+//        log.info("userApp.root: " + System.getProperty("userApp.root"));
+//        config.readConfigProperties();
+//        config.readConfigJson();
+//        lmsPlayers.searchForLmsIp();
+//        Utils.readAliceIdInRooms();
+//        lmsPlayers.readPlayersSettings();
+//        lmsPlayers.updateLmsPlayers();
+//        lmsPlayers.write();
+//        SmartHome.read();
+//        SpotifyAuth.read();
+//        SpotifyAuth.callbackRequestRefresh();
 //        Yandex.read();
-        Yandex.getRoomsAndDevices();
-        JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
-        Server.start();
-        Hive.start();
+//        Yandex.getRoomsAndDevices();
+//        JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
+//        Server.start();
+//        Hive.start();
+
+        String token = "y0__xDzxbXDARi79i4g1Kq52BLBrH5AiuK_6jAmQvamADVB964geA";
+        String jwtToken ="";
+
+            jwtToken= YandexJwtUtils.getJwtByOauth(token);
+            log.info("JWT: " + jwtToken);
+            YandexJwtUtils.parseYandexJwtForKey(jwtToken,"");
+
+
+
 
 //        Context context = new Context();
 //        String contextJson = "dddddddd";
