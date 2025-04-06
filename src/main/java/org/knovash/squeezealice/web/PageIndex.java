@@ -2,9 +2,8 @@ package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
-import org.knovash.squeezealice.Hive;
 import org.knovash.squeezealice.SmartHome;
-import org.knovash.squeezealice.provider.Yandex;
+import org.knovash.squeezealice.yandex.Yandex;
 import org.knovash.squeezealice.utils.Utils;
 
 import java.io.UnsupportedEncodingException;
@@ -14,8 +13,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
-import static org.knovash.squeezealice.provider.Yandex.yandexMusicDevCounter;
-import static org.knovash.squeezealice.provider.Yandex.yandexMusicDevListRooms;
+import static org.knovash.squeezealice.yandex.Yandex.yandexMusicDevCounter;
+import static org.knovash.squeezealice.yandex.Yandex.yandexMusicDevListRooms;
 
 @Log4j2
 public class PageIndex {
@@ -37,7 +36,7 @@ public class PageIndex {
 //        lmsPlayers.searchForLmsIp();
         lmsPlayers.updateLmsPlayers();
 
-        Yandex.read();
+//        Yandex.read();
         Yandex.getRoomsAndDevices();
     }
 
@@ -82,7 +81,11 @@ public class PageIndex {
                 "target=\"_blank\" rel=\"noopener noreferrer\"" +
                 ">Авторизация в Яндекс</a></p>" +
 
-                "<p><a href=\\spotify>Настройка Spotify</a></p>" +
+                "<p><a href=\\auth_spotify " +
+                "target=\"_blank\" rel=\"noopener noreferrer\"" +
+                ">Авторизация в Spotify</a></p>" +
+
+//                "<p><a href=\\spotify>Настройка Spotify</a></p>" +
                 "<p><b>" + "Комманды:</b></p>" +
                 "<p>" +
                 "Алиса, что играет<br>" +
@@ -141,7 +144,7 @@ public class PageIndex {
 
                 "УДЯ все комнаты " + rooms + "<br>" +
                 PageIndex.msgUdy + "<br>" +
-                "Пользователь: " + config.hiveYandexEmail +
+                "Пользователь: " + config.yandexUid +
 
                 "<form method='POST' action='/form'>" +
                 "<input name='action' type='hidden'  value='statusbar_refresh'>" +

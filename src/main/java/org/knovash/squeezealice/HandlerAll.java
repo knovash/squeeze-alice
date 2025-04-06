@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.*;
+import org.knovash.squeezealice.spotify.PageSpotify;
 import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 import org.knovash.squeezealice.web.*;
@@ -42,22 +43,16 @@ public class HandlerAll implements HttpHandler {
         switch (path) {
             case ("/"):
                 return PageIndex.action(context);
-//            case ("/refresh"):
-//                PageIndex.refresh();
-//                return PageIndex.action(context);
             case ("/players"):
                 return PagePlayers.action(context);
             case ("/manual"):
                 return PageManual.action(context);
             case ("/spotify"):
                 return PageSpotify.action(context);
-//            case ("/favicon.ico"):
-//                context.code = 204;
-//                return context;
             case ("/lms"):
                 return PageLms.action(context);
-            case ("/yandex"):
-                return PageYandex.action(context);
+//            case ("/yandex"):
+//                return PageYandex.action(context);
             case ("/cmd"):
                 context = SwitchQueryCommand.action(context);
                 break;

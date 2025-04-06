@@ -12,7 +12,6 @@ public class HandlerFavicon implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-//        log.info("HANDLER FAVICON START >>>");
         try (InputStream is = Server.class.getResourceAsStream("/public/favicon.ico")) {
             if (is != null) {
                 byte[] iconData = is.readAllBytes();
@@ -28,6 +27,5 @@ public class HandlerFavicon implements HttpHandler {
         } finally {
             exchange.close();
         }
-//        log.info("HANDLER FAVICON FINISH <<<");
     }
 }

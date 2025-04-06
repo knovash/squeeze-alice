@@ -4,7 +4,6 @@ import com.sun.net.httpserver.HttpServer;
 import lombok.extern.log4j.Log4j2;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
@@ -28,12 +27,13 @@ public class Server {
         server.createContext("/html", new HandlerHtml());
 
 
-//        server.createContext("/auth", new HandlerInitAuth());
-//        server.createContext("/auth", new LocalAuthServer.AuthHandler());
+//     запрос на выполнение авторизации в Яндекс,
+//     токен вернется на колбэк в облаке и вернется сюда через mqtt
+        server.createContext("/auth", new LocalAuthServerYandex.AuthHandler());
 
-        server.createContext("/auth", new LocalAuthServer.AuthHandler());
-        server.createContext("/store-token", new LocalAuthServer.TokenHandler());
-
+//     запрос на выполнение авторизации в Spotify,
+//     токен вернется на колбэк в облаке и вернется сюда через mqtt
+        server.createContext("/auth_spotify", new LocalAuthServerSpotify.AuthHandler());
 
         server.setExecutor(Executors.newCachedThreadPool());
         server.start();

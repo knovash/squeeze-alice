@@ -2,7 +2,6 @@ package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
-import org.knovash.squeezealice.Hive;
 
 import static org.knovash.squeezealice.Main.config;
 import static org.knovash.squeezealice.web.PageIndex.pageOuter;
@@ -19,9 +18,9 @@ public class PageYandex {
     public static String page() {
         String loginMessage = "Для подключения введите почту вашего Яндекс аккаунта user@yandex.ru";
         String placeholder = "user@yandex.ru";
-        if (config.hiveYandexEmail != null && !config.hiveYandexEmail.equals("")) {
-            loginMessage = "Вы вошли с аккаунтом: " + config.hiveYandexEmail;
-            placeholder = config.hiveYandexEmail;
+        if (config.yandexUid != null && !config.yandexUid.equals("")) {
+            loginMessage = "Вы вошли с аккаунтом: " + config.yandexUid;
+            placeholder = config.yandexUid;
         }
         String pageInner = "<br>" +
                 loginMessage +

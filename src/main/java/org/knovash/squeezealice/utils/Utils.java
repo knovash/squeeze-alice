@@ -5,8 +5,9 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.provider.Yandex;
-import org.knovash.squeezealice.provider.YandexInfo;
+import org.knovash.squeezealice.voice.SwitchVoiceCommand;
+import org.knovash.squeezealice.yandex.Yandex;
+import org.knovash.squeezealice.yandex.YandexInfo;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -253,7 +254,7 @@ public class Utils {
 
     public static void readAliceIdInRooms() {
         log.debug("READ ALICE IN ROOMS FROM rooms.json");
-        idRooms = JsonUtils.jsonFileToMap("rooms.json", String.class, String.class);
+        idRooms = JsonUtils.jsonFileToMap(SwitchVoiceCommand.saveToFileJson, String.class, String.class);
         if (idRooms == null) {
             idRooms = new HashMap<>();
             log.info("READ NO ROOMS");

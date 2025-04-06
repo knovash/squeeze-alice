@@ -1,8 +1,7 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.Yandex;
-import org.knovash.squeezealice.spotify.SpotifyAuth;
+import org.knovash.squeezealice.yandex.Yandex;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 
@@ -23,7 +22,6 @@ public class Main {
     public static Boolean lmsServerOnline;
     public static String yandexToken = "";
 
-
     public static void main(String[] args) {
         log.info("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
         log.info("OS: " + System.getProperty("os.name") + ", user.home: " + System.getProperty("user.home"));
@@ -31,26 +29,16 @@ public class Main {
         log.info("userApp.root: " + System.getProperty("userApp.root"));
         config.readConfigProperties();
         config.readConfigJson();
+        config.writeConfig();
         lmsPlayers.searchForLmsIp();
         Utils.readAliceIdInRooms();
         lmsPlayers.readPlayersSettings();
         lmsPlayers.updateLmsPlayers();
         lmsPlayers.write();
         SmartHome.read();
-        SpotifyAuth.read();
-        SpotifyAuth.callbackRequestRefresh();
-//        Yandex.read();
         Yandex.getRoomsAndDevices();
-        JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
         Server.start();
         Hive.start();
-
-//        Context context = new Context();
-//        String contextJson = "dddddddd";
-//        contextJson = Hive.publishContextWaitForContext("from_local_request", context, 5, "token");
-//        log.info(contextJson);
-
-
 //        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate);
     }
 }

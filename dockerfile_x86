@@ -1,0 +1,22 @@
+# Базовый образ с Java Runtime
+FROM eclipse-temurin:17-jre
+# Для ARM
+#FROM arm32v7/eclipse-temurin:17-jre-jammy
+
+# Создать директорию для данных
+RUN mkdir -p /app/data
+
+# Рабочая директория
+WORKDIR /app
+
+# Скопировать target в /app
+COPY target .
+
+# Посмотреть что скопировано
+RUN ls -la /app && sleep 1
+
+# Открываем порт
+EXPOSE 8010
+
+# Команда запуска
+CMD ["java", "-jar", "app.jar"]

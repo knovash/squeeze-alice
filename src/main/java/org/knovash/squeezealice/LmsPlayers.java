@@ -42,6 +42,7 @@ public class LmsPlayers {
     public static ServerStatusByName serverStatus = new ServerStatusByName();
     public String lastTitle;
     public String autoRemoteRefresh = "https://autoremotejoaomgcd.appspot.com/sendmessage?key=fovfKw-pC3A:APA91bFz1IHu4FIo9BpJaxwW0HgOulJtoXHF-khXptkSmn6QjhBIywkgi0-w9f4DvMK5y-hoOOTWsXDrv7ASE4S4BADhV8SQz6Y0XOJ5XWbF0pmprdOdmA7aEZ5hfQAWZ2Cd9RW_rShf&message=re";
+public static String saveToFileJson = "data/lms_players.json";
 
     public List<String> favorites() {
         log.info("START");
@@ -125,13 +126,15 @@ public class LmsPlayers {
 
     public void write() {
         log.info("WRITE FILE lms_players.json");
-        JsonUtils.pojoToJsonFile(lmsPlayers, "lms_players.json");
+//        JsonUtils.pojoToJsonFile(lmsPlayers, "data/lms_players.json");
+        JsonUtils.pojoToJsonFile(lmsPlayers, LmsPlayers.saveToFileJson);
     }
 
     public void readPlayersSettings() {
         log.debug("READ LMS PLAYERS FROM lms_players.json");
         lmsPlayers.players = new ArrayList<>();
-        LmsPlayers lp = JsonUtils.jsonFileToPojo("lms_players.json", LmsPlayers.class);
+//        LmsPlayers lp = JsonUtils.jsonFileToPojo("data/lms_players.json", LmsPlayers.class);
+        LmsPlayers lp = JsonUtils.jsonFileToPojo(LmsPlayers.saveToFileJson, LmsPlayers.class);
         if (lp == null) {
             log.info("NO PLAYERS lms_players.json");
         } else {
@@ -313,7 +316,8 @@ public class LmsPlayers {
 
     public void delayExpireSave(HashMap<String, String> parameters) {
         delayExpire = Integer.parseInt(parameters.get("delay_expire_value"));
-        JsonUtils.pojoToJsonFile(lmsPlayers, "lms_players.json");
+//        JsonUtils.pojoToJsonFile(lmsPlayers, "data/lms_players.json");
+        JsonUtils.pojoToJsonFile(lmsPlayers,LmsPlayers.saveToFileJson);
         lmsPlayers.write(); // ПОЧЕМУ ВЫЗЫВАЕТ СУПЕР РЕФРЕШ???
     }
 

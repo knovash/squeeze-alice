@@ -25,19 +25,19 @@ public class SpotifyRequests {
 //        log.info("JSON="+json);
         if (json.equals("401")) {
             log.info("401 RUN REFRESH TOKEN");
-            SpotifyAuth.callbackRequestRefresh();
-            json = SpotifyRequests.requestGetClosable(uri);
+//            SpotifyAuth.callbackRequestRefresh();
+//            json = SpotifyRequests.requestGetClosable(uri);
         }
         if (json == null || json.equals("400")) {
             log.info("REQUEST ERROR JSON="+json);
             return null;
         }
         if (json.equals("204")) {
-//            log.info(json);
+            log.info(json);
             return null;
         }
         if (json.equals("400")) {
-//            log.info(json);
+            log.info(json);
             return null;
         }
         return json;

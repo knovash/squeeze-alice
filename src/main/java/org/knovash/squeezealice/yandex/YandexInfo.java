@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.provider;
+package org.knovash.squeezealice.yandex;
 
 import java.util.ArrayList;
 import java.util.List;
