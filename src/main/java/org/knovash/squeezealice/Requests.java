@@ -5,6 +5,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
 
@@ -30,12 +31,11 @@ public class Requests {
     }
 
     public static Response postToLmsForResponse(String json) {
-//  все запросы плеера для получения информации из Response response.result._artist
         log.info("REQUEST TO LMS: " + json);
         Content content = null;
         Response response = null;
         try {
-            content = Request.Post(lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
+            content = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -50,14 +50,25 @@ public class Requests {
             log.info("ERROR RESPONSE IS EMPTY");
             return null;
         }
+
         return response;
     }
 
     public static String postToLmsForStatus(String json) {
         log.info("REQUEST TO LMS: " + json);
+
+//        log.info(">>>>>>>>>>>> REQUEST TO LMS: " + json);
+//                ОТПРАВИТЬ ОТВЕТ ОТ СЕРВЕРА В БРОКЕР
+//        try {
+//            log.info("TRY PUBLISH");
+//            CombinedServer.publishToMqtt("test", "TO LMS: " + json);
+//        } catch (MqttException e) {
+//            throw new RuntimeException(e);
+//        }
+
         String status = null;
         try {
-            status = Request.Post(lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
+            status = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -74,10 +85,20 @@ public class Requests {
     public static String postToLmsForJsonBody(String json) {
 //  все запросы плеера для получения информации из Response response.result._artist
         log.info("REQUEST TO LMS: " + json);
+
+//        log.info(">>>>>>>>>>>> REQUEST TO LMS: " + json);
+//                ОТПРАВИТЬ ОТВЕТ ОТ СЕРВЕРА В БРОКЕР
+//        try {
+//            log.info("TRY PUBLISH");
+//            CombinedServer.publishToMqtt("test", "TO LMS: " + json);
+//        } catch (MqttException e) {
+//            throw new RuntimeException(e);
+//        }
+
         Content content = null;
         Response response = null;
         try {
-            content = Request.Post(lmsUrl).bodyString(json, ContentType.APPLICATION_JSON)
+            content = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()

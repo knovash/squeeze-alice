@@ -2,70 +2,87 @@ package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
-import org.knovash.squeezealice.Main;
+import org.knovash.squeezealice.Hive;
+import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.utils.Utils;
 
-import static org.knovash.squeezealice.Main.lmsPlayers;
-import static org.knovash.squeezealice.Main.rooms;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.knovash.squeezealice.Main.*;
+import static org.knovash.squeezealice.provider.Yandex.yandexMusicDevCounter;
+import static org.knovash.squeezealice.provider.Yandex.yandexMusicDevListRooms;
 
 @Log4j2
 public class PageIndex {
 
-    public static String msgLms = "LMS сервер не найден https://lyrion.org";
+    public static String msgLmsIp;
+    public static String msgLmsPlayers;
     public static String msgSqa = "SQA добавьте плееры http://localhost:8010/players";
     public static String msgUdy = "УДЯ подключите акаунт http://localhost:8010/yandex";
 
 
     public static Context action(Context context) {
-        log.info("ACTION");
-        String json = page();
-        context.json = json;
+        context.bodyResponse = page();
         context.code = 200;
         return context;
     }
 
-    public static void refresh() {
+    public static void refresh(HashMap<String, String> parameters) {
         log.info("REFRESH");
-        log.info("LMS IP: " + Main.lmsIp);
-        if (Main.lmsIp == null) Utils.searchLmsIp();
+//        lmsPlayers.searchForLmsIp();
+        lmsPlayers.updateLmsPlayers();
 
-        log.info("REFRESH --- LMS");
-        lmsPlayers.updateServerStatus();
-
-        log.info("REFRESH --- UDY");
+        Yandex.read();
         Yandex.getRoomsAndDevices();
     }
 
     public static String page() {
-        log.info("PAGE INDEX");
-        Utils.readIdRooms();
-        String page = "<!doctype html><html lang=\"ru\">\n" +
-                "<head>\n" +
-                "<meta charSet=\"utf-8\" />\n" +
-                "<title>Squeeze-Alice</title>" +
-                "</head>\n" +
-                "<body> \n" +
-                "<p><strong>Squeeze-Alice</strong></p> \n" +
 
-                "LMS IP: " + Main.lmsIp + ":" + Main.lmsPort + "<br>" +
-                PageIndex.msgLms + "<br>" +
-                PageIndex.msgSqa + "<br>" +
-                "Колонки Алиса: "+Main.idRooms +"<br>" +
-                "УДЯ комнаты: " + rooms + "<br>" +
-                PageIndex.msgUdy + "<br>" +
+        if (lmsServerOnline) {
+            msgLmsIp = "LMS найден " + "<a href=\"http://" + config.lmsIp + ":"
+                    + config.lmsPort + "\">" + config.lmsIp + ":" + config.lmsPort + "</a>";
 
-                "<p><a href=\\refresh>Обновить</a></p> \n" +
-                "<p><a href=\\players>Настройка колонок</a></p> \n" +
-                "<p><a href=\\spotify>Настройка Spotify</a></p> \n" +
-                "<p><a href=\\yandex>Настройка Yandex</a></p> \n" +
-                "<p><a href=\\cmd?action=state_devices>Посмотреть настройки Devices</a></p> \n" +
-                "<p><a href=\\cmd?action=state_players>Посмотреть настройки Players</a></p> \n" +
+            msgLmsPlayers = "LMS плееры " + lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList());
+        } else {
+            msgLmsIp = "LMS сервер не найден";
+            msgLmsPlayers = "LMS плееры не найдены";
+        }
 
-//                "<p><a href=\\cmd?action=log>Посмотреть лог</a></p> \n" +
-//                "<p><a href=\\cmd?action=reset_players>Reset players</a></p> \n" +
-//                "<p><a href=\\cmd?action=restart>Restart server service</a></p> \n" +
-//                "<p><a href=\\cmd?action=reboot>Reboot device</a></p> \n" +
+        if (SmartHome.devices.size() == 0)
+            msgSqa = "SA для плееров LMS не выбраны комнаты УДЯ. Перейдите в настройку плееров и выберите комныты для плееров";
+        else
+            msgSqa = "SA подключено " + SmartHome.devices.size() + " плееров " + SmartHome.devices.stream().map(d ->
+                            lmsPlayers.getPlayerNameByDeviceId(d.id) + " в " + d.room)
+                    .collect(Collectors.toList());
+        if (yandexMusicDevCounter == 0) {
+            if (SmartHome.devices.size() == 0)
+                PageIndex.msgUdy = "УДЯ нет плееров";
+            else PageIndex.msgUdy = "УДЯ нет плееров. Обновите список устройств навыка в приложениии УДЯ";
+            log.info(PageIndex.msgUdy);
+        } else
+            PageIndex.msgUdy = "УДЯ подключено " + yandexMusicDevCounter + " устройств Музыка в комнатах "
+                    + yandexMusicDevListRooms;
+
+
+        Utils.readAliceIdInRooms();
+        String pageInner = statusBar() +
+                "<p><a href=\\html\\manual " +
+                "target=\"_blank\" rel=\"noopener noreferrer\"" +
+                ">Инструкция</a></p>" +
+                "<p><a href=\\lms>Настройка LMS</a></p>" +
+                "<p><a href=\\players>Настройка плееров</a></p>" +
+//                "<p><a href=\\yandex>Настройка Yandex</a></p>" +
+
+                "<p><a href=\\auth " +
+                "target=\"_blank\" rel=\"noopener noreferrer\"" +
+                ">Авторизация в Яндекс</a></p>" +
+
+                "<p><a href=\\spotify>Настройка Spotify</a></p>" +
                 "<p><b>" + "Комманды:</b></p>" +
                 "<p>" +
                 "Алиса, что играет<br>" +
@@ -84,11 +101,71 @@ public class PageIndex {
                 "Алиса, включи вместе<br>" +
                 "Алиса, скажи раз-два, выбери колонку Радиотехника<br>" +
                 "Алиса, где пульт<br>" +
-                "Алиса, включи пульт <br>" +
-                "<p></p>" +
-                "</body>\n" +
-                "</html>";
-        log.info("OK");
+                "Алиса, включи пульт <br>";
+
+        String page = pageOuter(pageInner, "Squeeze-Alice", "Squeeze-Alice");
+
+        return page;
+    }
+
+    public static String statusBar() {
+        log.info("PAGE STATUSBAR START");
+
+        if (lmsServerOnline) {
+            PageIndex.msgLmsIp = "LMS " + config.lmsIp;
+            PageIndex.msgLmsPlayers = "LMS плееры " + lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList());
+        } else {
+            PageIndex.msgLmsIp = "LMS не найден";
+            PageIndex.msgLmsPlayers = "LMS плееры не найдены";
+        }
+
+        List<String> aliceInRoomsList = idRooms.entrySet().stream().map(rooms -> {
+            try {
+                return URLDecoder.decode(rooms.getValue(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
+            }
+        }).collect(Collectors.toList());
+        String aliceInRooms = "SA колонки Алиса подключены в комнатах " + aliceInRoomsList;
+        if (aliceInRoomsList.size() == 0) {
+
+            aliceInRooms = "SA Навык еще незнает в какой он комнате. Скажите навыку Это комната Гостиная";
+        }
+
+        String bar = "<fieldset>" +
+                "<legend><b>" + "Информация" + "</b></legend>" +
+
+                PageIndex.msgLmsIp + "<br>" +
+                PageIndex.msgLmsPlayers + "<br>" +
+                PageIndex.msgSqa + "<br>" + aliceInRooms + "<br>" +
+
+                "УДЯ все комнаты " + rooms + "<br>" +
+                PageIndex.msgUdy + "<br>" +
+                "Пользователь: " + config.hiveYandexEmail +
+
+                "<form method='POST' action='/form'>" +
+                "<input name='action' type='hidden'  value='statusbar_refresh'>" +
+                "<button type='submit'>обновить</button>" +
+                "</form>" +
+
+                "</fieldset>";
+        return bar;
+    }
+
+    public static String pageOuter(String pageInner, String title, String header) {
+        String page = "<!DOCTYPE html><html lang=\"ru\">" + // Изменили lang на "ru"
+                "<head>" +
+                "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">" +
+                "<meta charset=\"UTF-8\">" +
+                "<title>" + title + " local</title>" +
+                "</head>" +
+
+                "<body>" +
+                "<p><a href=\"/\">Home</a></p>" +
+                "  <h2>" + header + "</h2>" +
+                pageInner +
+                "<p><a href=\"/\">Home</a></p>" +
+                "</body></html>";
         return page;
     }
 }

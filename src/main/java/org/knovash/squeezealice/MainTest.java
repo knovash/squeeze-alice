@@ -8,65 +8,62 @@ import org.knovash.squeezealice.utils.Utils;
 
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 
 @Log4j2
 public class MainTest {
 
-    private static final ResourceBundle bundle = ResourceBundle.getBundle("config");
-    public static String lmsIp = bundle.getString("lmsIp");
-    public static String lmsPort = bundle.getString("lmsPort");
-    public static String lmsUrl = "http://" + lmsIp + ":" + lmsPort + "/jsonrpc.js/";
-    public static String silence = bundle.getString("silence");
-    public static int port = Integer.parseInt(bundle.getString("port"));
     public static LmsPlayers lmsPlayers = new LmsPlayers();
-    public static Map<String, String> config = new HashMap<>();
     public static Map<String, String> idRooms = new HashMap<>();
     public static List<String> rooms = new ArrayList<>();
-    public static String tunnel;
-    public static ZoneId zoneId = ZoneId.of( "Europe/Minsk" );
+    public static ZoneId zoneId = ZoneId.of("Europe/Minsk");
+    public static Config config = new Config();
+    public static Boolean lmsServerOnline;
+    public static String yandexToken = "";
+
 
     public static void main(String[] args) {
-        log.info("USER TIME ZONE: " + zoneId);
-        log.info("USER TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
-        log.info("CONFIG FROM config.properties");
-        log.info("LMS URL: " + lmsUrl);
-        log.info("THIS PORT: " + port);
-        log.info("SILENCE: " + silence);
-        log.info("OS: " + System.getProperty("os.name") + ", USER DIRECTORY: " + System.getProperty("user.home"));
-        System.setProperty("userApp.root", System.getProperty("user.home"));
-        log.info("SILENCE: " + System.getProperty("userApp.root"));
-        Utils.readConfig();
-        if (!Utils.checkLmsIp(lmsIp)) {
-            log.info("WRONG LMS IP. RUN SEARCH LMS IP");
-            Utils.searchLmsIp();
-        }
-        Utils.readIdRooms();
-        Utils.writeConfig();
-        lmsPlayers.read();
-        lmsPlayers.updateServerStatus();
-        lmsPlayers.write();
-        SpotifyAuth.read();
-        SpotifyAuth.callbackRequestRefresh();
-        Yandex.read();
-        Yandex.getRoomsAndDevices();
-        JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
-
-//
-
-        Yandex.runScenario("свет гостиная лампа переключить на столике");
-  Yandex.runScenario("акваланг");
-//        Yandex.runScenario("свет душ авто ночной");
-//
-//
-//        Yandex.runScenario("свет душ авто ночной");
-
-//        Yandex.sayServerStart();
+        log.info("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
+        log.info("OS: " + System.getProperty("os.name") + ", user.home: " + System.getProperty("user.home"));
+//        System.setProperty("userApp.root", System.getProperty("user.home"));
+//        log.info("userApp.root: " + System.getProperty("userApp.root"));
+//        config.readConfigProperties();
+//        config.readConfigJson();
+//        lmsPlayers.searchForLmsIp();
+//        Utils.readAliceIdInRooms();
+//        lmsPlayers.readPlayersSettings();
+//        lmsPlayers.updateLmsPlayers();
+//        lmsPlayers.write();
+//        SmartHome.read();
+//        SpotifyAuth.read();
+//        SpotifyAuth.callbackRequestRefresh();
+//        Yandex.read();
+//        Yandex.getRoomsAndDevices();
+//        JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
 //        Server.start();
+//        Hive.start();
+
+        String token = "y0__xDzxbXDARi79i4g1Kq52BLBrH5AiuK_6jAmQvamADVB964geA";
+        String jwtToken ="";
+
+            jwtToken= YandexJwtUtils.getJwtByOauth(token);
+            log.info("JWT: " + jwtToken);
+            YandexJwtUtils.parseYandexJwtForKey(jwtToken,"");
+
+
+
+
+//        Context context = new Context();
+//        String contextJson = "dddddddd";
+//        contextJson = Hive.publishContextWaitForContext("from_local_request", context, 5, "token");
+//        log.info(contextJson);
+
+
 //        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate);
     }
-
-
 }

@@ -2,116 +2,124 @@ package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
-import org.knovash.squeezealice.Main;
-import org.knovash.squeezealice.SmartHome;
-import org.knovash.squeezealice.provider.Yandex;
+import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.utils.Utils;
 
-import java.util.List;
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
 import static org.knovash.squeezealice.Main.rooms;
+import static org.knovash.squeezealice.web.PageIndex.pageOuter;
 
 @Log4j2
 public class PagePlayers {
 
     public static Context action(Context context) {
-        log.info("PAGE SPEAKERS");
-        String json = page();
-        context.json = json;
+        log.info("PAGE PLAYERS");
+        context.bodyResponse = page();
         context.code = 200;
         return context;
     }
 
     public static String page() {
-        log.info("START GENER PAGE");
-        lmsPlayers.updateServerStatus();
-        Utils.readIdRooms();
-        String page2 = "<!DOCTYPE html><html lang=\"en\">" +
-                "<head><meta charset=\"UTF-8\" />" +
-                "<title>Настройка колонок</title></head><body>" +
-                "<p><a href=\"/\">Home</a></p>" +
 
-                "LMS IP: " + Main.lmsIp + ":" + Main.lmsPort + "<br>" +
-                PageIndex.msgLms + "<br>" +
-                PageIndex.msgSqa + "<br>" +
+        String pageInner;
 
-                "УДЯ комнаты: " + rooms + "<br>" +
-                PageIndex.msgUdy + "<br>" +
+        if (lmsPlayers.players.size() == 0) {
+            pageInner = "<b>Плееры в LMS не найдены</b>";
+        } else
+            pageInner =
+                    "<form method='POST' action='/form'>" +
+                            "<label>Время минут до сброса громкости на значаение по пресету когда не играет</label><br>" +
+                            "<input " +
+                            "required='required'" +
+                            "type='number'" + "min='1'" + "max='30'" +
+                            "name='delay_expire_value'" +
+                            "value='" + lmsPlayers.delayExpire + "'>" +
+                            "<input name='action' type='hidden'  value='delay_expire_save'>" +
+                            "<button type='submit'>Сохранить</button>" +
+                            "</form>" +
+                            "<br>" +
 
-                "  <h2>Настройка колонок</h2>" +
+                            "<form method='POST' action='/form'>" +
+                            "<label>Tasker AutoRemote URL для обновления виджета</label><br>" +
+                            "<input " +
+                            "required='required'" +
+                            "type='url'" +
+                            "name='autoremote_value'" +
+                            "value='" + lmsPlayers.autoRemoteRefresh + "'>" +
+                            "<input name='action' type='hidden'  value='autoremote_save'>" +
+                            "<button type='submit'>Сохранить</button>" +
+                            "</form>" +
+                            "<br>" +
 
-                "<form action=\"/cmd\" method=\"get\">" +
-                "<label for=\"delay_expire_value\">Если не играет Х минут - установить громкость по времени</label>" + "<br>" +
-                "<input                 name=\"delay_expire_value\" value= \"" + lmsPlayers.delayExpire + "\" />" + "<br>" +
-                "<input type=\"hidden\" name=\"action\"             value= \"delay_expire_save\">" +
-                "<button>save</button></form>" + "<br>" +
+                            "<form method='POST' action='/form'>" +
+                            "<label>Синхронизация альтернативная. Если di.fm работает нормально, должно быть false</label><br>" +
+                            "<select name='alt_sync' required>" +
+                            "<option value='true' " + lmsPlayers.syncAlt + ">true</option>" +
+                            "<option value='false' " + !lmsPlayers.syncAlt + ">false</option>" +
+                            "</select>" +
+                            "<input type='hidden' name='action' value='alt_sync_save'>" +
+                            "<button type='submit'>Сохранить</button>" +
+                            "</form>" +
+                            "<br>" +
 
-                "<form action=\"/cmd\" method=\"get\">" +
-                "<label for=\"autoremote_value\">AutoRemote URL</label>" + "<br>" +
-                "<label for=\"autoremote_value\">https://autoremotejoaomgcd.appspot.com/sendmessage?key=...&message=re</label>" + "<br>" +
-                "<input                 name=\"autoremote_value\" value= \"" + lmsPlayers.autoRemoteRefresh + "\" />" + "<br>" +
-                "<input type=\"hidden\" name=\"action\"             value= \"autoremote_save\">" +
-                "<button>save</button></form>" + "<br>" +
+                            "<form method='POST' action='/form'>" +
+                            "<label>Включать последнее игравшее на этой колонке, иначе с последней игравшей колонки</label><br>" +
+                            "<select name='last_this_value' required>" +
+                            "<option value='true' " + lmsPlayers.lastThis + ">true</option>" +
+                            "<option value='false' " + !lmsPlayers.lastThis + ">false</option>" +
+                            "</select>" +
+                            "<input type='hidden' name='action' value='last_this_save'>" +
+                            "<button type='submit'>Сохранить</button>" +
+                            "</form>" +
+                            lmsPlayers.players.stream().map(p -> playerSettings(p)).collect(Collectors.joining());
 
-                "<form action=\"/cmd\" method=\"get\">" +
-                "<label for=\"alt_sync_value\">Синхронизация альтернативная. Если di.fm работает нормально должно быть false</label><br>" +
-                "<select name=\"alt_sync_value\">" +
-                "<option value=" + lmsPlayers.syncAlt + ">" + lmsPlayers.syncAlt + "</option>" +
-                " <option value=" + !lmsPlayers.syncAlt + ">" + !lmsPlayers.syncAlt + "</option>" +
-                "</select>" +
-                "<input type=\"hidden\" name=\"action\" value=\"alt_sync_save\">" +
-                "<button>save</button></form><br>" +
-
-                "<form action=\"/cmd\" method=\"get\">" +
-                "<label for=\"last_this\">Включать последнее игравшее на этой колонке, иначе с последней игравшей колонки</label><br>" +
-                "<select name=\"last_this_value\">" +
-                "<option value=" + lmsPlayers.lastThis + ">" + lmsPlayers.lastThis + "</option>" +
-                " <option value=" + !lmsPlayers.lastThis + ">" + !lmsPlayers.lastThis + "</option>" +
-                "</select>" +
-                "<input type=\"hidden\" name=\"action\" value=\"last_this_save\">" +
-                "<button>save</button></form><br>" +
-
-                join(lmsPlayers.players.stream().map(p ->
-                        "<form action=\"/cmd\" method=\"get\">" +
-                                "<b>" + p.name + "</b>" + " Player id = " + p.deviceId + "<br>" +
-                                "<label for=\"room\">Комната</label>\n" +
-                                "<select name=\"room\" id=\"room\">\n" +
-                                "<option value=" + p.room + ">" + p.room + "</option>"
-                                + rooms.stream().map(r -> " <option value=" + r + ">" + r + "</option>")
-                                .collect(Collectors.joining()) +
-                                "</select><br>" +
-
-                                "<input name=\"delay\" id=\"delay\" value=\"" + p.delay + "\" />" +
-                                "<label for=\"delay\"> задержка включения</label>" +
-
-                                "<br>" +
-                                "<input name=\"schedule\" id=\"schedule\" value=\"" + Utils.mapToString(p.schedule) + "\" />" +
-                                "<label for=\"schedule\"> время:громкость</label>" +
-
-                                "<br>" +
-                                "<input type=\"hidden\" name=\"name\" id=\"name\" value=\"" + p.name + "\">" +
-                                "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"player_save\">" +
-                                "<button>save</button></form>" +
-
-                                "<form action=\"/cmd\" method=\"get\">" +
-                                "<input type=\"hidden\" name=\"name\" id=\"name\" value=\"" + p.name + "\">" +
-                                "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"player_remove\">" +
-                                "<button>remove</button></form>"
-                ).collect(Collectors.toList())) +
-                "<p><a href=\"/\">Home</a></p>" +
-                "</body></html>";
-
-        log.info("FINISH GENER PAGE");
-        return page2;
+        String page = pageOuter(pageInner, "Настройка плееров", "Настройка плееров");
+        return page;
     }
 
-    public static String join(List<String> list) {
-        final String[] join = {""};
-        list.stream()
-                .map(l -> "<p>" + l + "</p>")
-                .map(l -> join[0] = join[0] + l).collect(Collectors.toList());
-        return join[0];
+    public static String playerSettings(Player p) {
+        String form = "<br>" +
+                "<form method='POST' action='/form' enctype='application/x-www-form-urlencoded'>" + // Добавить enctype
+                "<fieldset>" +
+                "<legend><b>" + p.name + "</b></legend>" +
+
+                "<select name='room' required>" +
+                "<option value='" + p.room + "' " + p.room + ">" + p.room + "</option>" +
+                rooms.stream()
+                        .filter(r -> !r.equals(p.room))
+
+//                        .map(r -> "<option value=" + r + ">" + r + "</option>")
+                        .map(r -> {
+                            String decodedRoom = java.net.URLDecoder.decode(r, StandardCharsets.UTF_8);
+                            return "<option value=\"" + r + "\">" + decodedRoom + "</option>";
+                        })
+
+
+                        .collect(Collectors.joining()) +
+                "</select> комната<br>" +
+
+
+                "<input required " +
+                "name='delay' " +
+                "type='number'" + "min='0'" + "max='15'" +
+                "placeholder='10'" +
+                "value='" + p.delay + "'> секунды, задержка включения колонки, для установки громкости по пресету перед проигрыванием музыки" + "<br>" +
+
+                "<input required " +
+                "name='schedule' " +
+                "placeholder='0:10,9:20,20:15,22:10,7:15'" +
+                "value='" + Utils.mapToString(p.schedule) + "'> время:громкость - пресеты громкости по интервалам времени" + "<br>" +
+
+                "<input type='hidden' name='player_name' value='"+p.name+"'>" +
+
+                "<input type='hidden' name='action' value='player_save'>" +
+                "<button type='submit'>Сохранить</button>" +
+
+                "</fieldset>" +
+                "</form>";
+        return form;
     }
 }

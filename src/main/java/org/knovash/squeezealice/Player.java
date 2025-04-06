@@ -59,13 +59,23 @@ public class Player {
         this.volume_step = 5;
         this.volume_low = 10;
         this.volume_high = 25;
-        this.delay = 10000;
+        this.delay = 10;
         this.schedule = new HashMap<>(Map.of(
                 0, 10,
                 7, 15,
                 9, 20,
                 20, 15,
                 22, 10));
+    }
+
+    public static String count() {
+        Response response = Requests.postToLmsForResponse(RequestParameters.count().toString());
+        if (response == null) {
+            log.info("REQUEST ERROR");
+            return null;
+        }
+        log.info("COUNT PLAYERS IN LMS: " + response.result._count);
+        return response.result._count;
     }
 
     public static String name(String index) {
@@ -340,7 +350,7 @@ public class Player {
 
     public Player playSilence() {
         log.info("PLAYER: " + this.name + " PLAY SILENCE");
-        Requests.postToLmsForStatus(RequestParameters.play(this.name, silence).toString());
+        Requests.postToLmsForStatus(RequestParameters.play(this.name, config.silence).toString());
         return this;
     }
 
@@ -531,12 +541,12 @@ public class Player {
         log.info("");
         log.info("WAKE START >>>");
         log.info("PLAYER: " + this.name + " WAIT: " + this.delay);
-        Yandex.runScenario("музыка подождите");
+//        Yandex.runScenario("музыка подождите");
         this
                 .playSilence()
                 .volumeSet("+1")
                 .setVolumeByTime()
-                .waitForWake()
+                .waitForWakeSeconds()
                 .volumeSet("-1")
                 .setVolumeByTime()
                 .pause();
@@ -566,12 +576,12 @@ public class Player {
         if (lmsPlayers.lastThis) lastPath = thisLastPath;
         else lastPath = commonLastPath;
 
-        if (thisPath != null && !thisPath.equals(silence) && !thisPath.equals("")) {
+        if (thisPath != null && !thisPath.equals(config.silence) && !thisPath.equals("")) {
             log.info("PUSH PLAY BUTTON: " + thisPath);
             this.play().saveLastPath().saveLastTime();
             return this;
         }
-        if (commonLastPath != null && !commonLastPath.equals(silence) && !commonLastPath.equals("")) {
+        if (commonLastPath != null && !commonLastPath.equals(config.silence) && !commonLastPath.equals("")) {
             log.info("PLAY COMMON LAST PATH: " + commonLastPath);
             this.playPath(lastPath).saveLastPath().saveLastTime();
             return this;
@@ -595,10 +605,10 @@ public class Player {
         return this;
     }
 
-    public Player waitForWake() {
+    public Player waitForWakeSeconds() {
         log.info("WAIT " + delay + " . . . . .");
         try {
-            Thread.sleep(this.delay);
+            Thread.sleep(this.delay*1000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -618,16 +628,16 @@ public class Player {
 
     public Player saveLastTime() {
         this.lastPlayTime = LocalTime.now(zoneId).truncatedTo(MINUTES).toString();
-        log.info("SAVE LAST TIME: " + this.lastPlayTime);
+        log.debug("SAVE LAST TIME: " + this.lastPlayTime);
         return this;
     }
 
     public Player saveLastPath() {
         String path = this.path();
-        if (path != null && !path.equals(silence)) {
+        if (path != null && !path.equals(config.silence)) {
             this.lastPath = path;
             lmsPlayers.lastPath = this.lastPath;
-            log.info("SAVE LAST PATH: " + this.lastPath);
+            log.debug("SAVE LAST PATH: " + this.lastPath);
         }
         this.status();
         this.lastTitle = this.title;
@@ -636,7 +646,7 @@ public class Player {
     }
 
     public Player saveLastChannel(int channel) {
-        log.info("SAVE LAST CHANNEL: " + channel);
+        log.debug("SAVE LAST CHANNEL: " + channel);
         lmsPlayers.lastChannel = channel;
         this.lastChannel = channel;
         this.status();
@@ -676,7 +686,7 @@ public class Player {
             this.separateFlagFalse().turnOnMusic().syncAllOtherPlayingToThis();
         } else {
             log.info("SEPARATE FLAG OFF AND TURN ON ALL OTHER");
-            lmsPlayers.updateServerStatus();
+            lmsPlayers.updateLmsPlayers();
             lmsPlayers.players
                     .stream().map(p -> p.separateFlagFalse())
                     .filter(p -> !p.name.equals(this.name))

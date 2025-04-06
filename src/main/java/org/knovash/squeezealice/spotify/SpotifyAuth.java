@@ -10,14 +10,17 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.knovash.squeezealice.Context;
-import org.knovash.squeezealice.Main;
+import org.knovash.squeezealice.ContextForm;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.web.PageSpotiCallback;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static org.knovash.squeezealice.Main.config;
 import static org.knovash.squeezealice.spotify.SpotifyRequests.requestPost;
 
 
@@ -29,7 +32,7 @@ public class SpotifyAuth {
     public static String client_secret;
     public static String encoded;
     public static String response_type = "code";
-    public static String redirect_uri = Main.tunnel+"/spoti_callback";
+    public static String redirect_uri = config.domain + "/spoti_callback";
     public static String show_dialog; // Optional
     public static String scope =
             "app-remote-control " +
@@ -47,12 +50,16 @@ public class SpotifyAuth {
     public static String expires_in;
     public static String refresh_token;
 
-    public static Context requestUserAuthorization(Context context) {
 //  https://developer.spotify.com/documentation/web-api/tutorials/code-flow
 //  https://developer.spotify.com/dashboard/f45a18e2bcfe456dbd9e7b73e74514af/settings
-        log.info("");
+
+
+    public static ContextForm requestUserAuthorization(ContextForm context) {
+//        https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow#request-user-authorization
         log.info("REQUEST AUTH REDIRECT");
-        context.json = "REDIRECT";
+        log.info("REDIRECT: " + redirect_uri);
+//        Context context = new Context();
+        context.bodyResponse = "REDIRECT";
         context.code = 302;
         String location = "https://accounts.spotify.com/authorize?" +
                 "client_id=" + client_id + "&" +            // Required
@@ -60,13 +67,6 @@ public class SpotifyAuth {
                 "redirect_uri=" + redirect_uri + "&" +      // Required
                 "state=" + state + "&" +                    // Optional
                 "scope=" + scope;                           // Optional
-
-        log.info("client_id: " + client_id);
-        log.info("response_type: " + response_type);
-        log.info("redirect_uri: " + redirect_uri);
-        log.info("state: " + state);
-        log.info("scope: " + scope);
-
 
         log.info("REDIRECTURI: " + location);
         Headers headers = new Headers();
@@ -113,7 +113,7 @@ public class SpotifyAuth {
         state = context.queryMap.get("state");
         requestAccessToken();
         String json = PageSpotiCallback.page();
-        context.json = json;
+        context.bodyResponse = json;
         context.code = 200;
         log.info("FINISH\n");
         return context;
@@ -121,9 +121,13 @@ public class SpotifyAuth {
 
     public static void callbackRequestRefresh() {
 //  https://developer.spotify.com/documentation/web-api/tutorials/refreshing-tokens
+        if(client_id == null) {
+            log.info("NO SPOTIFY CREDENTIALS");
+            return;
+        }
         String url = "https://accounts.spotify.com/api/token";
         String refToken = refresh_token;
-        log.info("SPOTIFY CALLBACK REFRESH TOKEN " + url);
+        log.debug("SPOTIFY CALLBACK REFRESH TOKEN " + url);
         encoded = Base64.getEncoder().encodeToString((client_id + ':' + client_secret).getBytes());
         String json;
         final Collection<NameValuePair> params = new ArrayList<>();
@@ -136,6 +140,7 @@ public class SpotifyAuth {
                     .addHeader("Content-Type", "application/x-www-form-urlencoded")
                     .addHeader("Authorization", "Basic " + encoded)
                     .execute().returnContent();
+            log.info("SPOTIFY CALLBACK REFRESH TOKEN OK");
         } catch (IOException e) {
             log.info("ERROR: " + e);
             return;
@@ -149,10 +154,12 @@ public class SpotifyAuth {
 
 
     public static String save(HashMap<String, String> parameters) {
-        if (parameters.get("id") == null || parameters.get("secret") == null) return "CREDS ERROR";
-        SpotifyAuth.client_id = parameters.get("id");
-        SpotifyAuth.client_secret = parameters.get("secret");
-        log.info("FINISH\n");
+        log.info("SAVE START " + parameters);
+        if (parameters.get("clientid") == null || parameters.get("clientsecret") == null) return "CREDS ERROR";
+        SpotifyAuth.client_id = parameters.get("clientid");
+        SpotifyAuth.client_secret = parameters.get("clientsecret");
+        SpotifyAuth.write();
+        log.info("SAVE FINISH");
         return "CREDS SAVE";
     }
 

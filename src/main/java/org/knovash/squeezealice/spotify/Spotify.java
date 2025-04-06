@@ -3,16 +3,12 @@ package org.knovash.squeezealice.spotify;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.lms.PlayerStatus.*;
+import org.knovash.squeezealice.lms.PlayerStatus.PlaylistLoop;
 import org.knovash.squeezealice.spotify.spotify_pojo.*;
-import org.knovash.squeezealice.spotify.spotify_pojo.spotify_albums.SpotifyAlbums;
 import org.knovash.squeezealice.spotify.spotify_pojo.spotify_artists.SpotifyArtists;
-import org.knovash.squeezealice.spotify.spotify_pojo.spotify_playlist.Item;
-import org.knovash.squeezealice.spotify.spotify_pojo.spotify_playlist.SpotifyPlaylists;
-import org.knovash.squeezealice.spotify.spotify_pojo.spotify_tracks.SpotifyResponseTracks;
 import org.knovash.squeezealice.utils.JsonUtils;
-import org.knovash.squeezealice.utils.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
+import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 
 import static org.knovash.squeezealice.spotify.SpotifyRequests.requestWithRetryGet;
 
@@ -26,111 +22,55 @@ public class Spotify {
     public static String lastPath;
     public static String lastTitle;
 
-    public static String getLinkArtist(String target, Type type) {
-        log.info("TARGET: " + target);
-        log.info("TYPE: " + type);
-        String link = null;
-        String limit = "50";
+    public static String getLinkArtist(String target) {
+        log.info("ARTIST TARGET: " + target);
         target = target.replace(" ", "%20");
-        String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "artist" + "&limit=" + "5";
-        log.info("URI: " + uri);
-        String json = requestWithRetryGet(uri);
-        log.info("JSON: " + json);
-        if (json == null || json.equals("400")) return null;
-        log.info("11111");
+        String url = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "artist" + "&limit=" + "3" + "&market=ES";
+        String json = requestWithRetryGet(url);
+        if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         SpotifyArtists spotifyArtists = JsonUtils.jsonToPojo(json, SpotifyArtists.class);
-        String finalTarget = target;
-        org.knovash.squeezealice.spotify.spotify_pojo.spotify_artists.Item item = spotifyArtists.artists.items
-                .stream()
-                .peek(it -> log.info("PLAYLIST: " + it.name))
-                .filter(it -> Levenstein.compareWordAndWordBool(it.name, finalTarget))
-                .findFirst()
-                .orElse(spotifyArtists.artists.items.get(0));
-        log.info("FINAL PLAYLIST: " + item.name);
-        link = item.external_urls.spotify;
-        log.info("LINK: " + link);
-        log.info("FINISH\n");
-        return link;
+//        spotifyArtists.artists.items.forEach(it -> log.info("ARTIST: " + it.name));
+        String uri = spotifyArtists.artists.items.get(0).uri;
+        SwitchVoiceCommand.artist = spotifyArtists.artists.items.get(0).name;
+        log.info("ARTIST: " + SwitchVoiceCommand.artist);
+//        log.info("URI: " + uri);
+        return uri;
     }
-
 
     public static String getLinkTrack(String target) {
-        log.info("TARGET: " + target);
-        String link = null;
-        String limit = "50";
+        log.info("TRACK TARGET: " + target);
         target = target.replace(" ", "%20");
-        String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "track" + "&limit=" + "1";
-        log.info("URI: " + uri);
+        String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "track" + "&limit=" + "5" + "&market=ES";
         String json = requestWithRetryGet(uri);
-        log.info("JSON: " + json);
-        if (json == null || json.equals("400")) return null;
-        log.info("11111");
+        if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         SpotifySearchTrack spotifySearchTrack = JsonUtils.jsonToPojo(json, SpotifySearchTrack.class);
-        String finalTarget = target;
-        link =  spotifySearchTrack.tracks.items.get(0).external_urls.spotify;
-        log.info("LINK: " + link);
-        log.info("FINISH\n");
+        spotifySearchTrack.tracks.items.forEach(it -> log.info("TRACK: " + it.artists.get(0).name + " - " + it.name));
+        String link = spotifySearchTrack.tracks.items.get(0).uri;
+        SwitchVoiceCommand.artist = spotifySearchTrack.tracks.items.get(0).artists.get(0).name;
+        SwitchVoiceCommand.track = spotifySearchTrack.tracks.items.get(0).name;
+        log.info("ARTIST: " + SwitchVoiceCommand.artist);
+        log.info("TRACK: " + SwitchVoiceCommand.track);
+        log.info("URI: " + link);
         return link;
     }
 
-    public static String getLinkold(String target, Type type) {
-        log.info("TARGET: " + target);
-        log.info("TYPE: " + type);
-        String link = null;
-        String limit = "10";
+    public static String getLinkAlbum(String target) {
+        log.info("ALBUM TARGET: " + target);
         target = target.replace(" ", "%20");
-        String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + type + "&limit=" + limit;
-//        http GET 'https://api.spotify.com/v1/search?q=depechemode&type=artist' \
-//  Authorization:'Bearer 1POdFZRZbvb...qqillRxMr2z'
-//        http GET 'https://api.spotify.com/v1/search?q=depechemode&type=playlist' \
-//  Authorization:'Bearer 1POdFZRZbvb...qqillRxMr2z'
-        log.info("URI: " + uri);
+        String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "album" + "&limit=" + "5" + "&market=ES";
         String json = requestWithRetryGet(uri);
-        log.info("JSON: " + json);
-        if (json == null || json.equals("400")) return null;
-        log.info("11111");
+        if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
-        switch (type.toString()) {
-            case ("album"):
-                log.info("ALBUM");
-                SpotifyAlbums spotifyAlbums;
-                spotifyAlbums = JsonUtils.jsonToPojo(json, SpotifyAlbums.class);
-                spotifyAlbums.getAlbums().getItems().stream().forEach(item -> log.info(item));
-                link = spotifyAlbums.getAlbums().items.get(0).external_urls.spotify.toString();
-                break;
-            case ("track"):
-                log.info("TRACK");
-                SpotifyResponseTracks spotifyResponseTracks;
-                spotifyResponseTracks = JsonUtils.jsonToPojo(json, SpotifyResponseTracks.class);
-                link = spotifyResponseTracks.tracks.items.get(0).external_urls.spotify.toString();
-                break;
-            case ("artist"):
-                log.info("ARTIST");
-                SpotifyArtists spotifyArtists;
-                spotifyArtists = JsonUtils.jsonToPojo(json, SpotifyArtists.class);
-                link = spotifyArtists.artists.items.get(0).external_urls.spotify.toString();
-                break;
-            case ("playlist"):
-                log.info("PLAYLIST");
-                SpotifyPlaylists spotifyPlaylists;
-                spotifyPlaylists = JsonUtils.jsonToPojo(json, SpotifyPlaylists.class);
-                Item item = spotifyPlaylists.playlists.items
-                        .stream()
-                        .peek(it -> log.info("PLAYLIST: " + it.name + " OWNER: " + it.owner.display_name))
-                        .filter(it -> it.name.contains("This Is"))
-                        .filter(it -> it.owner.display_name.contains("Spotify"))
-                        .findFirst()
-                        .orElse(spotifyPlaylists.playlists.items.get(0));
-                log.info("FINAL PLAYLIST: " + item.name + " OWNER: " + item.owner.display_name);
-                link = item.external_urls.spotify;
-                break;
-            default:
-                log.info("ERROR");
-                break;
-        }
-        log.info("FINISH\n");
+        SpotifySearchAlbum spotifySearchAlbum = JsonUtils.jsonToPojo(json, SpotifySearchAlbum.class);
+        spotifySearchAlbum.albums.items.forEach(it -> log.info("ALBUM: " + it.artists.get(0).name + " - " + it.name));
+        String link = spotifySearchAlbum.albums.items.get(0).uri;
+        SwitchVoiceCommand.artist = spotifySearchAlbum.albums.items.get(0).artists.get(0).name;
+        SwitchVoiceCommand.album = spotifySearchAlbum.albums.items.get(0).name;
+        log.info("ARTIST: " + SwitchVoiceCommand.artist);
+        log.info("ALBUM: " + SwitchVoiceCommand.album);
+        log.info("URI: " + link);
         return link;
     }
 
@@ -173,9 +113,7 @@ public class Spotify {
             log.info("URI: " + uri);
             String json = requestWithRetryGet(uri);
             log.info("JSON: " + json);
-            if (json == null) {
-                return null;
-            }
+            if (json == null) return null;
             AlbumsArtistTitle albumsArtistTitle = JsonUtils.jsonToPojo(json, AlbumsArtistTitle.class);
             String artistName = albumsArtistTitle.artists.get(0).name;
             String albumName = albumsArtistTitle.name;
@@ -188,9 +126,7 @@ public class Spotify {
             log.info("URI: " + uri);
             String json = requestWithRetryGet(uri);
             log.info("JSON: " + json);
-            if (json == null) {
-                return null;
-            }
+            if (json == null) return null;
             name = JsonUtils.jsonGetValue(json, "name");
         }
         if (id.contains("playlist")) {
@@ -200,9 +136,7 @@ public class Spotify {
             log.info("URI: " + uri);
             String json = requestWithRetryGet(uri);
             log.info("JSON: " + json);
-            if (json == null) {
-                return null;
-            }
+            if (json == null) return null;
             name = JsonUtils.jsonGetValue(json, "name");
         }
         log.info("NAME: " + name);
@@ -236,7 +170,6 @@ public class Spotify {
     public static void volumeSetAbs(String value) {
         log.info("SPOTIFY VOLUME SET ABSOLUTE: " + value);
         String uri = "https://api.spotify.com/v1/me/player/volume?volume_percent=" + value;
-//        https://api.spotify.com/v1/me/player/volume?volume_percent=10
         log.info("URI: " + uri);
         String body = SpotifyRequests.requestPutHttpClient(uri);
         log.info("SPOTY VOLUME BODY: " + body);

@@ -1,7 +1,6 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.spotify.Spotify;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
 
@@ -83,7 +82,7 @@ public class Actions {
 
     public static String queryStopMusicAll() {
         log.info("STOP ALL");
-        lmsPlayers.updateServerStatus();
+        lmsPlayers.updateLmsPlayers();
         lmsPlayers.players.stream()
                 .filter(player -> player.connected)
                 .filter(player -> player.playing)

@@ -5,6 +5,8 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
+import org.knovash.squeezealice.Context;
+import org.knovash.squeezealice.Hive;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.utils.JsonUtils;
@@ -15,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static org.knovash.squeezealice.Main.config;
 import static org.knovash.squeezealice.Main.lmsPlayers;
 import static org.knovash.squeezealice.web.PageIndex.msgSqa;
 
@@ -22,21 +25,17 @@ import static org.knovash.squeezealice.web.PageIndex.msgSqa;
 @Data
 public class Yandex {
 
-    public String clientId = "";
-    public String clientSecret = "";
-    public String bearer = "";
-    public String user = "";
+    public String clientId;
+    public String clientSecret;
+    public String bearer;
+    public String user;
     public static Yandex yandex = new Yandex();
     public static YandexInfo yandexInfo = new YandexInfo();
     public static Map<String, String> scenariosIds = new HashMap<>();
     public static int devicesMusicCounter;
+    public static int yandexMusicDevCounter;
+    public static List<String> yandexMusicDevListRooms;
 
-    public static void writeCredentialsYandex(HashMap<String, String> parameters) {
-        yandex.clientId = parameters.get("client_id");
-        yandex.clientSecret = parameters.get("client_secret");
-        yandex.bearer = getBearerToken();
-        JsonUtils.pojoToJsonFile(yandex, "yandex.json");
-    }
 
     public static void saveClientId(HashMap<String, String> parameters) {
         log.info("SAVE CLIENT ID " + parameters.get("client_id"));
@@ -54,6 +53,8 @@ public class Yandex {
         if (yandex.clientId == null) JsonUtils.jsonFileToPojo("yandex.json", Yandex.class);
         String client_id = yandex.clientId;
         String client_secret = yandex.clientSecret;
+        client_id = "9aa97fffe29849bb945db5b82b3ee015";
+        client_secret = "37cf34e9fdbd48d389e293fc96d5e794";
         log.info("clientId: " + client_id + " clientSecret: " + client_secret);
         Response response;
         String token;
@@ -62,6 +63,7 @@ public class Yandex {
         log.info("base64: " + base64);
         String json = null;
 //      String uri = "https://oauth.yandex.ru/token?grant_type=refresh_token";
+//        String uri = "https://oauth.yandex.ru/token?grant_type=authorization_code&code=scope";
         String uri = "https://oauth.yandex.ru/token?grant_type=authorization_code&code=scope";
         String urlParameters =
                 "client_id=" + client_id +
@@ -95,7 +97,7 @@ public class Yandex {
     }
 
     public static void read() {
-        log.info("READ CREDENTIALS FROM yandex.json");
+        log.debug("READ CREDENTIALS FROM yandex.json");
         Map<String, String> map = new HashMap<>();
         map = JsonUtils.jsonFileToMap("yandex.json", String.class, String.class);
         if (map == null) return;
@@ -103,16 +105,26 @@ public class Yandex {
         yandex.clientSecret = map.get("clientSecret");
         yandex.bearer = map.get("bearer");
         yandex.user = map.get("user");
-        log.info(yandex);
+        log.info("READ CREDENTIALS FROM yandex.json OK");
+        log.debug(yandex);
 //        log.info("TOKEN: " + yandex.bearer);
     }
 
     public static void getRoomsAndDevices() {
-        log.info("GET ROOMS FROM YANDEX SMART HOME");
+        if (config.hiveYandexToken == null && config.hiveYandexToken.equals("")) {
+            log.info("NO YANDEX TOKEN");
+            return;
+        }
+
+        log.debug("GET ROOMS FROM YANDEX SMART HOME");
+
         String json;
+//        String bearer = "y0__xDzxbXDARi79i4g1Kq52BLBrH5AiuK_6jAmQvamADVB964geA";
+        String bearer = config.hiveYandexToken;
         try {
             Response response = Request.Get("https://api.iot.yandex.net/v1.0/user/info")
-                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+//                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+                    .setHeader("Authorization", "OAuth " + bearer)
                     .execute();
             json = response.returnContent().asString();
         } catch (IOException e) {
@@ -122,31 +134,22 @@ public class Yandex {
         yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
 //        log.info("YANDEX:" + json);
         Main.rooms = yandexInfo.rooms.stream().map(r -> r.name).collect(Collectors.toList());
-        log.info("ROOMS ALL: " + Main.rooms);
+        log.info("YANDEX ROOMS ALL: " + Main.rooms);
 //        SmartHome.devices = new ArrayList<>();
 
-        log.info("DEVICES ALL SIZE: " + yandexInfo.devices.size());
+        log.debug("YANDEX DEVICES ALL: " + yandexInfo.devices.size());
 
-        int yandexMusicDevCounter =
+        yandexMusicDevCounter =
                 (int) yandexInfo.devices.stream()
                         .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                         .filter(device -> device.name.equals("музыка")).count();
 
-        log.info("DEVICES MUSIC SIZE: " + yandexMusicDevCounter);
-        if (SmartHome.devices != null) log.info("SmartHome.devices.size(): " + SmartHome.devices.size());
-
-        if (SmartHome.devices.size() == 0)
-            msgSqa = "SQA нет плееров, добавте плееры в /players";
-        else
-            msgSqa = "SQA подключено " + SmartHome.devices.size() + " плееров " + SmartHome.devices.stream().map(d ->
-                            " id=" + d.id + " " + d.room + "-" + lmsPlayers.getPlayerNameByDeviceId(d.id))
-                    .collect(Collectors.toList());
-        log.info(msgSqa);
+        log.info("YANDEX DEVICES MUSIC COUNT: " + yandexMusicDevCounter);
+        if (SmartHome.devices != null) log.info("SA DEVICES COUNT: " + SmartHome.devices.size());
+        else log.info("SA DEVICES COUNT: 0");
 
         if (yandexMusicDevCounter == 0) {
-            if (SmartHome.devices.size() == 0) PageIndex.msgUdy = "УДЯ нет плееров. Сначала добавьте плееры в SQA /playeers";
-            else PageIndex.msgUdy = "УДЯ нет плееров. Обновите список устройств навыка в приложениии УДЯ";
-            log.info(PageIndex.msgUdy);
+            log.info("YANDEX MUSIC DEVICES COUNT: " + yandexMusicDevCounter);
             return;
         }
 
@@ -157,16 +160,21 @@ public class Yandex {
                 .filter(device -> device.name.equals("музыка"))
                 .map(device -> "id=" + device.external_id + " " + getRoomNameByRoomId(device.room))
                 .collect(Collectors.toList());
-if (SmartHome.devices.size() > yandexMusicDevCounter)
-        PageIndex.msgUdy = "УДЯ подключено " + yandexMusicDevCounter + " плееров " + yandexMusicDevList+ " Обновите устройства в УДЯ";
-else
-    PageIndex.msgUdy = "УДЯ подключено " + yandexMusicDevCounter + " плееров " + yandexMusicDevList;
+
+        yandexMusicDevListRooms = yandexInfo.devices.stream()
+                .filter(device -> device.type.equals("devices.types.media_device.receiver"))
+                .filter(device -> device.name.equals("музыка"))
+                .map(device -> getRoomNameByRoomId(device.room))
+                .collect(Collectors.toList());
+
+        PageIndex.msgUdy = "УДЯ подключено " + yandexMusicDevCounter + " устройств Музыка в комнатах "
+                + yandexMusicDevListRooms;
 
         yandexInfo.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                 .filter(device -> device.name.equals("музыка"))
                 .forEach(device -> SmartHome.create(getRoomNameByRoomId(device.room), Integer.valueOf(device.external_id)));
-        log.info("SMARTHOME DEVICES: " + SmartHome.devices);
+        log.info("SA DEVICES COUNT: " + SmartHome.devices.size());
         SmartHome.write();
     }
 
@@ -227,56 +235,60 @@ else
                 .findFirst().get().name;
     }
 
-    public static void sayOn() {
-        try {
-            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/d04255d2-607e-4805-981e-5ce676dc8482/actions")
-                    .setHeader("Authorization", "OAuth " + yandex.bearer)
-                    .execute();
-        } catch (IOException e) {
-            log.info("SAY ERROR");
-        }
-    }
-
-    public static void sayOff() {
-        try {
-            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/266db447-2238-4d84-beff-f635b0693953/actions")
-                    .setHeader("Authorization", "OAuth " + yandex.bearer)
-                    .execute();
-        } catch (IOException e) {
-            log.info("SAY ERROR");
-        }
-    }
-
-    public static void sayBeep() {
-        CompletableFuture.runAsync(() -> {
-            try {
-                Request.Post("https://api.iot.yandex.net/v1.0/scenarios/f2ddb649-62e7-4fe2-be01-23d477dd2974/actions")
-                        .setHeader("Authorization", "OAuth " + yandex.bearer)
-                        .execute();
-            } catch (IOException e) {
-                log.info("SAY ERROR");
-            }
-        });
-    }
-
-    public static void sayServerStart() {
-        try {
-            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/11ad405a-1b80-4031-ae7c-9bada79e276d/actions")
-                    .setHeader("Authorization", "OAuth " + yandex.bearer)
-                    .execute();
-        } catch (IOException e) {
-            log.info("SAY ERROR");
-        }
-    }
-
-    public static void sayWait() {
-//        log.info("SAY WAIT");
+//    public static void sayOn() {
 //        try {
-//            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/0e2c7cf4-3db9-416e-b17a-f6e2d501f257/actions")
+//            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/d04255d2-607e-4805-981e-5ce676dc8482/actions")
 //                    .setHeader("Authorization", "OAuth " + yandex.bearer)
 //                    .execute();
 //        } catch (IOException e) {
 //            log.info("SAY ERROR");
 //        }
-    }
+//    }
+
+//    public static void sayOff() {
+//        try {
+//            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/266db447-2238-4d84-beff-f635b0693953/actions")
+//                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+//                    .execute();
+//        } catch (IOException e) {
+//            log.info("SAY ERROR");
+//        }
+//    }
+
+//    public static void sayBeep() {
+//        CompletableFuture.runAsync(() -> {
+//            try {
+//                Request.Post("https://api.iot.yandex.net/v1.0/scenarios/f2ddb649-62e7-4fe2-be01-23d477dd2974/actions")
+//                        .setHeader("Authorization", "OAuth " + yandex.bearer)
+//                        .execute();
+//            } catch (IOException e) {
+//                log.info("SAY ERROR");
+//            }
+//        });
+//    }
+
+//    public static void sayServerStart() {
+//        try {
+//            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/11ad405a-1b80-4031-ae7c-9bada79e276d/actions")
+//                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+//                    .execute();
+//        } catch (IOException e) {
+//            log.info("SAY ERROR");
+//        }
+//    }
+
+//    public static void sayWait() {
+////        log.info("SAY WAIT");
+////        try {
+////            Request.Post("https://api.iot.yandex.net/v1.0/scenarios/0e2c7cf4-3db9-416e-b17a-f6e2d501f257/actions")
+////                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+////                    .execute();
+////        } catch (IOException e) {
+////            log.info("SAY ERROR");
+////        }
+//    }
+
+//    public static void requestYaAuthAndGetUserId() {
+//        Hive.publishCommandWaitForAnswer("","");
+//    }
 }

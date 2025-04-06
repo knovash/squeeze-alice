@@ -2,49 +2,37 @@ package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
+import org.knovash.squeezealice.Hive;
 
-import static org.knovash.squeezealice.provider.Yandex.yandex;
+import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.web.PageIndex.pageOuter;
 
 @Log4j2
 public class PageYandex {
 
     public static Context action(Context context) {
-        String json = page();
-        context.json = json;
+        context.bodyResponse = page();
         context.code = 200;
         return context;
     }
 
     public static String page() {
-        String page = "<!DOCTYPE html><html lang=\"en\">" +
-                "<head><meta charset=\"UTF-8\" />" +
-                "  <title>Yandex credentials</title>" +
-                "</head>" +
-                "<body>" +
-                "<p><a href=\"/\">Home</a></p>" +
-                "  <h1>Yandex credentials</h1>" +
+        String loginMessage = "Для подключения введите почту вашего Яндекс аккаунта user@yandex.ru";
+        String placeholder = "user@yandex.ru";
+        if (config.hiveYandexEmail != null && !config.hiveYandexEmail.equals("")) {
+            loginMessage = "Вы вошли с аккаунтом: " + config.hiveYandexEmail;
+            placeholder = config.hiveYandexEmail;
+        }
+        String pageInner = "<br>" +
+                loginMessage +
+                "<form method='POST' action='/form'>" +
+                "<input name='email' placeholder='" + placeholder + "' required><br>" +
+                "<input name='action' type='hidden'  value='hive_save_email'>" +
+                "<button type='submit'>Сохранить</button>" +
+                "</form>" +
                 "<br>" +
-
-                "<p><a href=https://oauth.yandex.ru/authorize?response_type=token&client_id=9aa97fffe29849bb945db5b82b3ee015>login</a></p>" +
-
-                "<form action=\"/cmd\" method=\"get\">" + "<div>" +
-                "<input name=\"client_id\" id=\"client_id\" value=\"" + yandex.clientId + "\"/>" +
-                "<label for=\"client_id\"> client id</label>" +
-                "<br><button>get token</button>" +
-                "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"yandex_save_client_id\">" + "<div>" +
-                "</div>" + "</form>" +
-                "<p></p>" +
-
-                "<form action=\"/cmd\" method=\"get\">" + "<div>" +
-                "<input name=\"token\" id=\"bearer\" value=\"" + yandex.bearer + "\"/>" +
-                "<label for=\"bearer\"> token</label>" +
-                "<br><button>save token</button>" +
-                "<input type=\"hidden\" name=\"action\" id=\"action\" value=\"yandex_save_token\">" + "<div>" +
-                "</div>" + "</form>" +
-                "<p></p>" +
-
-                "<p><a href=\"/\">Home</a></p>" +
-                "</body></html>";
+                "";
+        String page = pageOuter(pageInner, "Настройка Yandex", "Настройка Yandex");
         return page;
     }
 }

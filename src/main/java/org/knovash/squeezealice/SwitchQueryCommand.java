@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
 import static org.knovash.squeezealice.Main.rooms;
+//import static org.knovash.squeezealice.provider.Yandex.runScenario;
 
 @Log4j2
 public class SwitchQueryCommand {
@@ -25,7 +26,7 @@ public class SwitchQueryCommand {
         HashMap<String, String> queryParams = context.queryMap;
         log.info("QUERY: " + queryParams);
 
-        context.json = "BAD REQUEST NO ACTION IN QUERY";
+        context.bodyResponse = "BAD REQUEST NO ACTION IN QUERY";
         if (!queryParams.containsKey("action")) return context;
         context.code = 200;
         String action = queryParams.get("action");
@@ -35,7 +36,7 @@ public class SwitchQueryCommand {
         Player player = null;
         if (playerInQuery != null) {
             if (playerInQuery.equals("btremote")) {
-                Yandex.runScenario("уведомление клик");
+//                runScenario("уведомление клик");
                 log.info("BT PLAYER: " + lmsPlayers.btPlayerName);
                 playerInQuery = lmsPlayers.btPlayerName;
             }
@@ -51,6 +52,7 @@ public class SwitchQueryCommand {
 
         String response = "null";
         if (player != null)
+            log.info("SWITCH PLAYER NOT NULL");
             switch (action) {
                 case ("channel"):
                     response = player.playChannelRelativeOrAbsolute(value, false);
@@ -140,10 +142,11 @@ public class SwitchQueryCommand {
                     break;
             }
         if (response != "null") {
-            context.json = response;
+            context.bodyResponse = response;
             return context;
         }
 
+        log.info("SWITCH PLAYER NULL");
         switch (action) {
             case ("stop_all"):
             case ("pause_all"):
@@ -156,7 +159,8 @@ public class SwitchQueryCommand {
                 response = lmsPlayers.getPlayerNameByWidgetName(value);
                 break;
             case ("get_super_refresh"):
-                response = lmsPlayers.getSuperRefresh();
+                log.info("TRY SUPER RESRESH -----------");
+//                response = lmsPlayers.getSuperRefresh();
                 break;
             case ("select"):
                 log.info("SSSS  " + roomInQuery + " " + playerInQuery);
@@ -176,18 +180,25 @@ public class SwitchQueryCommand {
             case ("state_players"):
                 response = JsonUtils.pojoToJson(lmsPlayers);
                 break;
-            case ("spotify_save_creds"):
-                SpotifyAuth.save(queryParams);
-                response = PageSpotify.page();
-                break;
-            case ("cred_yandex"):
-                Yandex.writeCredentialsYandex(queryParams);
-                response = PageYandex.page();
-                break;
+//            case ("spotify_save_creds"):
+//                SpotifyAuth.save(queryParams);
+//                response = PageSpotify.page();
+//                break;
+//            case ("cred_yandex"):
+//                Yandex.writeCredentialsYandex(queryParams);
+//                response = PageYandex.page();
+//                break;
             case ("yandex_save_client_id"):
                 Yandex.saveClientId(queryParams);
                 response = PageYandex.page();
                 break;
+
+            case ("yandex_get_bearer"):
+                Yandex.getBearerToken();
+                response = PageYandex.page();
+                break;
+
+
             case ("yandex_save_token"):
                 Yandex.saveToken(queryParams);
                 response = PageYandex.page();
@@ -196,22 +207,22 @@ public class SwitchQueryCommand {
                 lmsPlayers.playerSave(queryParams);
                 response = PagePlayers.page();
                 break;
-            case ("delay_expire_save"):
-                lmsPlayers.delayExpireSave(queryParams);
-                response = PagePlayers.page();
-                break;
+//            case ("delay_expire_save"):
+//                lmsPlayers.delayExpireSave(queryParams);
+//                response = PagePlayers.page();
+//                break;
             case ("autoremote_save"):
                 lmsPlayers.autoremoteSave(queryParams);
                 response = PagePlayers.page();
                 break;
-            case ("alt_sync_save"):
-                lmsPlayers.altSyncSave(queryParams);
-                response = PagePlayers.page();
-                break;
-            case ("last_this_save"):
-                lmsPlayers.lastThisSave(queryParams);
-                response = PagePlayers.page();
-                break;
+//            case ("alt_sync_save"):
+//                lmsPlayers.altSyncSave(queryParams);
+//                response = PagePlayers.page();
+//                break;
+//            case ("last_this_save"):
+//                lmsPlayers.lastThisSave(queryParams);
+//                response = PagePlayers.page();
+//                break;
             case ("player_remove"):
                 lmsPlayers.playerRemove(queryParams);
                 response = PagePlayers.page();
@@ -232,7 +243,7 @@ public class SwitchQueryCommand {
                 response = "ACTION NOT FOUND: " + action;
                 break;
         }
-        context.json = response;
+        context.bodyResponse = response;
         return context;
     }
 }

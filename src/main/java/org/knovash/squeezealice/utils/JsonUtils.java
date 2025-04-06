@@ -40,7 +40,8 @@ public class JsonUtils {
     }
 
     public static <T> T jsonToPojo(String json, Class<T> clazz) {
-        log.info("JSON: " + json);
+//        log.info("JSON: " + json);
+        if (json.equals("") || json.equals(null)) return null;
         json = json.replace("\\", "");
         //        catch (JsonMappingException e){}
         try {
@@ -105,9 +106,10 @@ public class JsonUtils {
             return objectMapper.readValue(file, clazz);
         } catch (IOException | InaccessibleObjectException e) {
             log.info("ERROR READ lms_players.json" + e);
+            return null;
 //            throw new RuntimeException(e);
         }
-        return null;
+//        return null;
     }
 
     public static <T> List<T> jsonFileToList(String fileName, Class<T> clazz) {

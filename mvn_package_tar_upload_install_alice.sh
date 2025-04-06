@@ -3,6 +3,9 @@
 BGreen='\033[1;32m'
 NC='\033[0m' # No Color
 
+export JAVA_HOME=~/.jdks/corretto-18.0.2
+export PATH=$JAVA_HOME/bin:$PATH
+
 echo -e ${BGreen}"READ FROM set_remote_ip.txt"${NC}
 printf '%s\n' "DIR: ${PWD##*/}"
 remote=`cat set_remote_ip.txt`
@@ -13,6 +16,8 @@ echo -e "\n"${BGreen}"MVN PACKAGE > TAR > UPLOAD > INSTALL"${NC}"\n"
 echo -e "\n"${BGreen}"CLEAR TARGET DIR"${NC}"\n"
 printf '%s\n' "DIR: ${PWD##*/}"
 rm -r target
+
+cp *.json target
 
 echo -e "\n"${BGreen}"MVN PACKAGE"${NC}"\n"
 printf '%s\n' "DIR: ${PWD##*/}"

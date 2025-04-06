@@ -17,15 +17,22 @@ public class ProviderQuery {
 
     private static Player player;
 
-    public static Context action(Context context) {
+    public static Context providerQueryRun(Context context) {
+        log.info("START CONTEXT: " + context);
         String body = context.body;
         String xRequestId = context.xRequestId;
 
-        Payload bodyPojo = JsonUtils.jsonToPojo(body, Payload.class);
+//        Payload bodyPojo = JsonUtils.jsonToPojo(body, Payload.class);
         String json;
-        if (body == null) {
+        if (body.equals(null) || body.equals("")) {
+            log.info("BODY NULL");
             json = "{\"request_id\":\"" + xRequestId + "\",\"payload\":{\"devices\":[]}}";
+            context.bodyResponse = json;
+            context.code = 200;
+            return context;
+
         } else {
+            Payload bodyPojo = JsonUtils.jsonToPojo(body, Payload.class);
             if (SmartHome.devices.size() == 0) log.info("ERROR - no registered LMS players in Alice home");
             ResponseYandex responseYandex = new ResponseYandex();
             responseYandex.request_id = xRequestId;
@@ -38,19 +45,19 @@ public class ProviderQuery {
             json = json.replaceAll("(\"value\" :) \"([0-9a-z]+)\"", "$1 $2");
         }
 
-        context.json = json;
+        context.bodyResponse = json;
         context.code = 200;
         return context;
     }
 
-    public static Device updateDevice(Device device) {
+    private static Device updateDevice(Device device) {
         log.info("DEVICE UPDATE " + device.room + " " + device.id);
         // обратиться к девайсу и обновить все его значения
         player = lmsPlayers.getPlayerByDeviceId(device.id);
         log.info("DEVICE PLAYER " + player);
         if (player != null) device.capabilities.forEach(capability -> changeCapability(capability));
         else device.capabilities.forEach(capability -> changeCapabilityOff(capability));
-        log.info("DEVICE UPDATED\n" + device);
+        log.info("DEVICE UPDATED");
         return device;
     }
 

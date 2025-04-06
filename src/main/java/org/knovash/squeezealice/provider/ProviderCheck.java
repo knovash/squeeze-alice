@@ -6,9 +6,9 @@ import org.knovash.squeezealice.Context;
 @Log4j2
 public class ProviderCheck {
 
-    public static Context action(Context context) {
+    public static Context providerCheckRun(Context context) {
         log.info("200 OK");
-        context.json = "OK";
+        context.bodyResponse = "OK";
         context.code = 200;
         return context;
     }
