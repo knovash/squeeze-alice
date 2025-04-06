@@ -16,6 +16,7 @@ import java.util.List;
 public class SmartHome {
 
     public static List<Device> devices = new ArrayList<>();
+    public static String saveToFileJson = "data/devices.json";
 
     public static Device getDeviceById(int deviceId) {
         String index = String.valueOf(deviceId);
@@ -112,7 +113,7 @@ public class SmartHome {
     }
 
     public static void read() {
-        devices = JsonUtils.jsonFileToList("devices.json", Device.class);
+        devices = JsonUtils.jsonFileToList(SmartHome.saveToFileJson, Device.class);
         if (devices == null) devices = new ArrayList<>();
         log.info("DEVICES FROM devices.json: " + devices.size());
         log.debug("DEVICES: " + devices);
@@ -120,6 +121,6 @@ public class SmartHome {
 
     public static void write() {
         log.info("WRITE devices.json");
-        JsonUtils.pojoToJsonFile(SmartHome.devices, "devices.json");
+        JsonUtils.pojoToJsonFile(SmartHome.devices,SmartHome.saveToFileJson);
     }
 }

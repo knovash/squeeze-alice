@@ -4,12 +4,10 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
 //import org.knovash.squeezealice.provider.OAuthExample;
-import org.knovash.squeezealice.provider.Yandex;
-import org.knovash.squeezealice.provider.YandexAuth;
+import org.knovash.squeezealice.yandex.Yandex;
 import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.web.PageIndex;
 import org.knovash.squeezealice.web.PagePlayers;
-import org.knovash.squeezealice.web.PageYandex;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -51,29 +49,16 @@ public class HandlerForm implements HttpHandler {
     private ContextForm processContext(ContextForm context) {
         log.info("HANDLER FORM PROCESS CONTEXT START >>>");
         log.info("BODY: " + context.body);
-        Map<String, String> bodyMap = parse(context.body);
+//        Map<String, String> bodyMap = parse(context.body);
+        Map<String, String> bodyMap = Parser.run(context.body);
+
+        log.info("PARESER1: " +bodyMap);
+//        log.info("PARESER2: " +bodyMap2);
 
         context.code = 200;
         if (bodyMap.containsKey("action")) {
             String action = bodyMap.get("action");
             switch (action) {
-                case ("spotify_save_creds"):
-                    SpotifyAuth.save((HashMap<String, String>) bodyMap);
-                    context.code = 302;
-                    context.setRedirect("/spotify");
-                    break;
-                case ("spoti_auth"):
-                    log.info("SPOTI AUTH");
-//                    SpotifyAuth.requestUserAuthorization();
-                    context = SpotifyAuth.requestUserAuthorization(context);
-
-//                    context.code = 302;
-//                    context.setRedirect("/spotify");
-                    break;
-                case ("hive_save_email"):
-                    Hive.saveEmail(bodyMap);
-                    context.bodyResponse = PageYandex.page();
-                    break;
                 case ("delay_expire_save"):
                     lmsPlayers.delayExpireSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
@@ -101,24 +86,6 @@ public class HandlerForm implements HttpHandler {
                     context.code = 302;
                     context.setRedirect("/players");
                     break;
-                case ("yandex_clientid_save"):
-//                    YandexAuth.clientIdSave((HashMap<String, String>) bodyMap);
-//                    try {
-//                        OAuthExample.executeOAuthRequest(yandex.clientId);
-//                    } catch (Exception e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                    Yandex.getBearerToken();
-                    context.code = 302;
-                    context.setRedirect("/yandex");
-                    break;
-                case ("yandex_bearer_save"):
-                    YandexAuth.bearerSave((HashMap<String, String>) bodyMap);
-                    Yandex.getRoomsAndDevices();
-//                    Yandex.getBearerToken();
-                    context.code = 302;
-                    context.setRedirect("/yandex");
-                    break;
                 default:
                     log.info("ACTION ERROR " + action);
                     break;
@@ -128,35 +95,33 @@ public class HandlerForm implements HttpHandler {
         return context;
     }
 
-    public static Map<String, String> parse(String query) {
-        Map<String, String> result = new HashMap<>();
-        if (query == null || query.isEmpty()) {
-            return result;
-        }
-        String[] pairs = query.split("&");
-        for (String pair : pairs) {
-            if (pair.isEmpty()) {
-                continue;
-            }
-            String[] keyValue = pair.split("=", 2);
-//            String key = keyValue[0];
-            String key = URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8);
-//            String value = keyValue.length > 1 ? keyValue[1] : null;
-            String value = keyValue.length > 1 ?
-                    URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8) :
-                    null;
-            result.put(key, value);
-        }
-        return result;
-    }
+//    public static Map<String, String> parse(String query) {
+//        Map<String, String> result = new HashMap<>();
+//        if (query == null || query.isEmpty()) {
+//            return result;
+//        }
+//        String[] pairs = query.split("&");
+//        for (String pair : pairs) {
+//            if (pair.isEmpty()) {
+//                continue;
+//            }
+//            String[] keyValue = pair.split("=", 2);
+////            String key = keyValue[0];
+//            String key = URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8);
+////            String value = keyValue.length > 1 ? keyValue[1] : null;
+//            String value = keyValue.length > 1 ?
+//                    URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8) :
+//                    null;
+//            result.put(key, value);
+//        }
+//        return result;
+//    }
 
     private void sendResponse(HttpExchange exchange, ContextForm context) throws IOException {
         log.info("SEND RESPONSE");
-
         context.responseHeaders.set("Content-Type", "text/html; charset=UTF-8");
         context.responseHeaders.set("X-Content-Type-Options", "nosniff");
         exchange.getResponseHeaders().putAll(context.responseHeaders);
-
         // Обработка редиректов
         if (context.code >= 300 && context.code < 400) {
             log.info("REDIRECT " + context.code);
@@ -164,7 +129,6 @@ public class HandlerForm implements HttpHandler {
             exchange.sendResponseHeaders(context.code, -1); // Без тела ответа
             return;
         }
-
         byte[] responseBytes = context.bodyResponse.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().putAll(context.responseHeaders);
         exchange.sendResponseHeaders(context.code, responseBytes.length);

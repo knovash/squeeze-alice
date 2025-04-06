@@ -1,4 +1,4 @@
-package org.knovash.squeezealice;
+package org.knovash.squeezealice.yandex;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

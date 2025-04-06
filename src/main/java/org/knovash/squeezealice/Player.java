@@ -7,7 +7,6 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.lms.PlayerStatus;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
-import org.knovash.squeezealice.provider.Yandex;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.utils.JsonUtils;
 
@@ -51,7 +50,7 @@ public class Player {
     public Player(String name, String mac) {
         this.name = name;
         this.mac = mac;
-        this.title = "херпоймичё";
+        this.title = "непонятно";
         this.nameInQuery = this.name
                 .replace(" ", "")
                 .replace("_", "")
@@ -750,7 +749,7 @@ public class Player {
             if (title.contains(" - ")) title = title.replaceAll(" - .*", "");
         }
         if ((title == null) || (title == "")) title = this.artistName();
-        if (title == null) title = "херпоймичё";
+        if (title == null) title = "непонятно";
         if (title.length() > 20) title = title.substring(1, 20);
         title = title.replaceAll(",", " ");
         title = title.replaceAll(":", " ");

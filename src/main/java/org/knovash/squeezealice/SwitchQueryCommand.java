@@ -1,13 +1,11 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.Yandex;
-import org.knovash.squeezealice.spotify.SpotifyAuth;
+import org.knovash.squeezealice.yandex.Yandex;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 import org.knovash.squeezealice.web.PagePlayers;
-import org.knovash.squeezealice.web.PageSpotify;
 import org.knovash.squeezealice.web.PageYandex;
 
 import java.util.HashMap;
@@ -17,7 +15,7 @@ import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
 import static org.knovash.squeezealice.Main.rooms;
-//import static org.knovash.squeezealice.provider.Yandex.runScenario;
+//import static org.knovash.squeezealice.yandex.Yandex.runScenario;
 
 @Log4j2
 public class SwitchQueryCommand {
@@ -180,29 +178,7 @@ public class SwitchQueryCommand {
             case ("state_players"):
                 response = JsonUtils.pojoToJson(lmsPlayers);
                 break;
-//            case ("spotify_save_creds"):
-//                SpotifyAuth.save(queryParams);
-//                response = PageSpotify.page();
-//                break;
-//            case ("cred_yandex"):
-//                Yandex.writeCredentialsYandex(queryParams);
-//                response = PageYandex.page();
-//                break;
-            case ("yandex_save_client_id"):
-                Yandex.saveClientId(queryParams);
-                response = PageYandex.page();
-                break;
 
-            case ("yandex_get_bearer"):
-                Yandex.getBearerToken();
-                response = PageYandex.page();
-                break;
-
-
-            case ("yandex_save_token"):
-                Yandex.saveToken(queryParams);
-                response = PageYandex.page();
-                break;
             case ("player_save"):
                 lmsPlayers.playerSave(queryParams);
                 response = PagePlayers.page();

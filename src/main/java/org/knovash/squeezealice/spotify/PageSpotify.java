@@ -1,4 +1,4 @@
-package org.knovash.squeezealice.web;
+package org.knovash.squeezealice.spotify;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;

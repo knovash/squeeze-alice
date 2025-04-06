@@ -57,15 +57,6 @@ public class Requests {
     public static String postToLmsForStatus(String json) {
         log.info("REQUEST TO LMS: " + json);
 
-//        log.info(">>>>>>>>>>>> REQUEST TO LMS: " + json);
-//                ОТПРАВИТЬ ОТВЕТ ОТ СЕРВЕРА В БРОКЕР
-//        try {
-//            log.info("TRY PUBLISH");
-//            CombinedServer.publishToMqtt("test", "TO LMS: " + json);
-//        } catch (MqttException e) {
-//            throw new RuntimeException(e);
-//        }
-
         String status = null;
         try {
             status = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
@@ -85,15 +76,6 @@ public class Requests {
     public static String postToLmsForJsonBody(String json) {
 //  все запросы плеера для получения информации из Response response.result._artist
         log.info("REQUEST TO LMS: " + json);
-
-//        log.info(">>>>>>>>>>>> REQUEST TO LMS: " + json);
-//                ОТПРАВИТЬ ОТВЕТ ОТ СЕРВЕРА В БРОКЕР
-//        try {
-//            log.info("TRY PUBLISH");
-//            CombinedServer.publishToMqtt("test", "TO LMS: " + json);
-//        } catch (MqttException e) {
-//            throw new RuntimeException(e);
-//        }
 
         Content content = null;
         Response response = null;
@@ -120,6 +102,4 @@ public class Requests {
             log.info("TASKER ERROR");
         }
     }
-
-
 }

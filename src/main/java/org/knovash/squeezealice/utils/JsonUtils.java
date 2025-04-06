@@ -77,14 +77,21 @@ public class JsonUtils {
     }
 
     public static void pojoToJsonFile(Object pojo, String fileName) {
-//        log.info("START POJO TO JSON FILE " + fileName);
         File file = new File(fileName);
         try {
             objectWriter.writeValue(file, pojo);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-//        log.info("FINISH");
+    }
+
+    public static void pojoToJsonPathFile(Object pojo, String path,  String fileName) {
+        File file = new File(fileName);
+        try {
+            objectWriter.writeValue(file, pojo);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static <T> void listToJsonFile(List<T> list, String fileName) {

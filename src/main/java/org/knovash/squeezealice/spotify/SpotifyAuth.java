@@ -12,12 +12,9 @@ import org.apache.http.message.BasicNameValuePair;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.ContextForm;
 import org.knovash.squeezealice.utils.JsonUtils;
-import org.knovash.squeezealice.web.PageSpotiCallback;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.knovash.squeezealice.Main.config;
@@ -53,6 +50,27 @@ public class SpotifyAuth {
 //  https://developer.spotify.com/documentation/web-api/tutorials/code-flow
 //  https://developer.spotify.com/dashboard/f45a18e2bcfe456dbd9e7b73e74514af/settings
 
+    public static ContextForm getAuthLink(ContextForm context) {
+//        https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow#request-user-authorization
+        log.info("REQUEST AUTH REDIRECT");
+        log.info("REDIRECT: " + redirect_uri);
+//        Context context = new Context();
+        context.bodyResponse = "REDIRECT";
+        context.code = 302;
+        String location = "https://accounts.spotify.com/authorize?" +
+                "client_id=" + client_id + "&" +            // Required
+                "response_type=" + response_type + "&" +    // Required
+                "redirect_uri=" + redirect_uri + "&" +      // Required
+                "state=" + state + "&" +                    // Optional
+                "scope=" + scope;                           // Optional
+
+        log.info("REDIRECTURI: " + location);
+        Headers headers = new Headers();
+        headers.add("Location", location);
+        context.headers = headers;
+        log.info("FINISH\n");
+        return context;
+    }
 
     public static ContextForm requestUserAuthorization(ContextForm context) {
 //        https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow#request-user-authorization

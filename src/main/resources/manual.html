@@ -5,29 +5,74 @@
 	<title></title>
 	<meta name="generator" content="LibreOffice 7.3.7.2 (Linux)"/>
 	<meta name="created" content="2025-03-22T14:51:36.974114753"/>
-	<meta name="changed" content="2025-03-22T19:26:31.878813422"/>
+	<meta name="changed" content="2025-04-06T15:35:40.113001750"/>
 	<style type="text/css">
 		@page { size: 210.01mm 297mm; margin-left: 20mm; margin-right: 10mm; margin-top: 10mm; margin-bottom: 10mm }
-		p { line-height: 115%; margin-bottom: 2.47mm; background: transparent }
+		p { line-height: 115%; margin-bottom: 2.47mm; background: transparent; background: transparent }
 		a:link { color: #000080; text-decoration: underline }
 		a:visited { color: #800000; text-decoration: underline }
+		strong { font-weight: bold }
+		code.western { font-family: "Liberation Mono", monospace }
+		code.cjk { font-family: "Noto Sans Mono CJK SC", monospace }
+		code.ctl { font-family: "Liberation Mono", monospace }
+		em { font-style: italic }
 	</style>
 </head>
 <body lang="en-US" link="#000080" vlink="#800000" dir="ltr"><p align="left">
-<font size="4" style="font-size: 14pt">1. Запустить LMS,
+<font size="4" style="font-size: 14pt"><strong>1. Запустить
+Lyrion Music Server </strong><strong>(</strong><strong>LMS</strong><strong>)</strong></font></p>
+<p align="left"><font size="4" style="font-size: 14pt"><a href="https://lyrion.org/">https://lyrion.org</a>,
 открыть http://localhost:9000</font></p>
 <p align="left"><img src="manual_html_a9e68898ec69cf03.png" name="Image1" align="middle" width="672" height="378" border="0"/>
+
 </p>
-<p align="left"><font size="4" style="font-size: 14pt">2. Запустить
-SA, открыть SA http://localhost:8010</font></p>
+<p align="left"><font size="4" style="font-size: 14pt"><strong>2.
+Зап</strong><strong>устить S</strong><strong>queeze-</strong><strong>A</strong><strong>lice
+(SA)</strong></font></p>
+<p align="left"><font size="4" style="font-size: 14pt">2.1 Создать
+папку для сохранения настроек и
+логов<br/>
+</font><font size="3" style="font-size: 12pt"><i>mkdir
+~/sa_data</i></font></p>
+<p style="line-height: 100%; margin-bottom: 0mm; background: transparent">
+<font size="4" style="font-size: 14pt">2.2 Запустить
+контейнер SA</font></p>
+<p align="left"><font size="3" style="font-size: 12pt"><i>docker run
+--rm --name squeeze-alice-local -v ~/sa_data:/app/data -p 8010:8010
+knovash/squeeze-alice-local:latest</i></font></p>
+<ul>
+	<li><p style="line-height: 100%; margin-bottom: 0mm; background: transparent">
+	<font size="3" style="font-size: 12pt">Скачивается образ
+	knovash/squeeze-alice:latest</font></p>
+	<li><p style="line-height: 100%; margin-bottom: 0mm; background: transparent">
+	<font size="3" style="font-size: 12pt">Создается временный
+	контейнер с именем squeeze-alice-local</font></p>
+	<li><p style="line-height: 100%; margin-bottom: 0mm; background: transparent">
+	<font size="3" style="font-size: 12pt">Папка ~/sa_data на
+	компьютере доступна контейнеру для
+	сохранения настроек и логов</font></p>
+	<li><p style="line-height: 100%; margin-bottom: 0mm; background: transparent">
+	<font size="3" style="font-size: 12pt">Приложение в
+	контейнере доступно по адресу
+	http://localhost:8010</font></p>
+	<li><p style="line-height: 100%; margin-bottom: 0mm; background: transparent">
+	<font size="3" style="font-size: 12pt">После остановки
+	контейнера он автоматически удалится</font></p>
+</ul>
+<p align="left"><font size="4" style="font-size: 14pt">2.2 открыть
+SA http://localhost:8010</font></p>
 <p align="left"><img src="manual_html_fb489d1b55002f96.png" name="Image2" align="bottom" width="672" height="378" border="0"/>
+
 </p>
 <p align="left"><font size="4" style="font-size: 14pt">SA нашел
 плееры в LMS и комнаты в УДЯ.</font></p>
+<p align="left"><font size="4" style="font-size: 14pt">3.
+Авторизоваться в Яндексе</font></p>
 <p align="left"><font size="4" style="font-size: 14pt">3. Перейти
 в Настройку плееров и выбрать для плееров
 LMS комнаты УДЯ</font></p>
 <p align="left"><img src="manual_html_365a8194208852b7.png" name="Image3" align="bottom" width="672" height="378" border="0"/>
+
 </p>
 <p align="left"><font size="4" style="font-size: 14pt">4. Открыть
 приложение УДЯ</font></p>
@@ -48,8 +93,9 @@ Squeezebox LMS</font></p>
 <p align="left"><img src="manual_html_871524d7e3fa5106.png" name="Image6" align="bottom" width="416" height="696" border="0"/>
 
 <img src="manual_html_b97e11b34bf64375.png" name="Image10" align="bottom" width="416" height="696" border="0"/>
+
 </p>
-<p align="left"><img src="manual_html_3852945214221813.png" name="Image7" width="416" height="696" border="0"/>
+<p align="left"><img src="manual_html_3852945214221813.png" name="Image7" align="bottom" width="416" height="696" border="0"/>
 
 <img src="manual_html_3267d1360873ebf9.png" name="Image8" align="bottom" width="416" height="696" border="0"/>
 
@@ -61,6 +107,7 @@ Squeezebox LMS</font></p>
 <p align="left"><img src="manual_html_c766d35aba8e1b37.png" name="Image9" align="bottom" width="416" height="696" border="0"/>
 
 <img src="manual_html_d2ad6697278a02c6.png" name="Image11" align="bottom" width="416" height="696" border="0"/>
+
 </p>
 <p align="left"><br/>
 <br/>

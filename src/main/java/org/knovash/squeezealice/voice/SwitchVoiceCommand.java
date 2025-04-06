@@ -23,27 +23,7 @@ public class SwitchVoiceCommand {
     public static String artist;
     public static String album;
     public static String track;
-
-    public static Context actionMock(Context context) {
-        log.info("SWITCH VOICE COMMAND MOCK");
-        String answer = "проверка связи";
-        log.info("ANSWER MOCK:------- " + answer);
-
-        String sss = "{\n" +
-                "  \"response\": {\n" +
-                "    \"text\": \"Сейчас играет техно\",\n" +
-                "    \"tts\": \"Сейчас играет техно\",\n" +
-                "    \"end_session\": false\n" +
-                "  },\n" +
-                "  \"version\": \"1.0\"\n" +
-                "}";
-        context.bodyResponse = sss;
-
-//        context.bodyResponse = createResponse(answer);
-        context.code = 200;
-//        log.info("CONTEXT ANSWER: " + context);
-        return context;
-    }
+    public static String saveToFileJson = "data/rooms.json";
 
     public static Context action(Context context) {
         log.info("SWITCH VOICE COMMAND");
@@ -238,7 +218,7 @@ public class SwitchVoiceCommand {
     public static void selectRoomByCorrectRoom(String target) {
         log.info("START SELECT ROOM: " + target);
         idRooms.put(aliceId, target);
-        JsonUtils.mapToJsonFile(idRooms, "rooms.json");
+        JsonUtils.mapToJsonFile(idRooms, SwitchVoiceCommand.saveToFileJson);
     }
 
     public static String selectPlayerByCommand(String command) {

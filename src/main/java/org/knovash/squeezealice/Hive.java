@@ -6,6 +6,10 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.knovash.squeezealice.spotify.Spotify;
+import org.knovash.squeezealice.spotify.SpotifyAuth;
+import org.knovash.squeezealice.spotify.spotify_pojo.PlayerState;
+import org.knovash.squeezealice.yandex.YandexJwtUtils;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -25,8 +29,8 @@ public class Hive {
     private static final String hivePassword = config.hivePassword;
     private static final ResponseManager responseManager = new ResponseManager();
 
-    public static String topicRecieveDevice = "to_lms_idnovashki@yandex.ru"; // подписаться
-    public static String topicPublish = "from_lms_id"; // отправить сюда
+    public static String topicRecieveDevice = "to_lms_id";// подписаться
+    public static String topicPublish = "from_lms_id";// отправить сюда
 
 
     public static void start() {
@@ -40,15 +44,29 @@ public class Hive {
             options.setUserName(hiveUsername);
             options.setPassword(hivePassword.toCharArray());
             mqttClient.connect(options);
-
-            // Подписка на топик ответа
-            log.info("SUBSCRIBE topicRecieveDevice: <" + topicRecieveDevice + ">");
-//            log.info("SUBSCRIBE topicRecieveVoice: <" + topicRecieveVoice + ">");
-            mqttClient.subscribe(topicRecieveDevice, (topic, message) -> handleDeviceAndPublish(topic, message));
-//            mqttClient.subscribe(topicRecieveVoice, (topic, message) -> handleVoiceAndPublish(topic, message));
+// Подписка на топик ответа
+            subscribeByYandexEmail();
             log.info("MQTT STARTED OK");
         } catch (MqttException e) {
-            e.printStackTrace();
+            log.info("MQTT ERROR: " + e);
+        }
+    }
+
+    public static void subscribeByYandexEmail() {
+        if (config.yandexUid == null || config.yandexUid.equals("")) {
+            log.info("SUBSCRIBE BY YANDEX EMAIL FAIL email:" + config.yandexUid);
+            return;
+        }
+        log.info("SUBSCRIBE BY YANDEX EMAIL: " + topicRecieveDevice + config.yandexUid);
+        subscribe(topicRecieveDevice + config.yandexUid);
+    }
+
+    public static void subscribe(String subscribeToTopic) {
+        log.info("SUBSCRIBE TO TOPIC: " + subscribeToTopic);
+        try {
+            mqttClient.subscribe(subscribeToTopic, (topic, message) -> handleDeviceAndPublish(topic, message));
+        } catch (MqttException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -57,8 +75,7 @@ public class Hive {
         log.debug("MESSAGE : " + message);
         String payload = new String(message.getPayload());
 
-
-//        Map<String, String> params = parseParams(payload);
+// Map<String, String> params = parseParams(payload);
         Map<String, String> params = Parser.run(payload);
 
         String contextJson = "";
@@ -66,16 +83,20 @@ public class Hive {
         if (!params.containsKey("correlationId")) return;
         correlationId = params.get("correlationId");
 
-
-//      получить токен
-        if (params.containsKey("token")) {
-            log.info("RECIEVED TOKEN");
+// получить токен Yandex
+        if (params.containsKey("action") && params.getOrDefault("action", null).equals("yandex_callback_token")) {
+            log.info("RECIEVED YANDEX TOKEN");
             String token = params.getOrDefault("token", null);
             if (token == null) return;
-
             Main.yandexToken = token;
-            config.hiveYandexToken = token;
-            config.hiveYandexEmail = YandexJwtUtils.getValueByTokenAndKey(token, "email");
+            config.yandexToken = token;
+            String currentUid = config.yandexUid;
+            String newUid = YandexJwtUtils.getValueByTokenAndKey(token, "uid");
+            if (newUid.equals(currentUid)) return;
+
+            Hive.unsubscribe(Hive.topicRecieveDevice + currentUid);
+            Hive.subscribe(Hive.topicRecieveDevice + newUid);
+            config.yandexUid = newUid;
             config.writeConfig();
 
             log.info("TOKEN: " + token);
@@ -83,19 +104,36 @@ public class Hive {
             return;
         }
 
+// получить токен Spotify
+        if (params.containsKey("action") && params.getOrDefault("action", null).equals("spotify_callback_token")) {
+            log.info("RECIEVED SPOTIFY TOKEN");
+            String token = params.getOrDefault("token", null);
+            if (token == null) return;
+            log.info("TOKEN: " + token);
+            SpotifyAuth.bearer_token = token;
+            config.spotifyToken = token;
+            config.writeConfig();
+            PlayerState ps = Spotify.playerState;
+            log.info(ps);
+            responseManager.completeResponse(correlationId, "OK");
+            return;
+        }
 
-//        полученный контекст
+
+// полученный контекст
         contextJson = params.getOrDefault("context", "");
         Context context = Context.fromJson(contextJson);
-
-//      обработка контекста
+// обработка контекста
         context = HandlerAll.processContext(context);
-
-//      положить в пэйлоад ответа: ид, топик,  контекст
+// положить в пэйлоад ответа: ид, топик,  контекст
         payload = "correlationId=" + correlationId + "&" +
                 "userTopicId=" + topicRecieveDevice + "&" +
                 "context=" + context.toJson();
+////        подписаться на сгенерированый топик для ответа с токеном
+//        subscribe(topicRecieveDevice);
+//        отправить запрос получения токена
         try {
+            log.info("PUBLISH RESPONSE TO TOPIC: " + topicPublish);
             MqttMessage responseMessage = new MqttMessage(payload.getBytes());
             mqttClient.publish(topicPublish, responseMessage);
         } catch (MqttException e) {
@@ -106,10 +144,10 @@ public class Hive {
     private static Map<String, String> parseParams(String message) {
         Map<String, String> result = new HashMap<>();
         if (message == null || message.isEmpty()) return result;
-        // Ищем параметры по ключам с учетом их позиции
+// Ищем параметры по ключам с учетом их позиции
         int ctxStart = message.indexOf("context=");
         if (ctxStart == -1) return result;
-        // Выделяем correlationId и requestId до начала context
+// Выделяем correlationId и requestId до начала context
         String prefix = message.substring(0, ctxStart);
         String[] parts = prefix.split("&");
         for (String part : parts) {
@@ -121,53 +159,46 @@ public class Hive {
                 result.put(key, value);
             }
         }
-        // Извлекаем context как всю оставшуюся часть строки
+// Извлекаем context как всю оставшуюся часть строки
         String contextValue = message.substring(ctxStart + "context=".length());
         result.put("context", URLDecoder.decode(contextValue, StandardCharsets.UTF_8));
         return result;
     }
 
-    public static void saveEmail(Map<String, String> userData) {
-        log.info("SAVE USER YANDEX EMAIL");
-        if (!userData.containsKey("email")) {
-            log.info("ERROR USER NO NAME");
-            return;
-        }
-        String email = userData.get("email");
-        log.info("USER email: " + email);
-        config.hiveYandexEmail = email;
-        config.writeConfig();
-        topicRecieveDevice = "to_lms_id" + email;
-        Hive.start();
-        log.info("HIVE: <" + topicRecieveDevice + ">");
-        log.info("FINISH EMAIL");
-    }
 
-//    ----------------- это для паблиша
+//  это для паблиша
 
-    //    ЭТО РАБОЧИЙ СЕЙЧАС МЕТОД ДЛЯ УДЯ КОМАНД
+    // ЭТО РАБОЧИЙ СЕЙЧАС МЕТОД ДЛЯ УДЯ КОМАНД
     public static String publishContextWaitForContext(String topic, Context context, Integer timeout, String action, String correlationId) {
         log.info("MQTT PUBLISH TO TOPIC: " + topic);
         if (correlationId == null) correlationId = UUID.randomUUID().toString();
         String responseBody = "";
         String contextJson = context.toJson();
+
+//        генерация топика для колбэка с токеном
+        String callbackTopic = "callback" + correlationId;
+        //     подписаться на сгенерированый топик
+        subscribe(callbackTopic);
+
+//        подготовка пэйлоад
         try {
-            //             Отправка запроса в MQTT
-//            String payload = String.format("correlationId=%s&context=%s", correlationId, contextJson);
+
             String payload = "correlationId=" + correlationId + "&" +
-                    "callbackTopic=" + topicRecieveDevice + "&" +
+                    "callbackTopic=" + callbackTopic + "&" +
                     "action=" + action + "&" +
                     "context=" + contextJson;
+            log.info("PAYLOAD: " + payload);
 
+// Отправка запроса в MQTT
             mqttClient.publish(topic, new MqttMessage(payload.getBytes()));
-//             Ожидание ответа
+// Ожидание ответа
             CompletableFuture<String> future = responseManager.waitForResponse(correlationId);
-            //            Получение ответа
+// Получение ответа
             try {
                 log.info("MQTT WAIT FOR RESPONSE...");
-//                если таймаут больше 4 то навык ответит раньше что Навык не отвечает
-//                4 - недождалась ответа, но иногда может быть Навык неотвечает
-//                для УДЯ было 10
+// если таймаут больше 4 то навык ответит раньше что Навык не отвечает
+// 4 - недождалась ответа, но иногда может быть Навык неотвечает
+// для УДЯ было 10
                 responseBody = future.get(timeout, TimeUnit.SECONDS);
                 log.info("MQTT RESPONSE RECIEVED OK");
             } catch (TimeoutException e) {
@@ -197,4 +228,25 @@ public class Hive {
         }
     }
 
+
+    public static void unsubscribe(String topic) {
+        log.info("HIVE UNSUBSCRIBE TOPIC: " + topic);
+        try {
+            mqttClient.unsubscribe(topic);
+        } catch (MqttException e) {
+            log.info("MQTT UNSUBSCRIBE ERROR: " + e);
+        }
+    }
+
+    public static void stop() {
+        log.info("HIVE STOP");
+        try {
+            mqttClient.disconnect();
+            mqttClient.close();
+        } catch (MqttException e) {
+            throw new RuntimeException(e);
+        }
+        mqttClient = null;
+        log.info("MQTT CLIENT CLOSED");
+    }
 }

@@ -6,6 +6,7 @@ import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.Payload;
 import org.knovash.squeezealice.provider.response.ResponseYandex;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.yandex.Yandex;
 
 @Log4j2
 public class ProviderUserDevices {

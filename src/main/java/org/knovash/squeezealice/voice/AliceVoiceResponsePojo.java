@@ -11,8 +11,6 @@ public class AliceVoiceResponsePojo {
     public ResponseAlice response;
     public String version;
 
-
-
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
