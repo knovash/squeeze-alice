@@ -3,8 +3,11 @@ package org.knovash.squeezealice.web;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.SmartHome;
+import org.knovash.squeezealice.spotify.Spotify;
+import org.knovash.squeezealice.spotify.SpotifyUserParser;
 import org.knovash.squeezealice.yandex.Yandex;
 import org.knovash.squeezealice.utils.Utils;
+import org.knovash.squeezealice.yandex.YandexJwtUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -33,14 +36,15 @@ public class PageIndex {
 
     public static void refresh(HashMap<String, String> parameters) {
         log.info("REFRESH");
-//        lmsPlayers.searchForLmsIp();
+        if (!lmsServerOnline) lmsPlayers.searchForLmsIp();
         lmsPlayers.updateLmsPlayers();
-
-//        Yandex.read();
         Yandex.getRoomsAndDevices();
     }
 
     public static String page() {
+
+        Spotify.me();
+        Yandex.getRoomsAndDevices();
 
         if (lmsServerOnline) {
             msgLmsIp = "LMS найден " + "<a href=\"http://" + config.lmsIp + ":"
@@ -52,20 +56,25 @@ public class PageIndex {
             msgLmsPlayers = "LMS плееры не найдены";
         }
 
+        String newDevices = "";
+        if (yandexMusicDevCounter < SmartHome.devices.size())
+            newDevices = " Есть <b>новые</b> устройства Музыка. Обновите список устройств в приложении УДЯ";
+
         if (SmartHome.devices.size() == 0)
-            msgSqa = "SA для плееров LMS не выбраны комнаты УДЯ. Перейдите в настройку плееров и выберите комныты для плееров";
+            msgSqa = "нет устройств Музыка для подключения в УДЯ";
         else
-            msgSqa = "SA подключено " + SmartHome.devices.size() + " плееров " + SmartHome.devices.stream().map(d ->
+            msgSqa = "Музыка " + SmartHome.devices.size() + " устройств " + SmartHome.devices.stream().map(d ->
                             lmsPlayers.getPlayerNameByDeviceId(d.id) + " в " + d.room)
                     .collect(Collectors.toList());
         if (yandexMusicDevCounter == 0) {
             if (SmartHome.devices.size() == 0)
-                PageIndex.msgUdy = "УДЯ нет плееров";
-            else PageIndex.msgUdy = "УДЯ нет плееров. Обновите список устройств навыка в приложениии УДЯ";
+                PageIndex.msgUdy = "УДЯ нет плееров " + "<a href=\\players>настроить</a>";
+            else PageIndex.msgUdy = "Есть <b>новые</b> устройства Музыка. Обновите список устройств в приложении УДЯ";
             log.info(PageIndex.msgUdy);
         } else
+
             PageIndex.msgUdy = "УДЯ подключено " + yandexMusicDevCounter + " устройств Музыка в комнатах "
-                    + yandexMusicDevListRooms;
+                    + yandexMusicDevListRooms + newDevices;
 
 
         Utils.readAliceIdInRooms();
@@ -88,23 +97,27 @@ public class PageIndex {
 //                "<p><a href=\\spotify>Настройка Spotify</a></p>" +
                 "<p><b>" + "Комманды:</b></p>" +
                 "<p>" +
-                "Алиса, что играет<br>" +
+
                 "Алиса, включи музыку<br>" +
                 "Алиса, выключи музыку<br>" +
-                "Алиса, громче<br>" +
+                "Алиса, музыку громче<br>" +
                 "Алиса, музыку громче на 5<br>" +
                 "Алиса, канал 4<br>" +
                 "Алиса, переключи канал<br>" +
-                "Алиса, скажи раз-два, включи Кровосток<br>" +
-                "Алиса, дальше<br>" +
-                "Алиса, скажи раз-два, добавь в избранное<br>" +
-                "Алиса, переключи музыку сюда<br>" +
-                "Алиса, включи отдельно<br>" +
-                "Алиса, включи только тут<br>" +
-                "Алиса, включи вместе<br>" +
-                "Алиса, скажи раз-два, выбери колонку Радиотехника<br>" +
-                "Алиса, где пульт<br>" +
-                "Алиса, включи пульт <br>";
+                "<br>" +
+                "Алиса, скажи <навык>, привет(подключи,настрой)<br>" +
+                "Алиса, скажи <навык>, что играет - сейчас на Homepod1 играет Deep Organic House громкость 12<br>" +
+                "Алиса, скажи <навык>, выбери колонку Радиотехника - выберет для этой комнаты колонку из LMS плееров [HomePod2, Radiotechnika, HomePod, Mi Box, Homepod1]<br>" +
+                "<br>" +
+                "Алиса, скажи <навык>, включи Depeche Mode - включаю Depeche Mode - найдет в Spotify<br>" +
+                "Алиса, скажи <навык>, дальше<br>" +
+                "Алиса, скажи <навык>, добавь в избранное<br>" +
+                "Алиса, скажи <навык>, переключи музыку сюда<br>" +
+                "Алиса, скажи <навык>, включи отдельно<br>" +
+                "Алиса, скажи <навык>, включи только тут<br>" +
+                "Алиса, скажи <навык>, включи вместе<br>" +
+                "Алиса, скажи <навык>, где пульт<br>" +
+                "Алиса, скажи <навык>, включи пульт <br>";
 
         String page = pageOuter(pageInner, "Squeeze-Alice", "Squeeze-Alice");
 
@@ -129,11 +142,22 @@ public class PageIndex {
                 throw new RuntimeException(e);
             }
         }).collect(Collectors.toList());
-        String aliceInRooms = "SA колонки Алиса подключены в комнатах " + aliceInRoomsList;
+        String aliceInRooms = "в навык подключены колонки Алиса в комнатах " + aliceInRoomsList;
         if (aliceInRoomsList.size() == 0) {
 
-            aliceInRooms = "SA Навык еще незнает в какой он комнате. Скажите навыку Это комната Гостиная";
+            aliceInRooms = "в навык не подключены колонки Алиса, скажите навыку Привет или Настрой";
         }
+
+        if (config.yandexName == null && (config.yandexToken != null && !config.yandexToken.equals("")))
+            config.yandexName = YandexJwtUtils.getValueByTokenAndKey(config.yandexToken, "display_name");
+
+        String roomsMsg = "УДЯ комнаты " + rooms;
+        if (rooms.size() == 0) roomsMsg = "УДЯ нет комнат";
+
+
+        SpotifyUserParser.parseUserInfo(Spotify.me());
+        if (SpotifyUserParser.spotifyUser != null)
+            config.spotifyName = SpotifyUserParser.spotifyUser.getDisplayName();
 
         String bar = "<fieldset>" +
                 "<legend><b>" + "Информация" + "</b></legend>" +
@@ -142,9 +166,10 @@ public class PageIndex {
                 PageIndex.msgLmsPlayers + "<br>" +
                 PageIndex.msgSqa + "<br>" + aliceInRooms + "<br>" +
 
-                "УДЯ все комнаты " + rooms + "<br>" +
+                roomsMsg + "<br>" +
                 PageIndex.msgUdy + "<br>" +
-                "Пользователь: " + config.yandexUid +
+                "Пользователь Yandex: " + config.yandexName + "<br>" +
+                "Пользователь Spotify: " + config.spotifyName +
 
                 "<form method='POST' action='/form'>" +
                 "<input name='action' type='hidden'  value='statusbar_refresh'>" +

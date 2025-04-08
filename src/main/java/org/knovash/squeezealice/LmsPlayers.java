@@ -178,14 +178,30 @@ public static String saveToFileJson = "data/lms_players.json";
     public Player getPlayerByCorrectRoom(String room) {
 //        log.info("ROOM: " + room);
         Player player = new Player();
-        Optional optionalPlayer = lmsPlayers.players.stream()
+        Optional<Player> optionalPlayer = lmsPlayers.players.stream()
                 .filter(p -> (p.room != null))
 //                .peek(p -> log.info("0: " + p.name + " " + p.room + " = " + room + " " + p.room.equals(room)))
                 .filter(p -> p.room.equals(room))
-                .filter(Objects::nonNull).findFirst();
+                .filter(Objects::nonNull)
+                .findFirst();
         player = (Player) optionalPlayer.orElse(null);
         if (player != null) log.info("ROOM: " + room + " PLAYER: " + player.name);
         if (player == null) log.debug("PLAYER NOT FOUND WHITH ROOM " + room);
+        return player;
+    }
+
+    public Player getPlayerByCorrectRoom2(String room) {
+        log.debug("ROOM: " + room);
+        Optional<Player> optionalPlayer = lmsPlayers.players.stream()
+                .filter(p -> (p.room != null))
+                .filter(p -> p.room.equals(room))
+                .findFirst();
+        Player player = optionalPlayer.orElse(null);
+        if (player != null) {
+            log.info("ROOM: " + room + " PLAYER: " + player.name);
+        } else {
+            log.debug("PLAYER NOT FOUND WITH ROOM " + room);
+        }
         return player;
     }
 

@@ -16,20 +16,22 @@ import org.apache.http.util.EntityUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import static org.knovash.squeezealice.Main.config;
+
 @Log4j2
 public class SpotifyRequests {
 
     public static String requestWithRetryGet(String uri) {
 //        log.info("START");
         String json = SpotifyRequests.requestGetClosable(uri);
-//        log.info("JSON="+json);
+        log.info("JSON=" + json);
         if (json.equals("401")) {
             log.info("401 RUN REFRESH TOKEN");
 //            SpotifyAuth.callbackRequestRefresh();
 //            json = SpotifyRequests.requestGetClosable(uri);
         }
         if (json == null || json.equals("400")) {
-            log.info("REQUEST ERROR JSON="+json);
+            log.info("REQUEST ERROR JSON=" + json);
             return null;
         }
         if (json.equals("204")) {
@@ -48,7 +50,7 @@ public class SpotifyRequests {
         String json = SpotifyRequests.requestPutClosable(uri);
         if (json.equals("401")) {
             log.info("401 RUN REFRESH TOKEN");
-            SpotifyAuth.callbackRequestRefresh();
+//            SpotifyAuth.callbackRequestRefresh();
             json = SpotifyRequests.requestPutClosable(uri);
         }
         if (json == null) {
@@ -67,7 +69,7 @@ public class SpotifyRequests {
         String json = SpotifyRequests.requestPostClosable(uri);
         if (json.equals("401")) {
             log.info("401 RUN REFRESH TOKEN");
-            SpotifyAuth.callbackRequestRefresh();
+//            SpotifyAuth.callbackRequestRefresh();
             json = SpotifyRequests.requestPostClosable(uri);
         }
         if (json == null) {
@@ -96,10 +98,11 @@ public class SpotifyRequests {
 
     public static String requestGet(String uri) { // для получения линка для LMS из поиска
         log.info("uri: " + uri);
+        log.info("Bearer " + config.spotifyToken);
         Response response = null;
         String json = null;
         Header[] headers = {
-                new BasicHeader("Authorization", SpotifyAuth.bearer_token)
+                new BasicHeader("Authorization", "Bearer " + config.spotifyToken)
         };
         try {
             response = Request.Get(uri)
@@ -108,15 +111,17 @@ public class SpotifyRequests {
             log.info("RESPONSE: " + response);
             json = response.returnContent().asString();
         } catch (IOException e) {
+            log.info("RESPONSE ERROR: " + e);
             return null;
         }
         return json;
     }
 
     public static String requestGetClosable(String uri) {
-//        log.info("START");
+        log.info("START");
+        log.info("AUTH TOKEN: " + config.spotifyToken);
         Header[] headers = {
-                new BasicHeader("Authorization", SpotifyAuth.bearer_token)
+                new BasicHeader("Authorization", "Bearer " + config.spotifyToken)
         };
         int code;
         String json;
@@ -139,7 +144,7 @@ public class SpotifyRequests {
     public static String requestPutClosable(String uri) {
         log.info("START");
         Header[] headers = {
-                new BasicHeader("Authorization", SpotifyAuth.bearer_token)
+                new BasicHeader("Authorization", "Bearer " + config.spotifyToken)
         };
         int code;
         String json;
@@ -160,7 +165,7 @@ public class SpotifyRequests {
 
     public static String requestPostClosable(String uri) {
         Header[] headers = {
-                new BasicHeader("Authorization", SpotifyAuth.bearer_token)
+                new BasicHeader("Authorization", "Bearer " + config.spotifyToken)
         };
         int code;
         String json;
@@ -181,7 +186,7 @@ public class SpotifyRequests {
 
     public static String requestPutHttpClient(String uri) {
         Header[] headers = {
-                new BasicHeader("Authorization", SpotifyAuth.bearer_token)
+                new BasicHeader("Authorization", "Bearer " + config.spotifyToken)
         };
         int code;
         String json;

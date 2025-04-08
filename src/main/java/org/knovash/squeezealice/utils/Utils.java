@@ -225,21 +225,21 @@ public class Utils {
         return result;
     }
 
-    public static void restart() {
-        try {
-            Runtime.getRuntime().exec("systemctl restart squeeze-alice.service");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void reboot() {
-        try {
-            Runtime.getRuntime().exec("reboot");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    public static void restart() {
+//        try {
+//            Runtime.getRuntime().exec("systemctl restart squeeze-alice.service");
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+//
+//    public static void reboot() {
+//        try {
+//            Runtime.getRuntime().exec("reboot");
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
     public static void timerRequestPlayersState(int priod) {
         log.info("TIMER REQUEST PLAYERS STATE UPDATE");

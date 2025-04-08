@@ -61,9 +61,13 @@ public class ContextForm {
         log.info("BODY: " + body);
 //      QUERY
         String query = httpExchange.getRequestURI().getQuery();
-        HashMap<String, String> queryMap = HandlerUtils.convertQueryToMap(query);
-        log.info("QUERY: " + query);
+//        HashMap<String, String> queryMap = HandlerUtils.convertQueryToMap(query);
+//        log.info("QUERY: " + query);
 //        log.info("QUERY MAP: " + queryMap);
+        log.info("*********** TEST NEW QUERY PARSER **************");
+        HashMap<String, String> queryMap = (HashMap<String, String>) Parser.run(query);
+        log.info("*********** TEST NEW QUERY PARSER **************");
+
 
         ContextForm context = new ContextForm();
         context.body = body;

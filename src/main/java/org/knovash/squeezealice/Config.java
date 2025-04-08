@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.utils.Mask;
 
 import java.time.ZoneId;
 import java.util.ResourceBundle;
@@ -17,19 +18,27 @@ import static org.knovash.squeezealice.Main.config;
 @AllArgsConstructor
 public class Config {
 
-    public int port;
-    public String domain;
-    public String lmsIp;
-    public String lmsPort;
-    public String lmsUrl;
-    public String silence;
-    public ZoneId zoneId;
+    //    Squeeze-Alice
+    public int port; // порт этого сервера
+    public String domain; // для колбэка но в локальном ненужно
+    public ZoneId zoneId; // для установки часового пояса пользователя
+    //    Lyrion Music Server
+    public String lmsIp; // адрес LMS
+    public String lmsPort; // порт LMS обычно 9000
+    public String lmsUrl; // урл LMS для запросов jsonrpc.js
+    public String silence; // урл для звука тишины перед включением музыки
+    //    Hive
     public String hiveBroker;
     public String hiveUsername;
     public String hivePassword;
-    public String yandexToken;
-    public String yandexUid;
-    public String spotifyToken;
+    //    Yandex
+    public String yandexToken; // для получения списка комнат в умном доме
+    public String yandexName; // для отображения кто вошел
+    public String yandexUid; // для уникального названия топика пользователя
+    //    Spotify
+    public String spotifyToken; // для запросов поиска
+    public String spotifyName; // для отображения кто вошел
+
 
     public void readConfigProperties() {
         log.debug("READ CONFIG FROM config.properties");
@@ -56,17 +65,23 @@ public class Config {
         }
         this.port = jsonConfig.port;
         this.domain = jsonConfig.domain;
+        this.zoneId = jsonConfig.zoneId;
+
         this.lmsIp = jsonConfig.lmsIp;
         this.lmsPort = jsonConfig.lmsPort;
-        this.silence = jsonConfig.silence;
-        this.zoneId = jsonConfig.zoneId;
         this.lmsUrl = "http://" + lmsIp + ":" + lmsPort + "/jsonrpc.js/";
+        this.silence = jsonConfig.silence;
+
         this.hiveBroker = jsonConfig.hiveBroker;
         this.hiveUsername = jsonConfig.hiveUsername;
         this.hivePassword = jsonConfig.hivePassword;
+
         this.yandexToken = jsonConfig.yandexToken;
+        this.yandexName = jsonConfig.yandexName;
         this.yandexUid = jsonConfig.yandexUid;
+
         this.spotifyToken = jsonConfig.spotifyToken;
+        this.spotifyName = jsonConfig.spotifyName;
         log.info("CONFIG FROM config.json : " + config);
     }
 
@@ -75,23 +90,27 @@ public class Config {
         return "\n" +
                 "port=" + port + "\n" +
                 "domain=" + domain + "\n" +
+                "zoneId=" + zoneId + "\n" +
+
                 "lmsIp=" + lmsIp + "\n" +
                 "lmsPort=" + lmsPort + "\n" +
                 "lmsUrl=" + lmsUrl + "\n" +
                 "silence=" + silence + "\n" +
-                "zoneId=" + zoneId + "\n" +
+
                 "hiveBroker=" + hiveBroker + "\n" +
                 "hiveUsername=" + hiveUsername + "\n" +
-                "hivePassword=" + hivePassword + "\n" +
-                "yandexToken=" + yandexToken + "\n" +
+                "hivePassword=" + Mask.mask(hivePassword, 40) + "\n" +
+
+                "yandexToken=" + Mask.mask(yandexToken, 70) + "\n" +
+                "yandexName=" + yandexName + "\n" +
                 "yandexUid=" + yandexUid + "\n" +
-                "spotifyToken=" + spotifyToken;
+
+                "spotifyToken=" + Mask.mask(spotifyToken, 80) + "\n" +
+                "spotifyName=" + spotifyName;
     }
 
     public void writeConfig() {
         log.info("WRITE CONFIG TO config.json");
         JsonUtils.pojoToJsonFile(this, "data/config.json");
-//        JsonUtils.pojoToJsonFile(this, "config/config.json");
-//        JsonUtils.pojoToJsonPathFile(this, "","config.json");
     }
 }

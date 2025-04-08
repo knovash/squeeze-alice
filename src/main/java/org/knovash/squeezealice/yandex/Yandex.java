@@ -17,15 +17,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 @Data
 public class Yandex {
 
-    public String clientId;
-    public String clientSecret;
-    public String bearer;
-    public String user;
+//    public String clientId;
+//    public String clientSecret;
+//    public String bearer;
+//    public String user;
     public static Yandex yandex = new Yandex();
     public static YandexInfo yandexInfo = new YandexInfo();
     public static Map<String, String> scenariosIds = new HashMap<>();
@@ -140,7 +141,14 @@ public class Yandex {
 
         log.info("YANDEX DEVICES MUSIC COUNT: " + yandexMusicDevCounter);
         if (SmartHome.devices != null) log.info("SA DEVICES COUNT: " + SmartHome.devices.size());
-        else log.info("SA DEVICES COUNT: 0");
+        else log.info("SA DEVICES COUNT: 0 -----------");
+
+//        log.info("---------  LMS PLAYERS COUNT: " + lmsPlayers.players.size());
+//        int count = lmsPlayers.players.size();
+//        for (int i = 0; i < count; i++) {
+//            log.info("CREATE RANDOM ROOM DEVICE");
+//            SmartHome.create("комната",i);
+//        }
 
         if (yandexMusicDevCounter == 0) {
             log.info("YANDEX MUSIC DEVICES COUNT: " + yandexMusicDevCounter);
@@ -169,6 +177,10 @@ public class Yandex {
                 .filter(device -> device.name.equals("музыка"))
                 .forEach(device -> SmartHome.create(getRoomNameByRoomId(device.room), Integer.valueOf(device.external_id)));
         log.info("SA DEVICES COUNT: " + SmartHome.devices.size());
+
+
+
+
         SmartHome.write();
     }
 
@@ -181,7 +193,7 @@ public class Yandex {
         String json;
         try {
             Response response = Request.Get("https://api.iot.yandex.net/v1.0/user/info")
-                    .setHeader("Authorization", "OAuth " + yandex.bearer)
+                    .setHeader("Authorization", "OAuth " + config.yandexToken)
                     .execute();
             json = response.returnContent().asString();
         } catch (IOException e) {
@@ -212,7 +224,7 @@ public class Yandex {
         CompletableFuture.runAsync(() -> {
             try {
                 Request.Post("https://api.iot.yandex.net/v1.0/scenarios/" + scenarioId + "/actions")
-                        .setHeader("Authorization", "OAuth " + yandex.bearer)
+                        .setHeader("Authorization", "OAuth " + config.yandexToken)
                         .execute();
             } catch (IOException e) {
                 log.info("ERROR " + e);
