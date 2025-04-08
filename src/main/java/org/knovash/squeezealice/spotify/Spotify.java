@@ -22,6 +22,15 @@ public class Spotify {
     public static String lastPath;
     public static String lastTitle;
 
+    public static String me() {
+        log.info("SPOTIFY INFO ME");
+        String uri = "https://api.spotify.com/v1/me";
+        log.info("URI: " + uri);
+        String body = SpotifyRequests.requestGet(uri);
+        log.info("SPOTY ME BODY: " + body);
+        return body;
+    }
+
     public static String getLinkArtist(String target) {
         log.info("ARTIST TARGET: " + target);
         target = target.replace(" ", "%20");
@@ -74,15 +83,15 @@ public class Spotify {
         return link;
     }
 
-    public static String getClientIdHidden() {
-        if (SpotifyAuth.client_id == null || SpotifyAuth.client_id == "") return "empty";
-        return SpotifyAuth.client_id.substring(0, 4) + "----";
-    }
-
-    public static String getClientSecretHidden() {
-        if (SpotifyAuth.client_secret == null || SpotifyAuth.client_secret == "") return "empty";
-        return SpotifyAuth.client_secret.substring(0, 4) + "----";
-    }
+//    public static String getClientIdHidden() {
+//        if (SpotifyAuth.client_id == null || SpotifyAuth.client_id == "") return "empty";
+//        return SpotifyAuth.client_id.substring(0, 4) + "----";
+//    }
+//
+//    public static String getClientSecretHidden() {
+//        if (SpotifyAuth.client_secret == null || SpotifyAuth.client_secret == "") return "empty";
+//        return SpotifyAuth.client_secret.substring(0, 4) + "----";
+//    }
 
     public static void requestCurrentlyPlaying() {
         String uri = "https://api.spotify.com/v1/me/player/currently-playing";

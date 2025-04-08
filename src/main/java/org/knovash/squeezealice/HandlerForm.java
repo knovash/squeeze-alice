@@ -5,7 +5,7 @@ import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
 //import org.knovash.squeezealice.provider.OAuthExample;
 import org.knovash.squeezealice.yandex.Yandex;
-import org.knovash.squeezealice.spotify.SpotifyAuth;
+//import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.web.PageIndex;
 import org.knovash.squeezealice.web.PagePlayers;
 

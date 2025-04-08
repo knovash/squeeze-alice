@@ -1,7 +1,4 @@
-# Базовый образ с Java Runtime
 FROM eclipse-temurin:17-jre
-# Для ARM
-#FROM arm32v7/eclipse-temurin:17-jre-jammy
 
 # Создать директорию для данных
 RUN mkdir -p /app/data
@@ -10,7 +7,7 @@ RUN mkdir -p /app/data
 WORKDIR /app
 
 # Скопировать target в /app
-COPY target .
+COPY target/*.jar .
 
 # Посмотреть что скопировано
 RUN ls -la /app && sleep 1
@@ -19,4 +16,4 @@ RUN ls -la /app && sleep 1
 EXPOSE 8010
 
 # Команда запуска
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "squeeze-alice-1.0.jar"]

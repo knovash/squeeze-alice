@@ -57,7 +57,11 @@ public class Context {
         log.info("BODY: " + body);
 //      QUERY
         String query = httpExchange.getRequestURI().getQuery();
-        HashMap<String, String> queryMap = HandlerUtils.convertQueryToMap(query);
+        log.info("*********** TEST NEW QUERY PARSER **************");
+//        HashMap<String, String> queryMap = HandlerUtils.convertQueryToMap(query);
+        HashMap<String, String> queryMap = (HashMap<String, String>) Parser.run(query);
+        log.info("*********** TEST NEW QUERY PARSER **************");
+
         log.info("QUERY: " + query);
 //        log.info("QUERY MAP: " + queryMap);
 

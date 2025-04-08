@@ -6,7 +6,7 @@ import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.Payload;
 import org.knovash.squeezealice.provider.response.ResponseYandex;
 import org.knovash.squeezealice.utils.JsonUtils;
-import org.knovash.squeezealice.yandex.Yandex;
+import static org.knovash.squeezealice.Main.config;
 
 @Log4j2
 public class ProviderUserDevices {
@@ -20,12 +20,12 @@ public class ProviderUserDevices {
         ResponseYandex responseYandex = new ResponseYandex();
         responseYandex.request_id = xRequestId;
         responseYandex.payload = new Payload();
-        responseYandex.payload.user_id = Yandex.yandex.user;
+        responseYandex.payload.user_id = config.yandexUid;
         SmartHome.devices.forEach(device -> device.capabilities.forEach(capability -> capability.state = null));
 //        если State не null то при обновление устройств в УДЯ будет ошибка
         responseYandex.payload.devices = SmartHome.devices;
         String json = JsonUtils.pojoToJson(responseYandex);
-        log.info("USER: " + Yandex.yandex.user);
+        log.info("USER: " + config.yandexUid);
         log.info("DEVICES: " + SmartHome.devices.size());
 //        log.info("JSON: " + json);
 

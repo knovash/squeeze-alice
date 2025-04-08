@@ -13,6 +13,8 @@ public class Parser {
 
     public static Map<String, String> run(String text) {
         log.info("PARSER START");
+        log.info("QUERY TEXT: "+text);
+        if(text == null) return new HashMap<>();
         Map<String, String> result = new HashMap<>();
         splitByAnd(text).stream()
 //                .peek(p -> log.info(p))
@@ -21,10 +23,8 @@ public class Parser {
                 .forEach(p -> result.put(
                         URLDecoder.decode(p.get(0), StandardCharsets.UTF_8),
                         URLDecoder.decode(p.get(1), StandardCharsets.UTF_8)
-//                        p.get(0),
-//                        p.get(1)
                 ));
-        log.info("RESULT:\n" + result);
+        log.info("RESULT QUERY MAP:\n" + result);
         return result;
     }
 

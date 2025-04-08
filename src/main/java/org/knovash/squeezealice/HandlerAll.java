@@ -4,8 +4,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.*;
-import org.knovash.squeezealice.spotify.PageSpotify;
-import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 import org.knovash.squeezealice.web.*;
 
@@ -47,12 +45,10 @@ public class HandlerAll implements HttpHandler {
                 return PagePlayers.action(context);
             case ("/manual"):
                 return PageManual.action(context);
-            case ("/spotify"):
-                return PageSpotify.action(context);
+//            case ("/spotify"):
+//                return PageSpotify.action(context);
             case ("/lms"):
                 return PageLms.action(context);
-//            case ("/yandex"):
-//                return PageYandex.action(context);
             case ("/cmd"):
                 context = SwitchQueryCommand.action(context);
                 break;
@@ -75,25 +71,6 @@ public class HandlerAll implements HttpHandler {
             case ("/v1.0/user/devices/action"):
                 context = ProviderAction.providerActionRun(context);
                 break;
-//            case ("/auth"): // сюда первый запрос от Яндекса для привязки акаунта
-//                log.info("CASE /auth");
-//                context = YandexAuth.action(context);
-//                break;
-//            case ("/token"): // сюда второй запрос от Яндекса для привязки акаунта
-//                context = YandexToken.action(context);
-//                break;
-//            case ("/spoti_auth"):
-//                context = SpotifyAuth.requestUserAuthorization();
-//                break;
-            case ("/spoti_callback"):
-                context = SpotifyAuth.callback(context);
-                break;
-
-//            case ("/request_ya_auth_and_get_user_id"):
-////                Yandex.getBearerToken();
-//                Yandex.requestYaAuthAndGetUserId();
-////                context = SpotifyAuth.callback(context);
-//                break;
             default:
                 log.info("PATH ERROR " + path);
                 context = PageIndex.action(context);

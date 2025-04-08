@@ -7,7 +7,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.knovash.squeezealice.spotify.Spotify;
-import org.knovash.squeezealice.spotify.SpotifyAuth;
+import org.knovash.squeezealice.spotify.SpotifyUserParser;
 import org.knovash.squeezealice.spotify.spotify_pojo.PlayerState;
 import org.knovash.squeezealice.yandex.YandexJwtUtils;
 
@@ -92,11 +92,13 @@ public class Hive {
             config.yandexToken = token;
             String currentUid = config.yandexUid;
             String newUid = YandexJwtUtils.getValueByTokenAndKey(token, "uid");
+            String yandexName = YandexJwtUtils.getValueByTokenAndKey(token, "display_name");
             if (newUid.equals(currentUid)) return;
 
             Hive.unsubscribe(Hive.topicRecieveDevice + currentUid);
             Hive.subscribe(Hive.topicRecieveDevice + newUid);
             config.yandexUid = newUid;
+            config.yandexName = yandexName;
             config.writeConfig();
 
             log.info("TOKEN: " + token);
@@ -110,8 +112,11 @@ public class Hive {
             String token = params.getOrDefault("token", null);
             if (token == null) return;
             log.info("TOKEN: " + token);
-            SpotifyAuth.bearer_token = token;
             config.spotifyToken = token;
+
+//            получить имя пользователя Spotify
+            config.spotifyName = SpotifyUserParser.parseUserInfo(Spotify.me()).getDisplayName();
+
             config.writeConfig();
             PlayerState ps = Spotify.playerState;
             log.info(ps);

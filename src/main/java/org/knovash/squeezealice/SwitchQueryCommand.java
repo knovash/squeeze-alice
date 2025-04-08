@@ -203,14 +203,14 @@ public class SwitchQueryCommand {
                 lmsPlayers.playerRemove(queryParams);
                 response = PagePlayers.page();
                 break;
-            case ("restart"):
-                Utils.restart();
-                response = "RESTART";
-                break;
-            case ("reboot"):
-                Utils.reboot();
-                response = "REBOOT";
-                break;
+//            case ("restart"):
+//                Utils.restart();
+//                response = "RESTART";
+//                break;
+//            case ("reboot"):
+//                Utils.reboot();
+//                response = "REBOOT";
+//                break;
             case ("widget"):
                 response = Utils.widget();
                 break;

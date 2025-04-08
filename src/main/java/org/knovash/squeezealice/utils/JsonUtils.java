@@ -85,15 +85,6 @@ public class JsonUtils {
         }
     }
 
-    public static void pojoToJsonPathFile(Object pojo, String path,  String fileName) {
-        File file = new File(fileName);
-        try {
-            objectWriter.writeValue(file, pojo);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static <T> void listToJsonFile(List<T> list, String fileName) {
         File file = new File(fileName);
         try {

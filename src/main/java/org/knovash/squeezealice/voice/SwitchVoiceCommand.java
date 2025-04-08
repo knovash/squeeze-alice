@@ -75,10 +75,13 @@ public class SwitchVoiceCommand {
         if (command.equals(""))
             return "Я умею управлять плеерами подключенными в Logitech Media Server. Спросите у навыка," +
                     "что играет и я отвечу что сейчас играет или подскажу как настроить плееры";
-        if (command.contains("помощь") || command.contains("Помощь"))
-            return "У вас локально должен быть установлен Logitech Media Server и приложение навыка, например в докере";
-        if (command.contains("что ты умеешь") || command.contains("Что ты умеешь"))
+        if (command.contains("помощь") || command.contains("Помощь")|| command.contains("помоги") || command.contains("подскажи"))
+            return "У вас локально должен быть установлен Logitech Media Server и приложение навыка";
+        if (command.contains("что ты умеешь") || command.contains("Что ты умеешь")  || command.contains("Что ты можешь"))
             return "Я умею управлять плеерами подключенными в Logitech Media Server";
+
+
+
 
 
         if (command.contains("найди сервер")) return searchServer();
@@ -109,6 +112,11 @@ public class SwitchVoiceCommand {
             return "это комната " + room + playerNameInRoom + remoteInRoom;
         }
 
+
+
+
+
+
         if (command.matches("(выбери|включи) колонку.*")) {
             log.info("SELECT PLAYER выбери колонку ");
             return selectPlayerByCommand(command);
@@ -116,9 +124,26 @@ public class SwitchVoiceCommand {
         Device device = SmartHome.getDeviceByCorrectRoom(room);
         String firstPlayername = "";
         if (lmsPlayers.players.size() > 0) firstPlayername = lmsPlayers.players.get(0).name;
+
         if (device == null)
             return "устройство не найдено. скажите навыку, выбери колонку и название колонки, например " + firstPlayername;
         Player player = lmsPlayers.getPlayerByDeviceId(device.id);
+
+
+        if (command.contains("привет") || command.contains("подключи")  || command.contains("настрой")){
+
+            if (config.lmsIp == null) return "медиасервер не найден";
+            if (room == null) {
+                log.info("UNKNOWN ROOM");
+                return "скажите навыку, это комната и название комнаты";
+            }
+            if (player == null) return "в комнате " + room + " колонка еще не выбрана. " +
+                    "скажите навыку, выбери колонку и название колонки, например " + firstPlayername;
+            return "в комнате " +room+ " выбрана колонка "  + player.name +". можете спросить навык, что играет ";
+        }
+
+
+
         if (config.lmsIp == null) return "медиасервер не найден";
         if (player == null) return "в комнате " + room + " колонка еще не выбрана. " +
                 "скажите навыку, выбери колонку и название колонки, например " + firstPlayername;
