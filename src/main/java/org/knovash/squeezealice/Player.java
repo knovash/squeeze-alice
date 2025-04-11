@@ -109,6 +109,18 @@ public class Player {
         return response.result._mode;
     }
 
+    public String modeReal() {
+        this.playing = false;
+        Response response = Requests.postToLmsForResponse(RequestParameters.mode(this.name).toString());
+        if (response == null) {
+            log.info("REQUEST ERROR " + this.name);
+            return null;
+        }
+        if (response.result._mode.equals("play")) this.playing = true;
+        log.info("PLAYER: " + this.name + " MODE: " + response.result._mode);
+        return response.result._mode;
+    }
+
     public String path() {
         Response response = Requests.postToLmsForResponse(RequestParameters.path(this.name).toString());
         if (response == null) {

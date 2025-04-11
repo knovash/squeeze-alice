@@ -73,12 +73,12 @@ public class SwitchVoiceCommand {
         log.info("SWITCH VOICE COMMAND: " + " " + command);
 //      НАСТРОЙКА
         if (command.equals(""))
-            return "Я умею управлять плеерами подключенными в Logitech Media Server. Спросите у навыка," +
+            return "Я умею управлять плеерами подключенными в Lyrion Music Server. Спросите у навыка," +
                     "что играет и я отвечу что сейчас играет или подскажу как настроить плееры";
         if (command.contains("помощь") || command.contains("Помощь")|| command.contains("помоги") || command.contains("подскажи"))
-            return "У вас локально должен быть установлен Logitech Media Server и приложение навыка";
+            return "У вас локально должен быть установлен Lyrion Music Server и приложение навыка";
         if (command.contains("что ты умеешь") || command.contains("Что ты умеешь")  || command.contains("Что ты можешь"))
-            return "Я умею управлять плеерами подключенными в Logitech Media Server";
+            return "Я умею управлять плеерами подключенными в Lyrion Music Server";
 
 
 
@@ -190,6 +190,7 @@ public class SwitchVoiceCommand {
                 command.contains("shuffle") ||
                 command.contains("шафл") ||
                 command.contains("рандом")))
+
             return spotifyPlayArtist(command, player);
         return "я не поняла команду";
     }

@@ -263,19 +263,19 @@ public class Utils {
         log.info("ALICE IN ROOMS FROM rooms.json: " + Main.idRooms);
     }
 
-    public static String widget() {
-        log.info("WIDGET");
-        Yandex.getRoomsAndDevices();
-        YandexInfo.Device ddd = Yandex.yandexInfo.devices.stream()
-                .filter(device -> device.name.equals("душ"))
-                .filter(device -> device.type.equals("devices.types.sensor"))
-                .peek(device -> log.info(device.name + " " + device.properties.get(0).state.value))
-                .findFirst()
-                .orElse(null);
-        log.info(ddd);
-
-        return ddd.properties.get(0).state.value.toString();
-    }
+//    public static String widget() {
+//        log.info("WIDGET");
+//        Yandex.getRoomsAndDevices();
+//        YandexInfo.Device ddd = Yandex.yandexInfo.devices.stream()
+//                .filter(device -> device.name.equals("душ"))
+//                .filter(device -> device.type.equals("devices.types.sensor"))
+//                .peek(device -> log.info(device.name + " " + device.properties.get(0).state.value))
+//                .findFirst()
+//                .orElse(null);
+//        log.info(ddd);
+//
+//        return ddd.properties.get(0).state.value.toString();
+//    }
 
     public static String getCorrectRoomName(String approxRoomName) {
         log.info("GET CORRECT ROOM NAME BY: " + approxRoomName);

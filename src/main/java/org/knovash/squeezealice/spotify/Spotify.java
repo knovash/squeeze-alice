@@ -2,6 +2,7 @@ package org.knovash.squeezealice.spotify;
 
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.Hive;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.lms.PlayerStatus.PlaylistLoop;
 import org.knovash.squeezealice.spotify.spotify_pojo.*;
@@ -10,7 +11,10 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 
-import static org.knovash.squeezealice.spotify.SpotifyRequests.requestWithRetryGet;
+import java.util.UUID;
+
+import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.spotify.SpotifyRequests.requestWithRefreshGet;
 
 @Log4j2
 @Data
@@ -35,7 +39,7 @@ public class Spotify {
         log.info("ARTIST TARGET: " + target);
         target = target.replace(" ", "%20");
         String url = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "artist" + "&limit=" + "3" + "&market=ES";
-        String json = requestWithRetryGet(url);
+        String json = requestWithRefreshGet(url);
         if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         SpotifyArtists spotifyArtists = JsonUtils.jsonToPojo(json, SpotifyArtists.class);
@@ -51,7 +55,7 @@ public class Spotify {
         log.info("TRACK TARGET: " + target);
         target = target.replace(" ", "%20");
         String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "track" + "&limit=" + "5" + "&market=ES";
-        String json = requestWithRetryGet(uri);
+        String json = requestWithRefreshGet(uri);
         if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         SpotifySearchTrack spotifySearchTrack = JsonUtils.jsonToPojo(json, SpotifySearchTrack.class);
@@ -69,7 +73,7 @@ public class Spotify {
         log.info("ALBUM TARGET: " + target);
         target = target.replace(" ", "%20");
         String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "album" + "&limit=" + "5" + "&market=ES";
-        String json = requestWithRetryGet(uri);
+        String json = requestWithRefreshGet(uri);
         if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         SpotifySearchAlbum spotifySearchAlbum = JsonUtils.jsonToPojo(json, SpotifySearchAlbum.class);
@@ -97,7 +101,7 @@ public class Spotify {
         String uri = "https://api.spotify.com/v1/me/player/currently-playing";
         log.info("SPOTIFY REQUEST CURRENTLY PLAYING " + uri);
         log.info("REQUEST TRY");
-        String json = requestWithRetryGet(uri);
+        String json = requestWithRefreshGet(uri);
         log.info("REQUEST OK");
         log.info("JSON " + json);
         if (json == null) {
@@ -120,7 +124,7 @@ public class Spotify {
             id = id.replace("spotify:album:", "");
             String uri = "https://api.spotify.com/v1/albums/" + id + "?fields=name,artists.name";
             log.info("URI: " + uri);
-            String json = requestWithRetryGet(uri);
+            String json = requestWithRefreshGet(uri);
             log.info("JSON: " + json);
             if (json == null) return null;
             AlbumsArtistTitle albumsArtistTitle = JsonUtils.jsonToPojo(json, AlbumsArtistTitle.class);
@@ -133,7 +137,7 @@ public class Spotify {
             id = id.replace("spotify:artist:", "");
             String uri = "https://api.spotify.com/v1/artists/" + id + "?fields=name";
             log.info("URI: " + uri);
-            String json = requestWithRetryGet(uri);
+            String json = requestWithRefreshGet(uri);
             log.info("JSON: " + json);
             if (json == null) return null;
             name = JsonUtils.jsonGetValue(json, "name");
@@ -143,7 +147,7 @@ public class Spotify {
             id = id.replace("spotify:playlist:", "");
             String uri = "https://api.spotify.com/v1/playlists/" + id + "?fields=name";
             log.info("URI: " + uri);
-            String json = requestWithRetryGet(uri);
+            String json = requestWithRefreshGet(uri);
             log.info("JSON: " + json);
             if (json == null) return null;
             name = JsonUtils.jsonGetValue(json, "name");
@@ -236,7 +240,7 @@ public class Spotify {
     public static PlayerState requestPlayerState() {
         String uri = "https://api.spotify.com/v1/me/player/";
         log.info("PLAYER STATE " + uri);
-        String json = requestWithRetryGet(uri);
+        String json = requestWithRefreshGet(uri);
         log.info(json);
         if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
@@ -273,7 +277,7 @@ public class Spotify {
             log.info("SPOTY ID: " + id);
             uri = "https://api.spotify.com/v1/playlists/" + id;
             log.info("SPOTY REQUEST " + uri);
-            json = requestWithRetryGet(uri);
+            json = requestWithRefreshGet(uri);
             if (json == null) return null;
             json = json.replace("\\\"", ""); //  фикс для такого "name"
             PlayerPlaylist playerPlaylist = JsonUtils.jsonToPojo(json, PlayerPlaylist.class);
@@ -285,7 +289,7 @@ public class Spotify {
             log.info("SPOTY ID: " + id);
             uri = "https://api.spotify.com/v1/artists/" + id;
             log.info("SPOTY REQUEST " + uri);
-            json = requestWithRetryGet(uri);
+            json = requestWithRefreshGet(uri);
             if (json == null) return null;
             json = json.replace("\\\"", ""); //  фикс для такого "name"
             PlayerArtist playerArtist = JsonUtils.jsonToPojo(json, PlayerArtist.class);
@@ -297,7 +301,7 @@ public class Spotify {
             log.info("SPOTY ID: " + id);
             uri = "https://api.spotify.com/v1/albums/" + id;
             log.info("SPOTY REQUEST " + uri);
-            json = requestWithRetryGet(uri);
+            json = requestWithRefreshGet(uri);
             if (json == null) return null;
             json = json.replace("\\\"", ""); //  фикс для такого "name"
             PlayerAlbum playerAlbum = JsonUtils.jsonToPojo(json, PlayerAlbum.class);
@@ -366,5 +370,27 @@ public class Spotify {
         Utils.sleep(5);
         Spotify.pause();
         return true;
+    }
+
+    public static void ifExpiredRunRefersh() {
+        log.info("IF EXPIRED RUN REFRESH");
+        if (checkIfSpotifyTokenExpired()) requestRefreshToken();
+        log.info("NOT EXPIRED");
+    }
+
+    public static boolean checkIfSpotifyTokenExpired() {
+        long timeNow = System.currentTimeMillis();
+        long expiresAt = config.spotifyTokenExpiresAt;
+        boolean result = timeNow > expiresAt;
+        log.info("EXPIRES AT: " + config.spotifyTokenExpiresAt);
+        log.info("TIME NOW: " + timeNow);
+        log.info("EXPIRED : " + result);
+        return result;
+    }
+
+    public static void requestRefreshToken() {
+        log.info("SPOTIFY REQUEST REFRESH TOKEN");
+        String sessionId = UUID.randomUUID().toString();
+        Hive.publishContextWaitForContext("from_local_request", null, 10, "token_spotify_refresh", sessionId, config.spotifyRefreshToken);
     }
 }

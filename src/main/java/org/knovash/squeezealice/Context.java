@@ -42,11 +42,11 @@ public class Context {
         Headers headers = httpExchange.getRequestHeaders();
 
         String host = headers.getFirst("Host");
-        String xRequestId = headers.getFirst("X-Request-Id");
+        String xRequestId = headers.getFirst("X-request-id");
         log.info("REQUEST: " + method + " " + "http://" + host + path);
         log.info("PATH: " + path);
 //        log.info("HEADERS: " + headers.entrySet());
-//        log.info("XREQUESTID: " + xRequestId);
+        log.info("XREQUESTID: " + xRequestId);
 //      BODY
         String body = null;
         try {

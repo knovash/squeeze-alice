@@ -5,67 +5,78 @@
 	<title></title>
 	<meta name="generator" content="LibreOffice 7.3.7.2 (Linux)"/>
 	<meta name="created" content="2025-03-22T14:51:36.974114753"/>
-	<meta name="changed" content="2025-04-06T15:35:40.113001750"/>
+	<meta name="changed" content="2025-04-08T14:23:53.320315140"/>
 	<style type="text/css">
 		@page { size: 210.01mm 297mm; margin-left: 20mm; margin-right: 10mm; margin-top: 10mm; margin-bottom: 10mm }
 		p { line-height: 115%; margin-bottom: 2.47mm; background: transparent; background: transparent }
+		strong { font-weight: bold }
 		a:link { color: #000080; text-decoration: underline }
 		a:visited { color: #800000; text-decoration: underline }
-		strong { font-weight: bold }
-		code.western { font-family: "Liberation Mono", monospace }
-		code.cjk { font-family: "Noto Sans Mono CJK SC", monospace }
-		code.ctl { font-family: "Liberation Mono", monospace }
-		em { font-style: italic }
 	</style>
 </head>
 <body lang="en-US" link="#000080" vlink="#800000" dir="ltr"><p align="left">
-<font size="4" style="font-size: 14pt"><strong>1. Запустить
-Lyrion Music Server </strong><strong>(</strong><strong>LMS</strong><strong>)</strong></font></p>
+<font size="4" style="font-size: 14pt"><b>Это навык Алисы
+для управления плеерами LyrionMediaServer</b></font></p>
+<p style="line-height: 100%"><b>Установка:</b></p>
+<p style="line-height: 100%">Должен быть запущен
+LMS, например http://192.168.1.123:9000</p>
+<p style="line-height: 100%">Скачать и распаковать
+на ноутбук архив
+<a href="https://github.com/knovash/squeeze-alice/blob/main/squeeze-alice-local.tar.gz">https://github.com/knovash/squeeze-alice/blob/main/squeeze-alice-local.tar.gz</a></p>
+<p style="line-height: 100%">Cкрипт install_ssh_192.168.1.123.sh
+скопирует файлы на ip и запустит сервис
+навыка, поменяйте в названии файла на
+свой ip.</p>
+<p style="line-height: 100%">Запустить скрипт
+install_ssh_192.168.1.123.sh</p>
+<p style="line-height: 100%">Открыть
+http://192.168.1.123:8010/</p>
+<p style="line-height: 100%">Авторизация в Яндекс</p>
+<p style="line-height: 100%">Авторизация в Спотифай
+(если нужен голосовой поиск в Спотифай)</p>
+<p style="line-height: 100%">Настройка плееров -
+выбрать комнаты</p>
+<p style="line-height: 100%">Открыть приложение УДЯ</p>
+<p style="line-height: 100%">УДЯ Найти производителя
+Squeezebox</p>
+<p style="line-height: 100%">УДЯ Привязать к Яндекс</p>
+<p style="line-height: 100%">УДЯ Обновить список
+устройств</p>
+<p style="line-height: 100%">УДЯ показаны устройства
+&quot;музыка&quot; в комнатах</p>
+<p style="line-height: 100%">УДЯ Ура, теперь всё
+готово!</p>
+<p style="line-height: 100%"><br/>
+<br/>
+
+</p>
+<p style="line-height: 100%"><b>Удаление:</b></p>
+<p style="line-height: 100%">Скрипт
+uninstall_ssh_192.168.1.123.sh</p>
+<p style="line-height: 100%">удалит файлы</p>
+<p style="line-height: 100%">rm -r /opt/squeeze-alice-1.0</p>
+<p style="line-height: 100%">rm
+/lib/systemd/system/squeeze-alice.service</p>
+<p style="line-height: 100%">остановит сервис</p>
+<p style="line-height: 100%">systemctl disable squeeze-alice.service</p>
+<p style="line-height: 100%">systemctl daemon-reload</p>
+<p style="line-height: 100%"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">В
+приложении УДЯ удалите производителя
+и устройства</span></font><strong><font size="3" style="font-size: 12pt"><br/>
+</font></strong><strong><font size="4" style="font-size: 14pt"><br/>
+<br/>
+1.
+Запустить Lyrion Music Server</font></strong></p>
 <p align="left"><font size="4" style="font-size: 14pt"><a href="https://lyrion.org/">https://lyrion.org</a>,
 открыть http://localhost:9000</font></p>
 <p align="left"><img src="manual_html_a9e68898ec69cf03.png" name="Image1" align="middle" width="672" height="378" border="0"/>
 
 </p>
-<p align="left"><font size="4" style="font-size: 14pt"><strong>2.
-Зап</strong><strong>устить S</strong><strong>queeze-</strong><strong>A</strong><strong>lice
-(SA)</strong></font></p>
-<p align="left"><font size="4" style="font-size: 14pt">2.1 Создать
-папку для сохранения настроек и
-логов<br/>
-</font><font size="3" style="font-size: 12pt"><i>mkdir
-~/sa_data</i></font></p>
-<p style="line-height: 100%; margin-bottom: 0mm; background: transparent">
-<font size="4" style="font-size: 14pt">2.2 Запустить
-контейнер SA</font></p>
-<p align="left"><font size="3" style="font-size: 12pt"><i>docker run
---rm --name squeeze-alice-local -v ~/sa_data:/app/data -p 8010:8010
-knovash/squeeze-alice-local:latest</i></font></p>
-<ul>
-	<li><p style="line-height: 100%; margin-bottom: 0mm; background: transparent">
-	<font size="3" style="font-size: 12pt">Скачивается образ
-	knovash/squeeze-alice:latest</font></p>
-	<li><p style="line-height: 100%; margin-bottom: 0mm; background: transparent">
-	<font size="3" style="font-size: 12pt">Создается временный
-	контейнер с именем squeeze-alice-local</font></p>
-	<li><p style="line-height: 100%; margin-bottom: 0mm; background: transparent">
-	<font size="3" style="font-size: 12pt">Папка ~/sa_data на
-	компьютере доступна контейнеру для
-	сохранения настроек и логов</font></p>
-	<li><p style="line-height: 100%; margin-bottom: 0mm; background: transparent">
-	<font size="3" style="font-size: 12pt">Приложение в
-	контейнере доступно по адресу
-	http://localhost:8010</font></p>
-	<li><p style="line-height: 100%; margin-bottom: 0mm; background: transparent">
-	<font size="3" style="font-size: 12pt">После остановки
-	контейнера он автоматически удалится</font></p>
-</ul>
-<p align="left"><font size="4" style="font-size: 14pt">2.2 открыть
-SA http://localhost:8010</font></p>
+<p align="left"><strong><font size="4" style="font-size: 14pt">2.
+Запустить Squeeze-Alice</font></strong></p>
 <p align="left"><img src="manual_html_fb489d1b55002f96.png" name="Image2" align="bottom" width="672" height="378" border="0"/>
 
 </p>
-<p align="left"><font size="4" style="font-size: 14pt">SA нашел
-плееры в LMS и комнаты в УДЯ.</font></p>
 <p align="left"><font size="4" style="font-size: 14pt">3.
 Авторизоваться в Яндексе</font></p>
 <p align="left"><font size="4" style="font-size: 14pt">3. Перейти
@@ -107,14 +118,6 @@ Squeezebox LMS</font></p>
 <p align="left"><img src="manual_html_c766d35aba8e1b37.png" name="Image9" align="bottom" width="416" height="696" border="0"/>
 
 <img src="manual_html_d2ad6697278a02c6.png" name="Image11" align="bottom" width="416" height="696" border="0"/>
-
-</p>
-<p align="left"><br/>
-<br/>
-
-</p>
-<p align="left"><br/>
-<br/>
 
 </p>
 </body>

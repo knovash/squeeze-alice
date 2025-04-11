@@ -1,0 +1,189 @@
+@startuml
+set separator none
+title Диаграмма развёртывания
+
+left to right direction
+hide stereotype
+
+skinparam {
+  arrowFontSize 10
+  defaultTextAlignment center
+  wrapWidth 200
+  maxMessageSize 100
+}
+
+skinparam rectangle<<group>> {
+  BorderColor #888888
+}
+
+skinparam database<<database>> {
+  BackgroundColor #adb5b6
+  BorderColor #2e6295
+}
+
+skinparam queue<<messageBroker>> {
+  BackgroundColor #fcb0a4
+  BorderColor #2e6295
+}
+
+skinparam rectangle<<rectangleLight>> {
+  BackgroundColor #d7e8ea
+  BorderColor #2e6295
+}
+
+skinparam rectangle<<rectangleGreen>> {
+  BackgroundColor #7fc37d
+  BorderColor #2e6295
+}
+
+skinparam rectangle<<rectangleBlue>> {
+  BackgroundColor #7baadc
+  BorderColor #2e6295
+}
+skinparam rectangle<<rectanglePink>> {
+  BackgroundColor #ffc0cb
+  BorderColor #2e6295
+}
+skinparam rectangle<<rectangleRed>> {
+  BackgroundColor #FF0000
+  BorderColor #2e6295
+}
+
+skinparam rectangle<<rectangleYellow>> {
+  BackgroundColor #ffff00
+  BorderColor #2e6295
+}
+
+skinparam rectangle<<rectangleOrangeDark>> {
+  BackgroundColor #ff8c00
+  BorderColor #2e6295
+}
+
+skinparam rectangle<<rectanglePurple>> {
+  BackgroundColor #ccc0e8
+  BorderColor #2e6295
+}
+
+!procedure $group($name)
+rectangle "$name" <<group>> #line.dotted
+!endprocedure
+
+!procedure $blockSql($name, $host)
+database "==PostgreSQL\n<size:10>[$host]</size>" <<database>> as $name
+!endprocedure
+
+!procedure $blockQue($name, $description)
+queue "==$description" <<messageBroker>> as $name
+!endprocedure
+
+!procedure $blockLightBlue($name)
+rectangle "==Ingress Controller" <<rectangleLight>> as $name
+!endprocedure
+
+!procedure serviceCrsUzb()
+rectangle "==Service CSR UZB" <<rectangleGreen>> as serviceCrsUzb
+!endprocedure
+
+!procedure $blockBlue($name, $description)
+rectangle "==$description" <<rectangleBlue>> as $name
+!endprocedure
+
+!procedure $blockRed($name, $description)
+rectangle "==$description" <<rectangleRed>> as $name
+!endprocedure
+
+!procedure $blockPink($name, $description)
+rectangle "==$description" <<rectanglePink>> as $name
+!endprocedure
+
+!procedure $blockPurple($name, $description, $host)
+rectangle "==$description\n<size:10>[$host]</size>" <<rectanglePurple>> as $name
+!endprocedure
+
+!procedure $link($from, $to, $text)
+$from .[#707070,thickness=2].> $to : "[$text]"
+!endprocedure
+
+!procedure $link2($from, $to, $text)
+$from <.[#707,thickness=2].> $to : "[$text]"
+!endprocedure
+
+!procedure $link3($from, $to, $text)
+$from <.[#707070,thickness=2].> $to : "[$text]"
+!endprocedure
+
+!procedure $linkRed($from, $to, $text)
+$from -[#FF0000,thickness=2]-> $to : "[$text]"
+!endprocedure
+
+!procedure $linkPink($from, $to, $text)
+$from -[#ffc0cb,thickness=2]-> $to : "[$text]"
+!endprocedure
+
+!procedure $linkPurple($from, $to, $text)
+$from -[#800080,thickness=2]-> $to : "[$text]"
+!endprocedure
+
+!procedure $linkGreen($from, $to, $text)
+$from -[#00FF00,thickness=2]-> $to : "[$text]"
+!endprocedure
+
+!procedure $linkOrange($from, $to, $text)
+$from -[#FFA500,thickness=2]-> $to : "[$text]"
+!endprocedure
+
+!procedure $linkOrangeDuplex($from, $to, $text)
+$from <-[#FFA500,thickness=2]-> $to : "[$text]"
+!endprocedure
+
+$group("kubernetes [dp_k8s.ftc.ru]") {
+    $group("DSE") {
+        serviceCrsUzb()
+        $blockBlue("clientService", "Client")
+        $blockPurple("jaeger", "Jaeger Collector", "jaeger01.ftc.ru")
+        $blockPurple("logstash", "Logstash", "dpelk01.ftc.ru")
+        $blockQue("loansRabbitMQ", "Loans RabbitMQ")
+        $blockLightBlue("onlineIngressController")
+        $blockPink("authorizationService", "Authorization Service")
+        $blockBlue("referenceDataService", "Reference Data Service")
+        $blockRed("cryptoService", "Crypto Service")
+    }
+}
+
+$group("DPDB") {
+    $blockSql("loansScoringPostgresql", "loansScoringPostgresql")
+}
+
+$group("DMZ") {
+rectangle "БКИ адаптер" <<rectangleLight>> as cproCsp
+}
+
+$group("Internet") {
+rectangle "БКИ-UZB-1" as scoringBureau
+rectangle "БКИ-UZB-2" as nationalCreditBureau
+rectangle "БКИ-UZB-3" as kbkiNationalCreditBureau
+}
+
+
+$linkGreen("clientService", "onlineIngressController", "http:80")
+
+$link("serviceCrsUzb", "jaeger", "http:14268")
+$link("serviceCrsUzb", "loansRabbitMQ", "amqp:5672")
+$link("serviceCrsUzb", "loansScoringPostgresql", "tcp:5432")
+$link("serviceCrsUzb", "logstash", "tcp:25701")
+
+
+$linkGreen("onlineIngressController", "serviceCrsUzb", "http:8080")
+$linkRed("serviceCrsUzb", "onlineIngressController", "http:80")
+$linkPurple("serviceCrsUzb", "onlineIngressController", "http:80")
+$linkOrangeDuplex("serviceCrsUzb", "onlineIngressController", "ws:80")
+
+$linkPink("onlineIngressController", "authorizationService", "http:80")
+$linkOrangeDuplex("onlineIngressController", "referenceDataService", "ws:80")
+$linkRed("onlineIngressController", "cryptoService", "http:8080")
+
+$link("serviceCrsUzb", "cproCsp", "http:15001 http:15003 http:15006")
+$link("cproCsp", "scoringBureau", "http:443")
+$link("cproCsp", "nationalCreditBureau", "http:433")
+$link("cproCsp", "kbkiNationalCreditBureau", "http:443")
+@enduml

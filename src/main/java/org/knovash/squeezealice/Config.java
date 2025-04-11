@@ -38,6 +38,8 @@ public class Config {
     //    Spotify
     public String spotifyToken; // для запросов поиска
     public String spotifyName; // для отображения кто вошел
+    public String spotifyRefreshToken; // рефреш токен
+    public long spotifyTokenExpiresAt; // системное время когда истекает токен
 
 
     public void readConfigProperties() {
@@ -82,6 +84,8 @@ public class Config {
 
         this.spotifyToken = jsonConfig.spotifyToken;
         this.spotifyName = jsonConfig.spotifyName;
+        this.spotifyRefreshToken = jsonConfig.spotifyRefreshToken;
+        this.spotifyTokenExpiresAt = jsonConfig.spotifyTokenExpiresAt;
         log.info("CONFIG FROM config.json : " + config);
     }
 
@@ -106,6 +110,8 @@ public class Config {
                 "yandexUid=" + yandexUid + "\n" +
 
                 "spotifyToken=" + Mask.mask(spotifyToken, 80) + "\n" +
+                "spotifyRefreshToken=" + spotifyRefreshToken + "\n" +
+                "spotifyTokenExpiresAt=" + spotifyTokenExpiresAt + "\n" +
                 "spotifyName=" + spotifyName;
     }
 

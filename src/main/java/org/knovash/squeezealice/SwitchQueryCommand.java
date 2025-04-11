@@ -134,6 +134,33 @@ public class SwitchQueryCommand {
                     player.prevTrack().status(50);
                     response = lll;
                     break;
+                case ("stop_all"):
+                case ("pause_all"):
+                    response = Actions.queryStopMusicAll();
+                    break;
+                case ("get_player"):
+                    response = lmsPlayers.getPlayerByNearestRoom(value).name;
+                    break;
+                case ("get_room_player"):
+                    response = lmsPlayers.getPlayerNameByWidgetName(value);
+                    break;
+                case ("get_super_refresh"):
+                    log.info("TRY SUPER RESRESH -----------");
+//                    response = lmsPlayers.getSuperRefresh();
+                    break;
+                case ("select"):
+                    log.info("SSSS  " + roomInQuery + " " + playerInQuery);
+                    roomName = Utils.getCorrectRoomName(roomInQuery);
+                    playerName = Utils.getCorrectPlayerName(playerInQuery);
+                    log.info("DDDD " + roomName + " " + playerName);
+                    if (roomName != null && playerName != null) {
+                        SwitchVoiceCommand.selectPlayerInRoom(playerName, roomName, true);
+                        response = "SELECT OK";
+                    } else
+                        response = "SELECT ERROR";
+                    break;
+
+//                -------------------
                 default:
                     log.info("ACTION NOT FOUND: " + action);
                     response = "ACTION NOT FOUND: " + action;
@@ -144,81 +171,40 @@ public class SwitchQueryCommand {
             return context;
         }
 
-        log.info("SWITCH PLAYER NULL");
-        switch (action) {
-            case ("stop_all"):
-            case ("pause_all"):
-                response = Actions.queryStopMusicAll();
-                break;
-            case ("get_player"):
-                response = lmsPlayers.getPlayerByNearestRoom(value).name;
-                break;
-            case ("get_room_player"):
-                response = lmsPlayers.getPlayerNameByWidgetName(value);
-                break;
-            case ("get_super_refresh"):
-                log.info("TRY SUPER RESRESH -----------");
-//                response = lmsPlayers.getSuperRefresh();
-                break;
-            case ("select"):
-                log.info("SSSS  " + roomInQuery + " " + playerInQuery);
-                roomName = Utils.getCorrectRoomName(roomInQuery);
-                playerName = Utils.getCorrectPlayerName(playerInQuery);
-                log.info("DDDD " + roomName + " " + playerName);
-                if (roomName != null && playerName != null) {
-                    SwitchVoiceCommand.selectPlayerInRoom(playerName, roomName, true);
-                    response = "SELECT OK";
-                } else
-                    response = "SELECT ERROR";
-                break;
-//            WEB
-            case ("state_devices"):
-                response = JsonUtils.pojoToJson(SmartHome.devices);
-                break;
-            case ("state_players"):
-                response = JsonUtils.pojoToJson(lmsPlayers);
-                break;
+//        log.info("SWITCH PLAYER NULL");
+//        switch (action) {
 
-            case ("player_save"):
-                lmsPlayers.playerSave(queryParams);
-                response = PagePlayers.page();
-                break;
-//            case ("delay_expire_save"):
-//                lmsPlayers.delayExpireSave(queryParams);
+//            WEB
+//            case ("state_devices"):
+//                response = JsonUtils.pojoToJson(SmartHome.devices);
+//                break;
+//            case ("state_players"):
+//                response = JsonUtils.pojoToJson(lmsPlayers);
+//                break;
+
+//            case ("player_save"):
+//                lmsPlayers.playerSave(queryParams);
 //                response = PagePlayers.page();
 //                break;
-            case ("autoremote_save"):
-                lmsPlayers.autoremoteSave(queryParams);
-                response = PagePlayers.page();
-                break;
-//            case ("alt_sync_save"):
-//                lmsPlayers.altSyncSave(queryParams);
+//
+//            case ("autoremote_save"):
+//                lmsPlayers.autoremoteSave(queryParams);
 //                response = PagePlayers.page();
 //                break;
-//            case ("last_this_save"):
-//                lmsPlayers.lastThisSave(queryParams);
+//
+//            case ("player_remove"):
+//                lmsPlayers.playerRemove(queryParams);
 //                response = PagePlayers.page();
 //                break;
-            case ("player_remove"):
-                lmsPlayers.playerRemove(queryParams);
-                response = PagePlayers.page();
-                break;
-//            case ("restart"):
-//                Utils.restart();
-//                response = "RESTART";
+
+//            case ("widget"):
+//                response = Utils.widget();
 //                break;
-//            case ("reboot"):
-//                Utils.reboot();
-//                response = "REBOOT";
+//            default:
+//                log.info("ACTION NOT FOUND: " + action);
+//                response = "ACTION NOT FOUND: " + action;
 //                break;
-            case ("widget"):
-                response = Utils.widget();
-                break;
-            default:
-                log.info("ACTION NOT FOUND: " + action);
-                response = "ACTION NOT FOUND: " + action;
-                break;
-        }
+//        }
         context.bodyResponse = response;
         return context;
     }

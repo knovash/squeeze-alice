@@ -10,6 +10,7 @@ import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.SpotifyUserParser;
 import org.knovash.squeezealice.spotify.spotify_pojo.PlayerState;
 import org.knovash.squeezealice.yandex.YandexJwtUtils;
+import org.json.JSONObject;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +32,8 @@ public class Hive {
 
     public static String topicRecieveDevice = "to_lms_id";// подписаться
     public static String topicPublish = "from_lms_id";// отправить сюда
+
+    public static long spotifyExpiresAt;
 
 
     public static void start() {
@@ -72,11 +75,12 @@ public class Hive {
 
     private static void handleDeviceAndPublish(String topicRecieved, MqttMessage message) {
         log.info("RECIEVED MESSAGE FROM TOPIC: " + topicRecieved);
-        log.debug("MESSAGE : " + message);
+//        log.info("MESSAGE : " + message);
         String payload = new String(message.getPayload());
 
 // Map<String, String> params = parseParams(payload);
         Map<String, String> params = Parser.run(payload);
+//        log.info("PARAMS : " + params);
 
         String contextJson = "";
         String correlationId = "";
@@ -110,13 +114,21 @@ public class Hive {
         if (params.containsKey("action") && params.getOrDefault("action", null).equals("spotify_callback_token")) {
             log.info("RECIEVED SPOTIFY TOKEN");
             String token = params.getOrDefault("token", null);
+            String refreshToken = params.getOrDefault("refreshToken", null);
+            spotifyExpiresAt = Long.parseLong(params.getOrDefault("expiresAt", null));
             if (token == null) return;
             log.info("TOKEN: " + token);
+            log.info("REFRESH TOKEN: " + refreshToken);
+            log.info("EXPIRES AT: " + spotifyExpiresAt);
+            long currentTime = System.currentTimeMillis();
+            log.info("TIME NOW: " + currentTime);
+            long delta = spotifyExpiresAt - currentTime;
+            log.info("DELTA: " + delta);
             config.spotifyToken = token;
-
+            config.spotifyRefreshToken = refreshToken;
+            config.spotifyTokenExpiresAt = spotifyExpiresAt;
 //            получить имя пользователя Spotify
             config.spotifyName = SpotifyUserParser.parseUserInfo(Spotify.me()).getDisplayName();
-
             config.writeConfig();
             PlayerState ps = Spotify.playerState;
             log.info(ps);
@@ -125,11 +137,45 @@ public class Hive {
         }
 
 
+// получить рефлеш токен Spotify
+        if (params.containsKey("action") && params.getOrDefault("action", null).equals("spotify_callback_refresh_token")) {
+            log.info("RECIEVED SPOTIFY REFRESH TOKEN");
+            String refreshTokenResponse = params.getOrDefault("refreshTokenResponse", null);
+            log.info("RE: " + refreshTokenResponse);
+
+//            json body response от Spotify
+            JSONObject jsonObject = new JSONObject(refreshTokenResponse);
+            String accessToken = jsonObject.getString("access_token");
+            String tokenType = jsonObject.getString("token_type");
+            int expiresIn = jsonObject.getInt("expires_in");
+            String scope = jsonObject.getString("scope");
+            log.info("Access Token: " + accessToken);
+            log.info("Token Type: " + tokenType);
+            log.info("Expires in: " + expiresIn + " seconds");
+            log.info("Scopes: " + scope);
+
+            spotifyExpiresAt = System.currentTimeMillis() + expiresIn;
+            config.spotifyToken = accessToken;
+            config.spotifyTokenExpiresAt = System.currentTimeMillis() + expiresIn;
+
+            responseManager.completeResponse(correlationId, "OK");
+            return;
+        }
+        log.info("AFTER CASE ------------");
+
+
 // полученный контекст
         contextJson = params.getOrDefault("context", "");
         Context context = Context.fromJson(contextJson);
+//        log.info("HEADERS: " + context.headers.entrySet());
+
+
 // обработка контекста
         context = HandlerAll.processContext(context);
+
+//        log.info("CONTEXT JSON: " + context.toJson());
+
+
 // положить в пэйлоад ответа: ид, топик,  контекст
         payload = "correlationId=" + correlationId + "&" +
                 "userTopicId=" + topicRecieveDevice + "&" +
@@ -137,6 +183,7 @@ public class Hive {
 ////        подписаться на сгенерированый топик для ответа с токеном
 //        subscribe(topicRecieveDevice);
 //        отправить запрос получения токена
+//        log.info("PAYLOAD: " + payload);
         try {
             log.info("PUBLISH RESPONSE TO TOPIC: " + topicPublish);
             MqttMessage responseMessage = new MqttMessage(payload.getBytes());
@@ -171,11 +218,17 @@ public class Hive {
     }
 
 
-//  это для паблиша
+    //  это для паблиша
+    public static String publishContextWaitForContext(String topic, Context context, Integer timeout, String action, String correlationId) {
+        log.info("WITHOUT TEXT text null");
+        return publishContextWaitForContext(topic, context, timeout, action, correlationId, null);
+    }
 
     // ЭТО РАБОЧИЙ СЕЙЧАС МЕТОД ДЛЯ УДЯ КОМАНД
-    public static String publishContextWaitForContext(String topic, Context context, Integer timeout, String action, String correlationId) {
+    public static String publishContextWaitForContext(String topic, Context context, Integer timeout, String action, String correlationId, String text) {
         log.info("MQTT PUBLISH TO TOPIC: " + topic);
+        log.info("TEXT: " + text);
+        if (context == null) context = new Context();
         if (correlationId == null) correlationId = UUID.randomUUID().toString();
         String responseBody = "";
         String contextJson = context.toJson();
@@ -191,6 +244,7 @@ public class Hive {
             String payload = "correlationId=" + correlationId + "&" +
                     "callbackTopic=" + callbackTopic + "&" +
                     "action=" + action + "&" +
+                    "text=" + text + "&" +
                     "context=" + contextJson;
             log.info("PAYLOAD: " + payload);
 

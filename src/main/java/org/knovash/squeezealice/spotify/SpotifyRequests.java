@@ -21,36 +21,23 @@ import static org.knovash.squeezealice.Main.config;
 @Log4j2
 public class SpotifyRequests {
 
-    public static String requestWithRetryGet(String uri) {
-//        log.info("START");
-        String json = SpotifyRequests.requestGetClosable(uri);
+    public static String requestWithRefreshGet(String uri) {
+        log.info("TRY REQUEST...");
+        Spotify.ifExpiredRunRefersh();
+        String json = null;
+            json = SpotifyRequests.requestGetClosable(uri);
         log.info("JSON=" + json);
-        if (json.equals("401")) {
-            log.info("401 RUN REFRESH TOKEN");
-//            SpotifyAuth.callbackRequestRefresh();
-//            json = SpotifyRequests.requestGetClosable(uri);
-        }
-        if (json == null || json.equals("400")) {
-            log.info("REQUEST ERROR JSON=" + json);
-            return null;
-        }
-        if (json.equals("204")) {
-            log.info(json);
-            return null;
-        }
-        if (json.equals("400")) {
-            log.info(json);
-            return null;
-        }
         return json;
     }
 
     public static String requestWithRetryPut(String uri) {
         log.info("START");
+        Spotify.ifExpiredRunRefersh();
         String json = SpotifyRequests.requestPutClosable(uri);
+
+
         if (json.equals("401")) {
             log.info("401 RUN REFRESH TOKEN");
-//            SpotifyAuth.callbackRequestRefresh();
             json = SpotifyRequests.requestPutClosable(uri);
         }
         if (json == null) {
@@ -118,8 +105,7 @@ public class SpotifyRequests {
     }
 
     public static String requestGetClosable(String uri) {
-        log.info("START");
-        log.info("AUTH TOKEN: " + config.spotifyToken);
+        log.info("SPOTIFY REQUEST AUTH TOKEN: " + config.spotifyToken);
         Header[] headers = {
                 new BasicHeader("Authorization", "Bearer " + config.spotifyToken)
         };
@@ -130,8 +116,9 @@ public class SpotifyRequests {
             httpGet.setHeaders(headers);
             try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
                 code = response.getStatusLine().getStatusCode();
-//                log.info("CODE: " + code);
-                if (code != 200) return String.valueOf(code);
+                log.info("CODE: " + code);
+//                if (code != 200) return String.valueOf(code);
+                if (code != 200) return null;
                 json = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
             }
         } catch (IOException e) {
