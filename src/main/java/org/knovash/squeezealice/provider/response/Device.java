@@ -25,6 +25,10 @@ public class Device {
     public String skill_id;
     public String household_id;
     public List<String> groups;
+    public ActionResult actionResult;
+    public String error_code = null;
+    public String error_message = null;
+
 //    public YandexInfo.QuasarInfo quasar_info;
 
 }

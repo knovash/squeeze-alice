@@ -1,8 +1,8 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.yandex.Yandex;
-import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 
 import java.time.LocalTime;
@@ -40,5 +40,7 @@ public class Main {
         Server.start();
         Hive.start();
 //        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate);
+//        Spotify.ifExpiredRunRefersh();
+
     }
 }

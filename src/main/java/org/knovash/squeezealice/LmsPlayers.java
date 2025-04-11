@@ -367,71 +367,71 @@ public static String saveToFileJson = "data/lms_players.json";
         log.info(lmsPlayers.lastThis);
     }
 
-//    public String getSuperRefresh() {
-//        log.info("SUPER REFRESH START >>>");
-//        lmsPlayers.updateLmsPlayers(); //TODO совместить со статусами плееров
-//        lmsPlayers.syncgroups();
-//        List<String> roomNames = rooms;
-//        List<String> playersNames = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
-//        List<String> roomsAndPlayersNames = new ArrayList<>();
-//        roomsAndPlayersNames.addAll(roomNames);
-//        roomsAndPlayersNames.addAll(playersNames);
-//        List<String> roomsAndPlayersModes = new ArrayList<>();
-//        List<String> roomsAndPlayersSyncs = new ArrayList<>();
-//        List<String> roomsAndPlayersTitles = new ArrayList<>();
-//        List<String> playersVolModTit = new ArrayList<>();
-//        log.info("roomNames: " + roomNames);
-//        log.info("playersNames: " + playersNames);
-//        roomNames.stream()
-//                .map(r -> lmsPlayers.getPlayerByCorrectRoom(r))
-//                .peek(p -> {
-//                    if (p != null) {
-//                        p.status();
-//                        roomsAndPlayersModes.add(p.mode);
-//                        roomsAndPlayersSyncs.add(String.valueOf(p.sync));
-//                        roomsAndPlayersTitles.add(p.title);
-//                    } else {
-//                        roomsAndPlayersModes.add("null");
-//                        roomsAndPlayersSyncs.add(String.valueOf(false));
-//                        roomsAndPlayersTitles.add("null");
-//                    }
-//                })
-//                .collect(Collectors.toList());
-//
-//        playersNames.stream()
-//                .map(r -> lmsPlayers.getPlayerByCorrectName(r))
-//                .peek(p -> {
-//                    if (p != null) {
-//                        roomsAndPlayersModes.add(p.mode);
-//                        roomsAndPlayersSyncs.add(String.valueOf(p.sync));
-//                        roomsAndPlayersTitles.add(p.title);
-//                        playersVolModTit.add(p.name + "-" + p.volume + "-" + p.mode + "-" + p.title);
-//                    } else {
-//                        roomsAndPlayersModes.add("null");
-//                        roomsAndPlayersSyncs.add(String.valueOf(false));
-//                        roomsAndPlayersTitles.add("null");
-//                    }
-//                })
-//                .collect(Collectors.toList());
-//
-//        log.debug("ROOMS&PLAYERS NAMES: " + roomsAndPlayersNames);
-//        log.debug("ROOMS&PLAYERS MODES: " + roomsAndPlayersModes);
-//        log.debug("ROOMS&PLAYERS SYNCS: " + roomsAndPlayersSyncs);
-//        log.debug("ROOMS&PLAYERS TITLES: " + roomsAndPlayersTitles);
-//        String joinedRoomsAndPlayersNames = String.join(",", roomsAndPlayersNames);
-//        String joinedRoomsAndPlayersModes = String.join(",", roomsAndPlayersModes);
-//        String joinedRoomsAndPlayersSyncs = String.join(",", roomsAndPlayersSyncs);
-//        String joinedRoomsAndPlayersTitles = String.join(",", roomsAndPlayersTitles);
-//        String joinedPlayersVolModTit = String.join(",", playersVolModTit);
-//
-//        String response = joinedRoomsAndPlayersNames + ":"
-//                + joinedRoomsAndPlayersModes + ":"
-//                + joinedRoomsAndPlayersSyncs + ":"
-//                + joinedRoomsAndPlayersTitles + ":"
-//                + joinedPlayersVolModTit;
-//        log.info("SUPER REFRESH FINISH <<<");
-//        return response;
-//    }
+    public String getSuperRefresh() {
+        log.info("SUPER REFRESH START >>>");
+        lmsPlayers.updateLmsPlayers(); //TODO совместить со статусами плееров
+        lmsPlayers.syncgroups();
+        List<String> roomNames = rooms;
+        List<String> playersNames = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
+        List<String> roomsAndPlayersNames = new ArrayList<>();
+        roomsAndPlayersNames.addAll(roomNames);
+        roomsAndPlayersNames.addAll(playersNames);
+        List<String> roomsAndPlayersModes = new ArrayList<>();
+        List<String> roomsAndPlayersSyncs = new ArrayList<>();
+        List<String> roomsAndPlayersTitles = new ArrayList<>();
+        List<String> playersVolModTit = new ArrayList<>();
+        log.info("roomNames: " + roomNames);
+        log.info("playersNames: " + playersNames);
+        roomNames.stream()
+                .map(r -> lmsPlayers.getPlayerByCorrectRoom(r))
+                .peek(p -> {
+                    if (p != null) {
+                        p.status();
+                        roomsAndPlayersModes.add(p.mode);
+                        roomsAndPlayersSyncs.add(String.valueOf(p.sync));
+                        roomsAndPlayersTitles.add(p.title);
+                    } else {
+                        roomsAndPlayersModes.add("null");
+                        roomsAndPlayersSyncs.add(String.valueOf(false));
+                        roomsAndPlayersTitles.add("null");
+                    }
+                })
+                .collect(Collectors.toList());
+
+        playersNames.stream()
+                .map(r -> lmsPlayers.getPlayerByCorrectName(r))
+                .peek(p -> {
+                    if (p != null) {
+                        roomsAndPlayersModes.add(p.mode);
+                        roomsAndPlayersSyncs.add(String.valueOf(p.sync));
+                        roomsAndPlayersTitles.add(p.title);
+                        playersVolModTit.add(p.name + "-" + p.volume + "-" + p.mode + "-" + p.title);
+                    } else {
+                        roomsAndPlayersModes.add("null");
+                        roomsAndPlayersSyncs.add(String.valueOf(false));
+                        roomsAndPlayersTitles.add("null");
+                    }
+                })
+                .collect(Collectors.toList());
+
+        log.debug("ROOMS&PLAYERS NAMES: " + roomsAndPlayersNames);
+        log.debug("ROOMS&PLAYERS MODES: " + roomsAndPlayersModes);
+        log.debug("ROOMS&PLAYERS SYNCS: " + roomsAndPlayersSyncs);
+        log.debug("ROOMS&PLAYERS TITLES: " + roomsAndPlayersTitles);
+        String joinedRoomsAndPlayersNames = String.join(",", roomsAndPlayersNames);
+        String joinedRoomsAndPlayersModes = String.join(",", roomsAndPlayersModes);
+        String joinedRoomsAndPlayersSyncs = String.join(",", roomsAndPlayersSyncs);
+        String joinedRoomsAndPlayersTitles = String.join(",", roomsAndPlayersTitles);
+        String joinedPlayersVolModTit = String.join(",", playersVolModTit);
+
+        String response = joinedRoomsAndPlayersNames + ":"
+                + joinedRoomsAndPlayersModes + ":"
+                + joinedRoomsAndPlayersSyncs + ":"
+                + joinedRoomsAndPlayersTitles + ":"
+                + joinedPlayersVolModTit;
+        log.info("SUPER REFRESH FINISH <<<");
+        return response;
+    }
 
     public String getLastTitle(Player player) {
         String selectLast = null;

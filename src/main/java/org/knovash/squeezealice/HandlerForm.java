@@ -3,15 +3,11 @@ package org.knovash.squeezealice;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
-//import org.knovash.squeezealice.provider.OAuthExample;
-import org.knovash.squeezealice.yandex.Yandex;
-//import org.knovash.squeezealice.spotify.SpotifyAuth;
 import org.knovash.squeezealice.web.PageIndex;
 import org.knovash.squeezealice.web.PagePlayers;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,9 +21,9 @@ public class HandlerForm implements HttpHandler {
     public void handle(HttpExchange httpExchange) throws IOException {
         log.info("HANDLER START >>>>>>>>>>>>>>>");
         ContextForm context = ContextForm.contextCreate(httpExchange);
-        processContext(context );
+        processContext(context);
 
-        if (context.headers.containsKey("location")){
+        if (context.headers.containsKey("location")) {
 
             log.info("ALT");
             String response = context.bodyResponse;
@@ -41,50 +37,48 @@ public class HandlerForm implements HttpHandler {
             log.info("HTTP HANDLER FINISH <<<<<<<<<<<");
         }
 
-
         sendResponse(httpExchange, context);
         log.info("HANDLER FINISH <<<<<<<<<<<<<<<");
     }
 
     private ContextForm processContext(ContextForm context) {
         log.info("HANDLER FORM PROCESS CONTEXT START >>>");
-        log.info("BODY: " + context.body);
-//        Map<String, String> bodyMap = parse(context.body);
         Map<String, String> bodyMap = Parser.run(context.body);
-
-        log.info("PARESER1: " +bodyMap);
-//        log.info("PARESER2: " +bodyMap2);
-
         context.code = 200;
         if (bodyMap.containsKey("action")) {
             String action = bodyMap.get("action");
             switch (action) {
-                case ("delay_expire_save"):
-                    lmsPlayers.delayExpireSave((HashMap<String, String>) bodyMap);
-                    context.bodyResponse = PagePlayers.page();
-                    break;
-                case ("alt_sync_save"):
-                    lmsPlayers.altSyncSave((HashMap<String, String>) bodyMap);
-                    context.bodyResponse = PagePlayers.page();
-                    break;
-                case ("last_this_save"):
-                    lmsPlayers.lastThisSave((HashMap<String, String>) bodyMap);
-                    context.bodyResponse = PagePlayers.page();
-                    break;
-                case ("lms_save"):
-                    lmsPlayers.lmsSave((HashMap<String, String>) bodyMap);
-                    context.code = 302;
-                    context.setRedirect("/lms");
-                    break;
-                case ("statusbar_refresh"):
+//  страница главная
+                case ("statusbar_refresh"): // информация кнопка обновить
                     PageIndex.refresh((HashMap<String, String>) bodyMap);
                     context.code = 302;
                     context.setRedirect("/");
                     break;
-                case ("player_save"):
+//  страница Настройка плееров
+                case ("delay_expire_save"): // время до сброса громкости
+                    lmsPlayers.delayExpireSave((HashMap<String, String>) bodyMap);
+                    context.bodyResponse = PagePlayers.page();
+                    break;
+                case ("auto_remote_save"): // таскер урл для обновления виджета НЕГОТОВО
+                    break;
+                case ("alt_sync_save"): // синхронизация альтернативная
+                    lmsPlayers.altSyncSave((HashMap<String, String>) bodyMap);
+                    context.bodyResponse = PagePlayers.page();
+                    break;
+                case ("last_this_save"): // включать последнее игравшее тут
+                    lmsPlayers.lastThisSave((HashMap<String, String>) bodyMap);
+                    context.bodyResponse = PagePlayers.page();
+                    break;
+                case ("player_save"): // плеер сохранить
                     lmsPlayers.playerSave((HashMap<String, String>) bodyMap);
                     context.code = 302;
                     context.setRedirect("/players");
+                    break;
+//  страница Настройка ЛМС
+                case ("lms_save"): // кнопка Сохранить
+                    lmsPlayers.lmsSave((HashMap<String, String>) bodyMap);
+                    context.code = 302;
+                    context.setRedirect("/lms");
                     break;
                 default:
                     log.info("ACTION ERROR " + action);
@@ -95,27 +89,6 @@ public class HandlerForm implements HttpHandler {
         return context;
     }
 
-//    public static Map<String, String> parse(String query) {
-//        Map<String, String> result = new HashMap<>();
-//        if (query == null || query.isEmpty()) {
-//            return result;
-//        }
-//        String[] pairs = query.split("&");
-//        for (String pair : pairs) {
-//            if (pair.isEmpty()) {
-//                continue;
-//            }
-//            String[] keyValue = pair.split("=", 2);
-////            String key = keyValue[0];
-//            String key = URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8);
-////            String value = keyValue.length > 1 ? keyValue[1] : null;
-//            String value = keyValue.length > 1 ?
-//                    URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8) :
-//                    null;
-//            result.put(key, value);
-//        }
-//        return result;
-//    }
 
     private void sendResponse(HttpExchange exchange, ContextForm context) throws IOException {
         log.info("SEND RESPONSE");

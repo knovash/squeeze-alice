@@ -80,7 +80,7 @@ public class LmsSearchForIp {
 
             String serverHeader = conn.getHeaderField("Server");
             log.info("IP: " + ip + " PORT: " + port + " HEADER: " + serverHeader);
-            if (serverHeader != null && (serverHeader.contains("Logitech Media Server") || serverHeader.contains("Lyrion Music Server"))) {
+            if (serverHeader != null && (serverHeader.contains("Lyrion Music Server") || serverHeader.contains("Lyrion Music Server"))) {
                 foundIp.compareAndSet(null, ip);
             }
         } catch (IOException e) {

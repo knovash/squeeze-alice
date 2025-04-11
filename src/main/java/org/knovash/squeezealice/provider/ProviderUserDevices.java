@@ -13,9 +13,14 @@ public class ProviderUserDevices {
 
     public static Context providerUserDevicesRun(Context context) {
         log.info("USER DEVICES " + SmartHome.devices.size());
+
+
+
+        String xRequestId = context.headers.getFirst("X-request-id");
+        log.info("XREQUESTID: " + xRequestId);
 //        lmsPlayers.updateServerStatus();
 //        log.info("USER DEVICES " + SmartHome.devices);
-        String xRequestId = context.xRequestId;
+//        String xRequestId = context.xRequestId;
         log.info("XREQUESTID: " + xRequestId);
         ResponseYandex responseYandex = new ResponseYandex();
         responseYandex.request_id = xRequestId;

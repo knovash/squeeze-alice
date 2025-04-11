@@ -39,6 +39,7 @@ public class HandlerAll implements HttpHandler {
         String path = context.path;
         log.info("SWITCH CONTEXT PATH: " + path);
         switch (path) {
+//            web pages
             case ("/"):
                 return PageIndex.action(context);
             case ("/players"):
@@ -49,13 +50,16 @@ public class HandlerAll implements HttpHandler {
 //                return PageSpotify.action(context);
             case ("/lms"):
                 return PageLms.action(context);
+//                tasker query commands
             case ("/cmd"):
                 context = SwitchQueryCommand.action(context);
                 break;
+//                alice speaker voice commands
             case ("/alice/"):
                 log.info("CASE ALICE");
                 context = SwitchVoiceCommand.action(context);
                 break;
+//                yandex smart home commands
             case ("/v1.0"):
                 context = ProviderCheck.providerCheckRun(context);
                 break;

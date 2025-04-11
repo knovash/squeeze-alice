@@ -13,7 +13,7 @@ public class Parser {
 
     public static Map<String, String> run(String text) {
         log.info("PARSER START");
-        log.info("QUERY TEXT: "+text);
+//        log.info("QUERY TEXT: "+text);
         if(text == null) return new HashMap<>();
         Map<String, String> result = new HashMap<>();
         splitByAnd(text).stream()
@@ -24,7 +24,7 @@ public class Parser {
                         URLDecoder.decode(p.get(0), StandardCharsets.UTF_8),
                         URLDecoder.decode(p.get(1), StandardCharsets.UTF_8)
                 ));
-        log.info("RESULT QUERY MAP:\n" + result);
+//        log.info("RESULT QUERY MAP:\n" + result);
         return result;
     }
 
