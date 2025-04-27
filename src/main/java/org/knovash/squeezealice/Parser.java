@@ -12,8 +12,7 @@ import java.util.Map;
 public class Parser {
 
     public static Map<String, String> run(String text) {
-        log.info("PARSER START");
-//        log.info("QUERY TEXT: "+text);
+//        log.info("PARSER START");
         if(text == null) return new HashMap<>();
         Map<String, String> result = new HashMap<>();
         splitByAnd(text).stream()

@@ -29,12 +29,9 @@ public class Hive {
     private static final String hiveUsername = config.hiveUsername;
     private static final String hivePassword = config.hivePassword;
     private static final ResponseManager responseManager = new ResponseManager();
-
     public static String topicRecieveDevice = "to_lms_id";// подписаться
     public static String topicPublish = "from_lms_id";// отправить сюда
-
     public static long spotifyExpiresAt;
-
 
     public static void start() {
         log.info("MQTT STARTING...");
@@ -103,7 +100,7 @@ public class Hive {
             Hive.subscribe(Hive.topicRecieveDevice + newUid);
             config.yandexUid = newUid;
             config.yandexName = yandexName;
-            config.writeConfig();
+            config.write();
 
             log.info("TOKEN: " + token);
             responseManager.completeResponse(correlationId, "OK");
@@ -129,7 +126,7 @@ public class Hive {
             config.spotifyTokenExpiresAt = spotifyExpiresAt;
 //            получить имя пользователя Spotify
             config.spotifyName = SpotifyUserParser.parseUserInfo(Spotify.me()).getDisplayName();
-            config.writeConfig();
+            config.write();
             PlayerState ps = Spotify.playerState;
             log.info(ps);
             responseManager.completeResponse(correlationId, "OK");
@@ -161,8 +158,6 @@ public class Hive {
             responseManager.completeResponse(correlationId, "OK");
             return;
         }
-        log.info("AFTER CASE ------------");
-
 
 // полученный контекст
         contextJson = params.getOrDefault("context", "");
@@ -193,29 +188,29 @@ public class Hive {
         }
     }
 
-    private static Map<String, String> parseParams(String message) {
-        Map<String, String> result = new HashMap<>();
-        if (message == null || message.isEmpty()) return result;
-// Ищем параметры по ключам с учетом их позиции
-        int ctxStart = message.indexOf("context=");
-        if (ctxStart == -1) return result;
-// Выделяем correlationId и requestId до начала context
-        String prefix = message.substring(0, ctxStart);
-        String[] parts = prefix.split("&");
-        for (String part : parts) {
-            String[] kv = part.split("=", 2);
-            if (kv.length != 2) continue;
-            String key = URLDecoder.decode(kv[0], StandardCharsets.UTF_8);
-            String value = URLDecoder.decode(kv[1], StandardCharsets.UTF_8);
-            if (key.equals("correlationId") || key.equals("requestId")) {
-                result.put(key, value);
-            }
-        }
-// Извлекаем context как всю оставшуюся часть строки
-        String contextValue = message.substring(ctxStart + "context=".length());
-        result.put("context", URLDecoder.decode(contextValue, StandardCharsets.UTF_8));
-        return result;
-    }
+//    private static Map<String, String> parseParams(String message) {
+//        Map<String, String> result = new HashMap<>();
+//        if (message == null || message.isEmpty()) return result;
+//// Ищем параметры по ключам с учетом их позиции
+//        int ctxStart = message.indexOf("context=");
+//        if (ctxStart == -1) return result;
+//// Выделяем correlationId и requestId до начала context
+//        String prefix = message.substring(0, ctxStart);
+//        String[] parts = prefix.split("&");
+//        for (String part : parts) {
+//            String[] kv = part.split("=", 2);
+//            if (kv.length != 2) continue;
+//            String key = URLDecoder.decode(kv[0], StandardCharsets.UTF_8);
+//            String value = URLDecoder.decode(kv[1], StandardCharsets.UTF_8);
+//            if (key.equals("correlationId") || key.equals("requestId")) {
+//                result.put(key, value);
+//            }
+//        }
+//// Извлекаем context как всю оставшуюся часть строки
+//        String contextValue = message.substring(ctxStart + "context=".length());
+//        result.put("context", URLDecoder.decode(contextValue, StandardCharsets.UTF_8));
+//        return result;
+//    }
 
 
     //  это для паблиша
@@ -286,7 +281,6 @@ public class Hive {
             }
         }
     }
-
 
     public static void unsubscribe(String topic) {
         log.info("HIVE UNSUBSCRIBE TOPIC: " + topic);

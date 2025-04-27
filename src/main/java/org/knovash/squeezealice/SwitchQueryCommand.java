@@ -1,24 +1,19 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.yandex.Yandex;
-import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
-import org.knovash.squeezealice.web.PagePlayers;
-import org.knovash.squeezealice.web.PageYandex;
+import org.knovash.squeezealice.voice.VoiceActions;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
-import static org.knovash.squeezealice.Main.rooms;
-//import static org.knovash.squeezealice.yandex.Yandex.runScenario;
 
 @Log4j2
 public class SwitchQueryCommand {
+
+    private static Player player;
 
     public static Context action(Context context) {
         HashMap<String, String> queryParams = context.queryMap;
@@ -31,180 +26,159 @@ public class SwitchQueryCommand {
         String playerInQuery = queryParams.get("player");
         String roomInQuery = queryParams.get("room");
         log.info("PLAYER: " + playerInQuery + " ROOM: " + roomInQuery);
-        Player player = null;
+        player = null;
         if (playerInQuery != null) {
             if (playerInQuery.equals("btremote")) {
-//                runScenario("уведомление клик");
                 log.info("BT PLAYER: " + lmsPlayers.btPlayerName);
                 playerInQuery = lmsPlayers.btPlayerName;
             }
-            player = lmsPlayers.getPlayerByNearestName(playerInQuery);
-            if (player == null) player = lmsPlayers.getPlayerByNearestRoom(playerInQuery);
+// проверка что пришло, имя плеера или комнаты, если пришла комната - взять плеер по комнате
+// найти плеер по похожему имени
+            player = lmsPlayers.playerByNearestName(playerInQuery);
+// если плеер не найден попробовать взять плеер по похожему названию комнаты
+            if (player == null) player = lmsPlayers.playerByNearestRoom(playerInQuery);
         }
 
         String value = queryParams.get("value");
         String playerName;
         String roomName;
-        log.info("START SWITCH CASE action: " + action);
-
-
         String response = "null";
-        if (player != null)
-            log.info("SWITCH PLAYER NOT NULL");
-            switch (action) {
-                case ("channel"):
-                    response = player.playChannelRelativeOrAbsolute(value, false);
-                    break;
-                case ("play"):
-                    Player finalPlayer = player;
-                    CompletableFuture.runAsync(() -> finalPlayer.turnOnMusic().syncAllOtherPlayingToThis());
-                    response = "PLAY";
-                    break;
-                case ("toggle_music"):
-                case ("play_pause"):
-                    response = Actions.queryToggleMusic(player);
-                    break;
-                case ("toggle_music_all"):
-                case ("play_pause_all"):
-                    response = Actions.queryToggleMusicAll(player);
-                    break;
-                case ("next"):
-                    response = Actions.queryNext(player);
-                    break;
-                case ("prev"):
-                    response = Actions.queryPrev(player);
-                    break;
-                case ("next_track"):
-                    player.nextTrack().status(50);
-                    response = player.name + " - Next track - " + player.title;
-                    break;
-                case ("prev_track"):
-                    player.prevTrack().status(50);
-                    response = player.name + " - Next track - " + player.title;
-                    break;
-                case ("next_channel"):
-                    player.nextChannel();
-                    response = "NEXT";
-                    break;
-                case ("prev_channel"):
-                    player.prevChannel();
-                    response = "PREV";
-                    break;
-                case ("volume_dn"):
-                    response = player.volumeRelativeOrAbsolute("-3", true);
-                    break;
-                case ("volume_up"):
-                    response = player.volumeRelativeOrAbsolute("3", true);
-                    break;
-                case ("separate_on"):
-                    player.separateOn();
-                    response = "SEPARATE ON";
-                    break;
-                case ("separate_off"):
-                    player.separateOff();
-                    response = "SEPARATE OFF";
-                    break;
-                case ("transfer"):
-                case ("switch_here"):
-                    player.switchToHere();
-                    response = "SWITCH HERE";
-                    break;
-                case ("shuffle_on"):
-                    player.shuffleOn();
-                    response = "SHUFFLE ON";
-                    break;
-                case ("shuffle_off"):
-                    player.shuffleOff();
-                    response = "SHUFFLE OFF";
-                    break;
-                case ("favorites_add"):
-                    log.info("CASE FAVORITES ADD");
-                    player.favoritesAdd();
-                    response = "FAVORITES ADD";
-                    break;
-                case ("get_last"):
-                    response = lmsPlayers.getLastTitle(player);
-                    break;
-                case ("get_players"):
-                    List<String> sss = rooms.stream()
-                            .map(r -> r + ":" + lmsPlayers.getPlayerByCorrectRoom(r))
-                            .collect(Collectors.toList());
-                    log.info(sss);
-                    String lll = sss.toString();
-                    player.prevTrack().status(50);
-                    response = lll;
-                    break;
-                case ("stop_all"):
-                case ("pause_all"):
-                    response = Actions.queryStopMusicAll();
-                    break;
-                case ("get_player"):
-                    response = lmsPlayers.getPlayerByNearestRoom(value).name;
-                    break;
-                case ("get_room_player"):
-                    response = lmsPlayers.getPlayerNameByWidgetName(value);
-                    break;
-                case ("get_super_refresh"):
-                    log.info("TRY SUPER RESRESH -----------");
-//                    response = lmsPlayers.getSuperRefresh();
-                    break;
-                case ("select"):
-                    log.info("SSSS  " + roomInQuery + " " + playerInQuery);
-                    roomName = Utils.getCorrectRoomName(roomInQuery);
-                    playerName = Utils.getCorrectPlayerName(playerInQuery);
-                    log.info("DDDD " + roomName + " " + playerName);
-                    if (roomName != null && playerName != null) {
-                        SwitchVoiceCommand.selectPlayerInRoom(playerName, roomName, true);
-                        response = "SELECT OK";
-                    } else
-                        response = "SELECT ERROR";
-                    break;
 
-//                -------------------
-                default:
-                    log.info("ACTION NOT FOUND: " + action);
-                    response = "ACTION NOT FOUND: " + action;
-                    break;
-            }
+// if (player == null) return null;
+
+        switch (action) {
+
+// такиеже методы в Провайдере
+// player.volumeRelativeOrAbsolute(value, relative)
+// player.playChannelRelativeOrAbsolute(value, relative)
+// player.turnOnMusic()
+// player.turnOffMusic()
+
+// управление с пульта или виджетов таскер
+// респонс для отображения действия на телевизоре или планшете
+            case ("volume_dn"):
+                response = player.volumeRelativeOrAbsolute("-3", true);
+// player.saveLastTimePathAutoremoteRequest();
+                break;
+            case ("volume_up"):
+                response = player.volumeRelativeOrAbsolute("3", true);
+// player.saveLastTimePathAutoremoteRequest();
+                break;
+            case ("channel"):
+// response = player.playChannelRelativeOrAbsolute(value, false);
+                CompletableFuture.runAsync(() -> player.playChannelRelativeOrAbsolute(value, false))
+                        .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                response = player.name + " - play channel " + value;
+// player.saveLastTimePathAutoremoteRequest();
+                break;
+            case ("play"):
+// player.turnOnMusic().saveLastTimePathAutoremoteRequest()
+// .saveLastTimePathAutoremoteRequest();
+                CompletableFuture.runAsync(() -> player.turnOnMusic())
+                        .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                response = player.name + " - play";
+                break;
+            case ("toggle_music"):
+                CompletableFuture.runAsync(() -> player.toggleMusic())
+                        .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                response = player.name + " - play/pause";
+                break;
+            case ("stop_all"):
+                lmsPlayers.turnOffMusicAll();
+                response = "All players - Stop";
+                break;
+            case ("next"):
+                CompletableFuture.runAsync(() -> player.ctrlNextChannelOrTrack())
+                        .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                response = player.name + " - Next";
+                break;
+            case ("prev"):
+                CompletableFuture.runAsync(() -> player.ctrlPrevChannelOrTrack())
+                        .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                response = player.name + " - Prev";
+                break;
+            case ("next_track"):
+                CompletableFuture.runAsync(() -> player.ctrlNextTrack())
+                        .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                response = player.name + " - Next track";
+                break;
+            case ("prev_track"):
+                CompletableFuture.runAsync(() -> player.ctrlPrevTrack())
+                        .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                response = player.name + " - Next track";
+                break;
+            case ("next_channel"):
+                CompletableFuture.runAsync(() -> player.ctrlNextChannel())
+                        .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                response = player.name + " - Next channel - " + player.title;
+                break;
+            case ("prev_channel"):
+                CompletableFuture.runAsync(() -> player.ctrlPrevChannel())
+                        .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                response = player.name + " - Prev channel - " + player.title;
+                break;
+            case ("separate_on"):
+                VoiceActions.separateOn(player);
+                response = "Separate On";
+                break;
+            case ("separate_off"):
+                VoiceActions.separateOff(player);
+                response = "Separate Off";
+                break;
+            case ("switch_here"):
+                VoiceActions.syncSwitchToHere(player);
+                response = "Switch music to " + player.name;
+                break;
+
+            case ("select"):
+                roomName = Utils.getCorrectRoomName(roomInQuery);
+                playerName = Utils.getCorrectPlayerName(playerInQuery);
+                if (SwitchVoiceCommand.selectPlayerInRoom(playerName, roomName, true) != null) response = "SELECT OK";
+                else response = "SELECT ERROR";
+                break;
+            case ("shuffle_on"):
+                player.shuffleOn();
+                response = "SHUFFLE ON";
+                break;
+            case ("shuffle_off"):
+                player.shuffleOff();
+                response = "SHUFFLE OFF";
+                break;
+            case ("favorites_add"):
+                log.info("CASE FAVORITES ADD");
+                player.favoritesAdd();
+                response = "FAVORITES ADD";
+                break;
+
+            case ("get_room_player"):
+// Таскер по названию виджета вернуть комнату и плеер
+                response = lmsPlayers.playerNameByWidgetName(value);
+                break;
+            case ("get_widgets"):
+// Таскер для виджетов иконок плееров
+                response = lmsPlayers.forTaskerWidgetsIcons();
+                break;
+            case ("get_widgets_json"):
+// Таскер для виджетов иконок плееров
+                response = lmsPlayers.forTaskerPlayersIconsJson(player, value);
+                break;
+            case ("get_playlist"):
+// Таскер для виджета отображения плейлиста
+                response = player.forTaskerPlaylist(value);
+                break;
+            case ("get_players"):
+// Таскер для виджета отображения списка плееров и их состояния name-volume-mode-title
+                response = lmsPlayers.forTaskerPlayersList();
+                break;
+            default:
+                log.info("ACTION NOT FOUND: " + action);
+                response = "ACTION NOT FOUND: " + action;
+                break;
+        }
         if (response != "null") {
             context.bodyResponse = response;
             return context;
         }
-
-//        log.info("SWITCH PLAYER NULL");
-//        switch (action) {
-
-//            WEB
-//            case ("state_devices"):
-//                response = JsonUtils.pojoToJson(SmartHome.devices);
-//                break;
-//            case ("state_players"):
-//                response = JsonUtils.pojoToJson(lmsPlayers);
-//                break;
-
-//            case ("player_save"):
-//                lmsPlayers.playerSave(queryParams);
-//                response = PagePlayers.page();
-//                break;
-//
-//            case ("autoremote_save"):
-//                lmsPlayers.autoremoteSave(queryParams);
-//                response = PagePlayers.page();
-//                break;
-//
-//            case ("player_remove"):
-//                lmsPlayers.playerRemove(queryParams);
-//                response = PagePlayers.page();
-//                break;
-
-//            case ("widget"):
-//                response = Utils.widget();
-//                break;
-//            default:
-//                log.info("ACTION NOT FOUND: " + action);
-//                response = "ACTION NOT FOUND: " + action;
-//                break;
-//        }
         context.bodyResponse = response;
         return context;
     }

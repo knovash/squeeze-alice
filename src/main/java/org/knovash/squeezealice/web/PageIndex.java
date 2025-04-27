@@ -5,8 +5,8 @@ import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.SpotifyUserParser;
-import org.knovash.squeezealice.yandex.Yandex;
 import org.knovash.squeezealice.utils.Utils;
+import org.knovash.squeezealice.yandex.Yandex;
 import org.knovash.squeezealice.yandex.YandexJwtUtils;
 
 import java.io.UnsupportedEncodingException;
@@ -17,15 +17,18 @@ import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
 import static org.knovash.squeezealice.yandex.Yandex.yandexMusicDevCounter;
-import static org.knovash.squeezealice.yandex.Yandex.yandexMusicDevListRooms;
 
 @Log4j2
 public class PageIndex {
 
     public static String msgLmsIp;
     public static String msgLmsPlayers;
-    public static String msgSqa = "SQA добавьте плееры http://localhost:8010/players";
-    public static String msgUdy = "УДЯ подключите акаунт http://localhost:8010/yandex";
+    public static String msgMusicDevices;
+    public static String msgAliseSpeakers;
+    public static String msgDevices;
+    public static String msgRoomsYandex;
+    public static String msgYandexUser;
+    public static String msgSpotifyUser;
 
 
     public static Context action(Context context) {
@@ -43,48 +46,16 @@ public class PageIndex {
 
     public static String page() {
 
-        Spotify.me();
+
         Yandex.getRoomsAndDevices();
-
-        if (lmsServerOnline) {
-            msgLmsIp = "LMS найден " + "<a href=\"http://" + config.lmsIp + ":"
-                    + config.lmsPort + "\">" + config.lmsIp + ":" + config.lmsPort + "</a>";
-
-            msgLmsPlayers = "LMS плееры " + lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList());
-        } else {
-            msgLmsIp = "LMS сервер не найден";
-            msgLmsPlayers = "LMS плееры не найдены";
-        }
-
-        String newDevices = "";
-        if (yandexMusicDevCounter < SmartHome.devices.size())
-            newDevices = " Есть <b>новые</b> устройства Музыка. Обновите список устройств в приложении УДЯ";
-
-        if (SmartHome.devices.size() == 0)
-            msgSqa = "нет устройств Музыка для подключения в УДЯ";
-        else
-            msgSqa = "Музыка " + SmartHome.devices.size() + " устройств " + SmartHome.devices.stream().map(d ->
-                            lmsPlayers.getPlayerNameByDeviceId(d.id) + " в " + d.room)
-                    .collect(Collectors.toList());
-        if (yandexMusicDevCounter == 0) {
-            if (SmartHome.devices.size() == 0)
-                PageIndex.msgUdy = "УДЯ нет плееров " + "<a href=\\players>настроить</a>";
-            else PageIndex.msgUdy = "Есть <b>новые</b> устройства Музыка. Обновите список устройств в приложении УДЯ";
-            log.info(PageIndex.msgUdy);
-        } else
-
-            PageIndex.msgUdy = "УДЯ подключено " + yandexMusicDevCounter + " устройств Музыка в комнатах "
-                    + yandexMusicDevListRooms + newDevices;
-
-
         Utils.readAliceIdInRooms();
+
         String pageInner = statusBar() +
                 "<p><a href=\\html\\manual " +
                 "target=\"_blank\" rel=\"noopener noreferrer\"" +
                 ">Инструкция</a></p>" +
                 "<p><a href=\\lms>Настройка LMS</a></p>" +
                 "<p><a href=\\players>Настройка плееров</a></p>" +
-//                "<p><a href=\\yandex>Настройка Yandex</a></p>" +
 
                 "<p><a href=\\auth " +
                 "target=\"_blank\" rel=\"noopener noreferrer\"" +
@@ -93,7 +64,6 @@ public class PageIndex {
                 "<p><a href=\\auth_spotify " +
                 "target=\"_blank\" rel=\"noopener noreferrer\"" +
                 ">Авторизация в Spotify</a></p>" +
-
 
                 "Функции:<br>" +
                 "<b>Включение устройства \"музыка\"</b> в приложении \"Умный дом с Алисой\" или голосом \"Алиса, включи музыку\"<br>" +
@@ -109,26 +79,10 @@ public class PageIndex {
                 " \"Алиса, музыка громкость 12<br>" +
                 "<b>Переключение каналов</b> соответствует переключению закладок в избранном LMS<br>" +
                 " \"Алиса, включи канал 5\"<br>" +
-                " \"Алиса, переключи канал\""+
-
-
-
-//                "<p><a href=\\spotify>Настройка Spotify</a></p>" +
-//                "<p><b>" + "Комманды:</b></p>" +
-//                "<p>" +
-//                "Алиса, включи музыку<br>" +
-//                "Алиса, выключи музыку<br>" +
-//                "Алиса, музыку громче<br>" +
-//                "Алиса, музыку громче на 5<br>" +
-//                "Алиса, канал 4<br>" +
-//                "Алиса, переключи канал<br>" +
-//                "<br>" +
-
-
+                " \"Алиса, переключи канал\"" +
 //                "Алиса, скажи <навык>, привет(подключи,настрой)<br>" +
 //                "Алиса, скажи <навык>, что играет - сейчас на Homepod1 играет Deep Organic House громкость 12<br>" +
 //                "Алиса, скажи <навык>, выбери колонку Радиотехника - выберет для этой комнаты колонку из LMS плееров [HomePod2, Radiotechnika, HomePod, Mi Box, Homepod1]<br>" +
-//                "<br>" +
 //                "Алиса, скажи <навык>, включи Depeche Mode - включаю Depeche Mode - найдет в Spotify<br>" +
 //                "Алиса, скажи <навык>, дальше<br>" +
 //                "Алиса, скажи <навык>, добавь в избранное<br>" +
@@ -139,15 +93,13 @@ public class PageIndex {
 //                "Алиса, скажи <навык>, где пульт<br>" +
 //                "Алиса, скажи <навык>, включи пульт <br>";
                 "";
-
         String page = pageOuter(pageInner, "Squeeze-Alice", "Squeeze-Alice");
-
         return page;
     }
 
     public static String statusBar() {
         log.info("PAGE STATUSBAR START");
-
+//        LMS
         if (lmsServerOnline) {
             PageIndex.msgLmsIp = "LMS " + config.lmsIp;
             PageIndex.msgLmsPlayers = "LMS плееры " + lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList());
@@ -156,6 +108,8 @@ public class PageIndex {
             PageIndex.msgLmsPlayers = "LMS плееры не найдены";
         }
 
+
+        // колонки Алиса
         List<String> aliceInRoomsList = idRooms.entrySet().stream().map(rooms -> {
             try {
                 return URLDecoder.decode(rooms.getValue(), "UTF-8");
@@ -163,34 +117,76 @@ public class PageIndex {
                 throw new RuntimeException(e);
             }
         }).collect(Collectors.toList());
-        String aliceInRooms = "в навык подключены колонки Алиса в комнатах " + aliceInRoomsList;
+        msgAliseSpeakers = "Колонки Алиса в комнатах " + aliceInRoomsList;
         if (aliceInRoomsList.size() == 0) {
-
-            aliceInRooms = "в навык не подключены колонки Алиса, скажите навыку Привет или Настрой";
+            msgAliseSpeakers = "Колонки Алиса не найдены, скажите навыку Привет или Настрой";
         }
 
+// комнаты
+        msgRoomsYandex = "Комнаты Умного дома " + rooms;
+        if (rooms.size() == 0)
+            msgRoomsYandex = "Комнаты Умного дома не найдены ";
+
+//        Устройства Музыка
+        if (SmartHome.devices.size() == 0 && rooms.size() == 0)
+            msgMusicDevices = "Устройства Музыка не найдены ";
+
+        List<String> listMusic = SmartHome.devices.stream()
+                .filter(d -> lmsPlayers.playerNameByDeviceId(d.id) != null)
+                .map(d -> lmsPlayers.playerNameByDeviceId(d.id) + " в " + d.room)
+                .collect(Collectors.toList());
+
+        if (listMusic.size() == 0 && rooms.size() > 0)
+            msgMusicDevices = "Устройства Музыка не найдены " + "<a href=\\players>выбрать комнаты</a>";
+
+        if (listMusic.size() > 0)
+            msgMusicDevices = "Устройства Музыка " + listMusic;
+
+
+
+//        Плееры в умном доме
+
+
+//        String newDevices = "";
+//        if (yandexMusicDevCounter < SmartHome.devices.size())
+//            newDevices = " Есть <b>новые</b> устройства Музыка. Обновите список устройств в приложении УДЯ";
+
+        msgDevices = "Умный дом подключено: " + yandexMusicDevCounter;
+        if (SmartHome.devices.size() > yandexMusicDevCounter)
+            PageIndex.msgDevices = "Умный дом подключено " + yandexMusicDevCounter + " Есть <b>новые</b> устройства Музыка! Обновите список устройств в приложении Умный дом с Алисой";
+
+
+// Yandex user name
         if (config.yandexName == null && (config.yandexToken != null && !config.yandexToken.equals("")))
             config.yandexName = YandexJwtUtils.getValueByTokenAndKey(config.yandexToken, "display_name");
+        msgYandexUser = "Пользователь Yandex: " + config.yandexName;
+        if (config.yandexName == null)
+            msgYandexUser = "Пользователь Yandex: " +
+                    "<a href=\\auth " + "target=\"_blank\" rel=\"noopener noreferrer\"" + ">Авторизация в Яндекс</a>";
 
-        String roomsMsg = "УДЯ комнаты " + rooms;
-        if (rooms.size() == 0) roomsMsg = "УДЯ нет комнат";
-
-
+//        Spotify user name
         SpotifyUserParser.parseUserInfo(Spotify.me());
-        if (SpotifyUserParser.spotifyUser != null)
-            config.spotifyName = SpotifyUserParser.spotifyUser.getDisplayName();
+        if (SpotifyUserParser.spotifyUser != null) config.spotifyName = SpotifyUserParser.spotifyUser.getDisplayName();
+        msgSpotifyUser = "Пользователь Spotify: " + config.spotifyName;
+        if (config.spotifyName == null)
+            msgSpotifyUser = "Пользователь Spotify: " +
+                    "<a href=\\auth_spotify " + "target=\"_blank\" rel=\"noopener noreferrer\"" + ">Авторизация в Spotify</a>";
 
         String bar = "<fieldset>" +
                 "<legend><b>" + "Информация" + "</b></legend>" +
 
-                PageIndex.msgLmsIp + "<br>" +
-                PageIndex.msgLmsPlayers + "<br>" +
-                PageIndex.msgSqa + "<br>" + aliceInRooms + "<br>" +
+                msgLmsIp + "<br>" + // LMS 192.168.1.110
+                msgLmsPlayers + "<br>" + // LMS плееры [HomePod, Radiotechnika, Homepod1, JBL white, Mi Box, HomePod2]
+                msgYandexUser + "<br>" +
+                msgRoomsYandex + "<br>" + //Комнаты Умного дома не найдены войти в Яндекс аккаунт
 
-                roomsMsg + "<br>" +
-                PageIndex.msgUdy + "<br>" +
-                "Пользователь Yandex: " + config.yandexName + "<br>" +
-                "Пользователь Spotify: " + config.spotifyName +
+                msgMusicDevices + "<br>" + //Устройства Музыка не найдены
+//                msgAliseSpeakers + "<br>" + //Колонки Алиса не найдены, скажите навыку Привет или Настрой
+
+                msgDevices + "<br>" + //Плееры в Умном доме не найдены
+
+                msgSpotifyUser + "<br>" +
+//                "Пользователь Spotify: " + config.spotifyName +
 
                 "<form method='POST' action='/form'>" +
                 "<input name='action' type='hidden'  value='statusbar_refresh'>" +

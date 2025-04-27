@@ -25,13 +25,10 @@ public class Server {
         server.createContext("/", new HandlerAll());
         server.createContext("/form", new HandlerForm());
         server.createContext("/html", new HandlerHtml());
-
-
-//     запрос на выполнение авторизации в Яндекс,
+//     запрос на выполнение авторизации в Яндекс сервером в облаке,
 //     токен вернется на колбэк в облаке и вернется сюда через mqtt
         server.createContext("/auth", new LocalAuthServerYandex.AuthHandler());
-
-//     запрос на выполнение авторизации в Spotify,
+//     запрос на выполнение авторизации в Spotify сервером в облаке,
 //     токен вернется на колбэк в облаке и вернется сюда через mqtt
         server.createContext("/auth_spotify", new LocalAuthServerSpotify.AuthHandler());
 

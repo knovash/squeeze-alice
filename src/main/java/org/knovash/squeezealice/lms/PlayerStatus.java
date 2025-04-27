@@ -72,6 +72,8 @@ public class PlayerStatus {
         public int playlist_tracks;
         public double time;
         public int remote;
+        public String sync_slaves;
+        public String sync_master;
 
         @Override
         public String toString() {

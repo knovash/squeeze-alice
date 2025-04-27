@@ -5,17 +5,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.LmsPlayers;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InaccessibleObjectException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -29,14 +26,15 @@ public class JsonUtils {
     private static ObjectWriter objectWriter = objectMapper.writer(new DefaultPrettyPrinter());
 
     public static String pojoToJson(Object pojo) {
+//        log.info("POJO TO JSON");
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         try {
             return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pojo).replace("\\", "").replace("\"true\"", "true").replace("\"false\"", "false");// для State переделанного в String
         } catch (JsonProcessingException e) {
+            log.info("ERROR " +e);
             throw new RuntimeException(e);
         }
-
     }
 
     public static <T> T jsonToPojo(String json, Class<T> clazz) {

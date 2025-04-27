@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.utils.HandlerUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -24,10 +23,8 @@ public class ContextForm {
     public int code;
     public String path;
     public Headers headers;
-
     public Headers requestHeaders = new Headers();
     public Headers responseHeaders = new Headers();
-
     public String body;
     public String xRequestId;
     public String query;
@@ -38,9 +35,9 @@ public class ContextForm {
         String method = httpExchange.getRequestMethod();
 //      PATH
         String path = httpExchange.getRequestURI().getPath();
-        if(path.equals("/favicon.ico")){
+        if (path.equals("/favicon.ico")) {
             log.info("/favicon.ico");
-           return null;
+            return null;
         }
 //      HEADERS
         Headers headers = httpExchange.getRequestHeaders();
@@ -64,9 +61,9 @@ public class ContextForm {
 //        HashMap<String, String> queryMap = HandlerUtils.convertQueryToMap(query);
 //        log.info("QUERY: " + query);
 //        log.info("QUERY MAP: " + queryMap);
-        log.info("*********** TEST NEW QUERY PARSER **************");
+//        log.info("*********** TEST NEW QUERY PARSER **************");
         HashMap<String, String> queryMap = (HashMap<String, String>) Parser.run(query);
-        log.info("*********** TEST NEW QUERY PARSER **************");
+//        log.info("*********** TEST NEW QUERY PARSER **************");
 
 
         ContextForm context = new ContextForm();

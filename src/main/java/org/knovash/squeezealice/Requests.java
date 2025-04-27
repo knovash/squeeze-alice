@@ -5,13 +5,13 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
-import org.eclipse.paho.client.mqttv3.MqttException;
 import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
 
-import static org.knovash.squeezealice.Main.*;
+import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 public class Requests {
@@ -93,8 +93,13 @@ public class Requests {
     }
 
     public static void autoRemoteRefresh() {
+// запрос обновления виджетов таскера выполняется при
+// действии пульта или таскера SwitchQueryCommand
+// действии приложения Умного дома ProviderAction
+// SwitchVoiceCommand тут есть действия pleer и надо добавить после них autoRemoteRefresh
         log.info("TASKER AUTO REMOTE REFRESH");
-        String uri = "https://autoremotejoaomgcd.appspot.com/sendmessage?key=fovfKw-pC3A:APA91bFz1IHu4FIo9BpJaxwW0HgOulJtoXHF-khXptkSmn6QjhBIywkgi0-w9f4DvMK5y-hoOOTWsXDrv7ASE4S4BADhV8SQz6Y0XOJ5XWbF0pmprdOdmA7aEZ5hfQAWZ2Cd9RW_rShf&message=re";
+        String uri = lmsPlayers.autoRemoteRefresh;
+        if (uri == null) return;
         try {
             Request.Post(uri)
                     .execute();
@@ -103,3 +108,26 @@ public class Requests {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

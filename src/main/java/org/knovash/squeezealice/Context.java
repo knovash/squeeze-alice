@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.utils.HandlerUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -34,9 +33,9 @@ public class Context {
         String method = httpExchange.getRequestMethod();
 //      PATH
         String path = httpExchange.getRequestURI().getPath();
-        if(path.equals("/favicon.ico")){
+        if (path.equals("/favicon.ico")) {
             log.info("/favicon.ico");
-           return null;
+            return null;
         }
 //      HEADERS
         Headers headers = httpExchange.getRequestHeaders();
@@ -57,10 +56,10 @@ public class Context {
         log.info("BODY: " + body);
 //      QUERY
         String query = httpExchange.getRequestURI().getQuery();
-        log.info("*********** TEST NEW QUERY PARSER **************");
+//        log.info("*********** TEST NEW QUERY PARSER **************");
 //        HashMap<String, String> queryMap = HandlerUtils.convertQueryToMap(query);
         HashMap<String, String> queryMap = (HashMap<String, String>) Parser.run(query);
-        log.info("*********** TEST NEW QUERY PARSER **************");
+//        log.info("*********** TEST NEW QUERY PARSER **************");
 
         log.info("QUERY: " + query);
 //        log.info("QUERY MAP: " + queryMap);
@@ -126,11 +125,4 @@ public class Context {
             return null;
         }
     }
-
-
-//    public void setRedirect(String location) {
-//        this.code = 302;
-//        this.responseHeaders.set("Location", location);
-//        this.bodyResponse = ""; // Важно очистить тело ответа
-//    }
 }
