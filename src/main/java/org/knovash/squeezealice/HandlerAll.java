@@ -17,6 +17,9 @@ public class HandlerAll implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
+        log.info("");
+        log.info("---------------------------------------------------------------------------------------------");
+        log.info("");
         log.info("HTTP HANDLER START >>>>>>>>>>>>");
 //        извлечение данных из запроса в контекст
         Context context = Context.contextCreate(httpExchange);

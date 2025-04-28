@@ -311,7 +311,7 @@ public class LmsPlayers {
             return null;
         }
         Player player = lmsPlayers.players.stream()
-                .peek(p -> log.info("PLAYER ID: " + p.deviceId + " ROOM: " + p.room))
+//                .peek(p -> log.info("PLAYER ID: " + p.deviceId + " ROOM: " + p.room))
                 .filter(p -> p.room != null)
                 .filter(p -> p.deviceId != null)
                 .filter(p -> p.deviceId.equals(id))
@@ -368,8 +368,8 @@ public class LmsPlayers {
     }
 
     //  если пришла команда Алисы включи музыку везде
-    public void turnOnMusicAll(List<Device> devicesForTurnOn) {
-        log.info("START TURN ON ALL");
+    public void turnOnMusicMultiply(List<Device> devicesForTurnOn) {
+        log.info("START TURN ON MULTIPLY");
 // если плееров ЛМС нет то выход
         if (lmsPlayers.players == null || lmsPlayers.players.size() == 0) {
             log.info("NO PLAYERS");
@@ -383,11 +383,6 @@ public class LmsPlayers {
         else
             playersForTurnOn = SmartHome.devices.stream().map(d -> lmsPlayers.playerByDeviceId(d.id)).collect(Collectors.toList());
 
-// если в запросе провайдера указан канал то неискать играющий - включить канал из провайдера
-
-        if (ProviderAction.channelValueByProvider != null) {
-            log.info("CHNNEL BY PROVIDER: " + ProviderAction.channelValueByProvider);
-        }
 
 //        найти играющий плеер до выполнения пробуждения всех
         Player playingPlayer = lmsPlayers.playingPlayer("", true);

@@ -71,6 +71,9 @@ public class Hive {
     }
 
     private static void handleDeviceAndPublish(String topicRecieved, MqttMessage message) {
+        log.info("");
+        log.info("---------------------------------------------------------------------------------------------");
+        log.info("");
         log.info("RECIEVED MESSAGE FROM TOPIC: " + topicRecieved);
 //        log.info("MESSAGE : " + message);
         String payload = new String(message.getPayload());

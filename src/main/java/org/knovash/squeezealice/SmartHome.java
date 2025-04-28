@@ -40,8 +40,8 @@ public class SmartHome {
     }
 
     public static void create(String room, Integer index) {
-        log.info("START CREATE ROOM: " + room + " INDEX: " + index);
-        log.info("EXISTS: " + SmartHome.devices.stream().map(d -> d.id + ":" + d.room).collect(Collectors.toList()));
+//        log.info("START CREATE ROOM: " + room + " INDEX: " + index);
+//        log.info("EXISTS: " + SmartHome.devices.stream().map(d -> d.id + ":" + d.room).collect(Collectors.toList()));
 //        SmartHome.devices.stream().forEach(d -> log.info("EXISTS LOCAL DEVICE ID: " + d.id + " ROOM: " + d.room));
 //        если локальных девайсов еще нет - создать пустой лист
         if (SmartHome.devices == null) SmartHome.devices = new ArrayList<>();
@@ -57,15 +57,18 @@ public class SmartHome {
 
 // проверить если девайс с такой комнатой уже существует - выход
         Integer counter = (int) SmartHome.devices.stream().filter(device1 -> device1.room.equals(room)).count();
-        log.info("DEVICE EXISTS COUNTER: " + counter);
-        if (counter > 0) return;
+//        log.info("DEVICE EXISTS COUNTER: " + counter);
+        if (counter > 0) {
+            log.info("DEVICE EXISTS. CREATE SKIP");
+            return;
+        }
 
 //        создать новый девайс
         Device device = new Device();
         device.type = "devices.types.media_device.receiver";
         device.room = room;
 
-        log.info("NEW DEVICE: " + device);
+//        log.info("NEW DEVICE: " + device);
 
 
 //        создать для нового девайса капабилити
@@ -86,7 +89,7 @@ public class SmartHome {
         volume.state.action_result.error_code = null;
         volume.state.action_result.error_message = null;
         device.capabilities.add(volume);
-        log.info("DEVICE ADD CAPABILITI VOLUME: " + device.capabilities.get(device.capabilities.indexOf(volume)));
+//        log.info("DEVICE ADD CAPABILITI VOLUME: " + device.capabilities.get(device.capabilities.indexOf(volume)));
 
         Capability channel = new Capability();
         channel.type = "devices.capabilities.range"; // Тип умения. channel     volume
@@ -106,7 +109,7 @@ public class SmartHome {
         channel.state.action_result.error_code = null;
         channel.state.action_result.error_message = null;
         device.capabilities.add(channel);
-        log.info("DEVICE ADD CAPABILITI CHANNEL: " + device.capabilities.get(device.capabilities.indexOf(channel)));
+//        log.info("DEVICE ADD CAPABILITI CHANNEL: " + device.capabilities.get(device.capabilities.indexOf(channel)));
 
         Capability on_of = new Capability();
         on_of.type = "devices.capabilities.on_off"; // Тип умения. channel     volume
@@ -121,7 +124,7 @@ public class SmartHome {
 //        on_of.state.action_result.error_code = null;
 //        on_of.state.action_result.error_message = null;
         device.capabilities.add(on_of);
-        log.info("DEVICE ADD CAPABILITI ON_OF: " + device.capabilities.get(device.capabilities.indexOf(on_of)));
+//        log.info("DEVICE ADD CAPABILITI ON_OF: " + device.capabilities.get(device.capabilities.indexOf(on_of)));
 
 // назначить девайсу индекс
         device.id = String.valueOf(index);
@@ -129,7 +132,7 @@ public class SmartHome {
         SmartHome.devices.add(device);
         log.info("CREATED DEVICE ID: " + device.id + " ROOM: " + device.room + " " + SmartHome.devices.stream().map(d -> d.id + ":" + d.room).collect(Collectors.toList()));
 //        log.info("CREATER DEVICE FULL: " + device);
-        log.info("DEVICES: "+SmartHome.devices.size());
+//        log.info("DEVICES: " + SmartHome.devices.size());
         //        return device;
     }
 

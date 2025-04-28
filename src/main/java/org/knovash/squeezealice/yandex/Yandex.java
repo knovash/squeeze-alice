@@ -65,7 +65,7 @@ public class Yandex {
         List<YandexInfo.Device> yandexMusicDevices = yandexInfo.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                 .filter(device -> device.name.equals("музыка"))
-                .peek(device -> log.info("DEDICE ID: " + device.external_id + " ROOM: " + roomNameByRoomId(device.room)))
+                .peek(device -> log.info("DEVICE ID: " + device.external_id + " ROOM: " + roomNameByRoomId(device.room)))
                 .collect(Collectors.toList());
 
         yandexMusicDevCounter = yandexMusicDevices.size();

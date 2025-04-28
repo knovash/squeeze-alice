@@ -27,9 +27,9 @@ public class ProviderAction {
         channelValueByProvider = null;
         channelRelativeByProvider = null;
         onValueByProvider = null;
-//        volumelValue = null;
         volumeRelativeByprovider = null;
         volumeByProvider = null;
+//        volumelValue = null;
 
 //        log.info("CONTEXT: " + context);
         if (config.lmsIp == null) return null;
@@ -96,7 +96,7 @@ public class ProviderAction {
         ) {
             log.info("TURN ON MULTIPLE DEVICES: " + devicesForTurnOn.size());
 // выполнить паралельно пробуждение и запуск всех плееров в умном доме
-            CompletableFuture.runAsync(() -> lmsPlayers.turnOnMusicAll(devicesForTurnOn));
+            CompletableFuture.runAsync(() -> lmsPlayers.turnOnMusicMultiply(devicesForTurnOn));
 // создать пэйлоад для ответа в умный дом
             jsonDevices = responseYandex.payload.devices;
 // вернуть контекст
@@ -123,6 +123,8 @@ public class ProviderAction {
             log.info("FINISH ACTION");
             return context;
         }
+
+        log.info("RUN INSTANCE ON DEVICES: " + responseYandex.payload.devices.size());
 
 //   выполнить действие с каждым устройством и создать лист устройств с измененными свойствами
         jsonDevices = responseYandex.payload.devices.stream()
@@ -162,19 +164,31 @@ public class ProviderAction {
 
 //        если плеер не получен или недоступен - вернуть device с кодом ошибки
         if (player == null || player.modeReal() == null) {
-            device.actionResult = new ActionResult();
-            device.capabilities = null;
-            device.properties = null;
-            device.actionResult.status = "ERROR";
-            device.actionResult.error_code = "DEVICE_UNREACHABLE";
-            device.actionResult.error_message = "Устройство потеряно";
+            device.action_result = new ActionResult();
+            device.action_result.status = "ERROR";
+            device.action_result.error_code = "DEVICE_UNREACHABLE";
+            device.action_result.error_message = "Устройство потеряно";
+
+            device.capabilities.stream().forEach(capability -> {
+// https://yandex.ru/dev/dialogs/smart-home/doc/ru/reference/post-action
+// если нажать на кнопку увтройства вкл/выкл если ошибка - ответить Устройство неотвечает
+                capability.state.action_result = new ActionResult();
+                capability.state.action_result.status = "ERROR";
+                capability.state.action_result.error_code = "DEVICE_UNREACHABLE";
+                capability.state.action_result.error_message = "Устройство потеряно";
+                log.info("CAP: " + capability);
+
+            });
+
+
             log.info("ACTION RESULT ERROR PLAYER NULL");
+            log.info("DEVICE " + device);
             return device;
         } else {
-            device.actionResult = new ActionResult();
-            device.actionResult.status = "DONE";
-            device.actionResult.error_code = null;
-            device.actionResult.error_message = null;
+            device.action_result = new ActionResult();
+            device.action_result.status = "DONE";
+            device.action_result.error_code = null;
+            device.action_result.error_message = null;
             log.info("ACTION RESULT SET DONE");
         }
 
@@ -187,12 +201,11 @@ public class ProviderAction {
                                 if (c.state == null) {
                                     c.state = new State();
                                 }
-                                c.state.value = null;
-                                c.state.relative = false;
                                 c.state.action_result = new ActionResult();
                                 c.state.action_result.error_code = "";
                                 c.state.action_result.error_message = "";
                                 c.state.action_result.status = "DONE";
+
                                 c.reportable = true;
                                 c.retrievable = true;
                                 if (c.state.instance.equals("on")) {
@@ -208,25 +221,13 @@ public class ProviderAction {
                                     log.info("CAPABILITI VOLUME");
                                     volumeByProvider = c.state.value;
                                     volumeRelativeByprovider = c.state.relative;
-                                    c.state.value = "7";
+                                    c.state.value = "1";
                                     c.state.relative = false;
                                 }
                                 log.info("CAPABILITI: " + c.state.instance + "=" + c.state.value + " relative=" + c.state.relative);
                             }
                     );
 
-//            device.properties = new ArrayList<>();
-//            Property propertyVolume = new Property();
-//            propertyVolume.state = new State();
-//            propertyVolume.state.instance ="volume";
-//            propertyVolume.state.value ="3";
-//            device.properties.add(propertyVolume);
-//
-//            Property propertyChannel = new Property();
-//            propertyChannel.state = new State();
-//            propertyChannel.state.instance ="channel";
-//            propertyChannel.state.value ="4";
-//            device.properties.add(propertyChannel);
 
 // выполнить полученые капаюилити девайса в определеном порядке
 // если надо включить канал то не надо запускать задачу turnOn
@@ -235,8 +236,11 @@ public class ProviderAction {
 //                device.capabilities.stream().filter(capability -> capability.state.instance.equals())
                 CompletableFuture.runAsync(() -> player.volumeRelativeOrAbsolute(volumeByProvider, volumeRelativeByprovider))
                         .thenRunAsync(() -> {
-                            volumeByProvider = null;
+                            channelValueByProvider = null;
+                            channelRelativeByProvider = null;
+                            onValueByProvider = null;
                             volumeRelativeByprovider = null;
+                            volumeByProvider = null;
                         });
             }
             if (channelValueByProvider != null && !"false".equals(onValueByProvider)) {
@@ -244,20 +248,31 @@ public class ProviderAction {
                         .thenRunAsync(() -> {
                             channelValueByProvider = null;
                             channelRelativeByProvider = null;
+                            onValueByProvider = null;
+                            volumeRelativeByprovider = null;
+                            volumeByProvider = null;
                             player.saveLastTimePathAutoremoteRequest();
                         });
             }
             if ("true".equals(onValueByProvider) && channelValueByProvider == null) {
                 CompletableFuture.runAsync(player::turnOnMusic)
                         .thenRunAsync(() -> {
+                            channelValueByProvider = null;
+                            channelRelativeByProvider = null;
                             onValueByProvider = null;
+                            volumeRelativeByprovider = null;
+                            volumeByProvider = null;
                             player.saveLastTimePathAutoremoteRequest();
                         });
             }
             if ("false".equals(onValueByProvider)) {
                 CompletableFuture.runAsync(player::turnOffMusic)
                         .thenRunAsync(() -> {
+                            channelValueByProvider = null;
+                            channelRelativeByProvider = null;
                             onValueByProvider = null;
+                            volumeRelativeByprovider = null;
+                            volumeByProvider = null;
                             player.saveLastTimePathAutoremoteRequest();
                         });
             }
