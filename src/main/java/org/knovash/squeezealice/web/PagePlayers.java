@@ -122,7 +122,8 @@ public class PagePlayers {
     public static String playerSettings(Player p) {
 
         String inYaState = " Yandex <span style='color: red;'>" + "отключен" + "</span>";
-        if (Yandex.yandexMusicDevListRooms.contains(p.room)) {
+        log.info("yandexMusicDevListRooms: " + Yandex.yandexMusicDevListRooms);
+        if (Yandex.yandexMusicDevListRooms != null && Yandex.yandexMusicDevListRooms.contains(p.room)) {
             inYaState = " Yandex <span style='color: green;'>" + "подключен" + "</span>";
         }
 
@@ -132,7 +133,7 @@ public class PagePlayers {
         String form = "<br>" +
                 "<form method='POST' action='/form' enctype='application/x-www-form-urlencoded'>" + // Добавить enctype
                 "<fieldset>" +
-                "<legend><b>" + p.name + "</b> " + inLmsState + inYaState+"</legend>" +
+                "<legend><b>" + p.name + "</b> " + inLmsState + inYaState + "</legend>" +
 
                 "<select name='" + player_room_value + "' required>" +
                 "<option value='" + p.room + "' " + p.room + ">" + p.room + "</option>" +

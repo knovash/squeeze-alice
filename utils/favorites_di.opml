@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+  <head title="Favorites">
+    <expansionState></expansionState>
+  </head>
+  <body>
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/chilledm.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/a/4/5/5/a/2/a455a20c126294cf743421ee34473b1a.png" text="Chill EDM" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/deeporganichouse.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/7/4/0/c/a/9/740ca9fdd39ca56606fe900ae4a955fb.png" text="Deep Organic House" type="audio" />
+    <outline URL="spotify:playlist:37i9dQZF1DWTKxc7ZObqeH" icon="/imageproxy/https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67706f000000029d9ff0c2c65711d1bcb780aa/image.png" text="Summer Jazz" type="playlist" />
+    <outline URL="http://api.audioaddict.com/v1/jazzradio/listen/premium_high/smoothjazz.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/1/3/4/f/4/d/134f4dc127287c8eb52304b0883d525a.jpg" text="Smooth Jazz" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/chillout.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/0/3/3/3/b/6/0333b632ca8a69d31ca99ceea595384d.png" text="Chillout" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/lofihiphop.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/c/e/6/8/6/7/ce686797af56662ba827f79a80b30dbf.png" text="LoFi Hip-Hop" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/atmosphericbreaks.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/5/a/8/f/0/d/5a8f0d5191a7a137283f6887550cdbfd.png" text="Atmospheric Breaks" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/futuregarage.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/8/f/3/0/e/7/8f30e734caddb1abffc2cd88618a46a1.png" text="Future Garage" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/minimal.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/b/b/1/0/3/a/bb103ac2b80f76c178d042aa30b16170.png" text="Minimal" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/progressivepsy.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/6/5/8/4/e/1/6584e11e53a641a76ebc8cb7adc9a6ce.png" text="Progressive Psy" type="audio" />
+    <outline URL="http://somafm.com/suburbsofgoa.pls?source=xsqueezeapp" icon="https://api.somafm.com/img/sog120.jpg" text="Suburbs of Goa: Desi-influenced Asian world beats and beyond." type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/deepprogressivehouse.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/b/0/e/1/9/0/b0e19018c34150a07d76224e5fcdbeda.png" text="Deep Progressive House" type="audio" />
+    <outline URL="http://somafm.com/cliqhop.pls?source=xsqueezeapp" icon="https://api.somafm.com/img/cliqhop120.png" text="cliqhop idm: Blips'n'beeps backed mostly w/beats. Intelligent Dance Music." type="audio" />
+    <outline URL="http://somafm.com/groovesalad.pls?source=xsqueezeapp" icon="https://api.somafm.com/img/groovesalad120.png" text="Groove Salad: A nicely chilled plate of ambient/downtempo beats and grooves." type="audio" />
+    <outline URL="http://somafm.com/deepspaceone.pls?source=xsqueezeapp" icon="https://api.somafm.com/img/deepspaceone120.gif" text="Deep Space One: Deep ambient electronic, experimental and space music. For inner and outer space exploration." type="audio" />
+    <outline URL="http://somafm.com/missioncontrol.pls?source=xsqueezeapp" icon="https://api.somafm.com/img/missioncontrol120.jpg" text="Mission Control: Celebrating NASA and Space Explorers everywhere." type="audio" />
+    <outline URL="http://somafm.com/sf1033.pls?source=xsqueezeapp" icon="https://api.somafm.com/img/sf1033120.png" text="SF 10-33: Ambient music mixed with the sounds of San Francisco public safety radio traffic." type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/melodicprogressive.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/e/8/0/4/0/a/e8040af705311c2c2cbaf333f1403031.png" text="Melodic Progressive" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/chilloutdreams.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/6/d/8/7/7/8/6d8778faec3669ec64ef6f33a447b221.png" text="Chillout Dreams" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/drumandbass.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/3/1/b/a/c/1/31bac1b29a724275385d23ffef6846db.png" text="Drum and Bass" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/deeptech.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/2/d/2/0/b/3/2d20b381507900c6997e7feafc8ef4ad.png" text="Deep Tech" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/futuresynthpop.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/e/e/8/5/2/3/ee8523a0d6165465961cb2d0445c4f27.png" text="Future Synthpop" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/electropop.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/9/3/1/e/0/d/931e0de12186cb08ed15512f1205f3d4.png" text="Electropop" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/darkpsytrance.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="http://cdn-images.audioaddict.com/1/0/8/a/4/4/108a44f8092946fa72d1c940d24f5ba5.png" text="Dark PsyTrance" type="audio" />
+    <outline URL="https://www.mysqueezebox.com/public/opml/ac36a3febef11659f56f9f9cc1258650a254b2e9/favorites.opml" icon="html/images/favorites.png" text="On mysqueezebox.com" />
+    <outline URL="http://api.audioaddict.com/v1/di/listen/premium_high/deeporganichouse.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="html/images/radio.png" text="26 DI.FM" type="audio" />
+    <outline URL="http://api.audioaddict.com/v1/jazzradio/listen/premium_high/smoothjazz.pls?listen_key=780a4f0bfb95c977ceab43a2" icon="html/images/radio.png" text="27 Smooth Jazz" type="audio" />
+  </body>
+</opml>

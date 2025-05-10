@@ -66,7 +66,7 @@ public class SwitchQueryCommand {
                 break;
             case ("channel"):
 // response = player.playChannelRelativeOrAbsolute(value, false);
-                CompletableFuture.runAsync(() -> player.playChannelRelativeOrAbsolute(value, false))
+                CompletableFuture.runAsync(() -> player.playChannelRelativeOrAbsolute(value, false, null))
                         .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
                 response = player.name + " - play channel " + value;
 // player.saveLastTimePathAutoremoteRequest();
@@ -74,7 +74,7 @@ public class SwitchQueryCommand {
             case ("play"):
 // player.turnOnMusic().saveLastTimePathAutoremoteRequest()
 // .saveLastTimePathAutoremoteRequest();
-                CompletableFuture.runAsync(() -> player.turnOnMusic())
+                CompletableFuture.runAsync(() -> player.turnOnMusic(null))
                         .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
                 response = player.name + " - play";
                 break;
@@ -158,7 +158,7 @@ public class SwitchQueryCommand {
 // Таскер для виджетов иконок плееров
                 response = lmsPlayers.forTaskerWidgetsIcons();
                 break;
-            case ("get_widgets_json"):
+            case ("get_refresh_json"):
 // Таскер для виджетов иконок плееров
                 response = lmsPlayers.forTaskerPlayersIconsJson(player, value);
                 break;
@@ -167,6 +167,7 @@ public class SwitchQueryCommand {
                 response = player.forTaskerPlaylist(value);
                 break;
             case ("get_players"):
+                log.info("GET PLAYERS");
 // Таскер для виджета отображения списка плееров и их состояния name-volume-mode-title
                 response = lmsPlayers.forTaskerPlayersList();
                 break;

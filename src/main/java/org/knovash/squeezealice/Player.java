@@ -7,7 +7,6 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.lms.PlayerStatus;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
-import org.knovash.squeezealice.provider.ProviderAction;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
@@ -116,7 +115,7 @@ public class Player {
         return response.result._mode;
     }
 
-    public String modeReal() {
+    public String checkPlayerConnected() {
         this.playing = false;
         Response response = Requests.postToLmsForResponse(RequestParameters.mode(this.name).toString());
         if (response == null) {
@@ -124,7 +123,7 @@ public class Player {
             return null;
         }
         if (response.result._mode.equals("play")) this.playing = true;
-        log.info("PLAYER: " + this.name + " MODE: " + response.result._mode);
+        log.info("PLAYER: " + this.name + " CONNECTED");
         return response.result._mode;
     }
 
@@ -229,9 +228,16 @@ public class Player {
     }
 
     public List<String> favorites() {
+        log.info("FAVORITES START " + this.name);
         String playerName = this.name;
-        Response response = Requests.postToLmsForResponse(RequestParameters.favorites(playerName, 10).toString());
-        List<String> playlist = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
+        List<String> playlist = null;
+        try {
+            Response response = Requests.postToLmsForResponse(RequestParameters.favorites("", 10).toString());
+            playlist = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
+        } catch (Exception e) {
+            log.info("ERROR " + e);
+        }
+
         log.info("FAVORITES: " + playlist);
         return playlist;
     }
@@ -329,7 +335,7 @@ public class Player {
 
 
     // включить музыку
-    public Player turnOnMusic() {
+    public Player turnOnMusic(String volume) {
         log.info("TURN ON MUSIC PLAYER: " + this.name);
 // узнать состояние плеера
         this.status(); // далее запускается в методе экспайред
@@ -342,10 +348,11 @@ public class Player {
 
 // 1) если уже играет и нет других играющих - ничего не делать
         if (this.mode.equals("play")) {
-            if (ProviderAction.volumeByProvider != null) {
-                log.info("SET VILUME BY PROVIDER");
-                this.volumeSet(ProviderAction.volumeByProvider);
-            }
+//            if (ProviderAction.volumeByProvider != null) {
+//                log.info("SET VILUME BY PROVIDER");
+//                this.volumeSet(ProviderAction.volumeByProvider);
+//            }
+            if (volume != null) this.volumeSet(volume);
             log.info("PLAYING NOT IN GROUP: " + lmsPlayers.playingPlayersNamesNotInCurrentGrop);
             if (lmsPlayers.playingPlayersNamesNotInCurrentGrop == null ||
                     lmsPlayers.playingPlayersNamesNotInCurrentGrop.size() == 0) {
@@ -357,7 +364,7 @@ public class Player {
 // отключить от группы на случай если не играет но был включен в группу
         this.unsync();
 // если давно не играл - разбудить, установить громкость по пресету
-        this.ifExpiredAndNotPlayingUnsyncWakeSet(); // лишняя проверка статуса и проверка что не играет
+        this.ifExpiredAndNotPlayingUnsyncWakeSet(volume); // лишняя проверка статуса и проверка что не играет
 
 // 2) если не играет, отделён - играть последнее
         if (this.separate) {
@@ -405,7 +412,7 @@ public class Player {
         log.info("PLAYER: " + this.name + " TOGGLE MUSIC");
         this.status();
         if (this.playing) this.turnOffMusic();
-        else this.turnOnMusic();
+        else this.turnOnMusic(null);
         return this;
     }
 
@@ -471,7 +478,7 @@ public class Player {
 //        log.info("JSON: " + json);
         if (json == null) {
             log.info("REQUEST ERROR request null");
-            return null;
+            return false;
         }
         json = json.replaceAll("(\"\\w*)(\\s)(\\w*\":)", "$1_$3");
         playerStatus = JsonUtils.jsonToPojo(json, PlayerStatus.class);
@@ -507,20 +514,12 @@ public class Player {
             this.sync = true;
         }
 
-
-//        log.info("STATUS PLAYER: " + this.name +
-//                " MODE: " + this.mode +
-//                " " + this.playing +
-//                " VOLUME: " + this.volume +
-//                " SYNC: " + this.sync +
-//                " CONNECTED: " + this.connected +
-//                " TITLE: " + this.title);
         return true;
     }
 
 
-    public String playChannelRelativeOrAbsolute(String value, Boolean relative) {
-        log.info("CANNEL: " + value + " RELATIVE: " + relative);
+    public String playChannelRelativeOrAbsolute(String value, Boolean relative, String volume) {
+        log.info("CHANNEL: " + value + " RELATIVE: " + relative + " VOLUME: " + volume + " PLAYER: " + this.name);
         int channel = Integer.parseInt(value);
         int delta = Integer.parseInt(value);
 
@@ -530,19 +529,22 @@ public class Player {
             this.currentChannelIndexInFavorites();
             if (lastChannel != 0) channel = lastChannel + delta;
             if (currentChannel != 0) channel = currentChannel + delta;
+            log.info("RELATIVE: " + relative +
+                    " GET CURRENT CHANNEL: " + currentChannel +
+                    " SET CHANNEL: " + channel +
+                    " PLAYER: " + this.name);
         }
 
-
         log.info("PLAYER: " + this.name + " CHANNEL: " + channel + " RELATIVE: " + relative);
-// проверить если долго не играл - разбудить, установить громкость по пресету, или если пришла громкость от провайдера
-        this.ifExpiredAndNotPlayingUnsyncWakeSet();
+// проверить если долго не играл - разбудить, установить громкость по пресету
+        this.ifExpiredAndNotPlayingUnsyncWakeSet(volume);
 
 // включить канал, также и на другом плеере если был играющий
         this.playChannel(Integer.valueOf(channel)); // playChannelRelativeOrAbsolute
 // пауза для включения канала на плеере и определения пути
         this.waitFor(2000);
         lmsPlayers.lastChannel = channel;
-
+        log.info("PLAYER: " + this.name + " PLAY CHANNEL FINISH");
         return "PLAY CHANNEL " + channel;
     }
 
@@ -566,7 +568,7 @@ public class Player {
         else channel = lmsPlayers.lastChannel - 1;
         if (channel < 1) channel = favSize;
         log.info("PLAY PREV CHANNEL: " + channel + " LAST CHANNEL: " + lmsPlayers.lastChannel);
-        this.ifExpiredAndNotPlayingUnsyncWakeSet();
+        this.ifExpiredAndNotPlayingUnsyncWakeSet(null);
         this.playChannel(channel); // prevChannel
         return this;
     }
@@ -607,7 +609,7 @@ public class Player {
         }
         if (channel > favSize) channel = 1;
         log.info("PLAY CHANNEL: " + channel);
-        this.ifExpiredAndNotPlayingUnsyncWakeSet();
+        this.ifExpiredAndNotPlayingUnsyncWakeSet(null);
         this.playChannel(channel); // prevChannel
         return this;
     }
@@ -664,26 +666,22 @@ public class Player {
 //        return this;
 //    }
 
-    public Player ifExpiredAndNotPlayingUnsyncWakeSet() {
-        log.info("CHECK IF EXPIRED PLAYER: " + this.name);
+    public Player ifExpiredAndNotPlayingUnsyncWakeSet(String volume) {
+        log.info("CHECK IF EXPIRED PLAYER: " + this.name + " SET VOLUME BY PROVIDER: " + volume);
         if (!this.status(0)) {
             log.info("ERROR STATUS NULL !!!");
             return this;
         }
         if (!this.playing && this.ifTimeExpired(null)) {
             log.info("PLAYER " + this.name + " NOT PLAY - UNSYNC, WAKE, SET");
-            this.unsync().wakeAndSet();
+            this.unsync().wakeAndSet(volume);
             return this;
         } else {
-            log.info("SKIP WAKE");
-            if (ProviderAction.volumeByProvider != null) {
-                log.info("SET VOLUME BY PROVIDER: " + ProviderAction.volumeByProvider);
-                this.volumeSet(ProviderAction.volumeByProvider);
-//               сбросить громкость от провайдера
-                ProviderAction.volumeByProvider = null;
-                ProviderAction.volumeRelativeByprovider = null;
-//                ProviderAction.volumelValue = null;
-            }
+            log.info("SKIP WAKE " + this.name + " VOLUME BY PROVIDER: " + volume);
+            if (volume != null) {
+                log.info("SET VOLUME BY PROVIDER: " + volume + " PLAYER: " + this.name);
+                this.volumeSet(volume);
+            } else log.info("SKIP SET " + this.name + " VOLUME BY PROVIDER: " + volume);
 
         }
 //        if (this.playing && this.ifTimeExpired(60)) {
@@ -694,13 +692,12 @@ public class Player {
         return this;
     }
 
-    public Player wakeAndSet() {
+    public Player wakeAndSet(String volume) {
         log.info("");
-        log.info("WAKE START >>>");
-        log.info("PLAYER: " + this.name + " WAIT: " + this.delay);
+        log.info("WAKE START >>> PLAYER: " + this.name + " WAIT: " + this.delay + " VOLUME: " + volume);
 // если пришла громкость от провайдера то использовать ее вместо громкости по пресету
-        if (ProviderAction.volumeByProvider == null) {
-            log.info("VOLUME SET BY PRESET");
+        if (volume == null) {
+            log.info("VOLUME SET BY PRESET " + this.name);
             this
                     .playSilence()
                     .volumeSet("+1")
@@ -710,16 +707,14 @@ public class Player {
                     .setVolumeByTime()
                     .pause();
         } else {
-            log.info("VOLUME SET BY PROVIDER: " + ProviderAction.volumeByProvider);
+            log.info("VOLUME SET BY PROVIDER: " + volume + " " + this.name);
             this
                     .playSilence()
                     .volumeSet("+1")
-                    .volumeSet(ProviderAction.volumeByProvider)
-//                    .setVolumeByTime()
+                    .volumeSet(volume)
                     .waitForWakeSeconds()
                     .volumeSet("-1")
-                    .volumeSet(ProviderAction.volumeByProvider)
-//                    .setVolumeByTime()
+                    .volumeSet(volume)
                     .pause();
         }
         log.info("WAKE FINISH <<<");
@@ -784,7 +779,7 @@ public class Player {
                         .filter(entry -> LocalTime.of(entry.getKey(), 0).isBefore(timeNow))
                         .max(Comparator.comparing(Map.Entry::getKey))
                         .get();
-        log.info("TIME: " + timeNow.truncatedTo(MINUTES) + "VOLUME: " + e.getValue() + " BY TIME: " + e.getKey() + " OF: " + this.schedule);
+        log.info("TIME: " + timeNow.truncatedTo(MINUTES) + " VOLUME: " + e.getValue() + " BY TIME: " + e.getKey() + " OF: " + this.schedule);
         this.volumeSet(String.valueOf(e.getValue()));
         return this;
     }
@@ -952,15 +947,15 @@ public class Player {
 
     // для востановления после отделения и для спотифай
     public Player syncAllOtherPlayingToThis() {
-        if (!lmsPlayers.syncAlt) {
-            log.info("ALT SYNC OFF");
-            return this;
-        }
+        log.info("SYNC OTHER PLAYING TO THIS START " + this.name);
+//        if (!lmsPlayers.syncAlt) {
+//            log.info("ALT SYNC OFF");
+//            return this;
+//        }
         if (this.separate) {
             log.info("PLAYER IS SEPARETE. STOP ALT SYNC");
             return this;
         }
-        log.info("ALT SYNC ALL PLAYING TO " + this.name + " ALT SYNC: " + lmsPlayers.syncAlt);
         log.info("SEARCH PLAYING PLAYERS...");
         List<Player> playingPlayers = lmsPlayers.playingPlayers(this.name, true);
         log.info("PLAYING PLAYERS: " + playingPlayers);
@@ -983,7 +978,8 @@ public class Player {
         LocalTime nowTime = LocalTime.now(zoneId).truncatedTo(MINUTES);
         long diff = playerTime.until(nowTime, MINUTES);
         Boolean expired = diff > delayExpire || diff < 0;
-        log.info("EXPIRED: " + expired + " DIFF:" + diff + " DELAY:" + delayExpire);
+        log.info("LAST PLAY TIME: " + this.lastPlayTime + " DELAY MINUTES: " + delayMinutes + " DIFF: " + diff + " EXPIRED: " + expired);
+//        log.info("EXPIRED: " + expired + " DIFF:" + diff + " DELAY:" + delayExpire);
         return expired;
     }
 
@@ -999,7 +995,7 @@ public class Player {
             return this;
         }
         log.info("PLAYER NOT PLAY. SYNC TO PLAYING OR PLAY LAST. STOP ALL OTHER");
-        this.turnOnMusic().stopAllOther();
+        this.turnOnMusic(null).stopAllOther();
         return this;
     }
 
@@ -1058,22 +1054,17 @@ public class Player {
 
     public List<String> playlistList() {
         this.status(250);
-        log.info("TITLE: " + this.title);
         this.tracks();
-        log.info("TITLE: " + this.title);
-        log.info("PLAYLIST: " + this.playlist);
         return this.playlist;
     }
 
     public String forTaskerPlaylist(String value) {
+        log.info("FOR PLAYLIST START >>> ----------------");
         List<String> list = playlistList();
-        log.info("PLAYLIST: " + list);
-        log.info("CURRENT TRACK: " + this.currentTrack);
 // если в плейлисте только один трэк (радио)
         if (list.size() == 1) {
-            log.info("ONE TRACK");
-            log.info("TITLE: " + this.title);
-            log.info("ONE TRACK");
+            log.info("ONE TRACK TITLE: " + this.title);
+//            log.info("ONE TRACK");
             String currentTrack = this.currentTrack;
             if (currentTrack.length() > 20) currentTrack = currentTrack.substring(0, 20);
             String result = this.title + " - " + currentTrack;
@@ -1082,24 +1073,25 @@ public class Player {
         }
 //        найти номер играющего трека в плейлисте
 
-        log.info("CURRENT TRACK: " + this.currentTrack);
+//        log.info("CURRENT TRACK: " + this.currentTrack);
         int index = list.indexOf(this.currentTrack);
-        log.info("INDEX: " + index);
+//        log.info("INDEX: " + index);
 // добавление > к сейчас играющему треку
         list.replaceAll(l -> l.equals(this.currentTrack) ? ">" + l : "  " + l);
-        log.info("PLAYLIST > : " + list);
+//        log.info("PLAYLIST > : " + list);
         // нумерация плейлиста
         for (int i = 0; i < list.size(); i++) {
             String numbered = (i + 1) + ". " + list.get(i);
             list.set(i, numbered);
         }
-        log.info("PLAYLIST 1 > : " + list);
+//        log.info("PLAYLIST 1 > : " + list);
 //       показывать только часть плейлиста
-        log.info("LINES : " + value);
+//        log.info("LINES : " + value);
         list = Utils.linesFromList(list, index, Integer.parseInt(value));
 
-        log.info("PLAYLIST: " + list);
+//        log.info("PLAYLIST: " + list);
         String result = String.join(", ", list);
+        log.info("FOR PLAYLIST FINISH <<< ----------------");
         return result;
     }
 

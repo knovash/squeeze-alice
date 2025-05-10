@@ -341,7 +341,7 @@ public class Spotify {
         lastTitle = Spotify.getNameById(lastPath);
         log.info("LAST PATH: " + lastPath);
         log.info("LAST TITLE: " + lastTitle);
-        player.ifExpiredAndNotPlayingUnsyncWakeSet();
+        player.ifExpiredAndNotPlayingUnsyncWakeSet(null);
         player.playPath(playingUri);
         player.waitFor(1000);
         player.pause();

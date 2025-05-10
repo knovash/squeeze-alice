@@ -71,7 +71,7 @@ public class VoiceActions {
         channel = channel.replaceAll(":.*", "");
         answer = "включаю канал " + index + ", " + channel;
         log.info("INDEX: " + index);
-        CompletableFuture.runAsync(() -> player.playChannelRelativeOrAbsolute(String.valueOf(index), false))
+        CompletableFuture.runAsync(() -> player.playChannelRelativeOrAbsolute(String.valueOf(index), false, null))
                 .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
         return answer;
     }

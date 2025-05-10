@@ -45,6 +45,7 @@ public class ProviderQuery {
         json = json.replaceAll("(\"value\" :) \"([0-9a-z]+)\"", "$1 $2");
         context.bodyResponse = json;
         context.code = 200;
+        log.info("RETURN CONTEXT");
         return context;
     }
 
@@ -65,7 +66,7 @@ public class ProviderQuery {
             return device;
         }
 // если плеер существует но не отвечает - вернуть устройство с ошибкой
-        String modeReal = player.modeReal();
+        String modeReal = player.checkPlayerConnected();
         if (modeReal == null) {
             log.info("DEVICE_UNREACHABLE mode real = null");
             device.error_code = "DEVICE_UNREACHABLE";

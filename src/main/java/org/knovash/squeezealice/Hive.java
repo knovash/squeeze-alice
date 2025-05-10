@@ -20,6 +20,7 @@ import java.util.UUID;
 import java.util.concurrent.*;
 
 import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 public class Hive {
@@ -32,6 +33,7 @@ public class Hive {
     public static String topicRecieveDevice = "to_lms_id";// подписаться
     public static String topicPublish = "from_lms_id";// отправить сюда
     public static long spotifyExpiresAt;
+    public static String correlationId = "";
 
     public static void start() {
         log.info("MQTT STARTING...");
@@ -83,7 +85,7 @@ public class Hive {
 //        log.info("PARAMS : " + params);
 
         String contextJson = "";
-        String correlationId = "";
+        correlationId = "";
         if (!params.containsKey("correlationId")) return;
         correlationId = params.get("correlationId");
 
@@ -170,6 +172,7 @@ public class Hive {
 
 // обработка контекста
         context = HandlerAll.processContext(context);
+//        TODO если context null
 
 //        log.info("CONTEXT JSON: " + context.toJson());
 
@@ -214,6 +217,53 @@ public class Hive {
 //        result.put("context", URLDecoder.decode(contextValue, StandardCharsets.UTF_8));
 //        return result;
 //    }
+
+    public static void publish(String topic) {
+
+//        генерация топика для колбэка с токеном
+//        String callbackTopic = "callback" + correlationId;
+        //     подписаться на сгенерированый топик
+//        subscribe(callbackTopic);
+
+//        topic = "to_tasker_" + config.yandexUid;
+//        topic = "to_tasker";
+
+        // Таскер для виджетов иконок плееров
+        String responseWidgets = lmsPlayers.forTaskerWidgetsIcons();
+        // Таскер для виджета отображения плейлиста
+//        String responsePlaylist =lmsPlayers.players.get(0).forTaskerPlaylist(value);
+        // Таскер для виджета отображения списка плееров и их состояния name-volume-mode-title
+        String responsePlayers = lmsPlayers.forTaskerPlayersList();
+//        String payloadJson = "{\n" +
+//                "  \"PLAYERS\": \"" + responsePlayers + "\",\n" +
+//                "  \"WIDGETS\": \"" + responseWidgets + "\"\n" +
+//                "}\n";
+
+//        String payloadJson = "{\n" +
+//                "  \"PLAYLIST\": \"Atmospheric Breaks - Restored\",\n" +
+//                "  \"PLAYERS_PLAY\": \"Гостиная - Homepod1 - 7 - play - 7.Atmospheric Breaks\",\n" +
+//                "  \"PLAYERS_STOP\": \"Улица - JBL white - 5 - stop - LoFi Hip-Hop,Душ - HomePod2 - 7 - stop - Atrium Sun,Веранда - Radiotechnika - 15 - stop - Smooth Jazz,Спальня - HomePod - -- - offline - unknown,JBL black - 7 - stop - DEF CON Radio\",\n" +
+//                "  \"WIDGETS\": \"Гостиная пол,Веранда,Душ пол,Отопление,Спальня,Кухня,Улица,Дом,Гостиная,Душ,Homepod1,JBL white,HomePod2,Radiotechnika,HomePod,JBL black:null,stop,null,null,offline,null,stop,null,play,stop,play,stop,stop,stop,offline,stop:false,false,false,false,true,false,false,false,false,false,false,false,false,false,true,false:null,Smooth Jazz,null,null,unknown,null,LoFi Hip-Hop,null,Atmospheric Breaks,Rawnn Savan(Ind) & ,Atmospheric Breaks,LoFi Hip-Hop,Rawnn Savan(Ind) & ,Smooth Jazz,unknown,DEF CON Radio:Homepod1-7-play-Atmospheric Breaks,JBL white-5-stop-LoFi Hip-Hop,HomePod2-7-stop-Rawnn Savan(Ind) & ,Radiotechnika-15-stop-Smooth Jazz,HomePod----offline-unknown,JBL black-7-stop-DEF CON Radio:null,false,null,null,false,null,false,null,false,false,false,false,false,false,false,false\"\n" +
+//                "}\n";
+
+        String payload;
+//         payload = "correlationId=" + correlationId + "&" +
+//                "callbackTopic=" + "null" + "&" +
+//                "PLAYERS_PLAYIING=" + "null" + "&" +
+//                "PLAYERS_STOPED=" + "finish" + "&" +
+//                "context=" + "null";
+        payload = "test";
+
+//        log.info("PAYLOAD: " + payload);
+        log.info("PUBLISH FOR TASKER AFTER FINISH ACTION");
+
+        // Отправка запроса в MQTT
+        try {
+            mqttClient.publish(topic, new MqttMessage(payload.getBytes()));
+        } catch (MqttException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 
     //  это для паблиша

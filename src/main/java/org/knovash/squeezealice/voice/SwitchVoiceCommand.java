@@ -216,7 +216,7 @@ public class SwitchVoiceCommand {
         selectRoomByCorrectRoom(room);
         log.info("SELECT PLAYER: " + player);
         Player playerNew = selectPlayerInRoom(player, room, false);
-        if (playerNew != null) playerNew.turnOnMusic();
+        if (playerNew != null) playerNew.turnOnMusic(null);
         return "это комната " + room + " с колонкой " + player;
     }
 
@@ -320,7 +320,7 @@ public class SwitchVoiceCommand {
         if (start) {
             CompletableFuture.runAsync(() -> {
                 log.info("TURN ON NEW PLAYER " + playerNew.name);
-                playerNew.turnOnMusic();
+                playerNew.turnOnMusic(null);
                 if (playerNow != null) {
                     log.info("STOP CURRENT PLAYER " + playerNow.name);
                     playerNow.unsync().pause();

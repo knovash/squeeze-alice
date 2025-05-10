@@ -174,11 +174,13 @@ public class Utils {
     }
 
     public static void sleep(int seconds) {
+        log.info("SLEEP: " +seconds);
         try {
             Thread.sleep(seconds);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        log.info("SLEEP FINISH");
     }
 
     //    https://stackoverflow.com/questions/10893313/how-to-convert-cyrillic-letters-to-english-latin-in-java-string

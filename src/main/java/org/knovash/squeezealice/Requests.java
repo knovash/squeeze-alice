@@ -97,7 +97,7 @@ public class Requests {
 // действии пульта или таскера SwitchQueryCommand
 // действии приложения Умного дома ProviderAction
 // SwitchVoiceCommand тут есть действия pleer и надо добавить после них autoRemoteRefresh
-        log.info("TASKER AUTO REMOTE REFRESH");
+        log.info("REQUEST TO TASKER AUTO REMOTE FOR REFRESH");
         String uri = lmsPlayers.autoRemoteRefresh;
         if (uri == null) return;
         try {

@@ -39,7 +39,7 @@ public class Main {
 //        SmartHome.read();
         Yandex.getRoomsAndDevices();
 
-        log.info("DEVICES: "+SmartHome.devices);
+        log.info("DEVICES COUNT: "+SmartHome.devices.size());
         lmsPlayers.checkRooms();
         lmsPlayers.write();
 
