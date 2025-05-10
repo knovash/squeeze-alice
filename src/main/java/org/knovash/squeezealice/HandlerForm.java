@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.web.PagePlayers.*;
 
 @Log4j2
 public class HandlerForm implements HttpHandler {
@@ -21,11 +22,15 @@ public class HandlerForm implements HttpHandler {
     public void handle(HttpExchange httpExchange) throws IOException {
         log.info("HANDLER START >>>>>>>>>>>>>>>");
         ContextForm context = ContextForm.contextCreate(httpExchange);
+
+
+
+        log.info("PROCESS CONTEXT");
         processContext(context);
 
+//        если редирект
         if (context.headers.containsKey("location")) {
-
-            log.info("ALT");
+            log.info("REDIRRECT location");
             String response = context.bodyResponse;
 //        отправка ответа сервера
             byte[] responseBytes = response.getBytes(StandardCharsets.UTF_8);
@@ -37,45 +42,49 @@ public class HandlerForm implements HttpHandler {
             log.info("HTTP HANDLER FINISH <<<<<<<<<<<");
         }
 
+        log.info("SEND RESPONSE context");
         sendResponse(httpExchange, context);
         log.info("HANDLER FINISH <<<<<<<<<<<<<<<");
     }
 
     private ContextForm processContext(ContextForm context) {
-        log.info("HANDLER FORM PROCESS CONTEXT START >>>");
+        log.info("PROCESS CONTEXT START");
         Map<String, String> bodyMap = Parser.run(context.body);
         context.code = 200;
         if (bodyMap.containsKey("action")) {
             String action = bodyMap.get("action");
+            log.info("SWITCH CASE action: " + action);
             switch (action) {
 //  страница главная
-                case ("statusbar_refresh"): // информация кнопка обновить
+                case (statusbar_refresh): // информация кнопка обновить
                     PageIndex.refresh((HashMap<String, String>) bodyMap);
                     context.code = 302;
                     context.setRedirect("/");
                     break;
 //  страница Настройка плееров
-                case ("delay_expire_save"): // время до сброса громкости
+                case (delay_expire_save): // время до сброса громкости
                     lmsPlayers.delayExpireSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
-                case ("auto_remote_save"): // таскер урл для обновления виджета НЕГОТОВО
+                case (autoremote_save): // таскер урл для обновления виджета НЕГОТОВО
+                    lmsPlayers.autoremoteSave((HashMap<String, String>) bodyMap);
+                    context.bodyResponse = PagePlayers.page();
                     break;
-                case ("alt_sync_save"): // синхронизация альтернативная
+                case (alt_sync_save): // синхронизация альтернативная
                     lmsPlayers.altSyncSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
-                case ("last_this_save"): // включать последнее игравшее тут
+                case (last_this_save): // включать последнее игравшее тут
                     lmsPlayers.lastThisSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
-                case ("player_save"): // плеер сохранить
+                case (player_save): // плеер сохранить
                     lmsPlayers.playerSave((HashMap<String, String>) bodyMap);
                     context.code = 302;
                     context.setRedirect("/players");
                     break;
 //  страница Настройка ЛМС
-                case ("lms_save"): // кнопка Сохранить
+                case (lms_save): // кнопка Сохранить
                     lmsPlayers.lmsSave((HashMap<String, String>) bodyMap);
                     context.code = 302;
                     context.setRedirect("/lms");
@@ -85,7 +94,7 @@ public class HandlerForm implements HttpHandler {
                     break;
             }
         }
-        log.info("HANDLER FORM FINISH <<<<<");
+        log.info("PROCESS CONTEXT FINISH");
         return context;
     }
 

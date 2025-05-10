@@ -17,6 +17,9 @@ public class HandlerAll implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
+        log.info("");
+        log.info("---------------------------------------------------------------------------------------------");
+        log.info("");
         log.info("HTTP HANDLER START >>>>>>>>>>>>");
 //        извлечение данных из запроса в контекст
         Context context = Context.contextCreate(httpExchange);
@@ -54,7 +57,15 @@ public class HandlerAll implements HttpHandler {
             case ("/cmd"):
                 context = SwitchQueryCommand.action(context);
                 break;
-//                alice speaker voice commands
+
+
+
+//                Запрос от Яндекс приходит на сервер в облаке https://alice-lms.zeabur.app
+//            там запрос разбирается в context
+//            context отправляется в топик MQTT
+//      сюда context приходит из MQTT метода handleDeviceAndPublish
+//            тут context обрабатывается, возвращается в handleDeviceAndPublish
+//            и отправлятся в топик из которого забирает облачный сервер и отдает ответ в Яндекс умный дом
             case ("/alice/"):
                 log.info("CASE ALICE");
                 context = SwitchVoiceCommand.action(context);
@@ -80,7 +91,7 @@ public class HandlerAll implements HttpHandler {
                 context = PageIndex.action(context);
                 break;
         }
-        log.info("FINISH SWITCH PATH. RETURN CONTEXT");
+        log.info("FINISH. RETURN CONTEXT");
         return context;
     }
 }

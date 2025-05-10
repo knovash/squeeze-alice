@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+  <head title="Favorites">
+    <expansionState></expansionState>
+  </head>
+  <body>
+    <outline URL="http://api.somafm.com/vaporwaves130.pls" icon="/imageproxy/http%3A%2F%2Fapi.somafm.com%2Flogos%2F256%2Fvaporwaves256.png/image.png" text="Vaporwaves" type="audio" />
+    <outline URL="http://api.somafm.com/brfm130.pls" icon="/imageproxy/http%3A%2F%2Fapi.somafm.com%2Flogos%2F256%2Fbrfm256.jpg/image.jpg" text="Black Rock FM" type="audio" />
+    <outline URL="http://api.somafm.com/cliqhop130.pls" icon="/imageproxy/http%3A%2F%2Fapi.somafm.com%2Flogos%2F256%2Fcliqhop256.png/image.png" text="cliqhop idm" type="audio" />
+    <outline URL="http://api.somafm.com/poptron130.pls" icon="/imageproxy/http%3A%2F%2Fapi.somafm.com%2Flogos%2F256%2Fpoptron256.png/image.png" text="PopTron" type="audio" />
+    <outline URL="http://api.somafm.com/defcon130.pls" icon="/imageproxy/http%3A%2F%2Fapi.somafm.com%2Flogos%2F256%2Fdefcon256.png/image.png" text="DEF CON Radio" type="audio" />
+    <outline URL="http://api.somafm.com/chillits130.pls" icon="/imageproxy/http%3A%2F%2Fapi.somafm.com%2Flogos%2F256%2Fchillits256.png/image.png" text="Chillits Radio" type="audio" />
+    <outline URL="http://somafm.com/groovesalad.pls?source=xsqueezeapp" icon="https://api.somafm.com/img/groovesalad120.png" text="Groove Salad: A nicely chilled plate of ambient/downtempo beats and grooves." type="audio" />
+    <outline URL="http://api.somafm.com/n5md130.pls" icon="/imageproxy/http%3A%2F%2Fapi.somafm.com%2Flogos%2F256%2Fn5md256.png/image.png" text="n5MD Radio" type="audio" />
+    <outline URL="http://somafm.com/deepspaceone.pls?source=xsqueezeapp" icon="https://api.somafm.com/img/deepspaceone120.gif" text="Deep Space One: Deep ambient electronic, experimental and space music. For inner and outer space exploration." type="audio" />
+    <outline URL="http://somafm.com/missioncontrol.pls?source=xsqueezeapp" icon="https://api.somafm.com/img/missioncontrol120.jpg" text="Mission Control: Celebrating NASA and Space Explorers everywhere." type="audio" />
+    <outline URL="http://somafm.com/sf1033.pls?source=xsqueezeapp" icon="https://api.somafm.com/img/sf1033120.png" text="SF 10-33: Ambient music mixed with the sounds of San Francisco public safety radio traffic." type="audio" />
+    <outline URL="http://api.somafm.com/beatblender130.pls" icon="/imageproxy/http%3A%2F%2Fapi.somafm.com%2Flogos%2F256%2Fbeatblender256.png/image.png" text="Beat Blender" type="audio" />
+    <outline URL="http://api.somafm.com/thetrip130.pls" icon="/imageproxy/http%3A%2F%2Fapi.somafm.com%2Flogos%2F256%2Fthetrip256.jpg/image.jpg" text="The Trip" type="audio" />
+    <outline URL="http://api.somafm.com/sonicuniverse130.pls" icon="/imageproxy/http%3A%2F%2Fapi.somafm.com%2Flogos%2F256%2Fsonicuniverse256.png/image.png" text="Sonic Universe" type="audio" />
+    <outline URL="http://api.somafm.com/sfinsf130.pls" icon="/imageproxy/http%3A%2F%2Fapi.somafm.com%2Flogos%2F256%2Fsfinsf256.jpg/image.jpg" text="SF in SF" type="audio" />
+  </body>
+</opml>

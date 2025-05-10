@@ -8,8 +8,10 @@ remote="${file_name##*_}"
 echo -e ${BGreen}"IP: $remote"${NC}
 #remote=192.168.1.123
 
+rm -r data
+
 echo -e "copy json from "${BGreen}$remote${NC}"\n"
-sshpass -p "12345" scp -r root@$remote:/opt/squeeze-alice-1.0/data/ .
+sshpass -p "12345" scp -r root@$remote:/opt/squeeze-alice-1.0/data .
 
 echo -e ${BGreen}"OK"${NC}
 sleep 5

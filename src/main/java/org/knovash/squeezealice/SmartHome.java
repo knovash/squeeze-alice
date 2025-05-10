@@ -2,14 +2,13 @@ package org.knovash.squeezealice;
 
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.provider.response.Capability;
-import org.knovash.squeezealice.provider.response.Device;
-import org.knovash.squeezealice.provider.response.Range;
+import org.knovash.squeezealice.provider.response.*;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Log4j2
 @Data
@@ -40,21 +39,39 @@ public class SmartHome {
         return device;
     }
 
-    public static Device create(String room, Integer index) {
-        log.debug(" ADD IN ROOM: " + room + " MUSIC RECIVER ID: " + index);
+    public static void create(String room, Integer index) {
+//        log.info("START CREATE ROOM: " + room + " INDEX: " + index);
+//        log.info("EXISTS: " + SmartHome.devices.stream().map(d -> d.id + ":" + d.room).collect(Collectors.toList()));
+//        SmartHome.devices.stream().forEach(d -> log.info("EXISTS LOCAL DEVICE ID: " + d.id + " ROOM: " + d.room));
+//        если локальных девайсов еще нет - создать пустой лист
+        if (SmartHome.devices == null) SmartHome.devices = new ArrayList<>();
+//        если в метод не пришел индекс - создать индекс = существующий макс индекс + 1
+        if (index == null) {
+            int maxId = SmartHome.devices.stream()
+                    .mapToInt(d -> Integer.parseInt(d.id))
+                    .max()
+                    .orElse(0);
+            index = maxId + 1;
+            log.info("NEW ID IN SMART HOME: {}", index);
+        }
+
+// проверить если девайс с такой комнатой уже существует - выход
+        Integer counter = (int) SmartHome.devices.stream().filter(device1 -> device1.room.equals(room)).count();
+//        log.info("DEVICE EXISTS COUNTER: " + counter);
+        if (counter > 0) {
+            log.info("DEVICE EXISTS. CREATE SKIP");
+            return;
+        }
+
+//        создать новый девайс
         Device device = new Device();
         device.type = "devices.types.media_device.receiver";
         device.room = room;
-        int conteinsCounter =
-                (int) SmartHome.devices.stream()
-                        .filter(device1 -> device1.room.equals(device.room))
-                        .count();
-        log.info("DEVICE: " + device.room + " " + device.id);
-        if (conteinsCounter > 0) {
-            log.debug("EXISTS STOP");
-            return null;
-        }
 
+//        log.info("NEW DEVICE: " + device);
+
+
+//        создать для нового девайса капабилити
         Capability volume = new Capability();
         volume.type = "devices.capabilities.range"; // Тип умения. channel     volume
         volume.retrievable = true; // Доступен ли для данного умения устройства запрос состояния
@@ -65,51 +82,58 @@ public class SmartHome {
         volume.parameters.range.min = 1;
         volume.parameters.range.max = 100;
         volume.parameters.range.precision = 1;
+        volume.state = new State();
+        volume.state.instance = "volume";
+        volume.state.value = "0";
+        volume.state.action_result = new ActionResult();
+        volume.state.action_result.error_code = null;
+        volume.state.action_result.error_message = null;
         device.capabilities.add(volume);
+//        log.info("DEVICE ADD CAPABILITI VOLUME: " + device.capabilities.get(device.capabilities.indexOf(volume)));
 
         Capability channel = new Capability();
         channel.type = "devices.capabilities.range"; // Тип умения. channel     volume
-        channel.retrievable = true; // Доступен ли для данного умения устройства запрос состояния
-        channel.reportable = true; // Признак включенного оповещения об изменении состояния умения
+        channel.retrievable = false; // Доступен ли для данного умения устройства запрос состояния
+        channel.reportable = false; // Признак включенного оповещения об изменении состояния умения
         channel.parameters.instance = "channel"; // Название функции для данного умения. volume channel
         channel.parameters.random_access = true; // Возможность устанавливать произвольные значения функции
         channel.parameters.range = new Range();
         channel.parameters.range.min = 1;
         channel.parameters.range.max = 9;
         channel.parameters.range.precision = 1;
+        channel.state = new State();
+        channel.state.instance = "channel";
+        channel.state.value = null;
+        channel.state.relative = false;
+        channel.state.action_result = new ActionResult();
+        channel.state.action_result.error_code = null;
+        channel.state.action_result.error_message = null;
         device.capabilities.add(channel);
+//        log.info("DEVICE ADD CAPABILITI CHANNEL: " + device.capabilities.get(device.capabilities.indexOf(channel)));
 
         Capability on_of = new Capability();
         on_of.type = "devices.capabilities.on_off"; // Тип умения. channel     volume
         on_of.retrievable = true; // Доступен ли для данного умения устройства запрос состояния
         on_of.reportable = true; // Признак включенного оповещения об изменении состояния умения
         on_of.parameters.instance = "on"; // Название функции для данного умения. volume channel
+//        on_of.state = new State();
+//        on_of.state.instance = "on";
+//        on_of.state.value = null;
+//        on_of.state.relative = false;
+//        on_of.state.action_result = new ActionResult();
+//        on_of.state.action_result.error_code = null;
+//        on_of.state.action_result.error_message = null;
         device.capabilities.add(on_of);
+//        log.info("DEVICE ADD CAPABILITI ON_OF: " + device.capabilities.get(device.capabilities.indexOf(on_of)));
 
-        Integer id;
-        Integer idByParameters = null;
-        if (index != null) {
-            idByParameters = index;
-            log.info("ID BY PARAMETERS: " + idByParameters);
-        }
-        if (SmartHome.devices == null) SmartHome.devices = new ArrayList<>();
-        if (idByParameters == null) {
-            if (SmartHome.devices.size() == 0) {
-                id = 1;
-            } else {
-                Integer idBySmartHome = Integer.valueOf(SmartHome.devices.stream()
-                        .map(d -> d.id)
-                        .max(Comparator.naturalOrder())
-                        .orElse(null));
-                id = idBySmartHome + 1;
-                log.info("NEW ID IN SMART HOME: " + id);
-            }
-        } else id = idByParameters;
-
-        device.id = String.valueOf(id);
+// назначить девайсу индекс
+        device.id = String.valueOf(index);
+        //        добавить девайс в лист локальных девайсов
         SmartHome.devices.add(device);
-        SmartHome.write();
-        return device;
+        log.info("CREATED DEVICE ID: " + device.id + " ROOM: " + device.room + " " + SmartHome.devices.stream().map(d -> d.id + ":" + d.room).collect(Collectors.toList()));
+//        log.info("CREATER DEVICE FULL: " + device);
+//        log.info("DEVICES: " + SmartHome.devices.size());
+        //        return device;
     }
 
     public static void read() {
@@ -121,6 +145,6 @@ public class SmartHome {
 
     public static void write() {
         log.info("WRITE devices.json");
-        JsonUtils.pojoToJsonFile(SmartHome.devices,SmartHome.saveToFileJson);
+        JsonUtils.pojoToJsonFile(SmartHome.devices, SmartHome.saveToFileJson);
     }
 }

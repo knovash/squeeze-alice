@@ -12,27 +12,22 @@ import static org.knovash.squeezealice.Main.config;
 public class ProviderUserDevices {
 
     public static Context providerUserDevicesRun(Context context) {
-        log.info("USER DEVICES " + SmartHome.devices.size());
-
-
-
         String xRequestId = context.headers.getFirst("X-request-id");
         log.info("XREQUESTID: " + xRequestId);
-//        lmsPlayers.updateServerStatus();
-//        log.info("USER DEVICES " + SmartHome.devices);
-//        String xRequestId = context.xRequestId;
-        log.info("XREQUESTID: " + xRequestId);
+        log.info("LOCAL DEVICES " + SmartHome.devices.size());
+        log.info("LOCAL DEVICES " + SmartHome.devices);
+
         ResponseYandex responseYandex = new ResponseYandex();
         responseYandex.request_id = xRequestId;
         responseYandex.payload = new Payload();
         responseYandex.payload.user_id = config.yandexUid;
+//   если state не обнулить Поиск устройств в ошибку
         SmartHome.devices.forEach(device -> device.capabilities.forEach(capability -> capability.state = null));
 //        если State не null то при обновление устройств в УДЯ будет ошибка
         responseYandex.payload.devices = SmartHome.devices;
         String json = JsonUtils.pojoToJson(responseYandex);
         log.info("USER: " + config.yandexUid);
-        log.info("DEVICES: " + SmartHome.devices.size());
-//        log.info("JSON: " + json);
+        log.info("JSON: " + json);
 
         json = json.replace("\"true\"", "true");
         json = json.replace("\"false\"", "false");

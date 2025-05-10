@@ -17,7 +17,10 @@ tar -czvf squeeze-alice-local.tar.gz \
   target/squeeze-alice-1.0.jar \
   utils/squeeze-alice.service \
   install.txt \
-  *install*.sh
+  install_local.sh \
+  install_ssh_192.168.1.123.sh \
+  uninstall_local.sh \
+  uninstall_ssh_192.168.1.123.sh
 
 echo -e ${BGreen}"FINISH"${NC}
 

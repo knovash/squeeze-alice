@@ -100,12 +100,12 @@ public class Spotify {
     public static void requestCurrentlyPlaying() {
         String uri = "https://api.spotify.com/v1/me/player/currently-playing";
         log.info("SPOTIFY REQUEST CURRENTLY PLAYING " + uri);
-        log.info("REQUEST TRY");
+//        log.info("REQUEST TRY");
         String json = requestWithRefreshGet(uri);
         log.info("REQUEST OK");
-        log.info("JSON " + json);
+        log.info("REQUEST JSON " + json);
         if (json == null) {
-            log.info("JSON NULL");
+            log.info("JSON NULL RETURN");
             currentlyPlaying = null;
             return;
         }
@@ -312,13 +312,15 @@ public class Spotify {
     }
 
     public static Boolean transfer(Player player) {
-        log.info("SPOTIFY TRANSFER TO " + player.name);
+        log.info("SPOTIFY START TRANSFER TO " + player.name);
         requestCurrentlyPlaying();
-        log.info("PLAY OK " + currentlyPlaying + " " + currentlyPlaying.is_playing);
+        log.info("currentlyPlaying: " + currentlyPlaying);
         if (currentlyPlaying == null || !currentlyPlaying.is_playing) {
             log.info("SPOTIFY NOT PLAY. STOP TRANSFER");
             return false;
         }
+
+        log.info("PLAY OK " + currentlyPlaying + " " + currentlyPlaying.is_playing);
         String name;
         String playingUri;
         if (currentlyPlaying.context == null) {
@@ -339,7 +341,7 @@ public class Spotify {
         lastTitle = Spotify.getNameById(lastPath);
         log.info("LAST PATH: " + lastPath);
         log.info("LAST TITLE: " + lastTitle);
-        player.ifExpiredOrNotPlayUnsyncWakeSet();
+        player.ifExpiredAndNotPlayingUnsyncWakeSet(null);
         player.playPath(playingUri);
         player.waitFor(1000);
         player.pause();

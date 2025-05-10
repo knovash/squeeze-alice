@@ -6,8 +6,6 @@ import org.apache.http.HttpResponse;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
-import org.knovash.squeezealice.yandex.Yandex;
-import org.knovash.squeezealice.yandex.YandexInfo;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -33,42 +31,20 @@ public class Utils {
 
     public static Map<String, String> altNames;
 
-    public static void changePlayerValue(HashMap<String, String> parameters) {
-        String playerName = parameters.get("player");
-        String valueName = parameters.get("value_name");
-        Integer newValue = Integer.valueOf(parameters.get("value"));
-        Field field = null;
-        playerName = getPlayerByNameInQuery(playerName);
-        Player player = lmsPlayers.getPlayerByCorrectName(playerName);
-        log.info("PLAYER: " + playerName + " VALUE NAME: " + valueName + " NEW VALUE: " + newValue);
-        try {
-            field = Player.class.getField(valueName);
-            field.set(player, newValue);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            log.info("VALUE SET: " + valueName + " = " + field.get(player));
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-        lmsPlayers.write();
-    }
-
-    public static String getPlayerByNameInQuery(String name) {
-        log.info("NAME: " + name + " ALT NAMES: " + altNames);
-        if (altNames.containsKey(name)) {
-            name = altNames.get(name);
-        } else {
-            log.info("NO ALT NAME FOR " + name);
-        }
-        return name;
-    }
+//    public static String getPlayerByNameInQuery(String name) {
+//        log.info("NAME: " + name + " ALT NAMES: " + altNames);
+//        if (altNames.containsKey(name)) {
+//            name = altNames.get(name);
+//        } else {
+//            log.info("NO ALT NAME FOR " + name);
+//        }
+//        return name;
+//    }
 
 
-    public static String timeVolumeGet(Player player) {
-        return player.schedule.entrySet().toString();
-    }
+//    public static String timeVolumeGet(Player player) {
+//        return player.schedule.entrySet().toString();
+//    }
 //
 //    public static String timeVolumeSet(Player player, HashMap<String, String> parameters) {
 //        Integer time = Integer.valueOf(parameters.get("time"));
@@ -198,11 +174,13 @@ public class Utils {
     }
 
     public static void sleep(int seconds) {
+        log.info("SLEEP: " +seconds);
         try {
             Thread.sleep(seconds);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        log.info("SLEEP FINISH");
     }
 
     //    https://stackoverflow.com/questions/10893313/how-to-convert-cyrillic-letters-to-english-latin-in-java-string
@@ -241,7 +219,8 @@ public class Utils {
 //        }
 //    }
 
-    public static void timerRequestPlayersState(int priod) {
+    public static void timerRequestPlayersState(int period) {
+//      обновить состояние плееров в ЛМС. опросить все плееры сохранить время если играет
         log.info("TIMER REQUEST PLAYERS STATE UPDATE");
         Runnable drawRunnable = new Runnable() {
             public void run() {
@@ -249,7 +228,7 @@ public class Utils {
             }
         };
         ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
-        exec.scheduleAtFixedRate(drawRunnable, 5, priod, TimeUnit.MINUTES);
+        exec.scheduleAtFixedRate(drawRunnable, 5, period, TimeUnit.MINUTES);
     }
 
     public static void readAliceIdInRooms() {
@@ -299,5 +278,16 @@ public class Utils {
         if (correctPlayer == null) log.info("ERROR PLAYER NOT EXISTS IN LMS ");
         log.info("CORRECT PLAYER: " + player + " -> " + correctPlayer);
         return correctPlayer;
+    }
+
+    public static List<String> linesFromList(List<String> list, int index, int lines) {
+//   показывать из плейлиста часть сторок до и после играющего трека
+        int left = lines;
+        int start = Math.max(0, index - left);
+        int end = Math.min(list.size(), start + lines * 2 + 1);
+        int delta = lines * 2 + 1 - (end - start);
+        int start2 = Math.max(0, start - delta);
+        log.info("INDEX: " + index + " LEFT: " + left + " START: " + start + " END: " + end + " DELTA: " + delta);
+        return new ArrayList<>(list.subList(start2, end));
     }
 }

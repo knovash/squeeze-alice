@@ -19,26 +19,26 @@ password=${password:-12345}
 echo $username" "$password
 #------------------------------------------------------------
 
-#echo -e ${BGreen}"MVN PACKAGE"${NC}
-#rm -r target
-#mvn package
-
 echo -e ${BGreen}"MKDIR /opt/squeeze-alice-1.0"${NC}
 sshpass -p "$password" ssh "$username@$remote" "mkdir -p /opt/squeeze-alice-1.0"
 
+echo -e ${BGreen}"RM /opt/squeeze-alice-1.0/data"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "rm -r /opt/squeeze-alice-1.0/data"
+
 # копирование файлов
 echo -e ${BGreen}"COPY JAR squeeze-alice-1.0.jar TO /opt/squeeze-alice-1.0/"${NC}
+sshpass -p "$password" rsync -avh --progress        squeeze-alice-1.0.jar root@$remote:/opt/squeeze-alice-1.0/ 
 #sshpass -p "12345" scp target/*.jar root@$remote::/opt/squeeze-alice-1.0/
 #sshpass -p "$password" rsync -avh --progress target/*.jar root@$remote:/opt/squeeze-alice-1.0/
-[ -f "squeeze-alice-1.0.jar" ] && \
-sshpass -p "$password" rsync -avh --progress        squeeze-alice-1.0.jar root@$remote:/opt/squeeze-alice-1.0/ || \
-sshpass -p "$password" rsync -avh --progress target/squeeze-alice-1.0.jar root@$remote:/opt/squeeze-alice-1.0/
-
+#[ -f "squeeze-alice-1.0.jar" ] && \
+#sshpass -p "$password" rsync -avh --progress        squeeze-alice-1.0.jar root@$remote:/opt/squeeze-alice-1.0/ || \
+#sshpass -p "$password" rsync -avh --progress target/squeeze-alice-1.0.jar root@$remote:/opt/squeeze-alice-1.0/
 echo -e ${BGreen}"COPY SERVICE squeeze-alice.service TO /lib/systemd/system/"${NC}
+sshpass -p "$password" rsync -avh --progress       squeeze-alice.service root@$remote:/lib/systemd/system/
 #sshpass -p "$password" rsync -avh --progress utils/squeeze-alice.service root@$remote:/lib/systemd/system/
-[ -f "squeeze-alice.service" ] && \
-sshpass -p "$password" rsync -avh --progress       squeeze-alice.service root@$remote:/lib/systemd/system/ || \
-sshpass -p "$password" rsync -avh --progress utils/squeeze-alice.service root@$remote:/lib/systemd/system/
+#[ -f "squeeze-alice.service" ] && \
+#sshpass -p "$password" rsync -avh --progress       squeeze-alice.service root@$remote:/lib/systemd/system/ || \
+#sshpass -p "$password" rsync -avh --progress utils/squeeze-alice.service root@$remote:/lib/systemd/system/
 
 # проверка файлов
 echo -e ${BGreen}"CHECK LS /opt/squeeze-alice-1.0/"${NC}

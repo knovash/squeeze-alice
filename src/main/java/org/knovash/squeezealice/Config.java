@@ -62,7 +62,7 @@ public class Config {
         Config jsonConfig = JsonUtils.jsonFileToPojo("data/config.json", Config.class);
         if (jsonConfig == null) {
             log.info("NO FILE config.json WRITE NEW");
-            config.writeConfig();
+            config.write();
             return;
         }
         this.port = jsonConfig.port;
@@ -115,7 +115,7 @@ public class Config {
                 "spotifyName=" + spotifyName;
     }
 
-    public void writeConfig() {
+    public void write() {
         log.info("WRITE CONFIG TO config.json");
         JsonUtils.pojoToJsonFile(this, "data/config.json");
     }

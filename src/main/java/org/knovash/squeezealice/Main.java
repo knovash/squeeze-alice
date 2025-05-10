@@ -1,7 +1,7 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.spotify.Spotify;
+import org.knovash.squeezealice.utils.PlayersUpdateScheduler;
 import org.knovash.squeezealice.yandex.Yandex;
 import org.knovash.squeezealice.utils.Utils;
 
@@ -29,16 +29,24 @@ public class Main {
         log.info("userApp.root: " + System.getProperty("userApp.root"));
         config.readConfigProperties();
         config.readConfigJson();
-        config.writeConfig();
+        config.write();
+
         lmsPlayers.searchForLmsIp();
         Utils.readAliceIdInRooms();
-        lmsPlayers.readPlayersSettings();
+        lmsPlayers.read();
         lmsPlayers.updateLmsPlayers();
         lmsPlayers.write();
-        SmartHome.read();
+//        SmartHome.read();
         Yandex.getRoomsAndDevices();
+
+        log.info("DEVICES COUNT: "+SmartHome.devices.size());
+        lmsPlayers.checkRooms();
+        lmsPlayers.write();
+
         Server.start();
         Hive.start();
+//        PlayersUpdateScheduler.startPeriodicUpdate(5);
+        log.info("VERSION 1.2");
 //        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate);
 //        Spotify.ifExpiredRunRefersh();
 
