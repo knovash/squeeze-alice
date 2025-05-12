@@ -28,6 +28,21 @@ public class Context {
     public String query;
     public HashMap<String, String> queryMap;
 
+    public static Context contextCreate(String path, String headersJson, String body, String query) {
+//        для теста
+        Headers headers = HeadersParser.parseHeaders(headersJson);
+        String xRequestId = headers.getFirst("X-request-id");
+        HashMap<String, String> queryMap = (HashMap<String, String>) Parser.run(query);
+        Context context = new Context();
+        context.body = body;
+        context.headers = headers;
+        context.path = path;
+        context.xRequestId = xRequestId;
+        context.query = query;
+        context.queryMap = queryMap;
+        return context;
+    }
+
     public static Context contextCreate(HttpExchange httpExchange) {
 //      METHOD
         String method = httpExchange.getRequestMethod();

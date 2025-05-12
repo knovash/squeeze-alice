@@ -12,6 +12,7 @@ import lombok.extern.log4j.Log4j2;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InaccessibleObjectException;
 import java.util.List;
 import java.util.Map;
@@ -89,6 +90,20 @@ public class JsonUtils {
             objectWriter.writeValue(file, list);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+
+    public static <T> T jsonFileToPojoClass(String classpathPath, Class<T> clazz) {
+        try (InputStream is = JsonUtils.class.getResourceAsStream(classpathPath)) {
+            if (is == null) {
+                log.info("FILE NOT FOUND IN CLASSPATH: " + classpathPath);
+                return null;
+            }
+            return objectMapper.readValue(is, clazz);
+        } catch (IOException e) {
+            log.error("ERROR READING JSON", e);
+            return null;
         }
     }
 
