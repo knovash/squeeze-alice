@@ -1,9 +1,10 @@
-package org.knovash.squeezealice;
+package squeezealicetest.utils;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.Requests;
 import org.knovash.squeezealice.lms.PlayerStatus;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
@@ -18,12 +19,13 @@ import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.knovash.squeezealice.Main.*;
+import static squeezealicetest.utils.MainTest.lmsPlayersTest;
 
 @Log4j2
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Player {
+public class PlayerTest {
 
     public String name;
     public String nameInQuery;
@@ -51,7 +53,7 @@ public class Player {
     private List<String> playlist = new ArrayList<>();
     public Integer currentChannel = 0;
 
-    public Player(String name, String mac) {
+    public PlayerTest(String name, String mac) {
         this.name = name;
         this.mac = mac;
         this.title = "непонятно";
@@ -75,7 +77,7 @@ public class Player {
 
     public static String count() {
         log.info("COUNT START");
-        Response response = Requests.postToLmsForResponse(RequestParameters.count().toString());
+        Response response = RequestsTest.postToLmsForResponse(RequestParameters.count().toString());
         if (response == null) {
             log.info("REQUEST ERROR");
             return null;
@@ -85,7 +87,7 @@ public class Player {
     }
 
     public static String name(String index) {
-        Response response = Requests.postToLmsForResponse(RequestParameters.name(index).toString());
+        Response response = RequestsTest.postToLmsForResponse(RequestParameters.name(index).toString());
         if (response == null) {
             log.info("REQUEST ERROR");
             return null;
@@ -95,7 +97,7 @@ public class Player {
     }
 
     public static String id(String index) {
-        Response response = Requests.postToLmsForResponse(RequestParameters.id(index).toString());
+        Response response = RequestsTest.postToLmsForResponse(RequestParameters.id(index).toString());
         if (response == null) {
             log.info("REQUEST ERROR");
             return null;
@@ -106,7 +108,7 @@ public class Player {
 
     public String mode() {
         this.playing = false;
-        Response response = Requests.postToLmsForResponse(RequestParameters.mode(this.name).toString());
+        Response response = RequestsTest.postToLmsForResponse(RequestParameters.mode(this.name).toString());
         if (response == null) {
             log.info("REQUEST ERROR " + this.name);
             return "stop";
@@ -116,20 +118,8 @@ public class Player {
         return response.result._mode;
     }
 
-    public String checkPlayerConnected() {
-        this.playing = false;
-        Response response = Requests.postToLmsForResponse(RequestParameters.mode(this.name).toString());
-        if (response == null) {
-            log.info("REQUEST ERROR " + this.name);
-            return null;
-        }
-        if (response.result._mode.equals("play")) this.playing = true;
-        log.info("PLAYER: " + this.name + " CONNECTED");
-        return response.result._mode;
-    }
-
     public String path() {
-        Response response = Requests.postToLmsForResponse(RequestParameters.path(this.name).toString());
+        Response response = RequestsTest.postToLmsForResponse(RequestParameters.path(this.name).toString());
         if (response == null) {
             log.info("REQUEST ERROR " + this.name);
             return "";
@@ -139,7 +129,7 @@ public class Player {
     }
 
     public String tracks() {
-        Response response = Requests.postToLmsForResponse(RequestParameters.tracks(this.name).toString());
+        Response response = RequestsTest.postToLmsForResponse(RequestParameters.tracks(this.name).toString());
         if (response == null) {
             log.info("REQUEST ERROR " + this.name);
             return "0";
@@ -148,28 +138,8 @@ public class Player {
         return response.result._tracks;
     }
 
-    public String playlist() {
-
-        this.status(20);
-//        Response response = Requests.postToLmsForResponse(RequestParameters.tracks(this.name).toString());
-//        if (response == null) {
-//            log.info("REQUEST ERROR " + this.name);
-//            return "0";
-//        }
-//        log.info("PLAYER: " + this.name + " TRACKS: " + response.result.title);
-        return "PLAYLIST";
-    }
-
-//    public List<String> favorites() {
-//        String playerName = this.name;
-//        Response response = Requests.postToLmsForResponse(RequestParameters.favorites(playerName, 10).toString());
-//        List<String> playlist = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
-//        log.info("FAVORITES: " + playlist);
-//        return playlist;
-//    }
-
     public String playlistName() {
-        Response response = Requests.postToLmsForResponse(RequestParameters.playlistname(this.name).toString());
+        Response response = RequestsTest.postToLmsForResponse(RequestParameters.playlistname(this.name).toString());
         if (response == null) {
             log.info("REQUEST ERROR " + this.name);
             return null;
@@ -178,38 +148,8 @@ public class Player {
         return response.result._name;
     }
 
-    public String playlistUrl() {
-        Response response = Requests.postToLmsForResponse(RequestParameters.playlisturl(this.name).toString());
-        if (response == null) {
-            log.info("REQUEST ERROR " + this.name);
-            return null;
-        }
-        log.info("PLAYER: " + this.name + " PLAYLISTURL: " + response.result._url);
-        return response.result._url;
-    }
-
-    public String albumName() {
-        Response response = Requests.postToLmsForResponse(RequestParameters.albumname(this.name).toString());
-        if (response == null) {
-            log.info("REQUEST ERROR " + this.name);
-            return null;
-        }
-        log.info("PLAYER: " + this.name + " ALBUMNAME: " + response.result._album);
-        return response.result._album;
-    }
-
-    public String trackname() {
-        Response response = Requests.postToLmsForResponse(RequestParameters.trackname(this.name).toString());
-        if (response == null) {
-            log.info("REQUEST ERROR " + this.name);
-            return "";
-        }
-        log.info("PLAYER: " + this.name + " TRACKNAME: " + response.result._title);
-        return response.result._title;
-    }
-
     public String artistName() {
-        Response response = Requests.postToLmsForResponse(RequestParameters.artistname(this.name).toString());
+        Response response = RequestsTest.postToLmsForResponse(RequestParameters.artistname(this.name).toString());
         if (response == null) {
             log.info("REQUEST ERROR " + this.name);
             return null;
@@ -219,7 +159,7 @@ public class Player {
     }
 
     public String volumeGet() {
-        Response response = Requests.postToLmsForResponse(RequestParameters.volume(this.name).toString());
+        Response response = RequestsTest.postToLmsForResponse(RequestParameters.volume(this.name).toString());
         if (response == null) {
             log.info("REQUEST ERROR " + this.name);
             return "0";
@@ -233,7 +173,7 @@ public class Player {
         String playerName = this.name;
         List<String> playlist = null;
         try {
-            Response response = Requests.postToLmsForResponse(RequestParameters.favorites("", 10).toString());
+            Response response = RequestsTest.postToLmsForResponse(RequestParameters.favorites("", 10).toString());
             playlist = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
         } catch (Exception e) {
             log.info("ERROR " + e);
@@ -244,90 +184,90 @@ public class Player {
     }
 
     public void favoritesAdd(String url, String title) {
-        Requests.postToLmsForResponse(RequestParameters.favoritesAdd(this.name, url, title).toString());
+        RequestsTest.postToLmsForResponse(RequestParameters.favoritesAdd(this.name, url, title).toString());
     }
 
 
 // LMS короткие действия --------------------------------------------------------------------------------------------
 
-    public Player play() {
+    public PlayerTest play() {
         log.info("PLAYER: " + this.name + " PLAY");
-        Requests.postToLmsForStatus(RequestParameters.play(this.name).toString());
+        RequestsTest.postToLmsForStatus(RequestParameters.play(this.name).toString());
         return this;
     }
 
-    public Player pause() {
+    public PlayerTest pause() {
         log.info("PLAYER: " + this.name + " PAUSE");
-        Requests.postToLmsForStatus(RequestParameters.pause(this.name).toString());
+        RequestsTest.postToLmsForStatus(RequestParameters.pause(this.name).toString());
         return this;
     }
 
-    public Player togglePlayPause() {
+    public PlayerTest togglePlayPause() {
         log.info("PLAYER: " + this.name + " PLAY/PAUSE");
-        Requests.postToLmsForStatus(RequestParameters.togglePlayPause(this.name).toString());
+        RequestsTest.postToLmsForStatus(RequestParameters.togglePlayPause(this.name).toString());
         return this;
     }
 
-    public Player playPath(String path) {
+    public PlayerTest playPath(String path) {
         log.info("PLAYER: " + this.name + " PLAY PATH: " + path);
-        Requests.postToLmsForStatus(RequestParameters.play(this.name, path).toString());
+        RequestsTest.postToLmsForStatus(RequestParameters.play(this.name, path).toString());
         return this;
     }
 
-    public Player playChannel(Integer channel) {
+    public PlayerTest playChannel(Integer channel) {
         this.currentChannel = channel;
         log.info("CHANNEL: " + channel + " PLAYER: " + this.name);
-        Requests.postToLmsForStatus(RequestParameters.play(this.name, channel - 1).toString());
+        RequestsTest.postToLmsForStatus(RequestParameters.play(this.name, channel - 1).toString());
         return this;
     }
 
-    public Player playSilence() {
+    public PlayerTest playSilence() {
         log.info("PLAYER: " + this.name + " PLAY SILENCE");
-        Requests.postToLmsForStatus(RequestParameters.play(this.name, config.silence).toString());
+        RequestsTest.postToLmsForStatus(RequestParameters.play(this.name, config.silence).toString());
         return this;
     }
 
-    public Player ctrlPrevTrack() {
+    public PlayerTest ctrlPrevTrack() {
         log.info("PLAYER: " + this.name + " NEXT TRACK");
         if (!this.tracks().equals("1"))
-            Requests.postToLmsForStatus(RequestParameters.prevtrack(this.name).toString());
+            RequestsTest.postToLmsForStatus(RequestParameters.prevtrack(this.name).toString());
         return this;
     }
 
-    public Player ctrlNextTrack() {
+    public PlayerTest ctrlNextTrack() {
         log.info("PLAYER: " + this.name + " NEXT TRACK");
         if (!this.tracks().equals("1"))
-            Requests.postToLmsForStatus(RequestParameters.nexttrack(this.name).toString());
+            RequestsTest.postToLmsForStatus(RequestParameters.nexttrack(this.name).toString());
         return this;
     }
 
-    public Player playTrackNumber(String track) {
+    public PlayerTest playTrackNumber(String track) {
         log.info("PLAYER: " + this.name + " TRACK NUMBER " + track);
-        Requests.postToLmsForStatus(RequestParameters.track(this.name, track).toString());
+        RequestsTest.postToLmsForStatus(RequestParameters.track(this.name, track).toString());
         return this;
     }
 
-    public Player shuffleOn() {
+    public PlayerTest shuffleOn() {
         log.info("PLAYER: " + this.name + " SHUFFLE ON");
-        Requests.postToLmsForStatus(RequestParameters.shuffleon(this.name).toString());
+        RequestsTest.postToLmsForStatus(RequestParameters.shuffleon(this.name).toString());
         return this;
     }
 
-    public Player shuffleOff() {
+    public PlayerTest shuffleOff() {
         log.info("PLAYER: " + this.name + " SHUFFLE OFF");
-        Requests.postToLmsForStatus(RequestParameters.shuffleoff(this.name).toString());
+        RequestsTest.postToLmsForStatus(RequestParameters.shuffleoff(this.name).toString());
         return this;
     }
 
-    public Player syncTo(String toPlayerName) {
+    public PlayerTest syncTo(String toPlayerName) {
         log.info("SYNC " + this.name + " TO " + toPlayerName);
-        Requests.postToLmsForStatus(RequestParameters.sync(this.name, toPlayerName).toString());
+        RequestsTest.postToLmsForStatus(RequestParameters.sync(this.name, toPlayerName).toString());
         return this;
     }
 
-    public Player unsync() {
+    public PlayerTest unsync() {
         log.info("PLAYER UNSYNC: " + this.name);
-        Requests.postToLmsForStatus(RequestParameters.unsync(this.name).toString());
+        RequestsTest.postToLmsForStatus(RequestParameters.unsync(this.name).toString());
         return this;
     }
 
@@ -336,7 +276,7 @@ public class Player {
 
 
     // включить музыку
-    public Player turnOnMusic(String volume) {
+    public PlayerTest turnOnMusic(String volume) {
         log.info("TURN ON MUSIC PLAYER: " + this.name);
 // узнать состояние плеера
         this.status(); // далее запускается в методе экспайред
@@ -344,8 +284,8 @@ public class Player {
         String playingPlayerName = null;
 //        найти играющие исключая отделенные
         this.playingPlayersNamesNotInCurrentGroup(true);
-        if (lmsPlayers.playingPlayersNames != null && lmsPlayers.playingPlayersNames.size() > 0)
-            playingPlayerName = lmsPlayers.playingPlayersNames.get(0);
+        if (lmsPlayersTest.playingPlayersNames != null && lmsPlayersTest.playingPlayersNames.size() > 0)
+            playingPlayerName = lmsPlayersTest.playingPlayersNames.get(0);
 
 // 1) если уже играет и нет других играющих - ничего не делать
         if (this.mode.equals("play")) {
@@ -354,9 +294,9 @@ public class Player {
 //                this.volumeSet(ProviderAction.volumeByProvider);
 //            }
             if (volume != null) this.volumeSet(volume);
-            log.info("PLAYING NOT IN GROUP: " + lmsPlayers.playingPlayersNamesNotInCurrentGrop);
-            if (lmsPlayers.playingPlayersNamesNotInCurrentGrop == null ||
-                    lmsPlayers.playingPlayersNamesNotInCurrentGrop.size() == 0) {
+            log.info("PLAYING NOT IN GROUP: " + lmsPlayersTest.playingPlayersNamesNotInCurrentGrop);
+            if (lmsPlayersTest.playingPlayersNamesNotInCurrentGrop == null ||
+                    lmsPlayersTest.playingPlayersNamesNotInCurrentGrop.size() == 0) {
                 log.info("PLAYER ALREADY PLAYING. NO OTHER PLAYING. SKIP TURN ON MUSIC");
                 return this;
             }
@@ -381,17 +321,17 @@ public class Player {
         }
 // 4) если играет или не играет, не отделен и есть играющий не в группе - подключиться к нему в группу
         if (!this.separate &&
-                lmsPlayers.playingPlayersNamesNotInCurrentGrop != null &&
-                lmsPlayers.playingPlayersNamesNotInCurrentGrop.size() > 0) {
+                lmsPlayersTest.playingPlayersNamesNotInCurrentGrop != null &&
+                lmsPlayersTest.playingPlayersNamesNotInCurrentGrop.size() > 0) {
             log.info("SYNC TO PLAYING " + playingPlayerName);
-            this.syncTo(lmsPlayers.playingPlayersNamesNotInCurrentGrop.get(0));
+            this.syncTo(lmsPlayersTest.playingPlayersNamesNotInCurrentGrop.get(0));
             return this;
         }
 
 // сохранить последнее время и путь
 // обновить виджеты таскер
 // перенесено после runInstance всех устройств
-// Requests.autoRemoteRefresh();
+// RequestsTest.autoRemoteRefresh();
 
 // сохранение времени и пути должно выполняться для каждого плеера после выполнения действий
 
@@ -401,7 +341,7 @@ public class Player {
     }
 
     // выключить музыку
-    public Player turnOffMusic() {
+    public PlayerTest turnOffMusic() {
         log.info("PLAYER: " + this.name + " TURN OFF");
         this.unsync() // отключить от группы
                 .pause(); // поставить на паузу
@@ -409,7 +349,7 @@ public class Player {
     }
 
     // включить или выключить музыку. кнопка Play/Pause на пульте или виджет таскер
-    public Player toggleMusic() {
+    public PlayerTest toggleMusic() {
         log.info("PLAYER: " + this.name + " TOGGLE MUSIC");
         this.status();
         if (this.playing) this.turnOffMusic();
@@ -418,17 +358,17 @@ public class Player {
     }
 
 
-    public Player volumeSet(String value) {
+    public PlayerTest volumeSet(String value) {
         String status = null;
         log.info("PLAYER: " + this.name + " SET VOLUME: " + value);
-        status = Requests.postToLmsForStatus(RequestParameters.volume(this.name, value).toString());
+        status = RequestsTest.postToLmsForStatus(RequestParameters.volume(this.name, value).toString());
         if (status == null || !status.contains("200")) {
             log.info("REQUEST ERROR " + this.name);
             return this;
         }
         this.status(null);
         if (playerStatus.result.mixer_volume < 1) {
-            status = Requests.postToLmsForStatus(RequestParameters.volume(this.name, "1").toString());
+            status = RequestsTest.postToLmsForStatus(RequestParameters.volume(this.name, "1").toString());
             if (status == null || !status.contains("200")) {
                 log.info("REQUEST ERROR " + this.name);
                 return this;
@@ -442,7 +382,7 @@ public class Player {
             }
             if (value.contains("+")) value = value.replace("+", "-");
             else value = value.replace("-", "+");
-            Requests.postToLmsForStatus(RequestParameters.volume(this.name, value).toString());
+            RequestsTest.postToLmsForStatus(RequestParameters.volume(this.name, value).toString());
         }
         return this;
     }
@@ -475,7 +415,7 @@ public class Player {
     public Boolean status(Integer tracks) {
 // log.info("STATUS PLAYER " + this.name);
         if (tracks == null) tracks = 0;
-        String json = Requests.postToLmsForJsonBody(RequestParameters.status(this.name, tracks).toString());
+        String json = RequestsTest.postToLmsForJsonBody(RequestParameters.status(this.name, tracks).toString());
 //        log.info("JSON: " + json);
         if (json == null) {
             log.info("REQUEST ERROR request null");
@@ -544,13 +484,13 @@ public class Player {
         this.playChannel(Integer.valueOf(channel)); // playChannelRelativeOrAbsolute
 // пауза для включения канала на плеере и определения пути
         this.waitFor(2000);
-        lmsPlayers.lastChannel = channel;
+        lmsPlayersTest.lastChannel = channel;
         log.info("PLAYER: " + this.name + " PLAY CHANNEL FINISH");
         return "PLAY CHANNEL " + channel;
     }
 
     // выбор предыдущего канала через определение что сейчас играет или от последнего сохраненного канала
-    public Player ctrlPrevChannel() {
+    public PlayerTest ctrlPrevChannel() {
         int channel = 1;
         List<String> favList = this.favorites();
         int favSize = favList.size();
@@ -566,9 +506,9 @@ public class Player {
             this.lastChannel = currentIndex;
         }
         if (this.lastChannel != 0) channel = this.lastChannel - 1;
-        else channel = lmsPlayers.lastChannel - 1;
+        else channel = lmsPlayersTest.lastChannel - 1;
         if (channel < 1) channel = favSize;
-        log.info("PLAY PREV CHANNEL: " + channel + " LAST CHANNEL: " + lmsPlayers.lastChannel);
+        log.info("PLAY PREV CHANNEL: " + channel + " LAST CHANNEL: " + lmsPlayersTest.lastChannel);
         this.ifExpiredAndNotPlayingUnsyncWakeSet(null);
         this.playChannel(channel); // prevChannel
         return this;
@@ -586,8 +526,8 @@ public class Player {
 
 
     // выбор предыдущего канала через определение что сейчас играет или от последнего сохраненного канала
-    public Player ctrlNextChannel() {
-        log.info("LAST CHANNEL THIS: " + this.lastChannel + " COMMON: " + lmsPlayers.lastChannel);
+    public PlayerTest ctrlNextChannel() {
+        log.info("LAST CHANNEL THIS: " + this.lastChannel + " COMMON: " + lmsPlayersTest.lastChannel);
         int channel = 1;
         List<String> favList = this.favorites();
         int favSize = favList.size();
@@ -605,7 +545,7 @@ public class Player {
             channel = this.lastChannel + 1;
             log.info("CHANNEL THIS+1: " + channel);
         } else {
-            channel = lmsPlayers.lastChannel + 1;
+            channel = lmsPlayersTest.lastChannel + 1;
             log.info("CHANNEL COMMON+1: " + channel);
         }
         if (channel > favSize) channel = 1;
@@ -615,7 +555,7 @@ public class Player {
         return this;
     }
 
-    public Player ctrlNextChannelOrTrack() {
+    public PlayerTest ctrlNextChannelOrTrack() {
         log.info("PLAYER: " + this.name + " NEXT");
         int tracks = Integer.parseInt(this.tracks());
         log.info("TRACKS IN PLAYLIST: " + tracks);
@@ -624,7 +564,7 @@ public class Player {
         return this;
     }
 
-    public Player ctrlPrevChannelOrTrack() {
+    public PlayerTest ctrlPrevChannelOrTrack() {
         log.info("PLAYER: " + this.name + " PREV");
         int tracks = Integer.parseInt(this.tracks());
         log.info("TRACKS IN PLAYLIST: " + tracks);
@@ -655,19 +595,19 @@ public class Player {
 
 //    public Player syncToAlt(String toPlayerName) {
 //// альтернативная синхронизация если глючит синхронизация di.fm
-//        String path = lmsPlayers.playerByCorrectName(toPlayerName).path();
+//        String path = lmsPlayersTest.playerByCorrectName(toPlayerName).path();
 //        if (path.contains("di.fm") || path.contains("audioaddict")) {
 //            log.info("SYNC DI.FM " + this.name + " PLAY PATH FROM " + toPlayerName);
 //            this.playPath(path);
 //            return this;
 //        } else {
 //            log.info("SYNC " + this.name + " TO " + toPlayerName);
-//            Requests.postToLmsForStatus(RequestParameters.sync(this.name, toPlayerName).toString());
+//            RequestsTest.postToLmsForStatus(RequestParameters.sync(this.name, toPlayerName).toString());
 //        }
 //        return this;
 //    }
 
-    public Player ifExpiredAndNotPlayingUnsyncWakeSet(String volume) {
+    public PlayerTest ifExpiredAndNotPlayingUnsyncWakeSet(String volume) {
         log.info("CHECK IF EXPIRED PLAYER: " + this.name + " SET VOLUME BY PROVIDER: " + volume);
         if (!this.status(0)) {
             log.info("ERROR STATUS NULL !!!");
@@ -693,7 +633,7 @@ public class Player {
         return this;
     }
 
-    public Player wakeAndSet(String volume) {
+    public PlayerTest wakeAndSet(String volume) {
         log.info("");
         log.info("WAKE START >>> PLAYER: " + this.name + " WAIT: " + this.delay + " VOLUME: " + volume);
 // если пришла громкость от провайдера то использовать ее вместо громкости по пресету
@@ -723,26 +663,26 @@ public class Player {
         return this;
     }
 
-    public Player stopAllOther() {
-        lmsPlayers.players.stream()
+    public PlayerTest stopAllOther() {
+        lmsPlayersTest.players.stream()
                 .filter(p -> !p.name.equals(this.name))
                 .forEach(player -> player.unsync().pause());
         return this;
     }
 
-    public Player playLast() {
+    public PlayerTest playLast() {
         log.info("PLAY LAST");
         String thisPath = this.path();
         String thisLastPath = this.lastPath;
-        String commonLastPath = lmsPlayers.lastPath;
+        String commonLastPath = lmsPlayersTest.lastPath;
         String lastPath;
 // log.info("THIS PATH: " + thisPath);
 // log.info("THIS LAST PATH: " + thisLastPath);
 // log.info("TRY GLOBAL LAST PATH: " + commonLastPath);
 // log.info("SILENCE PATH: " + silence);
-// log.info("LAST THIS STATE: " + lmsPlayers.lastThis);
+// log.info("LAST THIS STATE: " + lmsPlayersTest.lastThis);
 
-//        if (lmsPlayers.lastThis) lastPath = thisLastPath;
+//        if (lmsPlayersTest.lastThis) lastPath = thisLastPath;
 //        else lastPath = commonLastPath;
 
 // если у этого плеера есть путь и он не тишина - играть
@@ -752,7 +692,7 @@ public class Player {
             return this;
         }
 // если у этого плеера нет пути играть последний сохраненый этого
-        if (thisLastPath != null && !thisLastPath.equals(config.silence) && !thisLastPath.equals("") && lmsPlayers.lastThis) {
+        if (thisLastPath != null && !thisLastPath.equals(config.silence) && !thisLastPath.equals("") && lmsPlayersTest.lastThis) {
             log.info("PLAY THIS LAST PATH: " + thisLastPath);
             this.playPath(thisLastPath);
             return this;
@@ -771,7 +711,7 @@ public class Player {
         return this;
     }
 
-    public Player setVolumeByTime() {
+    public PlayerTest setVolumeByTime() {
         LocalTime timeNow = LocalTime.now(zoneId);
 // log.info("VOLUME BY TIME: " + timeNow + " OF: " + this.schedule);
         Map.Entry<Integer, Integer> e =
@@ -785,7 +725,7 @@ public class Player {
         return this;
     }
 
-    public Player waitForWakeSeconds() {
+    public PlayerTest waitForWakeSeconds() {
         log.info("WAIT " + delay + " . . . . .");
         try {
             Thread.sleep(this.delay * 1000);
@@ -795,7 +735,7 @@ public class Player {
         return this;
     }
 
-    public Player waitFor(int msec) {
+    public PlayerTest waitFor(int msec) {
         log.info("WAIT " + msec + " START");
         try {
             Thread.sleep(msec);
@@ -807,16 +747,16 @@ public class Player {
     }
 
     //   должно выполняться после действия с плеером
-    public Player saveLastTimePathAutoremoteRequest() {
+    public PlayerTest saveLastTimePathAutoremoteRequest() {
 //        сохранить последнее время
         saveLastTimePath();
-//        записать в файл lmsPlayers.json
+//        записать в файл lmsPlayersTest.json
 //        запрос обновления виджетов
-        lmsPlayers.autoremoteRequest();
+        lmsPlayersTest.autoremoteRequest();
         return this;
     }
 
-    public Player saveLastTimePath() {
+    public PlayerTest saveLastTimePath() {
 //        сохранить последнее время
         this.lastPlayTime = LocalTime.now(zoneId).truncatedTo(MINUTES).toString();
         log.info("SAVE LAST TIME: " + this.lastPlayTime);
@@ -824,13 +764,13 @@ public class Player {
         String path = this.path();
         if (path != null && !path.equals(config.silence)) {
             this.lastPath = path;
-            lmsPlayers.lastPath = this.lastPath;
+            lmsPlayersTest.lastPath = this.lastPath;
             log.info("SAVE LAST PATH: " + this.lastPath);
         }
 //        сохранить последний тайтл
         this.status();
         this.lastTitle = this.title;
-        lmsPlayers.lastTitle = this.title;
+        lmsPlayersTest.lastTitle = this.title;
         log.info("SAVE LAST TITLE: " + this.title);
         return this;
     }
@@ -838,32 +778,32 @@ public class Player {
 
 //    public Player saveLastChannel(int channel) {
 //        log.info("SAVE LAST CHANNEL: " + channel);
-//        lmsPlayers.lastChannel = channel;
+//        lmsPlayersTest.lastChannel = channel;
 //        this.lastChannel = channel;
 //        this.status();
 ////        this.lastTitle = this.title;
-////        lmsPlayers.lastTitle = this.title;
+////        lmsPlayersTest.lastTitle = this.title;
 //        return this;
 //    }
 
     public void remove() {
-        lmsPlayers.players.remove(this);
+        lmsPlayersTest.players.remove(this);
     }
 
-    public Player separateFlagTrue() {
+    public PlayerTest separateFlagTrue() {
         this.separate = true;
         log.info("SEPARTE FLAG: " + this.name + " " + this.separate);
         return this;
     }
 
-    public Player separateFlagFalse() {
+    public PlayerTest separateFlagFalse() {
         this.separate = false;
         log.info("SEPARTE FLAG: " + this.name + " " + this.separate);
         return this;
     }
 
     // Алиса включи отдельно - для плеера включить флаг отделен, отключить от группы, если играл то продолжить
-    public Player separateOn() {
+    public PlayerTest separateOn() {
         log.info("SEPARATE ON");
         log.info("THIS SEPARATE: " + this.separate);
 //        если уже отделен - ничего не делать
@@ -882,41 +822,41 @@ public class Player {
     }
 
     // Таскер вместе - выключить флаг отделен. если играл то подключить к играющему если нет то ничего не делать
-    public Player separateOff() {
-        log.info("SEPARATE OFF");
-        log.info("THIS SEPARATE: " + this.separate);
-//        если уже не отделен - ничего не делать
-        if (!this.separate) {
-            log.info("ALREADY SEPARATE OFF");
-            return this;
-        }
-        this.separateFlagFalse(); // выключить флаг отделен
+//    public PlayerTest separateOff() {
+//        log.info("SEPARATE OFF");
+//        log.info("THIS SEPARATE: " + this.separate);
+////        если уже не отделен - ничего не делать
+//        if (!this.separate) {
+//            log.info("ALREADY SEPARATE OFF");
+//            return this;
+//        }
+//        this.separateFlagFalse(); // выключить флаг отделен
+////        if (playingPlayer != null) this.syncTo(playingPlayer.name);
+//        String mode = this.mode();
+////        если этот не играл то выход
+//        if (!mode.equals("play")) return this;
+////        если этот играет и есть играющий то подключиться к играющему
+//        PlayerTest playingPlayer = lmsPlayersTest.playingPlayer(this.name, true);
 //        if (playingPlayer != null) this.syncTo(playingPlayer.name);
-        String mode = this.mode();
-//        если этот не играл то выход
-        if (!mode.equals("play")) return this;
-//        если этот играет и есть играющий то подключиться к играющему
-        Player playingPlayer = lmsPlayers.playingPlayer(this.name, true);
-        if (playingPlayer != null) this.syncTo(playingPlayer.name);
-        return this;
-    }
+//        return this;
+//    }
 
     // Алиса включи вместе - все сброисть флаг отключен, все играющие подключить к этому
 // если плеер не играл - подключить к играющему
 // если плеер не играл и нет играющего - включить последнее игравшее
 // если плеер играл - подключить к нему остальные играющие
-    public Player separateOffAll() {
+    public PlayerTest separateOffAll() {
         log.info("SEPARATE OFF ALL");
 // найти играющий плеер (внутри обновление плееров ЛМС)
-        Player playingPlayer = lmsPlayers.playingPlayer(this.name, true);
+        PlayerTest playingPlayer = lmsPlayersTest.playingPlayer(this.name, true);
 // сбросить для каждого плеера флаг отделен
-        lmsPlayers.players.stream().forEach(p -> p.separateFlagFalse());
+        lmsPlayersTest.players.stream().forEach(p -> p.separateFlagFalse());
 // если плеер не играет и есть играющий - подключить к играющему
         if (!this.playing && playingPlayer != null) this.syncTo(playingPlayer.name);
 // если плеер не играет и нет играющего - включить последнее игравшее
         if (!this.playing && playingPlayer == null) this.playLast();
 // подключить к нему остальные играющие
-        lmsPlayers.players.stream()
+        lmsPlayersTest.players.stream()
                 .filter(p -> !p.name.equals(this.name)) // выбрать все кроме этого
                 .filter(p -> p.playing) // выбрать играющие
                 .forEach(p -> CompletableFuture.runAsync(() -> p
@@ -947,9 +887,9 @@ public class Player {
     }
 
     // для востановления после отделения и для спотифай
-    public Player syncAllOtherPlayingToThis() {
+    public PlayerTest syncAllOtherPlayingToThis() {
         log.info("SYNC OTHER PLAYING TO THIS START " + this.name);
-//        if (!lmsPlayers.syncAlt) {
+//        if (!lmsPlayersTest.syncAlt) {
 //            log.info("ALT SYNC OFF");
 //            return this;
 //        }
@@ -958,7 +898,7 @@ public class Player {
             return this;
         }
         log.info("SEARCH PLAYING PLAYERS...");
-        List<Player> playingPlayers = lmsPlayers.playingPlayers(this.name, true);
+        List<PlayerTest> playingPlayers = lmsPlayersTest.playingPlayers(this.name, true);
         log.info("PLAYING PLAYERS: " + playingPlayers);
         if (playingPlayers == null) return this;
         log.info("UNSYNC ALL PLAYING PLAYERS...");
@@ -972,7 +912,7 @@ public class Player {
     }
 
     public boolean ifTimeExpired(Integer delayMinutes) {
-        long delayExpire = lmsPlayers.delayExpire;
+        long delayExpire = lmsPlayersTest.delayExpire;
         if (delayMinutes != null) delayExpire = delayMinutes;
         if (this.lastPlayTime == null) return true;
         LocalTime playerTime = LocalTime.parse(this.lastPlayTime).truncatedTo(MINUTES);
@@ -984,48 +924,48 @@ public class Player {
         return expired;
     }
 
-    public Player switchToHere() {
-        log.info("TRY TRANSFER IF SPOTIFY PLAY");
-        if (Spotify.transfer(this)) {
-            log.info("SPOTIFY TRANSFER TO " + this.name + " FINISHED OK");
-            return this;
-        }
-        if (this.mode().equals("play")) {
-            log.info("PLAYER PLAYING. STOP ALL OTHER");
-            this.stopAllOther();
-            return this;
-        }
-        log.info("PLAYER NOT PLAY. SYNC TO PLAYING OR PLAY LAST. STOP ALL OTHER");
-        this.turnOnMusic(null).stopAllOther();
-        return this;
-    }
+//    public PlayerTest switchToHere() {
+//        log.info("TRY TRANSFER IF SPOTIFY PLAY");
+//        if (Spotify.transfer(this)) {
+//            log.info("SPOTIFY TRANSFER TO " + this.name + " FINISHED OK");
+//            return this;
+//        }
+//        if (this.mode().equals("play")) {
+//            log.info("PLAYER PLAYING. STOP ALL OTHER");
+//            this.stopAllOther();
+//            return this;
+//        }
+//        log.info("PLAYER NOT PLAY. SYNC TO PLAYING OR PLAY LAST. STOP ALL OTHER");
+//        this.turnOnMusic(null).stopAllOther();
+//        return this;
+//    }
 
     public List<String> playingPlayersNamesNotInCurrentGroup(Boolean exceptSeparated) {
         log.info("START");
 // найти плееры которые играют кроме этого
-        lmsPlayers.playingPlayersNames = lmsPlayers.playingPlayersNames(this.name, exceptSeparated);
-        log.info("PLAYING PLAYERS ALL: " + lmsPlayers.playingPlayersNames);
+        lmsPlayersTest.playingPlayersNames = lmsPlayersTest.playingPlayersNames(this.name, exceptSeparated);
+        log.info("PLAYING PLAYERS ALL: " + lmsPlayersTest.playingPlayersNames);
 // найти группы плееров
-        List<List<String>> groups = lmsPlayers.syncgroups();
+        List<List<String>> groups = lmsPlayersTest.syncgroups();
         log.info("GROUPS: " + groups);
 // найти плееры которые в одной группе с этим
         if (groups != null)
-            lmsPlayers.playersNamesInCurrentGroup = groups.stream()
+            lmsPlayersTest.playersNamesInCurrentGroup = groups.stream()
                     .filter(list -> list.contains(this.name)) // Ищем подсписок с этим плеером
                     .findFirst() // Берем первый найденный подсписок
                     .map(list -> list.stream()
                             .filter(e -> !e.equals(this.name)) // Удаляем этот плеер из подсписка
                             .collect(Collectors.toList()))
                     .orElse(Collections.emptyList()); // Если ничего не найдено, вернем пустой список
-        else lmsPlayers.playersNamesInCurrentGroup = new ArrayList<>();
-        log.info("OTHER PLAYING PLAYERS NAMES: " + lmsPlayers.playingPlayersNames);
-        log.info("PLAYERS IN CURRENT GROP: " + lmsPlayers.playersNamesInCurrentGroup);
+        else lmsPlayersTest.playersNamesInCurrentGroup = new ArrayList<>();
+        log.info("OTHER PLAYING PLAYERS NAMES: " + lmsPlayersTest.playingPlayersNames);
+        log.info("PLAYERS IN CURRENT GROP: " + lmsPlayersTest.playersNamesInCurrentGroup);
 //        находим плееры которые играют не в этой группе
-        lmsPlayers.playingPlayersNamesNotInCurrentGrop = lmsPlayers.playingPlayersNames;
-        lmsPlayers.playingPlayersNamesNotInCurrentGrop.removeAll(lmsPlayers.playersNamesInCurrentGroup);
-        log.info("PLAYERS PLAYING NOT IN CURRENT GROP: " + lmsPlayers.playingPlayersNamesNotInCurrentGrop);
+        lmsPlayersTest.playingPlayersNamesNotInCurrentGrop = lmsPlayersTest.playingPlayersNames;
+        lmsPlayersTest.playingPlayersNamesNotInCurrentGrop.removeAll(lmsPlayersTest.playersNamesInCurrentGroup);
+        log.info("PLAYERS PLAYING NOT IN CURRENT GROP: " + lmsPlayersTest.playingPlayersNamesNotInCurrentGrop);
         log.info("FINISH");
-        return lmsPlayers.playingPlayersNamesNotInCurrentGrop;
+        return lmsPlayersTest.playingPlayersNamesNotInCurrentGrop;
     }
 
     @Override
@@ -1043,8 +983,8 @@ public class Player {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Player)) return false;
-        Player player = (Player) o;
+        if (!(o instanceof PlayerTest)) return false;
+        PlayerTest player = (PlayerTest) o;
         return Objects.equals(getName(), player.getName()) && Objects.equals(getMac(), player.getMac());
     }
 
