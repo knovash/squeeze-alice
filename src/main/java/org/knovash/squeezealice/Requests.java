@@ -31,7 +31,7 @@ public class Requests {
     }
 
     public static Response postToLmsForResponse(String json) {
-        log.info("REQUEST TO LMS: " + json);
+//        log.info("REQUEST TO LMS: " + json);
         Content content = null;
         Response response = null;
         try {
@@ -55,7 +55,7 @@ public class Requests {
     }
 
     public static String postToLmsForStatus(String json) {
-        log.info("REQUEST TO LMS: " + json);
+//        log.info("REQUEST TO LMS: " + json);
 
         String status = null;
         try {
@@ -75,7 +75,7 @@ public class Requests {
 
     public static String postToLmsForJsonBody(String json) {
 //  все запросы плеера для получения информации из Response response.result._artist
-        log.info("REQUEST TO LMS: " + json);
+//        log.info("REQUEST TO LMS: " + json);
 
         Content content = null;
         Response response = null;
@@ -98,15 +98,18 @@ public class Requests {
 // действии приложения Умного дома ProviderAction
 // SwitchVoiceCommand тут есть действия pleer и надо добавить после них autoRemoteRefresh
         log.info("REQUEST TO TASKER AUTO REMOTE FOR REFRESH");
-        String uri = lmsPlayers.autoRemoteRefresh;
-        if (uri == null) return;
-        try {
-            Request.Post(uri)
-                    .execute();
-        } catch (IOException e) {
-            log.info("TASKER ERROR");
-        }
+        lmsPlayers.autoRemoteUrls.stream().forEach(url -> {
+            log.info("POST REFRESH TO AUTOREMOTE URI: " + url);
+            if (url == null) return;
+            try {
+                Request.Post(url).execute();
+            } catch (IOException e) {
+                log.info("POST ERROR " + e);
+            }
+        });
+//        log.info("OK");
     }
+
 }
 
 

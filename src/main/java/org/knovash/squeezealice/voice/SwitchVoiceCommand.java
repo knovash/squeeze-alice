@@ -29,10 +29,9 @@ public class SwitchVoiceCommand {
     public static String saveToFileJson = "data/rooms.json";
 
     public static Context action(Context context) {
-        log.info("SWITCH VOICE COMMAND");
         String answer = processVoiceContext(context);
-        log.info("ANSWER: " + answer);
-        context.bodyResponse = createResponse(answer);
+//        context.bodyResponse = createResponse(answer);
+        context.bodyResponse = answer;
         context.code = 200;
         return context;
     }
@@ -58,11 +57,11 @@ public class SwitchVoiceCommand {
         String body = context.body;
         String command = JsonUtils.jsonGetValue(body, "command");
         String clientId = JsonUtils.jsonGetValue(body, "client_id");
-        log.info("COMMAND: " + command);
+//        log.info("COMMAND: " + command);
 // если запрос с колонки то завершить диалог чтобы не висеть в навыке, если диалог в браузере то не завершать
         if (clientId.contains("browser")) clientType = "browser";
         else clientType = "speaker";
-        log.info("CLIENT_TYPE: " + clientType);
+        log.info("COMMAND: " + command + " CLIENT_TYPE: " + clientType);
         if (command == null) return "я не поняла команду";
 //        определить идентификатор application_id колонки с алисой для привязки к комнате где она находится
         aliceId = JsonUtils.jsonGetValue(body, "application_id");
@@ -70,13 +69,13 @@ public class SwitchVoiceCommand {
     }
 
     public static String processCommand(String roomId, String command) {
-        log.info("SWITCH VOICE COMMAND: " + " " + command);
+//        log.info("SWITCH VOICE COMMAND: " + " " + command);
         clientType = "browser";
 // показывать сообщение при запуске диалога в браузере
         if (command.equals(""))
             return "Я умею управлять плеерами подключенными в Lyrion Music Server. \n"
                     + "Скажите Алисе:\n"
-                   + "Алиса, включи(выключи) музыку \n"
+                    + "Алиса, включи(выключи) музыку \n"
                     + "Алиса, музыку громче(тише) \n"
                     + "Алиса, переключи канал"
 //                    " Спросите у навыка," +
@@ -98,7 +97,7 @@ public class SwitchVoiceCommand {
 
 // определение комнаты по идентификатору колонки с Алисой application_id
         room = Main.idRooms.get(roomId);
-        log.info("ROOM: " + room);
+        log.info("ROOM: " + room + " COMMAND: " + " " + command);
         String firstRoomname = "";
         if (SmartHome.devices.size() > 0) firstRoomname = SmartHome.devices.get(0).room;
 // если комната еще не определена, просьба обратиться к навыку для определения комнаты
@@ -409,8 +408,10 @@ public class SwitchVoiceCommand {
         if (player.title == null) return "медиасервер не отвечает";
 // если с плеером все хорошо записываем тайтл что играет
         log.info("TITLE: " + player.title);
+
 // находим группы плееров которые играют вместе или отдельно, включая отделенные false
         player.playingPlayersNamesNotInCurrentGroup(false);
+
         String separate = "";
         if (player.separate) separate = "отдельно ";
         List<String> separatePlayers;
@@ -446,7 +447,8 @@ public class SwitchVoiceCommand {
         String answer;
         log.info("VOLUME");
         String volume = player.volumeGet();
-        if (volume == null) return createResponse("медиасервер не отвечает");
+//        if (volume == null) return createResponse("медиасервер не отвечает");
+        if (volume == null) return "медиасервер не отвечает";
         answer = "сейчас на " + player.name + " громкость " + volume;
         return answer;
     }

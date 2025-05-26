@@ -14,6 +14,9 @@ import static org.junit.Assert.assertTrue;
 
 public class DeviceSteps {
 
+    private static boolean initialized = false; // Статический флаг для контроля инициализации
+
+
     private String getValueOrEmpty(Map<String, String> params, String key) {
         String value = params.getOrDefault(key, "");
         return (value == null || value.trim().isEmpty()) ? "" : value;
@@ -21,7 +24,11 @@ public class DeviceSteps {
 
     @Before
     public void beforeEachScenario() {
-        MainTest.main();
+        if (!initialized) {
+            MainTest.main();
+            initialized = true;
+        }
+//        MainTest.main();
         TestDevice.resetTestState();
     }
 

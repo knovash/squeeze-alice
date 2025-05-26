@@ -57,38 +57,38 @@ public class HiveTest {
     }
 
     private static void handleTest(String topicRecieved, MqttMessage message) {
-        log.info("RECIEVED MESSAGE FOR CHECK DEVICES STATE");
+        log.info("PLAYERS ACTIONS COMPLETED");
         TestDevice.checkdevicesState();
     }
 
     //  это для паблиша
     public static String publishContextWaitForContext(String topic, Context context, Integer timeout, String action, String correlationId) {
-        log.info("WITHOUT TEXT text null");
+//        log.info("WITHOUT TEXT text null");
         return publishContextWaitForContext(topic, context, timeout, action, correlationId, null);
     }
 
     // ЭТО РАБОЧИЙ СЕЙЧАС МЕТОД ДЛЯ УДЯ КОМАНД
     public static String publishContextWaitForContext(String topic, Context context, Integer timeout, String action, String correlationId, String text) {
         log.info("MQTT PUBLISH TO TOPIC: " + topic);
-        log.info("TEXT: " + text);
+//        log.info("TEXT: " + text);
         if (context == null) context = new Context();
         if (correlationId == null) correlationId = UUID.randomUUID().toString();
         String responseBody = "";
         String contextJson = context.toJson();
 
 //        генерация топика для колбэка с токеном
-        String callbackTopic = "callback" + correlationId;
+//        String callbackTopic = "callback" + correlationId;
         //     подписаться на сгенерированый топик
-        subscribe(callbackTopic);
+//        subscribe(callbackTopic);
 
 //        подготовка пэйлоад
         try {
             String payload = "correlationId=" + correlationId + "&" +
-                    "callbackTopic=" + callbackTopic + "&" +
+                    "callbackTopic=" + "callbackTopic" + "&" +
                     "action=" + action + "&" +
                     "text=" + text + "&" +
                     "context=" + contextJson;
-            log.info("PAYLOAD: " + payload);
+//            log.info("PAYLOAD: " + payload);
 // Отправка запроса в MQTT
             mqttClient.publish(topic, new MqttMessage(payload.getBytes()));
         } catch (Exception e) {

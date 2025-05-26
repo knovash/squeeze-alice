@@ -20,7 +20,7 @@ public class ProviderAction {
 //    private static String volume = null;
 
     public static Context providerActionRun(Context context) {
-        log.info("PROVIDER ACTION RUN START >>>");
+        log.info("START >>>");
         if (config.lmsIp == null) errorContext("LMS NULL");
 //        получить из контекста тело запроса от умного дома с девайсами и капабилити которые надо выполнить
         String body = context.body;
@@ -42,21 +42,39 @@ public class ProviderAction {
                                 " CAPABILITI: " + c.state.instance + " = " + c.state.value +
                                 " RELATIVE: " + c.state.relative)));
 
-        log.info("PROCESS DEVICES CAPABILITIES UPDATE STATE");
+        lmsPlayers.updateLmsPlayers();
+
+        log.info("SET CAPABILITIES IN PARALLEL STREAMS");
 // обновить для всех девайсов все капабилити в соответствии с ожидаемым результатом
         List<Device> jsonDevices = responseYandex.payload.devices.parallelStream()
                 .map(d -> setDeviceCapabilities(d)) // если устройство недоступно то статус DEVICE_UNREACHABLE
                 .collect(Collectors.toList());
 
-        log.info("PROCESS DEVICES CAPABILITIES RUN ACTIONS IN FUTURE...");
+// если устройство недоступно не выполнять действия
+// удалить девайсы которые недоступны
+        List<Device> unreachableDevices = new ArrayList<>();
+        unreachableDevices = responseYandex.payload.devices.stream()
+                .filter(device -> device.action_result != null)
+                .filter(device -> device.action_result.status != null)
+                .filter(device -> device.action_result.status.equals("ERROR"))
+                .peek(device -> log.info("REMOVE UNREACHABLE DEVICE ID: " + device.id))
+                .collect(Collectors.toList());
+
+        if (unreachableDevices.size() > 0) {
+            log.info("BEFORE REMOVE: " + responseYandex.payload.devices.size());
+            responseYandex.payload.devices.removeAll(unreachableDevices);
+            log.info("AFTER REMOVE: " + responseYandex.payload.devices.size());
+        }
+
+        log.info("RUN CAPABILITIES IN FUTURES");
 // выполнить в потоке действия с устройствами
         processDevicesCapabilities(responseYandex)
                 .exceptionally(ex -> {
-                    log.error("Ошибка обработки устройств: ", ex);
+                    log.error("DEVICE ERROR: ", ex);
                     return null;
                 })
                 .thenRun(() -> {
-                    log.info("Действия завершены");
+                    log.info("FINISH OK");
                     lmsPlayers.write();
                     lmsPlayers.autoremoteRequest();
                 });
@@ -65,18 +83,21 @@ public class ProviderAction {
         responseYandex.payload.devices = jsonDevices;
         context.bodyResponse = JsonUtils.pojoToJson(responseYandex);
         context.code = 200;
-        log.info("PROVIDER ACTION RUN FINISH <<<");
+        log.info("FINISH <<<");
         return context;
     }
 
     public static CompletableFuture<Void> processDevicesCapabilities(ResponseYandex responseYandex) {
+
         if (responseYandex.payload.devices.size() > 1) {
             log.info("MULTIPLE DEVICES");
-            return runDevices(responseYandex); // Теперь возвращает CompletableFuture
+            return runDevices(responseYandex);
         } else {
             log.info("ONE DEVICE");
             return CompletableFuture.allOf(
                     responseYandex.payload.devices.stream()
+//                            TODO вернуть если ошибки. девайсы недоступные должны быть ранее удалены
+//                            .filter(d -> !(d.action_result.error_code != null))
                             .map(d -> runCapabilitiesDevices(d)) // Собираем все CompletableFuture
                             .toArray(CompletableFuture[]::new)
             );
@@ -85,7 +106,7 @@ public class ProviderAction {
 
     private static CompletableFuture<Void> runCapabilitiesDevices(Device device) {
         return CompletableFuture.runAsync(() -> {
-            log.info("RUN CAPABILITIES FOR DEVICE ID: " + device.id);
+            log.info("RUN CAPABILITIES DEVICE ID: " + device.id);
 // получаем плеер для выполнения действия с ним
             Player player = lmsPlayers.playerByDeviceId(device.id);
             if (player == null) {
@@ -140,15 +161,16 @@ public class ProviderAction {
     }
 
     private static Device setDeviceCapabilities(Device device) {
-        log.info("SET CAPABILITIES START DEVICE ID: " + device.id);
+//        log.info("SET CAPABILITIES START DEVICE ID: " + device.id);
 // получаем плеер для выполнения действия с ним
         Player player = lmsPlayers.playerByDeviceId(device.id);
 //        log.info("PLAYER: " + player);
 // если плеер не получен или недоступен - вернуть device с кодом ошибки
 // https://yandex.ru/dev/dialogs/smart-home/doc/ru/reference/post-action
 // если нажать на кнопку увтройства вкл/выкл если ошибка - ответить Устройство неотвечает
-        if (player == null || player.checkPlayerConnected() == null) {
-            log.info("ERROR. PLAYER NULL BY DEVICE ID: " + device.id + " SET ACTION RESULT: DEVICE_UNREACHABLE");
+        if (player == null || !player.connected) {
+//            if (player == null || player.checkPlayerConnected() == null) {
+//            log.info("ERROR. PLAYER NULL BY DEVICE ID: " + device.id + " SET ACTION RESULT: DEVICE_UNREACHABLE");
             device.action_result = new ActionResult();
             device.action_result.status = "ERROR";
             device.action_result.error_code = "DEVICE_UNREACHABLE";
@@ -159,7 +181,7 @@ public class ProviderAction {
                 capability.state.action_result.error_code = "DEVICE_UNREACHABLE";
                 capability.state.action_result.error_message = "Устройство потеряно";
             });
-            log.info("SET CAPABILITIES FINISH DEVICE ID: " + device.id);
+            log.info("SET CAPABILITIES DEVICE ID: " + device.id + " ACTION RESULT: DEVICE_UNREACHABLE");
             return device;
         } else {
             device.action_result = new ActionResult();
@@ -172,7 +194,7 @@ public class ProviderAction {
                 capability.state.action_result.error_code = null;
                 capability.state.action_result.error_message = null;
             });
-            log.info("SET CAPABILITIES FINISH DEVICE ID: " + device.id + " PLAYER: " + player.name + " ACTION RESULT: DONE");
+            log.info("SET CAPABILITIES DEVICE ID: " + device.id + " PLAYER: " + player.name + " ACTION RESULT: DONE");
             return device;
         }
     }
@@ -184,6 +206,7 @@ public class ProviderAction {
             log.info("MULTIPLY DEVICES -----------");
 // определить если несколько девайсов с одинаковым каналом CheckForPlayersWithIdenticalChannel
             List<String> playersChannels = responseYandex.payload.devices.stream()
+//                    .filter(d -> !(d.action_result.error_code != null)) // TODO девайсы недоступные должны быть ранее удалены
                     .map(d -> d.capabilities.stream()
                             .filter(capability -> capability.state.instance.equals("channel"))
                             .map(capability -> capability.state.value)

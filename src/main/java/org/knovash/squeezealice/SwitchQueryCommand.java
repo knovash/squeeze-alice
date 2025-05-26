@@ -160,7 +160,7 @@ public class SwitchQueryCommand {
                 break;
             case ("get_refresh_json"):
 // Таскер для виджетов иконок плееров
-                response = lmsPlayers.forTaskerPlayersIconsJson(player, value);
+                response = lmsPlayers.forTaskerWidgetsRefreshJson(player, value);
                 break;
             case ("get_playlist"):
 // Таскер для виджета отображения плейлиста

@@ -12,9 +12,6 @@ import org.knovash.squeezealice.spotify.spotify_pojo.PlayerState;
 import org.knovash.squeezealice.yandex.YandexJwtUtils;
 import org.json.JSONObject;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
@@ -47,19 +44,19 @@ public class Hive {
             options.setPassword(hivePassword.toCharArray());
             mqttClient.connect(options);
 // Подписка на топик ответа
-            subscribeByYandexEmail();
+            subscribeByYandex();
             log.info("MQTT STARTED OK");
         } catch (MqttException e) {
             log.info("MQTT ERROR: " + e);
         }
     }
 
-    public static void subscribeByYandexEmail() {
+    public static void subscribeByYandex() {
         if (config.yandexUid == null || config.yandexUid.equals("")) {
-            log.info("SUBSCRIBE BY YANDEX EMAIL FAIL email:" + config.yandexUid);
+            log.info("SUBSCRIBE BY YANDEX FAIL: " + config.yandexUid);
             return;
         }
-        log.info("SUBSCRIBE BY YANDEX EMAIL: " + topicRecieveDevice + config.yandexUid);
+        log.info("SUBSCRIBE BY YANDEX: " + topicRecieveDevice + config.yandexUid);
         subscribe(topicRecieveDevice + config.yandexUid);
     }
 
@@ -75,14 +72,13 @@ public class Hive {
     private static void handleDeviceAndPublish(String topicRecieved, MqttMessage message) {
         log.info("");
         log.info("---------------------------------------------------------------------------------------------");
-        log.info("");
         log.info("RECIEVED MESSAGE FROM TOPIC: " + topicRecieved);
-//        log.info("MESSAGE : " + message);
+// log.info("MESSAGE : " + message);
         String payload = new String(message.getPayload());
 
 // Map<String, String> params = parseParams(payload);
         Map<String, String> params = Parser.run(payload);
-//        log.info("PARAMS : " + params);
+// log.info("PARAMS : " + params);
 
         String contextJson = "";
         correlationId = "";
@@ -129,7 +125,7 @@ public class Hive {
             config.spotifyToken = token;
             config.spotifyRefreshToken = refreshToken;
             config.spotifyTokenExpiresAt = spotifyExpiresAt;
-//            получить имя пользователя Spotify
+// получить имя пользователя Spotify
             config.spotifyName = SpotifyUserParser.parseUserInfo(Spotify.me()).getDisplayName();
             config.write();
             PlayerState ps = Spotify.playerState;
@@ -145,7 +141,7 @@ public class Hive {
             String refreshTokenResponse = params.getOrDefault("refreshTokenResponse", null);
             log.info("RE: " + refreshTokenResponse);
 
-//            json body response от Spotify
+// json body response от Spotify
             JSONObject jsonObject = new JSONObject(refreshTokenResponse);
             String accessToken = jsonObject.getString("access_token");
             String tokenType = jsonObject.getString("token_type");
@@ -167,24 +163,24 @@ public class Hive {
 // полученный контекст
         contextJson = params.getOrDefault("context", "");
         Context context = Context.fromJson(contextJson);
-//        log.info("HEADERS: " + context.headers.entrySet());
+// log.info("HEADERS: " + context.headers.entrySet());
 
 
 // обработка контекста
         context = HandlerAll.processContext(context);
-//        TODO если context null
+// TODO если context null
 
-//        log.info("CONTEXT JSON: " + context.toJson());
+// log.info("CONTEXT JSON: " + context.toJson());
 
 
 // положить в пэйлоад ответа: ид, топик,  контекст
         payload = "correlationId=" + correlationId + "&" +
                 "userTopicId=" + topicRecieveDevice + "&" +
                 "context=" + context.toJson();
-////        подписаться на сгенерированый топик для ответа с токеном
-//        subscribe(topicRecieveDevice);
-//        отправить запрос получения токена
-//        log.info("PAYLOAD: " + payload);
+// // подписаться на сгенерированый топик для ответа с токеном
+// subscribe(topicRecieveDevice);
+// отправить запрос получения токена
+// log.info("PAYLOAD: " + payload);
         try {
             log.info("PUBLISH RESPONSE TO TOPIC: " + topicPublish);
             MqttMessage responseMessage = new MqttMessage(payload.getBytes());
@@ -194,67 +190,11 @@ public class Hive {
         }
     }
 
-//    private static Map<String, String> parseParams(String message) {
-//        Map<String, String> result = new HashMap<>();
-//        if (message == null || message.isEmpty()) return result;
-//// Ищем параметры по ключам с учетом их позиции
-//        int ctxStart = message.indexOf("context=");
-//        if (ctxStart == -1) return result;
-//// Выделяем correlationId и requestId до начала context
-//        String prefix = message.substring(0, ctxStart);
-//        String[] parts = prefix.split("&");
-//        for (String part : parts) {
-//            String[] kv = part.split("=", 2);
-//            if (kv.length != 2) continue;
-//            String key = URLDecoder.decode(kv[0], StandardCharsets.UTF_8);
-//            String value = URLDecoder.decode(kv[1], StandardCharsets.UTF_8);
-//            if (key.equals("correlationId") || key.equals("requestId")) {
-//                result.put(key, value);
-//            }
-//        }
-//// Извлекаем context как всю оставшуюся часть строки
-//        String contextValue = message.substring(ctxStart + "context=".length());
-//        result.put("context", URLDecoder.decode(contextValue, StandardCharsets.UTF_8));
-//        return result;
-//    }
-
     public static void publish(String topic) {
-
-//        генерация топика для колбэка с токеном
-//        String callbackTopic = "callback" + correlationId;
-        //     подписаться на сгенерированый топик
-//        subscribe(callbackTopic);
-
-//        topic = "to_tasker_" + config.yandexUid;
-//        topic = "to_tasker";
-
-        // Таскер для виджетов иконок плееров
         String responseWidgets = lmsPlayers.forTaskerWidgetsIcons();
-        // Таскер для виджета отображения плейлиста
-//        String responsePlaylist =lmsPlayers.players.get(0).forTaskerPlaylist(value);
-        // Таскер для виджета отображения списка плееров и их состояния name-volume-mode-title
         String responsePlayers = lmsPlayers.forTaskerPlayersList();
-//        String payloadJson = "{\n" +
-//                "  \"PLAYERS\": \"" + responsePlayers + "\",\n" +
-//                "  \"WIDGETS\": \"" + responseWidgets + "\"\n" +
-//                "}\n";
-
-//        String payloadJson = "{\n" +
-//                "  \"PLAYLIST\": \"Atmospheric Breaks - Restored\",\n" +
-//                "  \"PLAYERS_PLAY\": \"Гостиная - Homepod1 - 7 - play - 7.Atmospheric Breaks\",\n" +
-//                "  \"PLAYERS_STOP\": \"Улица - JBL white - 5 - stop - LoFi Hip-Hop,Душ - HomePod2 - 7 - stop - Atrium Sun,Веранда - Radiotechnika - 15 - stop - Smooth Jazz,Спальня - HomePod - -- - offline - unknown,JBL black - 7 - stop - DEF CON Radio\",\n" +
-//                "  \"WIDGETS\": \"Гостиная пол,Веранда,Душ пол,Отопление,Спальня,Кухня,Улица,Дом,Гостиная,Душ,Homepod1,JBL white,HomePod2,Radiotechnika,HomePod,JBL black:null,stop,null,null,offline,null,stop,null,play,stop,play,stop,stop,stop,offline,stop:false,false,false,false,true,false,false,false,false,false,false,false,false,false,true,false:null,Smooth Jazz,null,null,unknown,null,LoFi Hip-Hop,null,Atmospheric Breaks,Rawnn Savan(Ind) & ,Atmospheric Breaks,LoFi Hip-Hop,Rawnn Savan(Ind) & ,Smooth Jazz,unknown,DEF CON Radio:Homepod1-7-play-Atmospheric Breaks,JBL white-5-stop-LoFi Hip-Hop,HomePod2-7-stop-Rawnn Savan(Ind) & ,Radiotechnika-15-stop-Smooth Jazz,HomePod----offline-unknown,JBL black-7-stop-DEF CON Radio:null,false,null,null,false,null,false,null,false,false,false,false,false,false,false,false\"\n" +
-//                "}\n";
-
         String payload;
-//         payload = "correlationId=" + correlationId + "&" +
-//                "callbackTopic=" + "null" + "&" +
-//                "PLAYERS_PLAYIING=" + "null" + "&" +
-//                "PLAYERS_STOPED=" + "finish" + "&" +
-//                "context=" + "null";
         payload = "test";
-
-//        log.info("PAYLOAD: " + payload);
         log.info("PUBLISH FOR TASKER AFTER FINISH ACTION");
 
         // Отправка запроса в MQTT
@@ -266,7 +206,7 @@ public class Hive {
     }
 
 
-    //  это для паблиша
+    // это для паблиша
     public static String publishContextWaitForContext(String topic, Context context, Integer timeout, String action, String correlationId) {
         log.info("WITHOUT TEXT text null");
         return publishContextWaitForContext(topic, context, timeout, action, correlationId, null);
@@ -281,12 +221,12 @@ public class Hive {
         String responseBody = "";
         String contextJson = context.toJson();
 
-//        генерация топика для колбэка с токеном
+// генерация топика для колбэка с токеном
         String callbackTopic = "callback" + correlationId;
-        //     подписаться на сгенерированый топик
+        // подписаться на сгенерированый топик
         subscribe(callbackTopic);
 
-//        подготовка пэйлоад
+// подготовка пэйлоад
         try {
 
             String payload = "correlationId=" + correlationId + "&" +

@@ -21,6 +21,7 @@ public class Main {
     public static Config config = new Config();
     public static Boolean lmsServerOnline;
     public static String yandexToken = "";
+    public static Links links = new Links();
 
     public static void main(String[] args) {
         log.info("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
@@ -31,6 +32,8 @@ public class Main {
         config.readConfigJson();
         config.write();
 
+        links.read();
+
         lmsPlayers.searchForLmsIp();
         Utils.readAliceIdInRooms();
         lmsPlayers.read();
@@ -39,15 +42,15 @@ public class Main {
 //        SmartHome.read();
         Yandex.getRoomsAndDevices();
 
-        log.info("DEVICES COUNT: "+SmartHome.devices.size());
+        log.info("DEVICES COUNT: " + SmartHome.devices.size());
         lmsPlayers.checkRooms();
         lmsPlayers.write();
 
         Server.start();
         Hive.start();
-//        PlayersUpdateScheduler.startPeriodicUpdate(5);
+        PlayersUpdateScheduler.startPeriodicUpdate(5); // новое
         log.info("VERSION 1.2");
-//        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate);
+//        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate); // старое
 //        Spotify.ifExpiredRunRefersh();
 
     }

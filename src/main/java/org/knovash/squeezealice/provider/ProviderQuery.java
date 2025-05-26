@@ -33,6 +33,8 @@ public class ProviderQuery {
         ResponseYandex responseYandex = new ResponseYandex();
         responseYandex.request_id = xRequestId;
 
+        lmsPlayers.updateLmsPlayers();
+
 // лист девайсов для обновления их свойств
         List<Device> jsonDevices = bodyPojo.devices.stream()
                 .map(d -> SmartHome.getDeviceById(Integer.parseInt(d.id)))
@@ -66,14 +68,24 @@ public class ProviderQuery {
             return device;
         }
 // если плеер существует но не отвечает - вернуть устройство с ошибкой
-        String modeReal = player.checkPlayerConnected();
-        if (modeReal == null) {
+//        String modeReal = player.checkPlayerConnected();
+//        if (modeReal == null) {
+//            log.info("DEVICE_UNREACHABLE mode real = null");
+//            device.error_code = "DEVICE_UNREACHABLE";
+//            device.error_message = "Устройство потеряно";
+//            log.info("DEVICE UPDATED");
+//            return device;
+//        }
+
+        if (!player.connected) {
             log.info("DEVICE_UNREACHABLE mode real = null");
             device.error_code = "DEVICE_UNREACHABLE";
             device.error_message = "Устройство потеряно";
             log.info("DEVICE UPDATED");
             return device;
         }
+
+
 
 // если плеер существует и отвечает - обратиться к плееру и обновить все его значения
         device.error_code = null;

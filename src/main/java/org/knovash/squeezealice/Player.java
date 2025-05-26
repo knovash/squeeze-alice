@@ -61,7 +61,7 @@ public class Player {
                 .toLowerCase();
         this.volume_step = 5;
         this.volume_low = 10;
-        this.volume_high = 25;
+        this.volume_high = 100;
         this.delay = 10;
         this.schedule = new HashMap<>(Map.of(
                 0, 10,
@@ -74,7 +74,7 @@ public class Player {
 // LMS получение данных ------------------------------------------------------------------------------------------------
 
     public static String count() {
-        log.info("COUNT START");
+//        log.info("COUNT START");
         Response response = Requests.postToLmsForResponse(RequestParameters.count().toString());
         if (response == null) {
             log.info("REQUEST ERROR");
@@ -229,18 +229,16 @@ public class Player {
     }
 
     public List<String> favorites() {
-        log.info("FAVORITES START " + this.name);
-        String playerName = this.name;
-        List<String> playlist = null;
+//        log.info("FAVORITES START " + this.name);
+        List<String> favorites = null;
         try {
-            Response response = Requests.postToLmsForResponse(RequestParameters.favorites("", 10).toString());
-            playlist = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
+            Response response = Requests.postToLmsForResponse(RequestParameters.favorites("", 100).toString());
+            favorites = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
         } catch (Exception e) {
             log.info("ERROR " + e);
         }
-
-        log.info("FAVORITES: " + playlist);
-        return playlist;
+        log.info("FAVORITES: " + favorites);
+        return favorites;
     }
 
     public void favoritesAdd(String url, String title) {
@@ -419,6 +417,37 @@ public class Player {
 
 
     public Player volumeSet(String value) {
+
+
+        Integer currentVolume = Integer.valueOf(this.volumeGet());
+        log.info("VOLUME CURRENT: " + currentVolume + " NEW VALUE: " + value);
+        log.info("LIMIT: " + this.volume_high);
+
+        Integer valueInt = 0;
+        Integer newVolume = 0;
+
+        if (value.contains("-")) {
+            valueInt = Integer.valueOf(value.replace("-", ""));
+            newVolume = currentVolume - valueInt;
+        }
+        if (value.contains("+")) {
+            valueInt = Integer.valueOf(value.replace("+", ""));
+            newVolume = currentVolume + valueInt;
+        }
+        if (!value.contains("+") && !value.contains("-")) {
+            valueInt = Integer.valueOf(value.replace("+", ""));
+            newVolume = valueInt;
+        }
+
+        log.info("VALUE INT: " + valueInt);
+        log.info("NEW VOLUME: " + newVolume);
+
+        if (newVolume > this.volume_high) {
+            log.info("VOLUME LIMITED BY " + this.volume_high);
+            value = String.valueOf(this.volume_high);
+        }
+
+
         String status = null;
         log.info("PLAYER: " + this.name + " SET VOLUME: " + value);
         status = Requests.postToLmsForStatus(RequestParameters.volume(this.name, value).toString());
@@ -426,7 +455,10 @@ public class Player {
             log.info("REQUEST ERROR " + this.name);
             return this;
         }
-        this.status(null);
+        // TODO
+        this.statusLite();
+
+//  не понижать громкость ниже 1
         if (playerStatus.result.mixer_volume < 1) {
             status = Requests.postToLmsForStatus(RequestParameters.volume(this.name, "1").toString());
             if (status == null || !status.contains("200")) {
@@ -472,6 +504,7 @@ public class Player {
         return status(1);
     }
 
+
     public Boolean status(Integer tracks) {
 // log.info("STATUS PLAYER " + this.name);
         if (tracks == null) tracks = 0;
@@ -515,6 +548,43 @@ public class Player {
             this.sync = true;
         }
 
+        return true;
+    }
+
+    public Boolean statusLite() {
+        String json = Requests.postToLmsForJsonBody(RequestParameters.status(this.name, 0).toString());
+        if (json == null) {
+            log.info("REQUEST ERROR request null");
+            return false;
+        }
+        json = json.replaceAll("(\"\\w*)(\\s)(\\w*\":)", "$1_$3");
+        playerStatus = JsonUtils.jsonToPojo(json, PlayerStatus.class);
+        if (playerStatus == null) {
+            log.info("REQUEST ERROR json invalid");
+            return false;
+        }
+
+        if (playerStatus.result.playlist_loop != null) {
+            this.playlist = playerStatus.result.playlist_loop.stream()
+                    .map(p -> p.title)
+                    .collect(Collectors.toList());
+        } else this.playlist = new ArrayList<>();
+
+//        if (playerStatus.result.remoteMeta != null)
+//            this.currentTrack = playerStatus.result.remoteMeta.title;
+
+        this.volume = String.valueOf(playerStatus.result.mixer_volume);
+        if (playerStatus.result.mode.equals("play")) {
+            this.playing = true;
+            this.mode = "play";
+        } else {
+            this.playing = false;
+            this.mode = "stop";
+        }
+        this.sync = false;
+        if (playerStatus.result.sync_slaves != null || playerStatus.result.sync_master != null) {
+            this.sync = true;
+        }
         return true;
     }
 
@@ -668,21 +738,21 @@ public class Player {
 //    }
 
     public Player ifExpiredAndNotPlayingUnsyncWakeSet(String volume) {
-        log.info("CHECK IF EXPIRED PLAYER: " + this.name + " SET VOLUME BY PROVIDER: " + volume);
+//        log.info("CHECK IF EXPIRED PLAYER: " + this.name + " SET VOLUME BY PROVIDER: " + volume);
         if (!this.status(0)) {
             log.info("ERROR STATUS NULL !!!");
             return this;
         }
         if (!this.playing && this.ifTimeExpired(null)) {
-            log.info("PLAYER " + this.name + " NOT PLAY - UNSYNC, WAKE, SET");
+            log.info("PLAYER " + this.name + " NOT PLAY - UNSYNC, WAKE, SET, VOLUME " + volume);
             this.unsync().wakeAndSet(volume);
             return this;
         } else {
-            log.info("SKIP WAKE " + this.name + " VOLUME BY PROVIDER: " + volume);
+//            log.info("SKIP WAKE " + this.name + " VOLUME BY PROVIDER: " + volume);
             if (volume != null) {
-                log.info("SET VOLUME BY PROVIDER: " + volume + " PLAYER: " + this.name);
+                log.info("SKIP WAKE, SET VOLUME BY PROVIDER: " + volume + " PLAYER: " + this.name);
                 this.volumeSet(volume);
-            } else log.info("SKIP SET " + this.name + " VOLUME BY PROVIDER: " + volume);
+            } else log.info("SKIP WAKE, SKIP SET " + this.name + " VOLUME BY PROVIDER: " + volume);
 
         }
 //        if (this.playing && this.ifTimeExpired(60)) {
@@ -695,30 +765,19 @@ public class Player {
 
     public Player wakeAndSet(String volume) {
         log.info("");
-        log.info("WAKE START >>> PLAYER: " + this.name + " WAIT: " + this.delay + " VOLUME: " + volume);
+        log.info("WAKE START PLAYER: " + this.name + " WAIT: " + this.delay + " VOLUME: " + volume);
 // если пришла громкость от провайдера то использовать ее вместо громкости по пресету
-        if (volume == null) {
-            log.info("VOLUME SET BY PRESET " + this.name);
-            this
-                    .playSilence()
-                    .volumeSet("+1")
-                    .setVolumeByTime()
-                    .waitForWakeSeconds()
-                    .volumeSet("-1")
-                    .setVolumeByTime()
-                    .pause();
-        } else {
-            log.info("VOLUME SET BY PROVIDER: " + volume + " " + this.name);
-            this
-                    .playSilence()
-                    .volumeSet("+1")
-                    .volumeSet(volume)
-                    .waitForWakeSeconds()
-                    .volumeSet("-1")
-                    .volumeSet(volume)
-                    .pause();
-        }
-        log.info("WAKE FINISH <<<");
+        if (volume == null) volume = String.valueOf(this.valueVolumeByTime());
+        else log.info("VOLUME SET BY PROVIDER: " + volume + " " + this.name);
+        this
+                .playSilence()
+                .volumeSet("+1")
+                .volumeSet(volume)
+                .waitForWakeSeconds()
+                .volumeSet("-1")
+                .volumeSet(volume)
+                .pause();
+        log.info("WAKE FINISH");
         log.info("");
         return this;
     }
@@ -780,9 +839,22 @@ public class Player {
                         .filter(entry -> LocalTime.of(entry.getKey(), 0).isBefore(timeNow))
                         .max(Comparator.comparing(Map.Entry::getKey))
                         .get();
-        log.info("TIME: " + timeNow.truncatedTo(MINUTES) + " VOLUME: " + e.getValue() + " BY TIME: " + e.getKey() + " OF: " + this.schedule);
+        log.info("TIME: " + timeNow.truncatedTo(MINUTES) + " VOLUME: " + e.getValue() + " BY TIME: " + e.getKey() + " PRESETS: " + this.schedule);
         this.volumeSet(String.valueOf(e.getValue()));
         return this;
+    }
+
+    public Integer valueVolumeByTime() {
+        LocalTime timeNow = LocalTime.now(zoneId);
+// log.info("VOLUME BY TIME: " + timeNow + " OF: " + this.schedule);
+        Map.Entry<Integer, Integer> e =
+                schedule.entrySet()
+                        .stream()
+                        .filter(entry -> LocalTime.of(entry.getKey(), 0).isBefore(timeNow))
+                        .max(Comparator.comparing(Map.Entry::getKey))
+                        .get();
+        log.info("TIME: " + timeNow.truncatedTo(MINUTES) + " VOLUME: " + e.getValue() + " BY TIME: " + e.getKey() + " PRESETS: " + this.schedule);
+        return e.getValue();
     }
 
     public Player waitForWakeSeconds() {
@@ -1004,10 +1076,10 @@ public class Player {
         log.info("START");
 // найти плееры которые играют кроме этого
         lmsPlayers.playingPlayersNames = lmsPlayers.playingPlayersNames(this.name, exceptSeparated);
-        log.info("PLAYING PLAYERS ALL: " + lmsPlayers.playingPlayersNames);
+//        log.info("PLAYING PLAYERS ALL: " + lmsPlayers.playingPlayersNames);
 // найти группы плееров
         List<List<String>> groups = lmsPlayers.syncgroups();
-        log.info("GROUPS: " + groups);
+//        log.info("GROUPS: " + groups);
 // найти плееры которые в одной группе с этим
         if (groups != null)
             lmsPlayers.playersNamesInCurrentGroup = groups.stream()
@@ -1018,13 +1090,18 @@ public class Player {
                             .collect(Collectors.toList()))
                     .orElse(Collections.emptyList()); // Если ничего не найдено, вернем пустой список
         else lmsPlayers.playersNamesInCurrentGroup = new ArrayList<>();
-        log.info("OTHER PLAYING PLAYERS NAMES: " + lmsPlayers.playingPlayersNames);
-        log.info("PLAYERS IN CURRENT GROP: " + lmsPlayers.playersNamesInCurrentGroup);
 //        находим плееры которые играют не в этой группе
         lmsPlayers.playingPlayersNamesNotInCurrentGrop = lmsPlayers.playingPlayersNames;
         lmsPlayers.playingPlayersNamesNotInCurrentGrop.removeAll(lmsPlayers.playersNamesInCurrentGroup);
-        log.info("PLAYERS PLAYING NOT IN CURRENT GROP: " + lmsPlayers.playingPlayersNamesNotInCurrentGrop);
-        log.info("FINISH");
+
+
+//        log.info("OTHER PLAYING PLAYERS NAMES: " + lmsPlayers.playingPlayersNames);
+//        log.info("PLAYERS IN CURRENT GROP: " + lmsPlayers.playersNamesInCurrentGroup);
+//        log.info("PLAYERS PLAYING NOT IN CURRENT GROP: " + lmsPlayers.playingPlayersNamesNotInCurrentGrop);
+
+        log.info("IN CURRENT GROP: " + lmsPlayers.playersNamesInCurrentGroup + " NOT IN CURRENT GROP: " + lmsPlayers.playingPlayersNamesNotInCurrentGrop);
+
+//        log.info("FINISH");
         return lmsPlayers.playingPlayersNamesNotInCurrentGrop;
     }
 
@@ -1062,6 +1139,9 @@ public class Player {
     public String forTaskerPlaylist(String value) {
         log.info("FOR PLAYLIST START >>> ----------------");
         List<String> list = playlistList();
+
+        LmsPlayers.nowPlaying = this.title; // для виджета одной иконкой для телефона где неработает плагин
+
 // если в плейлисте только один трэк (радио)
         if (list.size() == 1) {
             log.info("ONE TRACK TITLE: " + this.title);

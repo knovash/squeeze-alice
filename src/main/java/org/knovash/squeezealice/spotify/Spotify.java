@@ -313,6 +313,10 @@ public class Spotify {
 
     public static Boolean transfer(Player player) {
         log.info("SPOTIFY START TRANSFER TO " + player.name);
+        if (config.spotifyToken == null) {
+            log.info("ERROR SPOTIFY TOKEN NULL");
+            return false;
+        }
         requestCurrentlyPlaying();
         log.info("currentlyPlaying: " + currentlyPlaying);
         if (currentlyPlaying == null || !currentlyPlaying.is_playing) {

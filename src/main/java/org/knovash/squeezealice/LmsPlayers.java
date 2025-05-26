@@ -43,7 +43,7 @@ public class LmsPlayers {
     public boolean lastThis = true;
     public static ServerStatusByName serverStatus = new ServerStatusByName();
     public String lastTitle;
-    public String autoRemoteRefresh = null;
+    public List<String> autoRemoteUrls = new ArrayList<>();
     public static String saveToFileJson = "data/lms_players.json";
 
     public List<String> playingPlayersNames;
@@ -54,6 +54,7 @@ public class LmsPlayers {
     public static String widgetsModes;
     public static String widgetsSyncs;
     public static String widgetsSeparates;
+    public static String nowPlaying;
 //    public static String widgetPlayersTitles;
 //    public static String joinedPlayersVolModTit;
 
@@ -69,19 +70,27 @@ public class LmsPlayers {
     }
 
     public void updateLmsPlayers() {
-        log.info("UPDATE PLAYERS FROM LMS ------------------------------------");
+        log.info("UPDATE PLAYERS FROM LMS");
         if (!lmsServerOnline) {
             log.info("ERROR: LMS OFFLINE");
             return;
         }
-        String countPlayers = Player.count();
-        if (countPlayers.equals("0")) {
-            log.info("LMS NO PLAYERS");
-            this.players = new ArrayList<>();
-            return;
-        }
+//        String countPlayers = Player.count();
+//        if (countPlayers == null) {
+//            log.info("LMS NO PLAYERS");
+//            this.players = new ArrayList<>();
+//            return;
+//        }
+//        if (countPlayers.equals("0")) {
+//            log.info("LMS NO PLAYERS");
+//            this.players = new ArrayList<>();
+//            return;
+//        }
 
-        playersNames = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
+        if (this.players == null) this.players = new ArrayList<>();
+
+
+        playersNames = this.players.stream().map(p -> p.name).collect(Collectors.toList());
         String json = Requests.postToLmsForJsonBody(RequestParameters.serverstatusname().toString());
 //        log.debug("JSON: " + json);
         if (json == null) return;
@@ -90,8 +99,9 @@ public class LmsPlayers {
         serverStatus = JsonUtils.jsonToPojo(json, ServerStatusByName.class);
 //        log.info("SEARCH AND ADD NEW PLAYERS FROM LMS");
         if (serverStatus == null) return;
+
 // перед апдейтом сбросить состояние для всех плееров
-        lmsPlayers.players.forEach(p -> {
+        this.players.forEach(p -> {
             p.connected = false;
             p.playing = false;
             p.volume = "--";
@@ -100,14 +110,14 @@ public class LmsPlayers {
         });
 // обновить состояние всех плееров полученных в players_loop из LMS
         serverStatus.result.players_loop.forEach(pl -> updatePlayer(pl));
-        log.info("UPDATE FINISH --------------");
+//        log.info("UPDATE PLAYERS FROM LMS FINISH");
     }
 
     public void updatePlayer(ServerStatusByName.PlayersLoop playersLoop) {
 //        log.info("");
 //        log.info("START UPDATE: " + playersLoop.name);
         playersNamesOnLine.add(playersLoop.name);
-        Player existsPlayer = lmsPlayers.playerByCorrectName(playersLoop.name);
+        Player existsPlayer = this.playerByCorrectName(playersLoop.name);
         if (existsPlayer == null) {
             // если нет то создать новый плеер и добавить
             Player newPlayer = new Player(playersLoop.name, playersLoop.playerid);
@@ -122,7 +132,7 @@ public class LmsPlayers {
             if (playersLoop.connected == 1) newPlayer.connected = true;
             newPlayer.status();
 
-            lmsPlayers.players.add(newPlayer);
+            this.players.add(newPlayer);
             log.info("ADD NEW: " +
                             " CONNECTED: " + newPlayer.connected +
                             " SEPARATE: " + newPlayer.separate +
@@ -190,9 +200,7 @@ public class LmsPlayers {
         if (player == null) return null;
         List<String> players = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
         player = Utils.convertCyrilic(player);
-//        String correctPlayerName = Levenstein.getNearestElementInList(player, players);
         String correctPlayerName = Levenstein.getNearestElementInListWord(player, players);
-//        String correctPlayerName = Levenstein.search(player, players);
         if (correctPlayerName == null) log.info("ERROR PLAYER NOT EXISTS IN LMS ");
         log.info("CORRECT PLAYER: " + player + " -> " + correctPlayerName);
         Player correctPlayer = lmsPlayers.playerByCorrectName(correctPlayerName);
@@ -237,17 +245,20 @@ public class LmsPlayers {
                 .filter(p -> !exceptSeparated || !p.separate)
                 .filter(p -> p.playing)
                 .filter(p -> !exceptName.equals(p.name))
-                .filter(p -> {
-                    String path = p.path();
-                    return path != null && !path.equals(config.silence);
-                })
+
+                // TODO вернуть если ошибки с плеерами которые играют тишину
+//                .filter(p -> {
+//                    String path = p.path();
+//                    return path != null && !path.equals(config.silence);
+//                })
+
                 .collect(Collectors.toList());
 
         if (playingPlayers == null || playingPlayers.size() == 0) {
             log.info("NO PLAYING PLAYERS");
             return null;
         }
-        log.info("PLAYING PLAYERS: " + playingPlayers);
+        log.info("PLAYING PLAYERS: " + playingPlayers.stream().map(player -> player.name).collect(Collectors.toList()));
         return playingPlayers;
     }
 
@@ -262,17 +273,25 @@ public class LmsPlayers {
         String playerName = parameters.getOrDefault(player_name_value, "null");
         String roomName = parameters.getOrDefault(player_room_value, "null");
         String delay = parameters.getOrDefault(player_delay_value, "null");
+        String volumeMax = parameters.getOrDefault(player_volume_max_value, "null");
         String schedule = parameters.getOrDefault(player_schedule_value, "null");
         log.info("name: " + playerName);
         log.info("room: " + roomName);
         log.info("delay: " + delay);
+        log.info("volumeMax: " + volumeMax);
         log.info("schedule: " + schedule);
+
+        links.addLinkPlayer(roomName, playerName);
+        links.write();
+        log.info(links);
+
         if (playerName.equals("null") || roomName.equals("null") || delay.equals("null") || schedule.equals("null")) {
             log.info("ERROR PARAMETER NULL");
             return "NULL";
         }
         Player player = lmsPlayers.playerByCorrectName(playerName);
         player.delay = Integer.valueOf(delay);
+        player.volume_high = Integer.valueOf(volumeMax);
         player.schedule = Utils.stringSplitToIntMap2(schedule, ",", ":");
         SwitchVoiceCommand.room = roomName;
         Player playerNew = SwitchVoiceCommand.selectPlayerInRoom(playerName, roomName, false);
@@ -283,15 +302,22 @@ public class LmsPlayers {
     }
 
     public String playerRemove(HashMap<String, String> parameters) {
-        log.info("PARAMETERS: " + parameters);
-        String name = parameters.get("name");
-        Player player = lmsPlayers.playerByCorrectName(name);
+        log.info("PLAYER SAVE PARAMETERS: " + parameters);
+        String playerName = parameters.getOrDefault(player_name_value, "null");
+        String roomName = parameters.getOrDefault(player_room_value, "null");
+        log.info("name: " + playerName);
+        log.info("room: " + roomName);
+//        linkss.addLinkPlayer(roomName,playerName);
+//        log.info(linkss);
+
+        Player player = lmsPlayers.playerByCorrectName(playerName);
         log.info("PLAYER DEVICE ID: " + player.deviceId);
-        int id = Integer.parseInt(player.deviceId);
+        Integer id = null;
+        if (player.deviceId != null) id = Integer.parseInt(player.deviceId);
         log.info("PLAYER REMOVE: " + player);
         lmsPlayers.players.remove(player);
-        Device device = SmartHome.getDeviceById(id);
-        SmartHome.devices.remove(device);
+        if (id != null) SmartHome.devices.remove(SmartHome.getDeviceById(id));
+//        Device device = SmartHome.getDeviceById(id);
         write();
         return "OK";
     }
@@ -318,7 +344,7 @@ public class LmsPlayers {
 
     public Player playerByDeviceId(String id) {
         if (id == null) {
-            log.info("ERROR NO PLAYER BY ID: " + id);
+            log.info("ERROR NULL ID: " + id);
             return null;
         }
         Player player = lmsPlayers.players.stream()
@@ -329,7 +355,7 @@ public class LmsPlayers {
                 .findFirst().orElse(null);
 //        log.info("ID: " + id + " PLAYER BY ID: " + player);
         if (player != null) log.info("BY ID: " + id + " PLAYER: " + player.name);
-        else log.info("ERROR PLAYER NULL");
+        else log.info("ERROR PLAYER NULL BY ID: " + id);
         return player;
     }
 
@@ -347,9 +373,22 @@ public class LmsPlayers {
     }
 
     public void autoremoteSave(HashMap<String, String> parameters) {
+        log.info("START " + parameters);
         String tmp = parameters.get(autoremote_value);
+        log.info("TMP " + tmp);
         if (tmp == null) return;
-        autoRemoteRefresh = tmp;
+        if (autoRemoteUrls == null) autoRemoteUrls = new ArrayList<>();
+        autoRemoteUrls.add(tmp);
+        write();
+    }
+
+    public void autoremoteRemove(HashMap<String, String> parameters) {
+        log.info("START " + parameters);
+        String tmp = parameters.get(autoremote_value);
+        log.info("TMP " + tmp);
+        if (tmp == null) return;
+        if (autoRemoteUrls == null) autoRemoteUrls = new ArrayList<>();
+        autoRemoteUrls.remove(tmp);
         write();
     }
 
@@ -384,76 +423,76 @@ public class LmsPlayers {
 
         return CompletableFuture.runAsync(() -> {
 
-        log.info("START TURN ON MULTIPLY. CHANNEL: " + channel);
+            log.info("START TURN ON MULTIPLY. CHANNEL: " + channel);
 // если плееров ЛМС нет то выход
-        if (lmsPlayers.players == null || lmsPlayers.players.size() == 0) {
-            log.info("NO PLAYERS");
-            return;
-        }
+            if (lmsPlayers.players == null || lmsPlayers.players.size() == 0) {
+                log.info("NO PLAYERS");
+                return;
+            }
 // взять лист плееров по листу девайсов
-        log.info("GET PLAYERS LIST BY DEVICES LIST FOR TURN ON");
-        List<Player> playersForTurnOn = devicesForTurnOn.stream()
-                .map(d -> lmsPlayers.playerByDeviceId(d.id))
-                .collect(Collectors.toList());
+            log.info("GET PLAYERS LIST BY DEVICES LIST FOR TURN ON");
+            List<Player> playersForTurnOn = devicesForTurnOn.stream()
+                    .map(d -> lmsPlayers.playerByDeviceId(d.id))
+                    .collect(Collectors.toList());
 
 // найти играющий плеер или если задан канал играющий взяьть любой
-        Player playingPlayer = null;
-        if (channel != null) {
-            log.info("SKIP SEARCH PLAYING. PLAY CHANNEL: " + channel);
-            playingPlayer = lmsPlayers.playerByDeviceId(devicesForTurnOn.get(0).id);
-        } else {
-            log.info("SEARCH PLAYING PLAYER");
-//        найти играющий плеер до выполнения пробуждения всех
-            playingPlayer = lmsPlayers.playingPlayer("", true);
-            log.info("PLAYING PLAYER: " + playingPlayer);
-//        если нет играющего взять первый плеер
-            if (playingPlayer == null) {
+            Player playingPlayer = null;
+            if (channel != null) {
+                log.info("SKIP SEARCH PLAYING. PLAY CHANNEL: " + channel);
                 playingPlayer = lmsPlayers.playerByDeviceId(devicesForTurnOn.get(0).id);
-                log.info("NO PLAYING. GET FIRST PLAYER " + playingPlayer.name);
+            } else {
+                log.info("SEARCH PLAYING PLAYER");
+//        найти играющий плеер до выполнения пробуждения всех
+                playingPlayer = lmsPlayers.playingPlayer("", true);
+                log.info("PLAYING PLAYER: " + playingPlayer);
+//        если нет играющего взять первый плеер
+                if (playingPlayer == null) {
+                    playingPlayer = lmsPlayers.playerByDeviceId(devicesForTurnOn.get(0).id);
+                    log.info("NO PLAYING. GET FIRST PLAYER " + playingPlayer.name);
+                }
             }
-        }
 
 //        разбудить все плееры одновременно в паралельных потоках
-        log.info("WAKE ALL PLAYERS IN PARALEL STREAMS");
-        devicesForTurnOn.parallelStream()
-                .forEach(device -> {
-                    log.info("DEVICE ID: " + device.id);
-                    Capability capabilityVolume = device.capabilities.stream()
-                            .filter(capability -> capability.state.instance.equals("volume"))
-                            .findFirst()
-                            .orElse(null);
-                    String volume = null;
-                    if (capabilityVolume != null) {
-                        log.info("CAPABILITY VOLUME: " + capabilityVolume.state.value + " REL: " + capabilityVolume.state.relative);
-                        volume = capabilityVolume.state.value;
-                    }
-                    Player player = lmsPlayers.playerByDeviceId(device.id);
-                    if (player != null)
-                        player.ifExpiredAndNotPlayingUnsyncWakeSet(volume);
-                });
-        log.info("FINISH WAIT FOR WAKE ALL");
+            log.info("WAKE ALL PLAYERS IN PARALEL STREAMS");
+            devicesForTurnOn.parallelStream()
+                    .forEach(device -> {
+                        log.info("DEVICE ID: " + device.id);
+                        Capability capabilityVolume = device.capabilities.stream()
+                                .filter(capability -> capability.state.instance.equals("volume"))
+                                .findFirst()
+                                .orElse(null);
+                        String volume = null;
+                        if (capabilityVolume != null) {
+                            log.info("CAPABILITY VOLUME: " + capabilityVolume.state.value + " REL: " + capabilityVolume.state.relative);
+                            volume = capabilityVolume.state.value;
+                        }
+                        Player player = lmsPlayers.playerByDeviceId(device.id);
+                        if (player != null)
+                            player.ifExpiredAndNotPlayingUnsyncWakeSet(volume);
+                    });
+            log.info("FINISH WAIT FOR WAKE ALL");
 
-        //         подключить все остальные к играющему
-        String playingPlayerName = playingPlayer.name;
-        log.info("NAME PLAYING: " + playingPlayerName);
-        playersForTurnOn.stream()
-                .filter(player -> !player.name.equals(playingPlayerName))
-                .forEach(player -> player.syncTo(playingPlayerName));
+            //         подключить все остальные к играющему
+            String playingPlayerName = playingPlayer.name;
+            log.info("NAME PLAYING: " + playingPlayerName);
+            playersForTurnOn.stream()
+                    .filter(player -> !player.name.equals(playingPlayerName))
+                    .forEach(player -> player.syncTo(playingPlayerName));
 
 
 //       включить один плеер, тот который до этого играл или любой первый
-        if (channel == null) {
-            log.info("PLAY LAST");
-            playingPlayer.playLast();
-        } else {
-            log.info("PLAY UNIC CHANNEL: " + channel + " ON PLAYING : " + playingPlayer.name);
-            playingPlayer.playChannel(Integer.valueOf(channel));
-        }
-        log.info("МУЗЫКА ВКЛЮЧЕНА");
+            if (channel == null) {
+                log.info("PLAY LAST");
+                playingPlayer.playLast();
+            } else {
+                log.info("PLAY UNIC CHANNEL: " + channel + " ON PLAYING : " + playingPlayer.name);
+                playingPlayer.playChannel(Integer.valueOf(channel));
+            }
+            log.info("МУЗЫКА ВКЛЮЧЕНА");
 
 //        запрос в таскер обновить виджеты
 //        autoremoteRequest();
-        log.info("FINISH TURN MULTIPLY");
+            log.info("FINISH TURN MULTIPLY");
 
         });
     }
@@ -472,13 +511,16 @@ public class LmsPlayers {
     }
 
     public void autoremoteRequest() {
-        log.info("WRITE PLAYERS STATE & REQUEST TO TASKER REFRESH");
-        Hive.publish("test");
+        log.info("-----------------------------------------------------------------");
+        log.info("REQUEST TO TASKER FOR REFRESH WIDGETS");
+        Hive.publish("test"); // для автотеста - все действия завершены
         Requests.autoRemoteRefresh();
+        log.info("-----------------------------------------------------------------");
+        log.info("");
     }
 
-    public String forTaskerPlayersIconsJson(Player player, String value) {
-        log.info("WIDGETS JSON");
+    public String forTaskerWidgetsRefreshJson(Player player, String value) {
+        log.info("WIDGETS JSON START");
         lmsPlayers.updateLmsPlayers();
         // Таскер для виджетов иконок плееров
         String responseWidgets = lmsPlayers.forTaskerWidgetsIcons();
@@ -494,16 +536,16 @@ public class LmsPlayers {
                 "  \"ROOMSPLAYERS\": \"" + widgetsNames + "\",\n" +
                 "  \"MODES\": \"" + widgetsModes + "\",\n" +
                 "  \"SYNCS\": \"" + widgetsSyncs + "\",\n" +
-                "  \"SEPARATES\": \"" + widgetsSeparates + "\"\n" +
+                "  \"SEPARATES\": \"" + widgetsSeparates + "\",\n" +
+                "  \"NOWPLAYING\": \"" + nowPlaying + "\"\n" +
                 "}\n";
 
-        log.info("REFRESH JSON: " + responseJson);
+        log.info(responseJson);
         return responseJson;
     }
 
     public String forTaskerWidgetsIcons() {
-        log.info("FOR WIDGETS START >>> ----------------");
-//        lmsPlayers.updateLmsPlayers();
+        log.info("FOR WIDGETS ICONS START");
         lmsPlayers.syncgroups();
         List<String> roomNames = rooms;
         List<String> playersNames = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
@@ -555,11 +597,11 @@ public class LmsPlayers {
                 })
                 .collect(Collectors.toList());
 
-        log.info("NAMES: " + roomsAndPlayersNames);
-        log.info("MODES: " + roomsAndPlayersModes);
-        log.info("SYNCS: " + roomsAndPlayersSyncs);
-        log.info("TITLES: " + roomsAndPlayersTitles);
-        log.info("SEPARATES: " + roomsAndPlayersSeparates);
+//        log.info("NAMES: " + roomsAndPlayersNames);
+//        log.info("MODES: " + roomsAndPlayersModes);
+//        log.info("SYNCS: " + roomsAndPlayersSyncs);
+//        log.info("TITLES: " + roomsAndPlayersTitles);
+//        log.info("SEPARATES: " + roomsAndPlayersSeparates);
         widgetsNames = String.join(",", roomsAndPlayersNames);
         widgetsModes = String.join(",", roomsAndPlayersModes);
         widgetsSyncs = String.join(",", roomsAndPlayersSyncs);
@@ -573,7 +615,7 @@ public class LmsPlayers {
 //                + widgetPlayersTitles + ":"
 //                + joinedPlayersVolModTit + ":"
                 + widgetsSeparates;
-        log.info("FOR WIDGETS FINISH >>> ----------------");
+//        log.info("FOR WIDGETS FINISH >>> ----------------");
         return response;
     }
 
@@ -620,17 +662,13 @@ public class LmsPlayers {
 //        this.players.forEach(p -> p.sync = false);
         if (response == null) return null;
         if (response.result.syncgroups_loop == null) return null;
-        log.info("SYNCGROUPS LOOP: " + response.result.syncgroups_loop);
+//        log.info("SYNCGROUPS LOOP: " + response.result.syncgroups_loop);
         List<List<String>> syncMemberNames = response.result.syncgroups_loop.stream()
                 .map(syncgroupsLoop -> syncgroupsLoop.sync_member_names)
                 .map(s -> List.of(s.split(",")))
                 .collect(Collectors.toList());
         List<Object> result = new ArrayList<>();
         syncMemberNames.forEach(result::addAll);
-//        this.players.stream()
-//                .filter(p -> result.contains(p.name))
-//                .forEach(p -> p.sync = true);
-//        log.info("syncMemberNames: " + result);
         log.info("SYNCGROUPS: " + syncMemberNames);
         return syncMemberNames;
     }
@@ -639,12 +677,12 @@ public class LmsPlayers {
         log.info("SEARCH FOR LMS IP");
         String lmsIp = LmsSearchForIp.findServerIp();
         if (lmsIp != null) {
-            log.info("LMS HAS BEEN FOUND: " + lmsIp);
+            log.info("LMS IP: " + lmsIp);
             lmsServerOnline = true;
             config.lmsIp = lmsIp;
             config.write();
         } else {
-            log.info("LMS WAS NOT FOUND");
+            log.info("ERROR LMS NOT FOUND");
             lmsServerOnline = false;
         }
     }
@@ -703,12 +741,12 @@ public class LmsPlayers {
                 .filter(player -> player.room != null)
                 .filter(player -> player.deviceId != null)
                 .forEach(p -> {
-                    log.info("PLAYER: " + p.name + " ROOM: " + p.room + " ID: " + p.deviceId);
+//                    log.info("PLAYER: " + p.name + " ROOM: " + p.room + " ID: " + p.deviceId);
                     Device dev = SmartHome.devices.stream()
                             .filter(device -> device.room.equals(p.room))
                             .findFirst().orElse(null);
                     if (dev != null) {
-                        log.info("DEVICE ROOM:" + dev.room + " ID: " + dev.id);
+//                        log.info("DEVICE ROOM:" + dev.room + " ID: " + dev.id);
                         if (!p.deviceId.equals(dev.id)) {
                             p.deviceId = dev.id;
                             log.info("FIX PLAYER: " + p.name + " ROOM: " + p.room + " ID: " + p.deviceId);

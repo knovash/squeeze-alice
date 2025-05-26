@@ -169,7 +169,7 @@ public class PlayerTest {
     }
 
     public List<String> favorites() {
-        log.info("FAVORITES START " + this.name);
+//        log.info("FAVORITES START " + this.name);
         String playerName = this.name;
         List<String> playlist = null;
         try {
@@ -179,7 +179,7 @@ public class PlayerTest {
             log.info("ERROR " + e);
         }
 
-        log.info("FAVORITES: " + playlist);
+//        log.info("FAVORITES: " + playlist);
         return playlist;
     }
 

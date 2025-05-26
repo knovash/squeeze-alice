@@ -26,7 +26,7 @@ public class SmartHome {
     }
 
     public static Device getDeviceByCorrectRoom(String room) {
-        log.info("SEARCH BY ROOM: " + room + " IN DEVICES: " + devices.size());
+//        log.info("SEARCH BY ROOM: " + room + " IN DEVICES: " + devices.size());
         Device device = devices.stream()
                 .filter(d -> (d.room != null))
                 .filter(d -> d.room.equalsIgnoreCase(room))
@@ -35,7 +35,7 @@ public class SmartHome {
             log.info("NO DEVICE WITH ROOM: " + room);
             return null;
         }
-        log.info("DEVICE: " + device.room + " ID: " + device.id);
+        log.info("BY ROOM " + room+ " GET DEVICE: " + device.room + " ID: " + device.id);
         return device;
     }
 
@@ -130,7 +130,8 @@ public class SmartHome {
         device.id = String.valueOf(index);
         //        добавить девайс в лист локальных девайсов
         SmartHome.devices.add(device);
-        log.info("CREATED DEVICE ID: " + device.id + " ROOM: " + device.room + " " + SmartHome.devices.stream().map(d -> d.id + ":" + d.room).collect(Collectors.toList()));
+//        log.info("CREATED DEVICE ID: " + device.id + " ROOM: " + device.room + " " + SmartHome.devices.stream().map(d -> d.id + ":" + d.room).collect(Collectors.toList()));
+        log.info("CREATED DEVICE ID: " + device.id + " ROOM: " + device.room);
 //        log.info("CREATER DEVICE FULL: " + device);
 //        log.info("DEVICES: " + SmartHome.devices.size());
         //        return device;

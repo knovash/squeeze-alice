@@ -33,7 +33,7 @@ public class MainTest {
         System.setProperty("userApp.root", System.getProperty("user.home"));
         log.info("userApp.root: " + System.getProperty("userApp.root"));
         lmsPlayersTest.read();
-        lmsPlayersTest.updateLmsPlayers();
+//        lmsPlayersTest.updateLmsPlayers();
 //        Yandex.getRoomsAndDevices();
         YandexTest.getRoomsAndDevices();
         HiveTest.start();

@@ -10,6 +10,7 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.web.PageIndex;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.Main.links;
 
 @Log4j2
 @Data
@@ -47,26 +49,22 @@ public class Yandex {
             log.info("YANDEX GET INFO ERROR");
             return;
         }
+
         yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
 //        log.info("YANDEX:" + json);
         Main.rooms = yandexInfo.rooms.stream().map(r -> r.name).collect(Collectors.toList());
-        log.info("YANDEX ROOMS ALL: " + Main.rooms);
-//        SmartHome.devices = new ArrayList<>();
-
-        log.info("YANDEX DEVICES ALL: " + yandexInfo.devices.size());
-
-//        yandexMusicDevCounter =
-//                (int) yandexInfo.devices.stream()
-//                        .filter(device -> device.type.equals("devices.types.media_device.receiver"))
-//                        .filter(device -> device.name.equals("музыка"))
-//                        .peek(device -> log.info("DEDICE ID: " + device.external_id + " ROOM: " + roomNameByRoomId(device.room)))
-//                        .count();
+        log.info("YANDEX ROOMS ALL: " + Main.rooms + " DEVICES ALL: " + yandexInfo.devices.size());
 
         List<YandexInfo.Device> yandexMusicDevices = yandexInfo.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                 .filter(device -> device.name.equals("музыка"))
+                .sorted(Comparator.comparing(device -> device.external_id))
+//                .sorted(Comparator.comparingInt(device -> Integer.parseInt(device.id)))
                 .peek(device -> log.info("DEVICE ID: " + device.external_id + " ROOM: " + roomNameByRoomId(device.room)))
+                .peek(device -> links.addLinkRoom(device.id, device.external_id, device.room, Yandex.roomNameByRoomId(device.room), null))
                 .collect(Collectors.toList());
+
+        links.write();
 
         yandexMusicDevCounter = yandexMusicDevices.size();
 
