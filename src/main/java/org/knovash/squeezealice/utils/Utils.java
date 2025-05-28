@@ -173,10 +173,10 @@ public class Utils {
         return content;
     }
 
-    public static void sleep(int seconds) {
-        log.info("SLEEP: " +seconds);
+    public static void sleep(int msec) {
+        log.info("SLEEP: " +msec);
         try {
-            Thread.sleep(seconds);
+            Thread.sleep(msec);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -185,7 +185,6 @@ public class Utils {
 
     //    https://stackoverflow.com/questions/10893313/how-to-convert-cyrillic-letters-to-english-latin-in-java-string
     public static String convertCyrilic(String message) {
-//        log.info("START " + message);
         String result = message.replace("дж", "j")
                 .replace("у", "oo");
         char[] abcCyr = {' ', 'а', 'б', 'в', 'г', 'д', 'ѓ', 'е', 'ж', 'з', 'ѕ', 'и', 'ј', 'к', 'л', 'љ', 'м', 'н', 'њ', 'о', 'п', 'р', 'с', 'т', 'ќ', 'у', 'ф', 'х', 'ц', 'ч', 'џ', 'ш', 'э', 'ю', 'я', 'А', 'Б', 'В', 'Г', 'Д', 'Ѓ', 'Е', 'Ж', 'З', 'Ѕ', 'И', 'Ј', 'К', 'Л', 'Љ', 'М', 'Н', 'Њ', 'О', 'П', 'Р', 'С', 'Т', 'Ќ', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Џ', 'Ш', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '/', '-'};
@@ -199,37 +198,9 @@ public class Utils {
             }
         }
         result = builder.toString();
-//        log.info(message + " -> " + result);
         return result;
     }
 
-//    public static void restart() {
-//        try {
-//            Runtime.getRuntime().exec("systemctl restart squeeze-alice.service");
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-//
-//    public static void reboot() {
-//        try {
-//            Runtime.getRuntime().exec("reboot");
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-
-    public static void timerRequestPlayersState(int period) {
-//      обновить состояние плееров в ЛМС. опросить все плееры сохранить время если играет
-        log.info("TIMER REQUEST PLAYERS STATE UPDATE");
-        Runnable drawRunnable = new Runnable() {
-            public void run() {
-                lmsPlayers.updateLmsPlayers();
-            }
-        };
-        ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
-        exec.scheduleAtFixedRate(drawRunnable, 5, period, TimeUnit.MINUTES);
-    }
 
     public static void readAliceIdInRooms() {
         log.debug("READ ALICE IN ROOMS FROM rooms.json");
@@ -242,23 +213,8 @@ public class Utils {
         log.info("ALICE IN ROOMS FROM rooms.json: " + Main.idRooms);
     }
 
-//    public static String widget() {
-//        log.info("WIDGET");
-//        Yandex.getRoomsAndDevices();
-//        YandexInfo.Device ddd = Yandex.yandexInfo.devices.stream()
-//                .filter(device -> device.name.equals("душ"))
-//                .filter(device -> device.type.equals("devices.types.sensor"))
-//                .peek(device -> log.info(device.name + " " + device.properties.get(0).state.value))
-//                .findFirst()
-//                .orElse(null);
-//        log.info(ddd);
-//
-//        return ddd.properties.get(0).state.value.toString();
-//    }
-
     public static String getCorrectRoomName(String approxRoomName) {
         log.info("GET CORRECT ROOM NAME BY: " + approxRoomName);
-//        String correctRoom = Levenstein.getNearestElementInList(target, rooms);
         String correctRoom = Levenstein.search(approxRoomName, rooms);
         if (correctRoom == null) {
             log.info("ERROR ROOM NOT EXISTS IN YANDEX SMART HOME " + approxRoomName);
@@ -272,9 +228,7 @@ public class Utils {
         log.info("START: " + player);
         List<String> players = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
         player = Utils.convertCyrilic(player);
-//        String correctPlayer = Levenstein.getNearestElementInList(player, players);
         String correctPlayer = Levenstein.getNearestElementInListWord(player, players);
-//        String correctPlayer = Levenstein.search(player, players);
         if (correctPlayer == null) log.info("ERROR PLAYER NOT EXISTS IN LMS ");
         log.info("CORRECT PLAYER: " + player + " -> " + correctPlayer);
         return correctPlayer;

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.Main.hive;
 
 @Log4j2
 public class LocalAuthServerYandex {
@@ -115,7 +116,7 @@ public class LocalAuthServerYandex {
             log.info("PUBLISH REQUEST FOR TOKEN");
             Context context = new Context();
 
-            Hive.publishContextWaitForContext("from_local_request", context, 30, "token", sessionId);
+            hive.publishAndWaitForResponse("from_local_request", context, 30, "token", sessionId);
         }
     }
 }

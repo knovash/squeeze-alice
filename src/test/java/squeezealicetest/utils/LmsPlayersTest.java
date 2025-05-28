@@ -487,7 +487,7 @@ public class LmsPlayersTest {
 
     public void autoremoteRequest() {
         log.info("WRITE PLAYERS STATE & REQUEST TO TASKER REFRESH");
-        Hive.publish("test");
+        HiveTest.publish("test", "test");
         RequestsTest.autoRemoteRefresh();
     }
 
@@ -590,6 +590,7 @@ public class LmsPlayersTest {
         log.info("FOR WIDGETS FINISH >>> ----------------");
         return response;
     }
+
 
 //    public String lastTitle(Player player) {
 //        String selectLast = null;

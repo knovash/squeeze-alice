@@ -61,6 +61,15 @@ public class HiveTest {
         TestDevice.checkdevicesState();
     }
 
+    public  static void publish(String topic, String message) {
+        log.info("PUBLISH TO TOPIC: " + topic);
+        try {
+            mqttClient.publish(topic, new MqttMessage(message.getBytes()));
+        } catch (MqttException e) {
+            log.info("ERROR: " + e);
+        }
+    }
+
     //  это для паблиша
     public static String publishContextWaitForContext(String topic, Context context, Integer timeout, String action, String correlationId) {
 //        log.info("WITHOUT TEXT text null");

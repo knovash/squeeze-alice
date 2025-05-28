@@ -513,21 +513,23 @@ public class LmsPlayers {
     public void autoremoteRequest() {
         log.info("-----------------------------------------------------------------");
         log.info("REQUEST TO TASKER FOR REFRESH WIDGETS");
-        Hive.publish("test"); // для автотеста - все действия завершены
+        hive.publish("test", "test"); // для автотеста - все действия завершены
         Requests.autoRemoteRefresh();
         log.info("-----------------------------------------------------------------");
         log.info("");
     }
 
-    public String forTaskerWidgetsRefreshJson(Player player, String value) {
+    public String forTaskerWidgetsRefreshJson(Player player, String lines) {
         log.info("WIDGETS JSON START");
         lmsPlayers.updateLmsPlayers();
         // Таскер для виджетов иконок плееров
-        String responseWidgets = lmsPlayers.forTaskerWidgetsIcons();
+//        String responseWidgets =
+        lmsPlayers.forTaskerWidgetsIcons();
         // Таскер для виджета отображения плейлиста
-        String responsePlaylist = player.forTaskerPlaylist(value);
+        String responsePlaylist = player.forTaskerPlaylist(lines);
         // Таскер для виджета отображения списка плееров и их состояния name-volume-mode-title
-        String responsePlayers = lmsPlayers.forTaskerPlayersList();
+//        String responsePlayers =
+        lmsPlayers.forTaskerPlayersList();
 
         String responseJson = "{\n" +
                 "  \"PLAYLIST\": \"" + responsePlaylist + "\",\n" +

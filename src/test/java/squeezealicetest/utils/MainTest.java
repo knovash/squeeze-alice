@@ -1,6 +1,7 @@
 package squeezealicetest.utils;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.Hive;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.yandex.Yandex;
 import squeezealicetest.steps.ConfigTest;
@@ -37,6 +38,8 @@ public class MainTest {
 //        Yandex.getRoomsAndDevices();
         YandexTest.getRoomsAndDevices();
         HiveTest.start();
+//        hive = new Hive();
+//        hive.start();
         HiveTest.subscribe("test");
         payload.devices = new ArrayList<>();
         log.info("VERSION 1.2");

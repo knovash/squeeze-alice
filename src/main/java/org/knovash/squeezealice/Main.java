@@ -22,6 +22,7 @@ public class Main {
     public static Boolean lmsServerOnline;
     public static String yandexToken = "";
     public static Links links = new Links();
+    public static Hive hive;
 
     public static void main(String[] args) {
         log.info("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
@@ -47,10 +48,10 @@ public class Main {
         lmsPlayers.write();
 
         Server.start();
-        Hive.start();
+        hive = new Hive();
+        hive.start();
         PlayersUpdateScheduler.startPeriodicUpdate(5); // новое
         log.info("VERSION 1.2");
-//        Utils.timerRequestPlayersState(lmsPlayers.delayUpdate); // старое
 //        Spotify.ifExpiredRunRefersh();
 
     }

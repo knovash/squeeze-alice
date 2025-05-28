@@ -30,8 +30,8 @@ public class SwitchVoiceCommand {
 
     public static Context action(Context context) {
         String answer = processVoiceContext(context);
-//        context.bodyResponse = createResponse(answer);
-        context.bodyResponse = answer;
+        context.bodyResponse = createResponse(answer);
+//        context.bodyResponse = answer;
         context.code = 200;
         return context;
     }
@@ -77,10 +77,7 @@ public class SwitchVoiceCommand {
                     + "Скажите Алисе:\n"
                     + "Алиса, включи(выключи) музыку \n"
                     + "Алиса, музыку громче(тише) \n"
-                    + "Алиса, переключи канал"
-//                    " Спросите у навыка," +
-//                    "что играет и я отвечу что сейчас играет или подскажу как настроить плееры"
-                    ;
+                    + "Алиса, переключи канал";
 // Алиса, навык, помощь/помоги/подскажи
         if (command.contains("помощь") || command.contains("Помощь") || command.contains("помоги") || command.contains("подскажи"))
             return "У вас локально должен быть установлен Lyrion Music Server и приложение навыка";
@@ -120,7 +117,6 @@ public class SwitchVoiceCommand {
         if (device == null)
             return "устройство не найдено. скажите навыку, выбери колонку и название колонки, например " + firstPlayername;
         Player player = lmsPlayers.playerByDeviceId(device.id);
-
 
 // Алиса, навык, помощь/помоги/подскажи
         if (command.contains("привет") || command.contains("подключи") || command.contains("настрой")) {
@@ -168,7 +164,7 @@ public class SwitchVoiceCommand {
 // включи трэк усынови бомжа
 // включи кровосток трэк наука
         log.info("SPOTIFY");
-//        if (command.matches("(включи )?(дальше|следующий)")) return playlistNextTrack(player);
+        if (command.matches("(включи )?(дальше|следующий)")) return playlistNextTrack(player);
 //        if (command.contains("включи альбом")) return spotifyPlayAlbum(command, player);
 //        if (command.contains("включи") && command.contains("альбом") && !command.contains("включи альбом"))
 //            return spotifyPlayArtistAlbum(command, player);
@@ -185,7 +181,6 @@ public class SwitchVoiceCommand {
                 command.contains("шафл") ||
                 command.contains("рандом"))) {
 
-//            CompletableFuture.runAsync(() -> spotifyPlayArtist(command, player));
 
             CompletableFuture.runAsync(() -> spotifyPlayArtist(command, player))
                     .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
@@ -540,10 +535,9 @@ public class SwitchVoiceCommand {
     private static String playlistNextTrack(Player player) { // дальше, следующий
         String answer;
         log.info("NEXT TRACK");
-        CompletableFuture.runAsync(() -> player.ctrlNextTrack());
+        CompletableFuture.runAsync(() -> player.ctrlNextTrack().saveLastTimePathAutoremoteRequest());
         answer = "включаю следующий";
         return answer;
     }
-
 
 }

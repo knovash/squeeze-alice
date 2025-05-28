@@ -72,8 +72,6 @@ public class SwitchQueryCommand {
 // player.saveLastTimePathAutoremoteRequest();
                 break;
             case ("play"):
-// player.turnOnMusic().saveLastTimePathAutoremoteRequest()
-// .saveLastTimePathAutoremoteRequest();
                 CompletableFuture.runAsync(() -> player.turnOnMusic(null))
                         .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
                 response = player.name + " - play";
@@ -129,7 +127,6 @@ public class SwitchQueryCommand {
                 VoiceActions.syncSwitchToHere(player);
                 response = "Switch music to " + player.name;
                 break;
-
             case ("select"):
                 roomName = Utils.getCorrectRoomName(roomInQuery);
                 playerName = Utils.getCorrectPlayerName(playerInQuery);
@@ -149,27 +146,13 @@ public class SwitchQueryCommand {
                 player.favoritesAdd();
                 response = "FAVORITES ADD";
                 break;
-
             case ("get_room_player"):
 // Таскер по названию виджета вернуть комнату и плеер
                 response = lmsPlayers.playerNameByWidgetName(value);
                 break;
-            case ("get_widgets"):
-// Таскер для виджетов иконок плееров
-                response = lmsPlayers.forTaskerWidgetsIcons();
-                break;
             case ("get_refresh_json"):
 // Таскер для виджетов иконок плееров
                 response = lmsPlayers.forTaskerWidgetsRefreshJson(player, value);
-                break;
-            case ("get_playlist"):
-// Таскер для виджета отображения плейлиста
-                response = player.forTaskerPlaylist(value);
-                break;
-            case ("get_players"):
-                log.info("GET PLAYERS");
-// Таскер для виджета отображения списка плееров и их состояния name-volume-mode-title
-                response = lmsPlayers.forTaskerPlayersList();
                 break;
             default:
                 log.info("ACTION NOT FOUND: " + action);

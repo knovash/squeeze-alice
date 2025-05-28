@@ -106,19 +106,18 @@ public class ProviderAction {
 
     private static CompletableFuture<Void> runCapabilitiesDevices(Device device) {
         return CompletableFuture.runAsync(() -> {
-            log.info("RUN CAPABILITIES DEVICE ID: " + device.id);
+//            log.info("RUN CAPABILITIES DEVICE ID: " + device.id);
 // получаем плеер для выполнения действия с ним
             Player player = lmsPlayers.playerByDeviceId(device.id);
             if (player == null) {
                 log.info("ERROR. PLAYER NULL BY DEVICE ID: " + device.id);
                 return;
             }
-            log.info("RUN CAPABILITIES PLAYER: " + player.name);
+            log.info("RUN CAPABILITIES DEVICE ID: " + device.id + " PLAYER: " + player.name);
 // сначала достать все капабилити девайса
             Capability capabilityVolume = device.capabilities.stream().filter(capability -> capability.state.instance.equals("volume")).findFirst().orElse(null);
             Capability capabilityChannel = device.capabilities.stream().filter(capability -> capability.state.instance.equals("channel")).findFirst().orElse(null);
             Capability capabilityPower = device.capabilities.stream().filter(capability -> capability.state.instance.equals("on")).findFirst().orElse(null);
-
 
             String power = "true";
             if (capabilityPower != null) power = capabilityPower.state.value;

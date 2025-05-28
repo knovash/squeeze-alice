@@ -14,6 +14,7 @@ import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 import java.util.UUID;
 
 import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.Main.hive;
 import static org.knovash.squeezealice.spotify.SpotifyRequests.requestWithRefreshGet;
 
 @Log4j2
@@ -397,6 +398,6 @@ public class Spotify {
     public static void requestRefreshToken() {
         log.info("SPOTIFY REQUEST REFRESH TOKEN");
         String sessionId = UUID.randomUUID().toString();
-        Hive.publishContextWaitForContext("from_local_request", null, 10, "token_spotify_refresh", sessionId, config.spotifyRefreshToken);
+        hive.publishAndWaitForResponse("from_local_request", null, 10, "token_spotify_refresh", sessionId, config.spotifyRefreshToken);
     }
 }
