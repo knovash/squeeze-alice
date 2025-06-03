@@ -336,26 +336,26 @@ public class SwitchVoiceCommand {
         return correctPlayer;
     }
 
-    private static String searchPlayers() {
-        String answer;
-        log.info("BEFORE UPDATE " + lmsPlayers.playersNamesOnLine.toString());
-        lmsPlayers.updateLmsPlayers();
-        log.info("AFTER UPDATE " + lmsPlayers.playersNamesOnLine.toString());
-        answer = "найдено плееров " + lmsPlayers.playersNamesOnLine.size() + ", " + String.join(", ", lmsPlayers.playersNamesOnLine);
-        return answer;
-    }
+//    private static String searchPlayers() {
+//        String answer;
+//        log.info("BEFORE UPDATE " + lmsPlayers.playersNamesOnLine.toString());
+//        lmsPlayers.updateLmsPlayers();
+//        log.info("AFTER UPDATE " + lmsPlayers.playersNamesOnLine.toString());
+//        answer = "найдено плееров " + lmsPlayers.playersNamesOnLine.size() + ", " + String.join(", ", lmsPlayers.playersNamesOnLine);
+//        return answer;
+//    }
 
-    private static String searchServer() {
-        String answer;
-        log.info("SEARCH SERVER");
-// CompletableFuture.runAsync(() -> {
-// Utils.searchLmsIp();
-// log.info("LMS IP " + config.lmsIp);
-// if (config.lmsIp != null) lmsPlayers.updateLmsPlayers();
-// });
-        answer = "сейчас найду";
-        return answer;
-    }
+//    private static String searchServer() {
+//        String answer;
+//        log.info("SEARCH SERVER");
+//// CompletableFuture.runAsync(() -> {
+//// Utils.searchLmsIp();
+//// log.info("LMS IP " + config.lmsIp);
+//// if (config.lmsIp != null) lmsPlayers.updateLmsPlayers();
+//// });
+//        answer = "сейчас найду";
+//        return answer;
+//    }
 
     private static String connectBtRemote(String command, Player player) {
         String answer;
@@ -400,9 +400,10 @@ public class SwitchVoiceCommand {
         if (player == null) return "плеер не найден";
         if (player.status() == null) return "медиасервер не отвечает";
         if (!player.connected) return "плеер " + player.name + "  не подключен к медиасерверу";
-        if (player.title == null) return "медиасервер не отвечает";
+        String title = player.title();
+        if (title == null) return "медиасервер не отвечает"; // whatsPlaying
 // если с плеером все хорошо записываем тайтл что играет
-        log.info("TITLE: " + player.title);
+//        log.info("TITLE: " + player.title);
 
 // находим группы плееров которые играют вместе или отдельно, включая отделенные false
         player.playingPlayersNamesNotInCurrentGroup(false);
@@ -420,11 +421,11 @@ public class SwitchVoiceCommand {
             answerPlayingSeparate = ", отдельно играет " + String.join(", ", lmsPlayers.playingPlayersNamesNotInCurrentGrop);
 // в ответ плеер сейчас играет
         if (player.mode.equals("play")) {
-            answer = "сейчас на " + player.name + " играет " + separate + player.title + " громкость " + player.volume;
+            answer = "сейчас на " + player.name + " играет " + separate + title + " громкость " + player.volume; // whatsPlaying
         }
 // в ответ плеер сейчас не играет
         if (!player.mode.equals("play")) {
-            answer = "сейчас на " + player.name + " не играет " + separate + player.title;
+            answer = "сейчас на " + player.name + " не играет " + separate + title; // whatsPlaying
         }
 
         answer = answer + answerOtherInGroup + answerPlayingSeparate;
@@ -471,7 +472,8 @@ public class SwitchVoiceCommand {
         if (link == null) return "настройте спотифай";
         CompletableFuture.runAsync(() -> {
 // player.shuffleOn();
-            player.playPath(link);
+            player.ifExpiredAndNotPlayingUnsyncWakeSet(null)
+                    .playPath(link);
         });
         String answer = "включаю " + artist;
 // Requests.autoRemoteRefresh(); // spotifyPlayArtist

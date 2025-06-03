@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
+import static org.knovash.squeezealice.yandex.Yandex.sendDeviceState;
 
 @Log4j2
 public class ProviderAction {
@@ -44,7 +45,8 @@ public class ProviderAction {
 
         lmsPlayers.updateLmsPlayers();
 
-        log.info("SET CAPABILITIES IN PARALLEL STREAMS");
+        log.info("--------------------------------------------");
+        log.info("SET DEVICES CAPABILITIES IN PARALLEL STREAMS");
 // обновить для всех девайсов все капабилити в соответствии с ожидаемым результатом
         List<Device> jsonDevices = responseYandex.payload.devices.parallelStream()
                 .map(d -> setDeviceCapabilities(d)) // если устройство недоступно то статус DEVICE_UNREACHABLE
@@ -66,7 +68,8 @@ public class ProviderAction {
             log.info("AFTER REMOVE: " + responseYandex.payload.devices.size());
         }
 
-        log.info("RUN CAPABILITIES IN FUTURES");
+        log.info("-----------------------------------");
+        log.info("RUN DEVICES CAPABILITIES IN FUTURES");
 // выполнить в потоке действия с устройствами
         processDevicesCapabilities(responseYandex)
                 .exceptionally(ex -> {
@@ -83,7 +86,6 @@ public class ProviderAction {
         responseYandex.payload.devices = jsonDevices;
         context.bodyResponse = JsonUtils.pojoToJson(responseYandex);
         context.code = 200;
-        log.info("FINISH <<<");
         return context;
     }
 
@@ -108,6 +110,10 @@ public class ProviderAction {
         return CompletableFuture.runAsync(() -> {
 //            log.info("RUN CAPABILITIES DEVICE ID: " + device.id);
 // получаем плеер для выполнения действия с ним
+
+
+          
+            
             Player player = lmsPlayers.playerByDeviceId(device.id);
             if (player == null) {
                 log.info("ERROR. PLAYER NULL BY DEVICE ID: " + device.id);
@@ -118,6 +124,7 @@ public class ProviderAction {
             Capability capabilityVolume = device.capabilities.stream().filter(capability -> capability.state.instance.equals("volume")).findFirst().orElse(null);
             Capability capabilityChannel = device.capabilities.stream().filter(capability -> capability.state.instance.equals("channel")).findFirst().orElse(null);
             Capability capabilityPower = device.capabilities.stream().filter(capability -> capability.state.instance.equals("on")).findFirst().orElse(null);
+
 
             String power = "true";
             if (capabilityPower != null) power = capabilityPower.state.value;

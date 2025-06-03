@@ -4,6 +4,7 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 import org.knovash.squeezealice.voice.VoiceActions;
+import org.knovash.squeezealice.yandex.Yandex;
 
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
@@ -17,8 +18,7 @@ public class SwitchQueryCommand {
 
     public static Context action(Context context) {
         HashMap<String, String> queryParams = context.queryMap;
-        log.info("QUERY: " + queryParams);
-
+//        log.info("QUERY: " + queryParams);
         context.bodyResponse = "BAD REQUEST NO ACTION IN QUERY";
         if (!queryParams.containsKey("action")) return context;
         context.code = 200;
@@ -56,22 +56,18 @@ public class SwitchQueryCommand {
 
 // управление с пульта или виджетов таскер
 // респонс для отображения действия на телевизоре или планшете
-            case ("volume_dn"):
+            case ("volume_dn"): // TODO неиспользует Таскер
                 response = player.volumeRelativeOrAbsolute("-3", true);
-// player.saveLastTimePathAutoremoteRequest();
                 break;
-            case ("volume_up"):
+            case ("volume_up"): // TODO неиспользует Таскер
                 response = player.volumeRelativeOrAbsolute("3", true);
-// player.saveLastTimePathAutoremoteRequest();
                 break;
             case ("channel"):
-// response = player.playChannelRelativeOrAbsolute(value, false);
                 CompletableFuture.runAsync(() -> player.playChannelRelativeOrAbsolute(value, false, null))
                         .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
                 response = player.name + " - play channel " + value;
-// player.saveLastTimePathAutoremoteRequest();
                 break;
-            case ("play"):
+            case ("play"): // TODO неиспользует Таскер
                 CompletableFuture.runAsync(() -> player.turnOnMusic(null))
                         .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
                 response = player.name + " - play";
@@ -86,34 +82,36 @@ public class SwitchQueryCommand {
                 response = "All players - Stop";
                 break;
             case ("next"):
+//                Yandex.sendDeviceState("3", "on_off", "on","true", null);
                 CompletableFuture.runAsync(() -> player.ctrlNextChannelOrTrack())
                         .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
                 response = player.name + " - Next";
                 break;
             case ("prev"):
+//                Yandex.sendDeviceState("3", "on_off", "on","false", "offline");
                 CompletableFuture.runAsync(() -> player.ctrlPrevChannelOrTrack())
                         .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
                 response = player.name + " - Prev";
                 break;
-            case ("next_track"):
+            case ("next_track"): // TODO неиспользует Таскер
                 CompletableFuture.runAsync(() -> player.ctrlNextTrack())
                         .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
                 response = player.name + " - Next track";
                 break;
-            case ("prev_track"):
+            case ("prev_track"): // TODO неиспользует Таскер
                 CompletableFuture.runAsync(() -> player.ctrlPrevTrack())
                         .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
                 response = player.name + " - Next track";
                 break;
-            case ("next_channel"):
+            case ("next_channel"): // TODO неиспользует Таскер
                 CompletableFuture.runAsync(() -> player.ctrlNextChannel())
                         .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
-                response = player.name + " - Next channel - " + player.title;
+                response = player.name + " - Next channel";
                 break;
-            case ("prev_channel"):
+            case ("prev_channel"): // TODO неиспользует Таскер
                 CompletableFuture.runAsync(() -> player.ctrlPrevChannel())
                         .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
-                response = player.name + " - Prev channel - " + player.title;
+                response = player.name + " - Prev channel";
                 break;
             case ("separate_on"):
                 VoiceActions.separateOn(player);
@@ -126,12 +124,6 @@ public class SwitchQueryCommand {
             case ("switch_here"):
                 VoiceActions.syncSwitchToHere(player);
                 response = "Switch music to " + player.name;
-                break;
-            case ("select"):
-                roomName = Utils.getCorrectRoomName(roomInQuery);
-                playerName = Utils.getCorrectPlayerName(playerInQuery);
-                if (SwitchVoiceCommand.selectPlayerInRoom(playerName, roomName, true) != null) response = "SELECT OK";
-                else response = "SELECT ERROR";
                 break;
             case ("shuffle_on"):
                 player.shuffleOn();
@@ -147,7 +139,7 @@ public class SwitchQueryCommand {
                 response = "FAVORITES ADD";
                 break;
             case ("get_room_player"):
-// Таскер по названию виджета вернуть комнату и плеер
+// Таскер по названию виджета вернуть комнату и плеер при активации нового виджета
                 response = lmsPlayers.playerNameByWidgetName(value);
                 break;
             case ("get_refresh_json"):

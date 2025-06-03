@@ -1,183 +1,229 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.SpotifyUserParser;
-import org.knovash.squeezealice.spotify.spotify_pojo.PlayerState;
 import org.knovash.squeezealice.yandex.YandexJwtUtils;
 import org.json.JSONObject;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import static org.knovash.squeezealice.Main.config;
 
 @Log4j2
-public class Hive {
+public class Hive implements MqttCallbackExtended {
 
-    private  MqttClient mqttClient;
-    public  String correlationId = "";
-    private  final String hiveBroker = config.hiveBroker;
-    private  final String hiveUsername = config.hiveUsername;
-    private  final String hivePassword = config.hivePassword;
-    private  final ResponseManager responseManager = new ResponseManager();
-    public  String topicRecieveDevice = "to_lms_id";// подписаться
-    public  String topicPublish = "from_lms_id";// отправить сюда
-    public  long spotifyExpiresAt;
+    private MqttClient mqttClient;
+    public String correlationId = "";
+    private final String hiveBroker = config.hiveBroker;
+    private final String hiveUsername = config.hiveUsername;
+    private final String hivePassword = config.hivePassword;
+    private final ResponseManager responseManager = new ResponseManager();
+    public String topicRecieveDevice = "to_lms_id";// подписаться
+    public String topicPublish = "from_lms_id";// отправить сюда
+    public long spotifyExpiresAt;
 
-    public  void start() {
-        log.info("MQTT STARTING...");
+    // отслеживание состояния подключения
+    private volatile boolean isConnected = false;
+    // восстановление подписок после переподключения
+    private final Set<String> activeSubscriptions = new ConcurrentSkipListSet<>();
+    // управление переподключениями
+    private ScheduledExecutorService reconnectScheduler;
+
+    public void start() {
         try {
             mqttClient = new MqttClient(hiveBroker, MqttClient.generateClientId(), new MemoryPersistence());
+            mqttClient.setCallback(this);
             MqttConnectOptions options = new MqttConnectOptions();
-            options.setAutomaticReconnect(true);
+            options.setAutomaticReconnect(true); // Включаем встроенное авто-переподключение
             options.setCleanSession(true);
             options.setConnectionTimeout(10);
+            options.setKeepAliveInterval(30); // Частота проверки соединения
+            options.setMaxReconnectDelay(30000); // Максимальная задержка между попытками (30 сек)
             options.setUserName(hiveUsername);
             options.setPassword(hivePassword.toCharArray());
             mqttClient.connect(options);
-// Подписка на топик ответа
-            subscribeByYandex();
-            log.info("MQTT STARTED OK");
+            log.info("MQTT START");
+            isConnected = true;
         } catch (MqttException e) {
-            log.info("MQTT ERROR: " + e);
+            log.error("MQTT INITIAL CONNECTION ERROR: {}", e.getMessage());
+            scheduleReconnection();
         }
     }
 
-    public  void subscribeByYandex() {
+    @Override
+    public void connectComplete(boolean reconnect, String serverURI) {
+        log.info("MQTT CONNECTION ESTABLISHED. Reconnect: {}", reconnect);
+        isConnected = true;
+
+        // Восстанавливаем подписки после переподключения
+        if (reconnect && !activeSubscriptions.isEmpty()) {
+            log.info("Restoring {} subscriptions...", activeSubscriptions.size());
+            activeSubscriptions.forEach(topic -> {
+                try {
+                    mqttClient.subscribe(topic);
+                    log.info("Subscription restored: {}", topic);
+                } catch (MqttException e) {
+                    log.error("Failed to restore subscription: {}", topic, e);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void connectionLost(Throwable cause) {
+        log.warn("MQTT CONNECTION LOST: {}", cause.getMessage());
+        isConnected = false;
+    }
+
+    @Override
+    public void messageArrived(String topic, MqttMessage message) {
+        handleDeviceAndPublish(topic, message);
+    }
+
+    @Override
+    public void deliveryComplete(IMqttDeliveryToken token) {
+    }
+
+    public void subscribeByYandex() {
         if (config.yandexUid == null || config.yandexUid.equals("")) {
-            log.info("SUBSCRIBE BY YANDEX FAIL: " + config.yandexUid);
+            log.info("SUBSCRIBE BY YANDEX FAIL: {}", config.yandexUid);
             return;
         }
-        log.info("SUBSCRIBE BY YANDEX: " + topicRecieveDevice + config.yandexUid);
-        subscribe(topicRecieveDevice + config.yandexUid);
+        String topic = topicRecieveDevice + config.yandexUid;
+        log.info("SUBSCRIBE BY YANDEX: {}", topic);
+        subscribe(topic);
     }
 
-    public  void subscribe(String subscribeToTopic) {
-        log.info("SUBSCRIBE TO TOPIC: " + subscribeToTopic);
+    public void subscribe(String subscribeToTopic) {
+        log.info("SUBSCRIBE TO TOPIC: {}", subscribeToTopic);
         try {
-            mqttClient.subscribe(subscribeToTopic, (topic, message) -> handleDeviceAndPublish(topic, message));
+            // Добавляем в список активных подписок
+            activeSubscriptions.add(subscribeToTopic);
+
+            mqttClient.subscribe(subscribeToTopic, (topic, message) -> {
+                messageArrived(topic, message);
+            });
         } catch (MqttException e) {
-            throw new RuntimeException(e);
+            log.error("SUBSCRIBE ERROR: {}", e.getMessage());
         }
     }
 
-    private  void handleDeviceAndPublish(String topicRecieved, MqttMessage message) {
+    private void handleDeviceAndPublish(String topicRecieved, MqttMessage message) {
         log.info("");
         log.info("---------------------------------------------------------------------------------------------");
-        log.info("RECIEVED MESSAGE FROM TOPIC: " + topicRecieved);
+        log.info("RECEIVED MESSAGE FROM TOPIC: {}", topicRecieved);
         String payload = new String(message.getPayload());
         Map<String, String> params = Parser.run(payload);
 
-// получить токен Yandex. не отвечать
-        if ("yandex_callback_token".equals(params.get("action"))){
-            takeYandexTokenFromMessage(params);
-            return;
-        }
-// получить токен Spotify. не отвечать
-            if ("spotify_callback_token".equals(params.get("action"))){
-            takeSpotifyTokenFromMessage(params);
-            return;
-        }
-// получить рефлеш токен Spotify. не отвечать
-            if ("spotify_callback_refresh_token".equals(params.get("action"))){
-            takeSpotifyRefreshTokenFromMessage(params);
-            return;
+        // Обработка специальных действий
+        switch (params.getOrDefault("action", "")) {
+            case "yandex_callback_token":
+                takeYandexTokenFromMessage(params);
+                return;
+            case "spotify_callback_token":
+                takeSpotifyTokenFromMessage(params);
+                return;
+            case "spotify_callback_refresh_token":
+                takeSpotifyRefreshTokenFromMessage(params);
+                return;
         }
 
-// получить контекст, выполнить действия, отправить контекст в брокер
-        correlationId = ""; // TODO
+        // Обработка обычных сообщений
         if (!params.containsKey("correlationId")) {
-            log.info("ERROR: NO CORRELATION ID IN MESSAGE");
+            log.error("ERROR: NO CORRELATION ID IN MESSAGE");
             return;
         }
         correlationId = params.get("correlationId");
-// полученный контекст
+
         String contextJson = params.getOrDefault("context", "");
-        if (contextJson.equals("")) {
-            log.info("ERROR: NO CONTEXT IN MESSAGE");
+        if (contextJson.isEmpty()) {
+            log.error("ERROR: NO CONTEXT IN MESSAGE");
             return;
         }
+
         Context context = Context.fromJson(contextJson);
-// выполнить действия с контекстом
         context = HandlerAll.processContext(context);
-// положить в пэйлоад ответа: ид, топик,  контекст
-        payload = "correlationId=" + correlationId + "&" +
+
+        String responsePayload = "correlationId=" + correlationId + "&" +
                 "userTopicId=" + topicRecieveDevice + "&" +
                 "context=" + context.toJson();
-// отправить сообщение в топик
+
         try {
-            log.info("PUBLISH RESPONSE TO TOPIC: " + topicPublish);
-            mqttClient.publish(topicPublish, new MqttMessage(payload.getBytes()));
+            log.info("PUBLISH RESPONSE TO TOPIC: {}", topicPublish);
+            mqttClient.publish(topicPublish, new MqttMessage(responsePayload.getBytes()));
         } catch (MqttException e) {
-            log.info("ERROR: " + e);
+            log.error("PUBLISH ERROR: {}", e.getMessage());
         }
     }
 
-    public  void publish(String topic, String message) {
-        log.info("PUBLISH TO TOPIC: " + topic);
+    public void publish(String topic, String message) {
+        if (!isConnected()) {
+            log.warn("SKIPPED PUBLISH - MQTT NOT CONNECTED");
+            return;
+        }
+
+        log.info("PUBLISH TO TOPIC: {}", topic);
         try {
             mqttClient.publish(topic, new MqttMessage(message.getBytes()));
         } catch (MqttException e) {
-            log.info("ERROR: " + e);
+            log.error("PUBLISH ERROR: {}", e.getMessage());
         }
     }
 
-    // яндекс запрос токена
-// спотифай запрос токена
-    public  String publishAndWaitForResponse(String topic, Context context, Integer timeout, String action, String correlationId) {
+    public String publishAndWaitForResponse(String topic, Context context, Integer timeout, String action, String correlationId) {
         return publishAndWaitForResponse(topic, context, timeout, action, correlationId, null);
     }
 
-    // спотифай запрос рефреш токена
-    public  String publishAndWaitForResponse(String topic, Context context, Integer timeout, String action, String correlationId, String text) {
-        log.info("MQTT PUBLISH TO TOPIC: " + topic + " AND WAIT FOR CONTEXT RESPONSE");
+    public String publishAndWaitForResponse(String topic, Context context, Integer timeout, String action, String correlationId, String text) {
+        if (!isConnected()) {
+            log.warn("SKIPPED PUBLISH-AND-WAIT - MQTT NOT CONNECTED");
+            return "MQTT_NOT_CONNECTED";
+        }
+
+        log.info("MQTT PUBLISH TO TOPIC: {} AND WAIT FOR RESPONSE", topic);
         if (context == null) context = new Context();
         if (correlationId == null) correlationId = UUID.randomUUID().toString();
+
         String responseBody = "";
-        String contextJson = context.toJson();
-// генерация топика для колбэка с токеном
         String callbackTopic = "callback" + correlationId;
-// подписаться на сгенерированый топик
+
         subscribe(callbackTopic);
-// подготовка пэйлоад
+
         try {
             String payload = "correlationId=" + correlationId + "&" +
                     "callbackTopic=" + callbackTopic + "&" +
                     "action=" + action + "&" +
                     "text=" + text + "&" +
-                    "context=" + contextJson;
-            log.info("PAYLOAD: " + payload);
-// Отправка запроса в MQTT
+                    "context=" + context.toJson();
+
+            log.info("PAYLOAD: {}", payload);
             mqttClient.publish(topic, new MqttMessage(payload.getBytes()));
-// Ожидание ответа
+
             CompletableFuture<String> future = responseManager.waitForResponse(correlationId);
-// Получение ответа
             try {
                 log.info("MQTT WAIT FOR RESPONSE...");
-// если таймаут больше 4 то навык ответит что Навык не отвечает
-// 4 - недождалась ответа, но иногда может быть Навык неотвечает
-// для УДЯ было 10
                 responseBody = future.get(timeout, TimeUnit.SECONDS);
-                log.info("MQTT RESPONSE RECIEVED OK");
+                log.info("MQTT RESPONSE RECEIVED OK");
             } catch (TimeoutException e) {
-                log.info("MQTT ERROR NO RESPONSE: " + e);
-                responseBody = "---";
+                log.warn("MQTT RESPONSE TIMEOUT: {}", e.getMessage());
+                responseBody = "TIMEOUT";
             }
         } catch (Exception e) {
-            log.info("MQTT ERROR: " + e);
+            log.error("PUBLISH-AND-WAIT ERROR: {}", e.getMessage());
+        } finally {
+            unsubscribe(callbackTopic);
         }
         return responseBody;
     }
 
-    private  class ResponseManager {
-
+    private class ResponseManager {
         private final ConcurrentMap<String, CompletableFuture<String>> responses = new ConcurrentHashMap<>();
 
         public CompletableFuture<String> waitForResponse(String correlationId) {
@@ -194,89 +240,126 @@ public class Hive {
         }
     }
 
-    public  void unsubscribe(String topic) {
-        log.info("MQTT UNSUBSCRIBE TOPIC: " + topic);
+    public void unsubscribe(String topic) {
+        log.info("MQTT UNSUBSCRIBE TOPIC: {}", topic);
         try {
-            mqttClient.unsubscribe(topic);
+            activeSubscriptions.remove(topic);
+            if (mqttClient != null && mqttClient.isConnected()) {
+                mqttClient.unsubscribe(topic);
+            }
         } catch (MqttException e) {
-            log.info("MQTT UNSUBSCRIBE ERROR: " + e);
+            log.error("UNSUBSCRIBE ERROR: {}", e.getMessage());
         }
     }
 
-    public  void stop() {
-        log.info("MQTT STOP");
-        try {
-            mqttClient.disconnect();
-            mqttClient.close();
-        } catch (MqttException e) {
-            throw new RuntimeException(e);
+    public void stop() {
+        log.info("MQTT STOPPING...");
+        if (reconnectScheduler != null) {
+            reconnectScheduler.shutdownNow();
         }
-        mqttClient = null;
-        log.info("MQTT CLIENT CLOSED");
+
+        if (mqttClient != null) {
+            try {
+                mqttClient.disconnect();
+                mqttClient.close();
+                log.info("MQTT CLIENT DISCONNECTED");
+            } catch (MqttException e) {
+                log.error("DISCONNECT ERROR: {}", e.getMessage());
+            }
+        }
+        isConnected = false;
+        activeSubscriptions.clear();
     }
 
-    public  void takeYandexTokenFromMessage(Map<String, String> params) {
-        log.info("RECIEVED YANDEX TOKEN");
-        String token = params.getOrDefault("token", null);
+    public void takeYandexTokenFromMessage(Map<String, String> params) {
+        log.info("RECEIVED YANDEX TOKEN");
+        String token = params.get("token");
         if (token == null) return;
+
         Main.yandexToken = token;
         config.yandexToken = token;
         String currentUid = config.yandexUid;
         String newUid = YandexJwtUtils.getValueByTokenAndKey(token, "uid");
         String yandexName = YandexJwtUtils.getValueByTokenAndKey(token, "display_name");
-        if (newUid.equals(currentUid)) return;
-// если полученый уид отличается то переподписаться на новый топик нового пользователя
-        this.unsubscribe(topicRecieveDevice + currentUid);
-        this.subscribe(topicRecieveDevice + newUid);
-        config.yandexUid = newUid;
-        config.yandexName = yandexName;
-        config.write();
-        log.info("TOKEN: " + token);
+
+        if (!newUid.equals(currentUid)) {
+            // Переподписываемся на новый топик пользователя
+            unsubscribe(topicRecieveDevice + currentUid);
+            subscribe(topicRecieveDevice + newUid);
+            config.yandexUid = newUid;
+            config.yandexName = yandexName;
+            config.write();
+        }
+
+        log.info("YANDEX UID UPDATED: {}", newUid);
         responseManager.completeResponse(correlationId, "OK");
     }
 
-    public  void takeSpotifyTokenFromMessage(Map<String, String> params) {
-        log.info("RECIEVED SPOTIFY TOKEN");
-        String token = params.getOrDefault("token", null);
-        String refreshToken = params.getOrDefault("refreshToken", null);
-        spotifyExpiresAt = Long.parseLong(params.getOrDefault("expiresAt", null));
+    public void takeSpotifyTokenFromMessage(Map<String, String> params) {
+        log.info("RECEIVED SPOTIFY TOKEN");
+        String token = params.get("token");
+        String refreshToken = params.get("refreshToken");
+        spotifyExpiresAt = Long.parseLong(params.get("expiresAt"));
+
         if (token == null) return;
-        log.info("TOKEN: " + token);
-        log.info("REFRESH TOKEN: " + refreshToken);
-        log.info("EXPIRES AT: " + spotifyExpiresAt);
-        long currentTime = System.currentTimeMillis();
-        log.info("TIME NOW: " + currentTime);
-        long delta = spotifyExpiresAt - currentTime;
-        log.info("DELTA: " + delta);
+
+        log.info("Spotify token received");
         config.spotifyToken = token;
         config.spotifyRefreshToken = refreshToken;
         config.spotifyTokenExpiresAt = spotifyExpiresAt;
-// получить имя пользователя Spotify
+
+        // Получаем имя пользователя Spotify
         config.spotifyName = SpotifyUserParser.parseUserInfo(Spotify.me()).getDisplayName();
         config.write();
-        PlayerState ps = Spotify.playerState;
-        log.info(ps);
+
+        log.info("Spotify user: {}", config.spotifyName);
         responseManager.completeResponse(correlationId, "OK");
     }
 
-    public  void takeSpotifyRefreshTokenFromMessage(Map<String, String> params) {
-        log.info("RECIEVED SPOTIFY REFRESH TOKEN");
-        String refreshTokenResponse = params.getOrDefault("refreshTokenResponse", null);
-        log.info("SPOTIFY REFRESH TOKEN RESPONSE: " + refreshTokenResponse);
-// json body response от Spotify
+    public void takeSpotifyRefreshTokenFromMessage(Map<String, String> params) {
+        log.info("RECEIVED SPOTIFY REFRESH TOKEN RESPONSE");
+        String refreshTokenResponse = params.get("refreshTokenResponse");
+        if (refreshTokenResponse == null) return;
+
         JSONObject jsonObject = new JSONObject(refreshTokenResponse);
         String accessToken = jsonObject.getString("access_token");
-        String tokenType = jsonObject.getString("token_type");
         int expiresIn = jsonObject.getInt("expires_in");
-        String scope = jsonObject.getString("scope");
-        log.info("Access Token: " + accessToken);
-        log.info("Token Type: " + tokenType);
-        log.info("Expires in: " + expiresIn + " seconds");
-        log.info("Scopes: " + scope);
-        spotifyExpiresAt = System.currentTimeMillis() + expiresIn;
+
+        spotifyExpiresAt = System.currentTimeMillis() + expiresIn * 1000L;
         config.spotifyToken = accessToken;
-        config.spotifyTokenExpiresAt = System.currentTimeMillis() + expiresIn;
+        config.spotifyTokenExpiresAt = spotifyExpiresAt;
+        config.write();
+
+        log.info("Spotify token refreshed, expires in {} seconds", expiresIn);
         responseManager.completeResponse(correlationId, "OK");
     }
 
+    public boolean isConnected() {
+        boolean mqttConnected = mqttClient.isConnected();
+        boolean state = isConnected && mqttClient != null && mqttConnected;
+//        log.info("MQTT isConnected: " + isConnected);
+//        log.info("MQTT mqttClient: " + mqttClient.getClientId());
+        log.info("MQTT mqttConnected: " + mqttConnected);
+//        log.info("MQTT STATE: " + state);
+        return state;
+    }
+
+    private void scheduleReconnection() {
+        if (reconnectScheduler != null && !reconnectScheduler.isShutdown()) {
+            reconnectScheduler.shutdownNow();
+        }
+
+        reconnectScheduler = Executors.newSingleThreadScheduledExecutor();
+        reconnectScheduler.scheduleAtFixedRate(() -> {
+            if (!isConnected()) {
+                log.warn("Attempting to reconnect to MQTT broker...");
+                try {
+                    stop();
+                    start();
+                } catch (Exception e) {
+                    log.error("Reconnection attempt failed: {}", e.getMessage());
+                }
+            }
+        }, 5, 30, TimeUnit.SECONDS); // Первая попытка через 5 сек, затем каждые 30 сек
+    }
 }

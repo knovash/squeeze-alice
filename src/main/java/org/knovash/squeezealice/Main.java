@@ -1,6 +1,7 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.utils.PlayersUpdateScheduler;
 import org.knovash.squeezealice.yandex.Yandex;
 import org.knovash.squeezealice.utils.Utils;
@@ -8,8 +9,12 @@ import org.knovash.squeezealice.utils.Utils;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static org.knovash.squeezealice.yandex.Yandex.sendDeviceState;
 
 @Log4j2
 public class Main {
@@ -35,6 +40,9 @@ public class Main {
 
         links.read();
 
+        log.info("IP: " +  Utils.getMyIpAddres());
+
+
         lmsPlayers.searchForLmsIp();
         Utils.readAliceIdInRooms();
         lmsPlayers.read();
@@ -50,9 +58,24 @@ public class Main {
         Server.start();
         hive = new Hive();
         hive.start();
-        PlayersUpdateScheduler.startPeriodicUpdate(5); // новое
+        hive.subscribeByYandex();
+
+        PlayersUpdateScheduler.startPeriodicUpdate(1); // новое
         log.info("VERSION 1.2");
+//            sendDeviceState();
 //        Spotify.ifExpiredRunRefersh();
+
+        // Запуск периодической проверки MQTT
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(() -> {
+//            log.info("CHECK MQTT CONNECTION...");
+            if (hive != null && !hive.isConnected()) {
+                log.warn("MQTT connection lost! Attempting to reconnect...");
+                hive.stop();
+                hive.start();
+                hive.subscribeByYandex();
+            }
+        }, 1, 1, TimeUnit.MINUTES); // Проверка каждую минуту
 
     }
 }

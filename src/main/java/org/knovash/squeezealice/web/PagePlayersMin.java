@@ -15,7 +15,7 @@ import static org.knovash.squeezealice.Main.rooms;
 import static org.knovash.squeezealice.web.PageIndex.pageOuter;
 
 @Log4j2
-public class PagePlayers {
+public class PagePlayersMin {
 
     public static final String alt_sync_save = "alt_sync_save";
     public static final String alt_sync_value = "alt_sync_value";
@@ -84,7 +84,7 @@ public class PagePlayers {
 
                             "<br>" +
                             "<form method='POST' action='/form'>" +
-                            "<label>Минут до сброса громкости на значаение по пресету когда не играет</label><br>" +
+                            "<label>Время минут до сброса громкости на значаение по пресету когда не играет</label><br>" +
                             "<input " +
                             "required='required'" +
                             "type='number'" + "min='1'" + "max='30'" +
@@ -95,16 +95,16 @@ public class PagePlayers {
                             "</form>" +
                             "<br>" +
 
-//                            "<form method='POST' action='/form'>" +
-//                            "<label>Синхронизация альтернативная (" + lmsPlayers.syncAlt + ") если di.fm работает нормально, должно быть false</label><br>" +
-//                            "<select name='" + alt_sync_value + "' required>" +
-//                            "<option value='true' " + (lmsPlayers.syncAlt ? "selected" : "") + ">вкл</option>" +
-//                            "<option value='false' " + (!lmsPlayers.syncAlt ? "selected" : "") + ">выкл</option>" +
-//                            "</select>" +
-//                            "<input type='hidden' name='action' value='" + alt_sync_save + "'>" +
-//                            "<button type='submit'>Сохранить</button>" +
-//                            "</form>" +
-//                            "<br>" +
+                            "<form method='POST' action='/form'>" +
+                            "<label>Синхронизация альтернативная (" + lmsPlayers.syncAlt + ") если di.fm работает нормально, должно быть false</label><br>" +
+                            "<select name='" + alt_sync_value + "' required>" +
+                            "<option value='true' " + (lmsPlayers.syncAlt ? "selected" : "") + ">вкл</option>" +
+                            "<option value='false' " + (!lmsPlayers.syncAlt ? "selected" : "") + ">выкл</option>" +
+                            "</select>" +
+                            "<input type='hidden' name='action' value='" + alt_sync_save + "'>" +
+                            "<button type='submit'>Сохранить</button>" +
+                            "</form>" +
+                            "<br>" +
 
                             "<form method='POST' action='/form'>" +
                             "<label>Включать последнее игравшее на этой колонке (" + lmsPlayers.lastThis + ") иначе с последней игравшей колонки</label><br>" +
@@ -175,7 +175,7 @@ public class PagePlayers {
                         "name='" + player_delay_value + "' " +
                         "type='number'" + "min='0'" + "max='20'" +
                         "placeholder='10'" +
-                        "value='" + p.delay + "'> секунд, задержка включения колонки, для установки громкости по пресету перед проигрыванием музыки" + "<br>" +
+                        "value='" + p.delay + "'> секунды, задержка включения колонки, для установки громкости по пресету перед проигрыванием музыки" + "<br>" +
 
                         "<input required " +
                         "name='" + player_volume_max_value + "' " +
@@ -192,13 +192,6 @@ public class PagePlayers {
 
                         "<button type='submit' name='action' value='player_save'>Сохранить</button>" +
                         "<button type='submit' name='action' value='player_remove'>Удалить</button>" +
-
-                        "<br>" +
-                        " <b>title:</b>" + p.title() + // PagePlayers
-                        "  <b>lastTime:</b>" + p.lastPlayTime +
-                        "   <b>lastChannel:</b>" + p.lastChannel +
-                        "   <b>lastPath:</b>" + p.lastPath +
-                        "   <b>currentTrackInPlaylist:</b>" + p.remoteMetaTitle +
 
                         "</fieldset>" +
                         "</form>";

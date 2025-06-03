@@ -241,7 +241,7 @@ public class Utils {
         int end = Math.min(list.size(), start + lines * 2 + 1);
         int delta = lines * 2 + 1 - (end - start);
         int start2 = Math.max(0, start - delta);
-        log.info("INDEX: " + index + " LEFT: " + left + " START: " + start + " END: " + end + " DELTA: " + delta);
+//        log.info("INDEX: " + index + " LEFT: " + left + " START: " + start + " END: " + end + " DELTA: " + delta);
         return new ArrayList<>(list.subList(start2, end));
     }
 }

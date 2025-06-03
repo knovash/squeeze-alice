@@ -346,10 +346,11 @@ public class Spotify {
         lastTitle = Spotify.getNameById(lastPath);
         log.info("LAST PATH: " + lastPath);
         log.info("LAST TITLE: " + lastTitle);
-        player.ifExpiredAndNotPlayingUnsyncWakeSet(null);
-        player.playPath(playingUri);
-        player.waitFor(1000);
-        player.pause();
+        player
+                .ifExpiredAndNotPlayingUnsyncWakeSet(null) // transfer
+                .playPath(playingUri)
+                .waitFor(1000)
+                .pause();
         Integer index = currentlyPlaying.item.track_number - 1;
         log.info("TYPE: " + currentlyPlaying.context.type);
         if (!currentlyPlaying.context.type.equals("album")) {

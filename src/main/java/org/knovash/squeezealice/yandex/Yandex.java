@@ -1,19 +1,24 @@
 package org.knovash.squeezealice.yandex;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
+import org.apache.http.entity.ContentType;
+import org.apache.http.util.EntityUtils;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.SmartHome;
+import org.knovash.squeezealice.provider.response.Capability;
+import org.knovash.squeezealice.provider.response.Device;
+import org.knovash.squeezealice.provider.response.State;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.web.PageIndex;
 
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -159,4 +164,58 @@ public class Yandex {
 //        log.info("DEVICE ID: " + deviceId);
         return deviceId;
     }
+
+    public static void sendDeviceState(String deviceId, String type, String instance, String capState, String status) {
+//        Уведомление об изменении состояний устройств
+//        https://yandex.ru/dev/dialogs/smart-home/doc/ru/reference-alerts/post-skill_id-callback-state
+        log.info("ID: " + deviceId + " CAPNAME: " + type + " STATE: " + capState);
+        CompletableFuture.runAsync(() -> {
+            HttpResponse response = null;
+            try {
+                String url = "https://dialogs.yandex.net/api/v1/skills/5e3196e7-dc7c-4de3-b42a-95f56f58a9fe/callback/state";
+                Map<String, Object> deviceMap = new HashMap<>();
+                deviceMap.put("id", deviceId);
+                Map<String, Object> capabilityMap = new HashMap<>();
+                capabilityMap.put("type", "devices.capabilities." + type);
+                Map<String, Object> stateMap = new HashMap<>();
+                stateMap.put("instance", instance);
+                stateMap.put("value", capState);
+                capabilityMap.put("state", stateMap);
+                deviceMap.put("capabilities", Collections.singletonList(capabilityMap));
+                Map<String, Object> payload = new HashMap<>();
+                payload.put("user_id", config.yandexUid);
+                payload.put("devices", Collections.singletonList(deviceMap));
+                Map<String, Object> requestBody = new HashMap<>();
+                requestBody.put("ts", System.currentTimeMillis() / 1000.0);
+                requestBody.put("payload", payload);
+                String jsonBody = JsonUtils.pojoToJson(requestBody);
+//                log.info("Request body: " + jsonBody);
+                // Отправляем запрос и получаем ответ
+                response = null;
+                response = Request.Post(url)
+                        .setHeader("Authorization", "OAuth " + "y0__xDzxbXDARij9xMgof3dqBNVNLZJ5TUBmwMndUdpOq_rMn5GQw")
+                        .setHeader("Content-Type", "application/json")
+                        .bodyString(jsonBody, ContentType.APPLICATION_JSON)
+                        .execute().returnResponse();
+                // Логируем ответ сервера
+                int statusCode = response.getStatusLine().getStatusCode();
+                String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+                log.info("Response status: " + statusCode + " Response body: " + responseBody);
+            } catch (IOException e) {
+                log.error("Error updating device state: " + e.getMessage(), e);
+            } finally {
+                // Закрываем ресурсы ответа
+                if (response != null && response.getEntity() != null) {
+                    try {
+                        EntityUtils.consume(response.getEntity());
+                    } catch (IOException e) {
+                        log.warn("Error closing response entity", e);
+                    }
+                }
+//                log.info("FINISH SEND STATE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            }
+        });
+    }
+
+
 }

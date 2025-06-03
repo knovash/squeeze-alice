@@ -93,8 +93,8 @@ public class SmartHome {
 
         Capability channel = new Capability();
         channel.type = "devices.capabilities.range"; // Тип умения. channel     volume
-        channel.retrievable = false; // Доступен ли для данного умения устройства запрос состояния
-        channel.reportable = false; // Признак включенного оповещения об изменении состояния умения
+        channel.retrievable = true; // Доступен ли для данного умения устройства запрос состояния
+        channel.reportable = true; // Признак включенного оповещения об изменении состояния умения
         channel.parameters.instance = "channel"; // Название функции для данного умения. volume channel
         channel.parameters.random_access = true; // Возможность устанавливать произвольные значения функции
         channel.parameters.range = new Range();

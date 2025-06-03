@@ -9,6 +9,7 @@ import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import static org.knovash.squeezealice.Main.config;
 import static org.knovash.squeezealice.Main.lmsPlayers;
@@ -35,7 +36,7 @@ public class Requests {
         Content content = null;
         Response response = null;
         try {
-            content = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
+            content = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8))
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -45,7 +46,7 @@ public class Requests {
             return null;
         }
         if (content != null) {
-            response = JsonUtils.jsonToPojo(content.asString(), Response.class);
+            response = JsonUtils.jsonToPojo(content.asString(StandardCharsets.UTF_8), Response.class);
         } else {
             log.info("ERROR RESPONSE IS EMPTY");
             return null;
@@ -59,7 +60,7 @@ public class Requests {
 
         String status = null;
         try {
-            status = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
+            status = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8))
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -73,14 +74,13 @@ public class Requests {
         return status;
     }
 
-    public static String postToLmsForJsonBody(String json) {
-//  все запросы плеера для получения информации из Response response.result._artist
-//        log.info("REQUEST TO LMS: " + json);
+    //  все запросы плеера для получения информации из Response response.result._artist
 
+    public static String postToLmsForJsonBody(String json) {
         Content content = null;
-        Response response = null;
         try {
-            content = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
+            content = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/")
+                    .bodyString(json, ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8))
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -89,7 +89,7 @@ public class Requests {
             log.info("ERROR " + e);
             return null;
         }
-        return content.asString();
+        return content.asString(StandardCharsets.UTF_8);
     }
 
     public static void autoRemoteRefresh() {
@@ -99,7 +99,7 @@ public class Requests {
 // SwitchVoiceCommand тут есть действия pleer и надо добавить после них autoRemoteRefresh
         log.info("REQUEST TO TASKER AUTO REMOTE FOR REFRESH");
         lmsPlayers.autoRemoteUrls.stream().forEach(url -> {
-            log.info("POST REFRESH TO AUTOREMOTE URI: " + url);
+            log.info("POST TO AUTOREMOTE: " + url);
             if (url == null) return;
             try {
                 Request.Post(url).execute();

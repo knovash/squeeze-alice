@@ -73,7 +73,7 @@ public class Links {
             log.info("NO LINKS FILE");
         } else {
             this.links = linksFromFile.links;
-            log.info(this.links);
+//            log.info(this.links);
         }
     }
 

@@ -89,7 +89,6 @@ public class HandlerAll implements HttpHandler {
                 context = PageIndex.action(context);
                 break;
         }
-        log.info("FINISH. RETURN CONTEXT");
         return context;
     }
 }
