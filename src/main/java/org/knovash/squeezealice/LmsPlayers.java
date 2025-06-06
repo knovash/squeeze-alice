@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.http.client.fluent.Request;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.lms.ServerStatusByName;
@@ -13,7 +14,9 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
+import org.knovash.squeezealice.yandex.Yandex;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -30,8 +33,8 @@ public class LmsPlayers {
 
     public List<Player> players;
     //    public List<String> playersNames = new ArrayList<>();
-    public List<String> playersNamesOnLine = new ArrayList<>();
-    public List<String> playersNamesOffLine = new ArrayList<>();
+//    public List<String> playersNamesOnLine = new ArrayList<>();
+//    public List<String> playersNamesOffLine = new ArrayList<>();
     public String lastPath;
     public int lastChannel = 1;
     public String btPlayerInQuery = "homepod";
@@ -73,53 +76,44 @@ public class LmsPlayers {
         if (!lmsServerOnline) return;
         if (this.players == null) this.players = new ArrayList<>();
         String json = Requests.postToLmsForJsonBody(RequestParameters.serverstatusname().toString());
-//        log.debug("JSON: " + json);
         if (json == null) return;
         json = JsonUtils.replaceSpace(json);
         json = json.replaceAll("\"newversion.*</a>\\.\"", "\"newversion\": \"--\"");
+// получить лист плееров из LMS
         serverStatus = JsonUtils.jsonToPojo(json, ServerStatusByName.class);
         if (serverStatus == null) return;
-// перед апдейтом сбросить состояние для всех плееров
-        this.players.forEach(p -> {
-            p.connected = false;
-            p.playing = false;
-            p.volume = "--";
-            p.title = "unknown";
-            p.mode = "offline";
-        });
-//        log.info("lastThis: " + this.lastThis);
-//        log.info("lastPath: " + this.lastPath);
-//        log.info("lastChannel: " + this.lastChannel);
-//        log.info("delayExpire: " + this.delayExpire);
-//        log.info("delayUpdate: " + this.delayUpdate);
-//        log.info("players: " + this.players);
-//        log.info("playersNamesOnLine: " + this.playersNamesOnLine);
-//        log.info("playersNamesOffLine: " + this.playersNamesOffLine);
 // обновить состояние всех плееров полученных в players_loop из LMS
-        playersNamesOnLine = new ArrayList<>();
-        serverStatus.result.players_loop.forEach(playersLoop -> updatePlayer(playersLoop));
+//        playersNamesOnLine = new ArrayList<>();
+
+// очистить состояние локальных плееров, которых могло не оказаться в LMS
+//        lmsPlayers.players.forEach(player ->player.clean());
+
+        List<String> lmsPlayersList = serverStatus.result.players_loop.stream().map(playersLoop -> playersLoop.name).collect(Collectors.toList());
+        List<String> localPlayersList = lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList());
+        Set<String> fullPlayersSet = new HashSet<>(); // Создаём HashSet из первого списка
+        fullPlayersSet.addAll(lmsPlayersList); // Добавляем элементы второго списк
+        fullPlayersSet.addAll(localPlayersList); // Добавляем элементы второго списк
+
+        fullPlayersSet.forEach(player -> updatePlayer(player));
     }
 
-    public void updatePlayer(ServerStatusByName.PlayersLoop playersLoop) {
-        playersNamesOnLine.add(playersLoop.name);
-        Player existsPlayer = this.playerByCorrectName(playersLoop.name);
-        if (existsPlayer == null) {
+    public void updatePlayer(String playerName) {
+//        playersNamesOnLine.add(playerName);
+// попытка найти этот плеер в подключенных по имени
+        Player player = this.playerByCorrectName(playerName);
+        if (player == null) {
 // если плеера еще нет то создать новый плеер обновить статус и добавить
-            Player newPlayer = new Player(playersLoop.name, playersLoop.playerid);
-            log.info("ADD NEW PLAYER: " + newPlayer.name);
-            if (playersLoop.connected == 1) newPlayer.connected = true;
-            newPlayer.status();
-            this.players.add(newPlayer);
-        } else {
-// если плеер уже есть то обновить статус плеера
-            if (playersLoop.connected == 1) existsPlayer.connected = true;
-            existsPlayer.status();
-//            log.info("FINISH UPDATE PLAYER: " + existsPlayer.name);
+            player = new Player(playerName);
+            log.info("ADD NEW PLAYER: " + player.name);
+// обновить статус и добавить новый плеер в подключенные
+            this.players.add(player);
         }
+// если плеер уже есть то обновить статус плеера
+        player.status(); // updatePlayer
     }
 
     public void write() {
-        log.info("WRITE FILE: " + LmsPlayers.saveToFileJson);
+        log.info("\nWRITE FILE: " + LmsPlayers.saveToFileJson);
         JsonUtils.pojoToJsonFile(lmsPlayers, LmsPlayers.saveToFileJson);
     }
 
@@ -136,17 +130,13 @@ public class LmsPlayers {
     }
 
     public Player playerByCorrectName(String name) {
-//        log.debug("BY NAME: " + name);
-        Player player = new Player();
-        if (name == null) return null;
-        if (lmsPlayers.players == null) return null;
+        Player player;
+        if (name == null || lmsPlayers == null || lmsPlayers.players == null) return null;
         player = lmsPlayers.players.stream()
-                .filter(p -> (p.getName() != null))
-                .filter(p -> p.getName().equals(name))
+                .filter(p -> name.equals(p.name))
                 .findFirst()
                 .orElse(null);
         if (player == null) log.debug("PLAYER NOT FOUND BY NAME: " + name);
-//        else log.info("BY NAME: " + name + " GET PLAYER: " + player);
         return player;
     }
 
@@ -186,39 +176,33 @@ public class LmsPlayers {
     }
 
     public Player playingPlayer(String exceptName, boolean exceptSeparated) {
-        List<Player> playingPlayers = playingPlayers(exceptName, exceptSeparated);
+        List<Player> playingPlayers = playingPlayers(exceptName, exceptSeparated); //playingPlayer
         if (playingPlayers != null) return playingPlayers.get(0);
         return null;
     }
 
     public List<Player> playingPlayers(String exceptName, boolean exceptSeparated) {
-        log.info("SEARCH FOR PLAYING. EXCEPT NAME: " + exceptName + ". EXCEPT SEPARATED: " + exceptSeparated);
-        lmsPlayers.updateLmsPlayers();
         List<Player> playingPlayers = null;
-
         playingPlayers = lmsPlayers.players.stream()
                 .filter(p -> !exceptSeparated || !p.separate)
-                .filter(p -> p.playing)
+                .filter(p -> p.playing) // playingPlayers
                 .filter(p -> !exceptName.equals(p.name))
-
                 // TODO вернуть если ошибки с плеерами которые играют тишину
 //                .filter(p -> {
 //                    String path = p.path();
 //                    return path != null && !path.equals(config.silence);
 //                })
-
                 .collect(Collectors.toList());
-
         if (playingPlayers == null || playingPlayers.size() == 0) {
-            log.info("NO PLAYING PLAYERS");
+            log.info("SEARCH FOR PLAYING. EXCEPT NAME: " + exceptName + ". EXCEPT SEPARATED: " + exceptSeparated + " NO PLAYING PLAYERS");
             return null;
         }
-        log.info("PLAYING PLAYERS: " + playingPlayers.stream().map(player -> player.name).collect(Collectors.toList()));
+        log.info("SEARCH FOR PLAYING. EXCEPT NAME: " + exceptName + ". EXCEPT SEPARATED: " + exceptSeparated + " PLAYING PLAYERS: " + playingPlayers.stream().map(player -> player.name).collect(Collectors.toList()));
         return playingPlayers;
     }
 
     public List<String> playingPlayersNames(String exceptName, Boolean exceptSeparated) {
-        List<Player> playingPlayers = playingPlayers(exceptName, exceptSeparated);
+        List<Player> playingPlayers = playingPlayers(exceptName, exceptSeparated); // playingPlayersNames
         if (playingPlayers == null) return new ArrayList<>();
         return playingPlayers.stream().map(p -> p.name).collect(Collectors.toList());
     }
@@ -249,7 +233,7 @@ public class LmsPlayers {
         player.volume_high = Integer.valueOf(volumeMax);
         player.schedule = Utils.stringSplitToIntMap2(schedule, ",", ":");
         SwitchVoiceCommand.room = roomName;
-        Player playerNew = SwitchVoiceCommand.selectPlayerInRoom(playerName, roomName, false);
+        Player playerNew = SwitchVoiceCommand.selectPlayerInRoom(playerName, roomName, false); // playerSave
         log.info("SELECT PLAYER NEW: " + playerNew);
         write();
         log.info("FINISH PLAYER SAVE");
@@ -275,26 +259,6 @@ public class LmsPlayers {
 //        Device device = SmartHome.getDeviceById(id);
         write();
         return "OK";
-    }
-
-    public List<String> separatedPlayers(Player excludePlayer) {
-        log.info("TRY GET SEPARATED PLAYERS");
-        lmsPlayers.updateLmsPlayers();
-
-
-        List<String> separatePlayers =
-                lmsPlayers.players.stream()
-                        .peek(p -> log.debug(p.name + " separate " + p.separate))
-                        .filter(p -> p.separate)
-                        .filter(p -> !p.name.equals(excludePlayer.name))
-//                        .peek(p -> log.info(p.name + " filter separate " + p.separate))
-                        .map(p -> {
-                            if (p.playing) return p.name;
-                            return " не играет " + p.name;
-                        })
-                        .collect(Collectors.toList());
-        log.info("SEPARATED PLAYERS: " + separatePlayers);
-        return separatePlayers;
     }
 
     public Player playerByDeviceId(String id) {
@@ -370,7 +334,9 @@ public class LmsPlayers {
         config.lmsPort = tmp2;
         config.write();
         lmsPlayers.searchForLmsIp();
-        lmsPlayers.updateLmsPlayers();
+
+        log.info("\nUPDATE LMS PLAYERS");
+        lmsPlayers.updateLmsPlayers(); // lmsSave
     }
 
     //  если пришла команда Алисы включи музыку везде или на нескольких колонках с разной громкостью и с одинаковым каналом
@@ -398,7 +364,7 @@ public class LmsPlayers {
             } else {
                 log.info("SEARCH PLAYING PLAYER");
 //        найти играющий плеер до выполнения пробуждения всех
-                playingPlayer = lmsPlayers.playingPlayer("", true);
+                playingPlayer = lmsPlayers.playingPlayer("", true); // turnOnMusicMultiply
                 log.info("PLAYING PLAYER: " + playingPlayer);
 //        если нет играющего взять первый плеер
                 if (playingPlayer == null) {
@@ -432,7 +398,7 @@ public class LmsPlayers {
             log.info("NAME PLAYING: " + playingPlayerName);
             playersForTurnOn.stream()
                     .filter(player -> !player.name.equals(playingPlayerName))
-                    .forEach(player -> player.syncTo(playingPlayerName));
+                    .forEach(player -> player.syncTo(playingPlayerName)); // turnOnMusicMultiply
 
 
 //       включить один плеер, тот который до этого играл или любой первый
@@ -452,34 +418,64 @@ public class LmsPlayers {
         });
     }
 
-    public String turnOffMusicAll() {
+    public String turnOffMusicAll() { // для Таскер только
         log.info("STOP ALL");
-        lmsPlayers.updateLmsPlayers();
+//        log.info("\nUPDATE LMS PLAYERS");
+//        lmsPlayers.updateLmsPlayers(); // turnOffMusicAll
         List<CompletableFuture<Void>> futures = lmsPlayers.players.stream()
-                .filter(player -> player.connected)
+                .filter(player -> player.connected) // turnOffMusicAll
 //                .filter(player -> player.playing)
-                .map(p -> CompletableFuture.runAsync(() -> p.turnOffMusic().saveLastTimePath())) // turnOffMusicAll
+//                .map(p -> CompletableFuture.runAsync(() -> p.turnOffMusic().saveLastTimePath())) // turnOffMusicAll
+                .map(p -> CompletableFuture.runAsync(() -> p.turnOffMusic())) // turnOffMusicAll
                 .collect(Collectors.toList());
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenRunAsync(() -> autoremoteRequest());
+//        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+//                .thenRunAsync(() -> autoremoteRequest()); //turnOffMusicAll
         return "OK";
     }
 
     public void autoremoteRequest() {
-        log.info("REQUEST TO TASKER FOR REFRESH WIDGETS");
-        hive.publish("test", "test"); // для автотеста - все действия завершены
-        Requests.autoRemoteRefresh();
+        log.info("\nREQUEST TASKER AUTOREMOTE REFRESH");
+        lmsPlayers.autoRemoteUrls.stream().forEach(url -> {
+            log.info("POST TO AUTOREMOTE: " + url);
+            if (url == null) return;
+            try {
+                Request.Post(url).execute();
+            } catch (IOException e) {
+                log.info("POST ERROR " + e);
+            }
+        });
+    }
 
+
+    public void afterAll() {
+        log.info("\nAFTER ALL - SAVE LAST TIME");
+        // сохранить состояние плееров - время и путь
+        lmsPlayers.players.forEach(player -> player.saveLastTimePath());
+        lmsPlayers.write();
+// запрос на обновление виджетов таскера
+
+        log.info("\nAFTER ALL - AUTOREMOTE REFRESH");
+        lmsPlayers.autoremoteRequest();
+//        обновить отображение в Яндекс
+        lmsPlayers.updateLmsPlayers();
+        Yandex.sendAllStates();
+
+// для автотеста - все действия завершены
+
+        log.info("\nAFTER ALL - HIVE TEST");
+        hive.publish("test", "test");
     }
 
     public String forTaskerWidgetsRefreshJson(Player player, String lines) {
         log.info("\nSTART TASKER WIDGETS REFRESH JSON");
-        log.info("\nUPDATE PLAYERS FROM LMS");
-        lmsPlayers.updateLmsPlayers(); // обновить состояние прлееров
+//        log.info("\nUPDATE LMS PLAYERS");
+//        lmsPlayers.updateLmsPlayers(); // forTaskerWidgetsRefreshJson
         log.info("\nTASKER WIDGET ICONS");
         lmsPlayers.forTaskerWidgetsIcons(); // для виджетов иконок плееров
         log.info("\nTASKER WIDGET PLAY LIST FOR " + player.name);
         String responsePlaylist = player.forTaskerPlaylist(lines); // для виджета плейлиста
+        log.info("\nTASKER WIDGET ONE ICON NOW PLAYING");
+        LmsPlayers.nowPlaying = player.title(); // для виджета одной иконкой для телефона где неработает плагин
         log.info("\nTASKER WIDGET PLAYERS LIST");
         lmsPlayers.forTaskerPlayersList(); // для виджета списка плееров name-volume-mode-title
         String responseJson = "{\n" +
@@ -491,11 +487,8 @@ public class LmsPlayers {
                 "  \"SYNCS\": \"" + widgetsSyncs + "\",\n" +
                 "  \"SEPARATES\": \"" + widgetsSeparates + "\",\n" +
                 "  \"NOWPLAYING\": \"" + nowPlaying + "\"\n" +
-                "}\n";
-
-        log.info("\nTASKER RESULT:");
+                "}";
         log.info(responseJson);
-        log.info("\nTASKER WIDGETS REFRESH JSON");
         return responseJson;
     }
 
@@ -509,7 +502,7 @@ public class LmsPlayers {
         iconsNames.forEach(name -> {
             Player player = lmsPlayers.playerByCorrectRoom(name);
             if (player == null) player = lmsPlayers.playerByCorrectName(name);
-            modes.add(player != null ? player.mode : "null");
+            modes.add(player != null ? player.mode : "null"); // forTaskerWidgetsIcons
             syncs.add(player != null ? String.valueOf(player.sync) : "false");
             separates.add(player != null ? String.valueOf(player.separate) : "null");
         });
@@ -576,35 +569,34 @@ public class LmsPlayers {
         List<String> favList = this.players.get(0).favorites();
 
         Function<Player, String> playerFormatter = p -> {
-            log.info("-------");
+            if (!p.connected) p.playlistNameShort = "unknown";
+            if (!p.connected) p.playlistNameShort = "offline";
             String playlistName = p.playlistName(); // forTaskerPlayersList
             String favoritesIndex = "";
             if (playlistName != null && favList.contains(playlistName))
                 favoritesIndex = (favList.indexOf(playlistName) + 1) + ".";
-
             if (playlistName == null) playlistName = p.title();
             else playlistName = p.playlistNameShort;
-
-
             String roomNamePlayerName = p.room + " - " + p.name;
             if (p.room == null) roomNamePlayerName = p.name;
+//            log.info(roomNamePlayerName + " - " + p.volume + " - " + favoritesIndex + playlistName);
             return roomNamePlayerName + " - " + p.volume + " - " + favoritesIndex + playlistName;
         };
 
-        log.info("PLAYING PLAYERS");
+        log.info("\nPLAYING PLAYERS LIST:");
         widgetPlayersPlay = lmsPlayers.players.stream()
                 .filter(p -> p.playing)
                 .map(playerFormatter)
                 .collect(Collectors.joining(","));
         if (widgetPlayersPlay.isEmpty()) widgetPlayersPlay = "all players stop";
-        log.info("NOT PLAYING PLAYERS");
+        log.info("\nNOT PLAYING PLAYERS LIST:");
         widgetPlayersStop = lmsPlayers.players.stream()
                 .filter(p -> !p.playing)
                 .map(playerFormatter)
                 .collect(Collectors.joining(","));
         if (widgetPlayersStop.isEmpty()) widgetPlayersStop = "all players play";
-        log.info("PLAYING: " + widgetPlayersPlay);
-        log.info("NOT PLAYING: " + widgetPlayersStop);
+        log.info("RESULT PLAYING PLAYERS LIST: " + widgetPlayersPlay);
+        log.info("RESULT NOT PLAYING PLAYERS LIST: " + widgetPlayersStop);
         String result = widgetPlayersPlay + ";" + widgetPlayersStop;
         return result;
     }

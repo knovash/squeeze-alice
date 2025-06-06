@@ -38,12 +38,12 @@ public class PlayersUpdateScheduler {
             public void run() {
                 try {
                     log.debug("Executing players state update");
-                    Main.lmsPlayers.updateLmsPlayers();
+                    Main.lmsPlayers.updateLmsPlayers(); // PlayersUpdateScheduler
                     Main.lmsPlayers.players.stream()
+                            .filter(player -> player != null)
+                            .filter(player -> player.deviceId != null)
                             .forEach(player ->
-                                    Yandex.sendDeviceState(player.deviceId, "on_off", "on", String.valueOf(player.playing), null));
-
-//                    Yandex.sendDeviceState(this.deviceId, "on_off", "on", "false", null);
+                                    Yandex.sendDeviceState(player.deviceId, "on_off", "on", String.valueOf(player.playing), null)); // startPeriodicUpdate
                 } catch (Exception e) {
                     log.error("Failed to update players state", e);
                 }

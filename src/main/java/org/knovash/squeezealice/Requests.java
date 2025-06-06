@@ -68,7 +68,7 @@ public class Requests {
                     .getStatusLine()
                     .toString();
         } catch (IOException e) {
-            log.info("REQUEST ERROR " + e);
+            log.info("REQUEST ERROR " + e + "\n" + json);
             return null;
         }
         return status;
@@ -91,25 +91,6 @@ public class Requests {
         }
         return content.asString(StandardCharsets.UTF_8);
     }
-
-    public static void autoRemoteRefresh() {
-// запрос обновления виджетов таскера выполняется при
-// действии пульта или таскера SwitchQueryCommand
-// действии приложения Умного дома ProviderAction
-// SwitchVoiceCommand тут есть действия pleer и надо добавить после них autoRemoteRefresh
-        log.info("REQUEST TO TASKER AUTO REMOTE FOR REFRESH");
-        lmsPlayers.autoRemoteUrls.stream().forEach(url -> {
-            log.info("POST TO AUTOREMOTE: " + url);
-            if (url == null) return;
-            try {
-                Request.Post(url).execute();
-            } catch (IOException e) {
-                log.info("POST ERROR " + e);
-            }
-        });
-//        log.info("OK");
-    }
-
 }
 
 

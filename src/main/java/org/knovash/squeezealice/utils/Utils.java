@@ -93,10 +93,10 @@ public class Utils {
 //                log.info(networkInterface.getDisplayName() + " " + addr.getHostAddress());
                 if (addr.getHostAddress().contains("192.")) {
                     myip = addr.getHostAddress();
-                    log.info("MY IP: " + myip);
                 }
             }
         }
+        log.info("MY IP: " + myip);
         return myip;
     }
 

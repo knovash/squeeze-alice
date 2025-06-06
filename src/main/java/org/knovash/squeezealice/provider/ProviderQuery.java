@@ -18,7 +18,7 @@ public class ProviderQuery {
     private static Player player;
 
     public static Context providerQueryRun(Context context) {
-        log.info("START QUERY");
+//        log.info("START QUERY");
         String body = context.body;
         List<String> xRequestIdList = context.headers.get("X-request-id");
         String xRequestId = xRequestIdList.get(0);
@@ -33,14 +33,14 @@ public class ProviderQuery {
         ResponseYandex responseYandex = new ResponseYandex();
         responseYandex.request_id = xRequestId;
 
-        lmsPlayers.updateLmsPlayers(); // TODO тут апдейт нужен только для обновления списка подключенных плееров
+        lmsPlayers.updateLmsPlayers(); // providerQueryRun TODO тут апдейт нужен только для обновления списка подключенных плееров
 
 
 // лист девайсов для обновления их свойств
         List<Device> jsonDevices = bodyPojo.devices.stream()
                 .map(d -> SmartHome.getDeviceById(Integer.parseInt(d.id)))
 // обратиться к каждому девайсу и обновить его свойства
-                .map(d -> updateDevice(d)).collect(Collectors.toList());
+                .map(d -> updateDeviceCapabilities(d)).collect(Collectors.toList());
         responseYandex.payload = new Payload();
         responseYandex.payload.devices = jsonDevices;
 // объект ответа преобразовать в json ответа
@@ -52,7 +52,7 @@ public class ProviderQuery {
         return context;
     }
 
-    private static Device updateDevice(Device device) {
+    private static Device updateDeviceCapabilities(Device device) {
         log.info("DEVICE UPDATE " + device.room + " " + device.id);
 // взять плеер по id устройства в умном доме
         player = lmsPlayers.playerByDeviceId(device.id);
@@ -69,7 +69,7 @@ public class ProviderQuery {
             return device;
         }
 
-        if (!player.connected) {
+        if (!player.connected) { // updateDevice
             log.info("DEVICE_UNREACHABLE mode real = null");
             device.error_code = "DEVICE_UNREACHABLE";
             device.error_message = "Устройство потеряно";
@@ -80,15 +80,12 @@ public class ProviderQuery {
 // если плеер существует и отвечает - обратиться к плееру и обновить все его значения
         device.error_code = null;
         device.error_message = null;
-        log.info("DEVICE BEFORE UPDATE: " + device);
         device.capabilities.forEach(capability -> changeCapability(capability));
-        log.info("DEVICE UPDATED");
-//        log.info("DEVICE AFTER UPDATE: " + device);
         return device;
     }
 
     private static void changeCapability(Capability capability) {
-        log.info("CAPABILITY UPDATE");
+//        log.info("CAPABILITY UPDATE");
 //        providerUserDevicesRun при Поиске новых устройств state = null
         if (capability.state == null) {
             capability.state = new State();
@@ -101,23 +98,28 @@ public class ProviderQuery {
             capability.state.action_result.status = "DONE";
         }
 
-        log.info("CAPABILITY : " + capability.parameters.instance);
-        Boolean power = false;
+//        log.info("UPDATE CAPABILITY : " + capability.parameters.instance);
+//        Boolean power = false;
         switch (capability.parameters.instance) {
             case ("volume"):
-                capability.state.value = player.volumeGet();
+//                capability.state.value = player.volumeGet();
+                capability.state.value = player.volume;
+                log.info("UPDATE CAPABILITY : " + capability.parameters.instance + " VALUE: " + capability.state.value + " PLAYER: " + player.name);
                 break;
             case ("on"):
-                if (player.mode().equals("play")) power = true;
-                capability.state.value = String.valueOf(power);
+//                if (player.mode().equals("play")) power = true;
+//                capability.state.value = String.valueOf(power);
+                capability.state.value = String.valueOf(player.playing);
+                log.info("UPDATE CAPABILITY : " + capability.parameters.instance + " VALUE: " + capability.state.value + " PLAYER: " + player.name);
                 break;
             case ("channel"):
                 capability.state.value = "1";
+                log.info("UPDATE CAPABILITY : " + capability.parameters.instance + " VALUE: " + capability.state.value + " PLAYER: " + player.name);
                 break;
-            case ("pause"):
-                if (player.mode().equals("play")) power = true;
-                capability.state.value = String.valueOf(power);
-                break;
+//            case ("pause"):
+//                if (player.mode().equals("play")) power = true;
+//                capability.state.value = String.valueOf(power);
+//                break;
             default:
                 log.info("ERROR CAPABILITY NOT FOUND");
                 break;

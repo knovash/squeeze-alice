@@ -14,7 +14,7 @@ import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 public class Hive implements MqttCallbackExtended {
@@ -99,6 +99,7 @@ public class Hive implements MqttCallbackExtended {
         String topic = topicRecieveDevice + config.yandexUid;
         log.info("SUBSCRIBE BY YANDEX: {}", topic);
         subscribe(topic);
+
     }
 
     public void subscribe(String subscribeToTopic) {
@@ -116,9 +117,9 @@ public class Hive implements MqttCallbackExtended {
     }
 
     private void handleDeviceAndPublish(String topicRecieved, MqttMessage message) {
-        log.info("");
-        log.info("---------------------------------------------------------------------------------------------");
-        log.info("RECEIVED MESSAGE FROM TOPIC: {}", topicRecieved);
+//        log.info("");
+//        log.info("---------------------------------------------------------------------------------------------");
+        log.info("\nRECEIVED MESSAGE FROM TOPIC: " + topicRecieved);
         String payload = new String(message.getPayload());
         Map<String, String> params = Parser.run(payload);
 
@@ -224,6 +225,7 @@ public class Hive implements MqttCallbackExtended {
     }
 
     private class ResponseManager {
+
         private final ConcurrentMap<String, CompletableFuture<String>> responses = new ConcurrentHashMap<>();
 
         public CompletableFuture<String> waitForResponse(String correlationId) {
@@ -289,6 +291,9 @@ public class Hive implements MqttCallbackExtended {
             config.yandexUid = newUid;
             config.yandexName = yandexName;
             config.write();
+
+            lmsPlayers.checkRooms();
+            lmsPlayers.write();
         }
 
         log.info("YANDEX UID UPDATED: {}", newUid);
@@ -362,4 +367,20 @@ public class Hive implements MqttCallbackExtended {
             }
         }, 5, 30, TimeUnit.SECONDS); // Первая попытка через 5 сек, затем каждые 30 сек
     }
+
+
+    public void periodicCheckStart() {
+        // Запуск периодической проверки MQTT
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(() -> {
+            if (hive != null && !hive.isConnected()) {
+                log.warn("MQTT connection lost! Attempting to reconnect...");
+                hive.stop();
+                hive.start();
+                hive.subscribeByYandex();
+            }
+        }, 1, 1, TimeUnit.MINUTES); // Проверка каждую минуту
+    }
+
+
 }

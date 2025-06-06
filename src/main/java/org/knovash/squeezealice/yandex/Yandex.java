@@ -64,7 +64,6 @@ public class Yandex {
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                 .filter(device -> device.name.equals("музыка"))
                 .sorted(Comparator.comparing(device -> device.external_id))
-//                .sorted(Comparator.comparingInt(device -> Integer.parseInt(device.id)))
                 .peek(device -> log.info("DEVICE ID: " + device.external_id + " ROOM: " + roomNameByRoomId(device.room)))
                 .peek(device -> links.addLinkRoom(device.id, device.external_id, device.room, Yandex.roomNameByRoomId(device.room), null))
                 .collect(Collectors.toList());
@@ -165,10 +164,18 @@ public class Yandex {
         return deviceId;
     }
 
+    public static void sendAllStates(){
+        Main.lmsPlayers.players.stream()
+                .filter(player -> player != null)
+                .filter(player -> player.deviceId != null)
+                .forEach(player ->
+                        Yandex.sendDeviceState(player.deviceId, "on_off", "on", String.valueOf(player.playing), null)); // startPeriodicUpdate
+    }
+
     public static void sendDeviceState(String deviceId, String type, String instance, String capState, String status) {
 //        Уведомление об изменении состояний устройств
 //        https://yandex.ru/dev/dialogs/smart-home/doc/ru/reference-alerts/post-skill_id-callback-state
-        log.info("ID: " + deviceId + " CAPNAME: " + type + " STATE: " + capState);
+        log.info("ID: " + deviceId + " CAPABILITY: " + type + " STATE: " + capState);
         CompletableFuture.runAsync(() -> {
             HttpResponse response = null;
             try {
@@ -197,10 +204,10 @@ public class Yandex {
                         .setHeader("Content-Type", "application/json")
                         .bodyString(jsonBody, ContentType.APPLICATION_JSON)
                         .execute().returnResponse();
-                // Логируем ответ сервера
-                int statusCode = response.getStatusLine().getStatusCode();
-                String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-                log.info("Response status: " + statusCode + " Response body: " + responseBody);
+// ответ сервера
+//                int statusCode = response.getStatusLine().getStatusCode();
+//                String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+//                log.info("Response status: " + statusCode + " Response body: " + responseBody);
             } catch (IOException e) {
                 log.error("Error updating device state: " + e.getMessage(), e);
             } finally {
@@ -212,10 +219,7 @@ public class Yandex {
                         log.warn("Error closing response entity", e);
                     }
                 }
-//                log.info("FINISH SEND STATE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             }
         });
     }
-
-
 }

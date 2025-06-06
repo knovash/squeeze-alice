@@ -11,6 +11,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+import static org.knovash.squeezealice.Main.hive;
+import static org.knovash.squeezealice.Main.lmsPlayers;
+
 
 @Log4j2
 public class HandlerAll implements HttpHandler {
@@ -65,7 +68,6 @@ public class HandlerAll implements HttpHandler {
 // тут context обрабатывается, возвращается в handleDeviceAndPublish
 // и отправлятся в топик из которого забирает облачный сервер и отдает ответ в Яндекс умный дом
             case ("/alice/"):
-//                log.info("CASE ALICE");
                 context = SwitchVoiceCommand.action(context);
                 break;
 //                yandex smart home commands

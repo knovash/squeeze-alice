@@ -8,50 +8,58 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.voice.SwitchVoiceCommand.spotifyPlayArtist;
 
 @Log4j2
 public class VoiceActions {
 
-    public static String whatIsTheRoom(String room) {
-//        if (command.contains("какая комната")) {
-        log.info("КАКАЯ КОМНАТА");
-        String playerNameInRoom = ". колонка еще не выбрана. скажите выбери колонку и название";
-        Player playerInRoom = lmsPlayers.playerByCorrectRoom(room);
-        log.info("PLAYER IN ROOM: " + playerInRoom);
-        if (playerInRoom != null)
-            playerNameInRoom = ". с колонкой " + playerInRoom.name;
-        String remoteInRoom = ". пульт не подключен";
-        if (lmsPlayers.btPlayerName != null)
-            remoteInRoom = ". пульт подключен к " + lmsPlayers.btPlayerName;
-        return "это комната " + room + playerNameInRoom + remoteInRoom;
+    public static String playArtist(Player player, String command) {
+        log.info("PLAY ARTIST");
+        CompletableFuture.runAsync(() -> spotifyPlayArtist(command, player))
+                .thenRunAsync(() -> lmsPlayers.afterAll());
+        return "включаю";
     }
 
     //      СИНХРОНИЗАЦИЯ
     public static String syncSwitchToHere(Player player) {
         log.info("SWITCH TO HERE");
         CompletableFuture.runAsync(() -> player.switchToHere())
-                .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                .thenRunAsync(() -> lmsPlayers.afterAll());
         return "переключаю музыку на " + player.name;
+    }
+
+    public static String shuffleOn(Player player) {
+        log.info("SEPARATE ON");
+        CompletableFuture.runAsync(() -> player.shuffleOn())
+                .thenRunAsync(() -> lmsPlayers.afterAll());
+        return "включаю рандом";
+    }
+
+    public static String shuffleOff(Player player) {
+        log.info("SEPARATE ON");
+        CompletableFuture.runAsync(() -> player.shuffleOff())
+                .thenRunAsync(() -> lmsPlayers.afterAll());
+        return "выключаю рандом";
     }
 
     public static String separateOn(Player player) {
         log.info("SEPARATE ON");
         CompletableFuture.runAsync(() -> player.separateOn())
-                .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                .thenRunAsync(() -> lmsPlayers.afterAll());
         return "включаю отдельно " + player.name;
     }
 
     public static String separateAllOff(Player player) {
         log.info("SEPARATE OFF");
         CompletableFuture.runAsync(() -> player.separateOffAll())
-                .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                .thenRunAsync(() -> lmsPlayers.afterAll());
         return "соединяю все играющие вместе";
     }
 
     public static String separateOff(Player player) {
         log.info("SEPARATE OFF");
         CompletableFuture.runAsync(() -> player.separateOff())
-                .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                .thenRunAsync(() -> lmsPlayers.afterAll());
         return "соединяю все играющие вместе";
     }
 
@@ -72,7 +80,7 @@ public class VoiceActions {
         answer = "включаю канал " + index + ", " + channel;
         log.info("INDEX: " + index);
         CompletableFuture.runAsync(() -> player.playChannelRelativeOrAbsolute(String.valueOf(index), false, null))
-                .thenRunAsync(() -> player.saveLastTimePathAutoremoteRequest());
+                .thenRunAsync(() -> lmsPlayers.afterAll());
         return answer;
     }
 }

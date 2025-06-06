@@ -31,51 +31,41 @@ public class Main {
 
     public static void main(String[] args) {
         log.info("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
-        log.info("OS: " + System.getProperty("os.name") + ", user.home: " + System.getProperty("user.home"));
         System.setProperty("userApp.root", System.getProperty("user.home"));
-        log.info("userApp.root: " + System.getProperty("userApp.root"));
+        log.info("OS: " + System.getProperty("os.name") + ", user.home: " + System.getProperty("user.home") + " userApp.root: " + System.getProperty("userApp.root"));
         config.readConfigProperties();
         config.readConfigJson();
         config.write();
-
         links.read();
-
-        log.info("IP: " +  Utils.getMyIpAddres());
-
-
+        Utils.getMyIpAddres();
         lmsPlayers.searchForLmsIp();
         Utils.readAliceIdInRooms();
         lmsPlayers.read();
-        lmsPlayers.updateLmsPlayers();
-        lmsPlayers.write();
-//        SmartHome.read();
+        lmsPlayers.updateLmsPlayers(); // Main
         Yandex.getRoomsAndDevices();
-
-        log.info("DEVICES COUNT: " + SmartHome.devices.size());
         lmsPlayers.checkRooms();
         lmsPlayers.write();
-
         Server.start();
         hive = new Hive();
         hive.start();
         hive.subscribeByYandex();
-
-        PlayersUpdateScheduler.startPeriodicUpdate(1); // новое
         log.info("VERSION 1.2");
-//            sendDeviceState();
-//        Spotify.ifExpiredRunRefersh();
 
-        // Запуск периодической проверки MQTT
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(() -> {
-//            log.info("CHECK MQTT CONNECTION...");
-            if (hive != null && !hive.isConnected()) {
-                log.warn("MQTT connection lost! Attempting to reconnect...");
-                hive.stop();
-                hive.start();
-                hive.subscribeByYandex();
-            }
-        }, 1, 1, TimeUnit.MINUTES); // Проверка каждую минуту
+//        PlayersUpdateScheduler.startPeriodicUpdate(1);
+//        sendDeviceState();
+//        Spotify.ifExpiredRunRefersh();
+//        hive.periodicCheckStart();
+
+
+//        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+//        scheduler.scheduleAtFixedRate(() -> {
+//            if (hive != null && !hive.isConnected()) {
+//                log.warn("MQTT connection lost! Attempting to reconnect...");
+//                hive.stop();
+//                hive.start();
+//                hive.subscribeByYandex();
+//            }
+//        }, 1, 1, TimeUnit.MINUTES); // Проверка каждую минуту
 
     }
 }

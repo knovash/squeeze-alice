@@ -37,23 +37,21 @@ public class Spotify {
     }
 
     public static String getLinkArtist(String target) {
-        log.info("ARTIST TARGET: " + target);
+        log.info("ARTIST: " + target);
         target = target.replace(" ", "%20");
         String url = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "artist" + "&limit=" + "3" + "&market=ES";
         String json = requestWithRefreshGet(url);
         if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         SpotifyArtists spotifyArtists = JsonUtils.jsonToPojo(json, SpotifyArtists.class);
-//        spotifyArtists.artists.items.forEach(it -> log.info("ARTIST: " + it.name));
         String uri = spotifyArtists.artists.items.get(0).uri;
         SwitchVoiceCommand.artist = spotifyArtists.artists.items.get(0).name;
-        log.info("ARTIST: " + SwitchVoiceCommand.artist);
-//        log.info("URI: " + uri);
+        log.info("ARTIST URI: " + uri);
         return uri;
     }
 
     public static String getLinkTrack(String target) {
-        log.info("TRACK TARGET: " + target);
+        log.info("TRACK: " + target);
         target = target.replace(" ", "%20");
         String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "track" + "&limit=" + "5" + "&market=ES";
         String json = requestWithRefreshGet(uri);
@@ -356,7 +354,7 @@ public class Spotify {
         if (!currentlyPlaying.context.type.equals("album")) {
             log.info("PLAYER STATUS FOR PLAYLIST");
             player.waitFor(3000);
-            player.status();
+//            player.status(); //transfer
 //        Player.playerStatus.result.playlist_loop.stream()
 //                .forEach(playlistLoop -> log.info("-----" + playlistLoop.playlist_index + " " + playlistLoop.title + " = " + name));
             log.info("FILTER INDEX BY NAME: " + name);
@@ -381,19 +379,14 @@ public class Spotify {
     }
 
     public static void ifExpiredRunRefersh() {
-        log.info("IF EXPIRED RUN REFRESH");
-        if (checkIfSpotifyTokenExpired()) requestRefreshToken();
-        log.info("NOT EXPIRED");
-    }
-
-    public static boolean checkIfSpotifyTokenExpired() {
         long timeNow = System.currentTimeMillis();
         long expiresAt = config.spotifyTokenExpiresAt;
         boolean result = timeNow > expiresAt;
-        log.info("EXPIRES AT: " + config.spotifyTokenExpiresAt);
-        log.info("TIME NOW: " + timeNow);
-        log.info("EXPIRED : " + result);
-        return result;
+        log.info("EXPIRES AT: " + config.spotifyTokenExpiresAt + " TIME NOW: " + timeNow + " EXPIRED : " + result);
+        if (result) {
+            log.info("\nSPOTIFY TOKEN EXPIRED. REQUEST REFRESH TOKEN");
+            requestRefreshToken();
+        }
     }
 
     public static void requestRefreshToken() {
