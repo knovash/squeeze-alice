@@ -66,6 +66,13 @@ public class HandlerForm implements HttpHandler {
                     lmsPlayers.delayExpireSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
+                case (toggle_wake_save): // задержка пред включением
+                    log.info("START 1111111111111");
+                    lmsPlayers.toggleWakeSave((HashMap<String, String>) bodyMap);
+
+                    log.info("FINISH 222222222222222222");
+                    context.bodyResponse = PagePlayers.page();
+                    break;
                 case (autoremote_save): // таскер урл для обновления виджета НЕГОТОВО
                     log.info("SAVE " + bodyMap);
                     lmsPlayers.autoremoteSave((HashMap<String, String>) bodyMap);

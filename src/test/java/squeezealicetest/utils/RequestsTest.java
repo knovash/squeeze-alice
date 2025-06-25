@@ -35,7 +35,7 @@ public class RequestsTest {
         Content content = null;
         Response response = null;
         try {
-            content = Request.Post("http://" + configTest.lmsIp + ":" + configTest.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
+            content = Request.Post("http://" + "192.168.1.110" + ":" + "9000" + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -59,7 +59,7 @@ public class RequestsTest {
 
         String status = null;
         try {
-            status = Request.Post("http://" + configTest.lmsIp + ":" + configTest.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
+            status = Request.Post("http://" + "192.168.1.110" + ":" + "9000" + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -80,7 +80,7 @@ public class RequestsTest {
         Content content = null;
         Response response = null;
         try {
-            content = Request.Post("http://" + configTest.lmsIp + ":" + configTest.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
+            content = Request.Post("http://" + "192.168.1.110" + ":" + "9000" + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()

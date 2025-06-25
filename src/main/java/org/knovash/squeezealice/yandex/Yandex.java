@@ -1,6 +1,5 @@
 package org.knovash.squeezealice.yandex;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.HttpResponse;
@@ -10,9 +9,6 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.util.EntityUtils;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.SmartHome;
-import org.knovash.squeezealice.provider.response.Capability;
-import org.knovash.squeezealice.provider.response.Device;
-import org.knovash.squeezealice.provider.response.State;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.web.PageIndex;
 
@@ -22,8 +18,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static org.knovash.squeezealice.Main.config;
-import static org.knovash.squeezealice.Main.links;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 @Data
@@ -75,8 +70,9 @@ public class Yandex {
 //        создать локальные девайсы Музыка из полученных из YandexInfo
         log.info("CREATE LOCAL DEVICES");
         yandexMusicDevices.stream()
-                .forEach(device -> SmartHome.create(roomNameByRoomId(device.room), Integer.valueOf(device.external_id)));
-        SmartHome.write();
+//                .forEach(device -> SmartHome.create(roomNameByRoomId(device.room), Integer.valueOf(device.external_id))); // getRoomsAndDevices
+                .forEach(device -> smartHome.create(roomNameByRoomId(device.room), device.external_id)); // getRoomsAndDevices
+        smartHome.write();
 
 // для отображения на вебинтерфейсе
         yandexMusicDevListRooms = yandexInfo.devices.stream()
@@ -88,60 +84,11 @@ public class Yandex {
                 + yandexMusicDevListRooms;
     }
 
-
     public static String roomNameByRoomId(String id) {
         String roomName = null;
         YandexInfo.Room room = yandexInfo.rooms.stream().filter(r -> r.id.equals(id)).findFirst().orElseGet(null);
         if (room != null) roomName = room.name;
         return roomName;
-    }
-
-    public static String getScenarioIdByName(String scenarioName) {
-        log.info("GET SCENARIO ID BY NAME: " + scenarioName);
-        String scenarioId = null;
-        scenarioId = scenariosIds.get(scenarioName);
-        if (scenarioId != null) return scenarioId;
-        log.info("GO SEARCH IN YANDEX INFO....");
-        String json;
-        try {
-            Response response = Request.Get("https://api.iot.yandex.net/v1.0/user/info")
-                    .setHeader("Authorization", "OAuth " + config.yandexToken)
-                    .execute();
-            json = response.returnContent().asString();
-        } catch (IOException e) {
-            log.info("YANDEX GET INFO ERROR");
-            return "";
-        }
-        yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
-        List<String> scenarios = yandexInfo.scenarios.stream().map(r -> r.name).collect(Collectors.toList());
-//        log.info("SCENARIOS: " + scenarios);
-        YandexInfo.Scenario scenario = yandexInfo.scenarios.stream()
-                .filter(s -> s.name.equals(scenarioName))
-                .findFirst()
-                .orElseGet(null);
-        if (scenario != null) scenarioId = scenario.id;
-        scenariosIds.put(scenarioName, scenarioId);
-        log.info("ID " + scenarioId);
-        log.info("IDS " + scenariosIds);
-        log.info("GET ID " + scenariosIds.get(scenarioName));
-        scenariosIds.get(scenarioName);
-        return scenarioId;
-    }
-
-    public static void runScenario(String scenarioName) {
-        log.info("RUN SCENARIO NAME: " + scenarioName);
-        String scenarioId = getScenarioIdByName(scenarioName);
-        log.info("RUN SCENARIO ID: " + scenarioId);
-        if (scenarioId == null) return;
-        CompletableFuture.runAsync(() -> {
-            try {
-                Request.Post("https://api.iot.yandex.net/v1.0/scenarios/" + scenarioId + "/actions")
-                        .setHeader("Authorization", "OAuth " + config.yandexToken)
-                        .execute();
-            } catch (IOException e) {
-                log.info("ERROR " + e);
-            }
-        });
     }
 
     public static String getRoomNameByRoomId(String roomId) {
@@ -164,7 +111,8 @@ public class Yandex {
         return deviceId;
     }
 
-    public static void sendAllStates(){
+    public static void sendAllStates() {
+        log.info("\nSEND ALL DEVICES STATES ON/OFF TO YANDEX");
         Main.lmsPlayers.players.stream()
                 .filter(player -> player != null)
                 .filter(player -> player.deviceId != null)
@@ -175,7 +123,7 @@ public class Yandex {
     public static void sendDeviceState(String deviceId, String type, String instance, String capState, String status) {
 //        Уведомление об изменении состояний устройств
 //        https://yandex.ru/dev/dialogs/smart-home/doc/ru/reference-alerts/post-skill_id-callback-state
-        log.info("ID: " + deviceId + " CAPABILITY: " + type + " STATE: " + capState);
+        log.info("ID: " + deviceId + " PLAYER: " + lmsPlayers.playerByDeviceId(deviceId).name + " INSTANCE: " + instance + " TYPE: " + type + " STATE: " + capState);
         CompletableFuture.runAsync(() -> {
             HttpResponse response = null;
             try {
@@ -186,7 +134,12 @@ public class Yandex {
                 capabilityMap.put("type", "devices.capabilities." + type);
                 Map<String, Object> stateMap = new HashMap<>();
                 stateMap.put("instance", instance);
-                stateMap.put("value", capState);
+                if (instance.equals("volume")) {
+                    int valueInt = Integer.parseInt(capState);
+                    stateMap.put("value", valueInt);
+                } else {
+                    stateMap.put("value", capState);
+                }
                 capabilityMap.put("state", stateMap);
                 deviceMap.put("capabilities", Collections.singletonList(capabilityMap));
                 Map<String, Object> payload = new HashMap<>();
@@ -204,10 +157,19 @@ public class Yandex {
                         .setHeader("Content-Type", "application/json")
                         .bodyString(jsonBody, ContentType.APPLICATION_JSON)
                         .execute().returnResponse();
+//Тип токена: OAuth-токен разработчика навыка.
+//Как получить: Через консоль разработчика Яндекс.Диалогов: Навык → Настройки → Авторизация для HTTP-запросов → Скопировать OAuth-токен.
+//Не требует программирования – токен статичен для навыка.
+//Назначение: Управление состоянием навыка Алисы (отправка событий, состояние сессии).
+//Срок жизни: Бессрочный (но можно перегенерировать вручную).
+
 // ответ сервера
-//                int statusCode = response.getStatusLine().getStatusCode();
-//                String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-//                log.info("Response status: " + statusCode + " Response body: " + responseBody);
+                int statusCode = response.getStatusLine().getStatusCode();
+                String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+                if(statusCode != 202){
+                    log.info("ERROR: Request body: " + jsonBody);
+                    log.info("ERROR: Response status: " + statusCode + " Response body: " + responseBody);
+                }
             } catch (IOException e) {
                 log.error("Error updating device state: " + e.getMessage(), e);
             } finally {
@@ -222,4 +184,5 @@ public class Yandex {
             }
         });
     }
+
 }

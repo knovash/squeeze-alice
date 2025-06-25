@@ -11,22 +11,16 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-import static org.knovash.squeezealice.Main.hive;
-import static org.knovash.squeezealice.Main.lmsPlayers;
-
 
 @Log4j2
 public class HandlerAll implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        log.info("");
-        log.info("---------------------------------------------------------------------------------------------");
-        log.info("HTTP HANDLER START >>>>>>>>>>>>");
+        log.info("\nRECIEVED HTTP REQUEST");
 //        извлечение данных из запроса в контекст
         Context context = Context.contextCreate(httpExchange);
         log.info("CLIENT ID IN QUERY: " + context.queryMap.get("client_id"));
-
         context = HandlerAll.processContext(context);
         String response = context.bodyResponse;
 

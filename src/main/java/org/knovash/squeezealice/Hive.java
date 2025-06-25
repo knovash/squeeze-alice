@@ -36,6 +36,27 @@ public class Hive implements MqttCallbackExtended {
     // управление переподключениями
     private ScheduledExecutorService reconnectScheduler;
 
+    public void start(String hiveBroker, String hiveUsername,String hivePassword) {
+        try {
+            mqttClient = new MqttClient(hiveBroker, MqttClient.generateClientId(), new MemoryPersistence());
+            mqttClient.setCallback(this);
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setAutomaticReconnect(true); // Включаем встроенное авто-переподключение
+            options.setCleanSession(true);
+            options.setConnectionTimeout(10);
+            options.setKeepAliveInterval(30); // Частота проверки соединения
+            options.setMaxReconnectDelay(30000); // Максимальная задержка между попытками (30 сек)
+            options.setUserName(hiveUsername);
+            options.setPassword(hivePassword.toCharArray());
+            mqttClient.connect(options);
+            log.info("MQTT START");
+            isConnected = true;
+        } catch (MqttException e) {
+            log.error("MQTT INITIAL CONNECTION ERROR: {}", e.getMessage());
+            scheduleReconnection();
+        }
+    }
+
     public void start() {
         try {
             mqttClient = new MqttClient(hiveBroker, MqttClient.generateClientId(), new MemoryPersistence());

@@ -28,6 +28,28 @@ public class HiveTest {
 //    public static long spotifyExpiresAt;
 //    public static String correlationId = "";
 
+
+    public void start(String hiveBroker, String hiveUsername, String hivePassword) {
+        try {
+            mqttClient = new MqttClient(hiveBroker, MqttClient.generateClientId(), new MemoryPersistence());
+//            mqttClient.setCallback(this);
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setAutomaticReconnect(true); // Включаем встроенное авто-переподключение
+            options.setCleanSession(true);
+            options.setConnectionTimeout(10);
+            options.setKeepAliveInterval(30); // Частота проверки соединения
+            options.setMaxReconnectDelay(30000); // Максимальная задержка между попытками (30 сек)
+            options.setUserName(hiveUsername);
+            options.setPassword(hivePassword.toCharArray());
+            mqttClient.connect(options);
+            log.info("MQTT START");
+//            isConnected = true;
+        } catch (MqttException e) {
+            log.error("MQTT INITIAL CONNECTION ERROR: {}", e.getMessage());
+//            scheduleReconnection();
+        }
+    }
+
     public static void start() {
         log.info("MQTT STARTING...");
         try {
@@ -61,7 +83,7 @@ public class HiveTest {
         TestDevice.checkdevicesState();
     }
 
-    public  static void publish(String topic, String message) {
+    public static void publish(String topic, String message) {
         log.info("PUBLISH TO TOPIC: " + topic);
         try {
             mqttClient.publish(topic, new MqttMessage(message.getBytes()));

@@ -1,25 +1,24 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.spotify.Spotify;
-import org.knovash.squeezealice.utils.PlayersUpdateScheduler;
-import org.knovash.squeezealice.yandex.Yandex;
+import org.knovash.squeezealice.utils.ConfigLoader;
 import org.knovash.squeezealice.utils.Utils;
+import org.knovash.squeezealice.yandex.Yandex;
 
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
-import static org.knovash.squeezealice.yandex.Yandex.sendDeviceState;
 
 @Log4j2
 public class Main {
 
     public static LmsPlayers lmsPlayers = new LmsPlayers();
+    public static SmartHome smartHome = new SmartHome();
     public static Map<String, String> idRooms = new HashMap<>();
     public static List<String> rooms = new ArrayList<>();
     public static ZoneId zoneId = ZoneId.of("Europe/Minsk");
@@ -35,12 +34,21 @@ public class Main {
         log.info("OS: " + System.getProperty("os.name") + ", user.home: " + System.getProperty("user.home") + " userApp.root: " + System.getProperty("userApp.root"));
         config.readConfigProperties();
         config.readConfigJson();
+
+
+
         config.write();
         links.read();
         Utils.getMyIpAddres();
         lmsPlayers.searchForLmsIp();
         Utils.readAliceIdInRooms();
+
+
+        log.info("AUTOREMOTEURLS: "+lmsPlayers.autoRemoteUrls);
         lmsPlayers.read();
+        log.info("AUTOREMOTEURLS: "+lmsPlayers.autoRemoteUrls);
+
+
         lmsPlayers.updateLmsPlayers(); // Main
         Yandex.getRoomsAndDevices();
         lmsPlayers.checkRooms();
@@ -51,21 +59,10 @@ public class Main {
         hive.subscribeByYandex();
         log.info("VERSION 1.2");
 
+
 //        PlayersUpdateScheduler.startPeriodicUpdate(1);
-//        sendDeviceState();
 //        Spotify.ifExpiredRunRefersh();
 //        hive.periodicCheckStart();
-
-
-//        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-//        scheduler.scheduleAtFixedRate(() -> {
-//            if (hive != null && !hive.isConnected()) {
-//                log.warn("MQTT connection lost! Attempting to reconnect...");
-//                hive.stop();
-//                hive.start();
-//                hive.subscribeByYandex();
-//            }
-//        }, 1, 1, TimeUnit.MINUTES); // Проверка каждую минуту
 
     }
 }

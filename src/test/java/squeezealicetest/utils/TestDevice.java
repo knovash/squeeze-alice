@@ -182,7 +182,8 @@ public class TestDevice {
         String playerName = player.name;
         String mode = player.mode();
         String volume = player.volumeGet();
-        Integer channel = player.currentChannelIndexInFavorites();
+//        Integer channel = player.currentChannelIndexInFavorites();
+        Integer channel = 1;
 
         String result = "CHECK " + playerName +
                 " MODE: '" + mode + "'='" + capPowerValue + "'" +

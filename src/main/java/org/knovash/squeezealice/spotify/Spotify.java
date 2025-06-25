@@ -2,7 +2,6 @@ package org.knovash.squeezealice.spotify;
 
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.Hive;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.lms.PlayerStatus.PlaylistLoop;
 import org.knovash.squeezealice.spotify.spotify_pojo.*;
@@ -358,9 +357,9 @@ public class Spotify {
 //        Player.playerStatus.result.playlist_loop.stream()
 //                .forEach(playlistLoop -> log.info("-----" + playlistLoop.playlist_index + " " + playlistLoop.title + " = " + name));
             log.info("FILTER INDEX BY NAME: " + name);
-            log.info("LOOP: " + Player.playerStatus.result.playlist_loop);
-            if (Player.playerStatus.result.playlist_loop != null) {
-                PlaylistLoop playlistLoop = Player.playerStatus.result.playlist_loop.stream()
+            log.info("LOOP: " + player.playerStatus.result.playlist_loop);
+            if (player.playerStatus.result.playlist_loop != null) {
+                PlaylistLoop playlistLoop = player.playerStatus.result.playlist_loop.stream()
                         .peek(pl -> log.info("ALL: " + pl.playlist_index + " " + pl.title + " = " + name))
                         .filter(pl -> pl.title.equals(name))
                         .peek(pl -> log.info("FILTER: " + pl.playlist_index + " " + pl.title + " = " + name))

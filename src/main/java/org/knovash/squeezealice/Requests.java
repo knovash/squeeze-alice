@@ -56,7 +56,7 @@ public class Requests {
     }
 
     public static String postToLmsForStatus(String json) {
-//        log.info("REQUEST TO LMS: " + json);
+        log.info("REQUEST TO LMS: " + json);
 
         String status = null;
         try {
@@ -86,7 +86,7 @@ public class Requests {
                     .execute()
                     .returnContent();
         } catch (IOException e) {
-            log.info("ERROR " + e);
+            log.debug("ERROR " + e);
             return null;
         }
         return content.asString(StandardCharsets.UTF_8);

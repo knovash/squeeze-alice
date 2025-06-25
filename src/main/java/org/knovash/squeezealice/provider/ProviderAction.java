@@ -11,30 +11,25 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
-import static org.knovash.squeezealice.yandex.Yandex.sendDeviceState;
 
 @Log4j2
 public class ProviderAction {
 
-    private static Boolean hasDifferentChannels = false;
     private static String xRequestId;
-//    private static String volume = null;
 
     public static Context providerActionRun(Context context) {
         if (config.lmsIp == null) errorContext("LMS NULL");
-//        получить из контекста тело запроса от умного дома с девайсами и капабилити которые надо выполнить
         String body = context.body;
-//        получить из хедеров запроса id запроса который надо вернуть в ответе яндексу
+// получить из хедеров запроса id запроса который надо вернуть в ответе яндексу
         xRequestId = context.headers.get("X-request-id").get(0);
-//        log.info("XREQUESTID: " + xRequestId);
         if (body.equals("") || body == null) return errorContext("BODY NULL");
-//        создать ответ из запроса
+// создать ответ из запроса
         ResponseYandex responseYandex = JsonUtils.jsonToPojo(body, ResponseYandex.class);
         if (responseYandex == null) return errorContext("RESPONSE YANDEX NULL");
-//        положить в ответ id запроса полученый из хедеров запроса
+// положить в ответ id запроса полученый из хедеров запроса
         responseYandex.request_id = xRequestId;
 
-//        посмотреть полученные девайсы и их капабилити
+// посмотреть полученные девайсы и их капабилити
         log.info("DEVICES IN PAYLOAD: " + responseYandex.payload.devices.size());
         responseYandex.payload.devices.forEach(d -> d.capabilities
                 .forEach(c -> log.info(
@@ -42,41 +37,40 @@ public class ProviderAction {
                                 " CAPABILITI: " + c.state.instance + " = " + c.state.value +
                                 " RELATIVE: " + c.state.relative)));
 
+// обновить состояние плееров из LMS
         log.info("\nUPDATE LMS PLAYERS");
-        lmsPlayers.updateLmsPlayers(); // providerActionRun
+        lmsPlayers.updateLmsPlayers();
 
-        log.info("\nSET DEVICES CAPABILITIES IN PARALLEL STREAMS");
-// обновить для всех девайсов все капабилити в соответствии с ожидаемым результатом
+        log.info("\nSET DEVICES CAPABILITIES. SIZE=" + responseYandex.payload.devices.size());
+// обновить для всех девайсов все капабилити
         List<Device> jsonDevices = responseYandex.payload.devices.parallelStream()
                 .map(d -> setDeviceCapabilities(d)) // если устройство недоступно то статус DEVICE_UNREACHABLE
                 .collect(Collectors.toList());
-
-// если устройство недоступно не выполнять действия
 // удалить девайсы которые недоступны
         List<Device> unreachableDevices = new ArrayList<>();
         unreachableDevices = responseYandex.payload.devices.stream()
                 .filter(device -> device.action_result != null)
-                .filter(device -> device.action_result.status != null)
-                .filter(device -> device.action_result.status.equals("ERROR"))
-                .peek(device -> log.info("REMOVE UNREACHABLE DEVICE ID: " + device.id))
+                .filter(device -> "ERROR".equals(device.action_result.status))
+                .peek(device -> log.info("REMOVE UNREACHABLE DEVICE ID: " + device.id + " PLAYER: " + device.playerName()))
                 .collect(Collectors.toList());
-        if (unreachableDevices.size() > 0) {
-            log.info("BEFORE REMOVE: " + responseYandex.payload.devices.stream().map(d -> d.id).collect(Collectors.toList()) );
+        if (!unreachableDevices.isEmpty()) {
+            log.info("BEFORE REMOVE: " + responseYandex.payload.devices.stream().map(d -> "\nID=" + d.id + " " + d.playerName()).collect(Collectors.toList()));
             responseYandex.payload.devices.removeAll(unreachableDevices);
-            log.info("AFTER REMOVE: " + responseYandex.payload.devices.stream().map(d -> d.id).collect(Collectors.toList()) );
+            log.info("AFTER REMOVE: " + responseYandex.payload.devices.stream().map(d -> "\nID=" + d.id + " " + d.playerName()).collect(Collectors.toList()));
         }
 
-        log.info("\nRUN DEVICES CAPABILITIES IN FUTURES");
-// выполнить в потоке действия с устройствами
-        processDevicesCapabilities(responseYandex)
-                .exceptionally(ex -> {
-                    log.error("DEVICE ERROR: ", ex);
-                    return null;
-                })
-                .thenRun(() -> {
-                    log.info("\nAFTER ALL");
+        List<Device> devicesForAsync = responseYandex.payload.devices;
+        log.info("\nRUN DEVICES CAPABILITIES. SIZE=" + devicesForAsync.size());
+// если устройств нет - выход
+        if (!devicesForAsync.isEmpty()) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    runMultipleDevicesCapabilities(devicesForAsync);
+                } finally {
                     lmsPlayers.afterAll();
-                });
+                }
+            });
+        }
 
 // положить в пэйлоад все девайсы с обновленными состояниями капабилитей
         responseYandex.payload.devices = jsonDevices;
@@ -84,91 +78,6 @@ public class ProviderAction {
         context.code = 200;
         return context;
     }
-
-    public static CompletableFuture<Void> processDevicesCapabilities(ResponseYandex responseYandex) {
-        if (responseYandex.payload.devices.size() > 1) {
-            log.info("\nMULTIPLE DEVICES    runDevices(responseYandex)");
-            return runDevices(responseYandex);
-        } else {
-            log.info("\nONE DEVICE responseYandex.payload.devices.stream().map(d -> runCapabilitiesDevices(d)");
-            return CompletableFuture.allOf(
-                    responseYandex.payload.devices.stream()
-                            .map(d -> runCapabilitiesDevices(d))
-                            .toArray(CompletableFuture[]::new)
-            );
-        }
-    }
-
-    private static CompletableFuture<Void> runCapabilitiesDevices(Device device) {
-        log.info("\n RUN CAPS DEVICES");
-        return CompletableFuture.runAsync(() -> {
-            Player player = lmsPlayers.playerByDeviceId(device.id);
-            if (player == null) {
-                log.info("Player not found for device ID: {}", device.id);
-                return;
-            }
-
-            // Извлекаем нужные capability одним проходом
-            Capability volumeCap = null;
-            Capability channelCap = null;
-            Capability powerCap = null;
-
-            for (Capability cap : device.capabilities) {
-                switch (cap.state.instance) {
-                    case "volume" -> volumeCap = cap;
-                    case "channel" -> channelCap = cap;
-                    case "on" -> powerCap = cap;
-                }
-            }
-
-            // Определяем действие на основе приоритета состояний
-            Runnable action = null;
-            String playerInfo = "Device ID: " + device.id + " Player: " + player.name;
-
-            // 1. Обработка выключения (высший приоритет)
-            if (powerCap != null && "false".equals(powerCap.state.value)) {
-                log.info("Turn OFF - {}", playerInfo);
-                action = () -> player.turnOffMusic();
-            }
-            // 2. Обработка каналов (включено состояние)
-            else if (channelCap != null) {
-                log.info("Channel update - {}", playerInfo);
-                final String volume = (volumeCap != null) ? volumeCap.state.value : null;
-                Capability finalChannelCap = channelCap;
-                action = () -> {
-                    if (hasDifferentChannels) player.unsync();
-                    player.playChannelRelativeOrAbsolute(
-                            finalChannelCap.state.value,
-                            finalChannelCap.state.relative,
-                            volume
-                    );
-                };
-            }
-            // 3. Обработка включения
-            else if (powerCap != null && "true".equals(powerCap.state.value)) {
-                log.info("Turn ON - {}", playerInfo);
-                final String volume = (volumeCap != null) ? volumeCap.state.value : null;
-                action = () -> player.turnOnMusic(volume);
-            }
-            // 4. Обработка громкости (низший приоритет)
-            else if (volumeCap != null) {
-                log.info("Volume update - {}", playerInfo);
-                Capability finalVolumeCap = volumeCap;
-                action = () -> player.volumeRelativeOrAbsolute(
-                        finalVolumeCap.state.value,
-                        finalVolumeCap.state.relative
-                );
-            }
-
-            // Выполняем действие если определено
-            if (action != null) {
-                action.run();
-            } else {
-                log.info("No actions for {}", playerInfo);
-            }
-        });
-    }
-
 
     private static Device setDeviceCapabilities(Device device) {
 // получаем плеер для выполнения действия с ним
@@ -205,58 +114,218 @@ public class ProviderAction {
         }
     }
 
-    public static CompletableFuture<Void> runDevices(ResponseYandex responseYandex) {
-        List<Device> devicesCopy = new ArrayList<>(responseYandex.payload.devices);
-        return CompletableFuture.supplyAsync(( ) -> {
-// определить если несколько девайсов с одинаковым каналом CheckForPlayersWithIdenticalChannel
-            List<String> playersChannels = devicesCopy.stream()
-                    .map(d -> d.capabilities.stream()
-                            .filter(capability -> capability.state.instance.equals("channel"))
-                            .map(capability -> capability.state.value)
-                            .findFirst()
-                            .orElse(null)
-                    )
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-            Set<String> uniqueChannels = new HashSet<>(playersChannels);
-// определить общий уникальный канал
-            String unicChannel;
-            if (playersChannels.isEmpty()) {
-                // Все каналы null, считаем их одинаковыми
-                hasDifferentChannels = false;
-                unicChannel = null;
-            } else {
-                // Проверяем, есть ли разные каналы среди не-null
-                hasDifferentChannels = uniqueChannels.size() > 1;
-                unicChannel = uniqueChannels.size() == 1 ? uniqueChannels.iterator().next() : null;
+    public static void runMultipleDevicesCapabilities(List<Device> devices) {
+// Фильтруем устройства с каналом
+        List<Device> devicesWithChannel = devices.stream()
+                .filter(device -> device.capabilities.stream()
+                        .anyMatch(capability -> "channel".equals(capability.state.instance) && capability.state.value != null)
+                )
+                .collect(Collectors.toList());
+// Группируем по значению канала
+        Map<Object, List<Device>> groupedByChannel = devicesWithChannel.stream()
+                .collect(Collectors.groupingBy(
+                        device -> device.capabilities.stream()
+                                .filter(cap -> "channel".equals(cap.state.instance) && cap.state.value != null)
+                                .findFirst()
+                                .map(cap -> cap.state.value)
+                                .orElse(null)
+                ));
+// 1. Группы устройств с одинаковым каналом (размер группы > 1)
+        List<List<Device>> sameChannelGroups = groupedByChannel.values().stream()
+                .filter(group -> group.size() > 1)
+                .collect(Collectors.toList());
+// 2. Устройства с уникальными каналами (одиночные)
+        List<Device> differentChannelDevices = groupedByChannel.values().stream()
+                .filter(group -> group.size() == 1)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+// 3. Устройства без канала
+        List<Device> noChannelDevices = devices.stream()
+                .filter(device -> device.capabilities.stream()
+                        .filter(cap -> "channel".equals(cap.state.instance)) // выбираем только каналы
+                        .allMatch(cap -> cap.state.value == null) // все найденные каналы должны иметь value == null
+                ).collect(Collectors.toList());
+
+// 4. Устройства с on=true и channel=null
+        List<Device> devicesTurnOnAll = devices.stream()
+                .filter(device -> device.capabilities.stream()
+                        .anyMatch(cap -> "on".equals(cap.state.instance) && cap.state.value.equals("true")) // все найденные каналы должны иметь value == null
+                ).collect(Collectors.toList());
+
+        log.info("devicesTurnOnAll " + devicesTurnOnAll.size());
+        devicesTurnOnAll.stream().forEach(device -> log.info(device.id));
+        log.info("noChannelDevices " + noChannelDevices.size());
+        noChannelDevices.stream().forEach(device -> log.info(device.id));
+        log.info("sameChannelGroups " + sameChannelGroups.size());
+        sameChannelGroups.stream().forEach(g -> g.stream().forEach(device ->
+                log.info("DEVICE: " + device.id)));
+
+//  если включи все только 1 колонка то выполнять действие как для одной попытаться подключить к тграющей
+        if(!devicesTurnOnAll.isEmpty() && devicesTurnOnAll.size()<2) devicesTurnOnAll = new ArrayList<>();
+
+        noChannelDevices.removeAll(devicesTurnOnAll);
+
+        if (!devicesTurnOnAll.isEmpty()) {
+            log.info("TURN ON ALL: " + devicesTurnOnAll.size());
+            sameChannelGroups.add(devicesTurnOnAll);
+        }
+
+        differentChannelDevices.addAll(noChannelDevices);
+
+        log.info("----------------------------------");
+        log.info("devicesTurnOnAll " + devicesTurnOnAll.size());
+        devicesTurnOnAll.stream().forEach(device -> log.info(device.id));
+        log.info("noChannelDevices " + noChannelDevices.size());
+        noChannelDevices.stream().forEach(device -> log.info(device.id));
+        log.info("sameChannelGroups " + sameChannelGroups.size());
+        sameChannelGroups.stream().forEach(g -> g.stream().forEach(device ->
+                log.info("DEVICE: " + device.id)));
+//        log.info("\nRUN DEVICES SAME CHANNEL. SIZE=" + sameChannelGroups.size());
+//        sameChannelGroups.parallelStream().forEach(group -> runDevicesSameChannel(group));
+//        log.info("\nRUN DEVICES DIFFERENT OR NO CHANNEL. SIZE=" + differentChannelDevices.size());
+//        runDevicesDifferentChannel(differentChannelDevices);
+
+// Создаем список futures для sameChannelGroups
+        List<CompletableFuture<Void>> sameGroupFutures = sameChannelGroups.stream()
+                .map(group -> CompletableFuture.runAsync(() -> runDevicesSameChannel(group)))
+                .collect(Collectors.toList());
+// Запускаем differentChannelDevices асинхронно
+        CompletableFuture<Void> differentFuture = CompletableFuture.runAsync(
+                () -> runDevicesDifferentChannel(differentChannelDevices)
+        );
+// Объединяем все futures
+        List<CompletableFuture<Void>> allFutures = new ArrayList<>(sameGroupFutures);
+        allFutures.add(differentFuture);
+// Ожидаем завершения ВСЕХ задач
+        CompletableFuture.allOf(allFutures.toArray(new CompletableFuture[0])).join();
+
+    }
+
+    // включить несколько колонок с одинаковым каналом, возможно разная громкость
+    public static void runDevicesSameChannel(List<Device> devices) {
+        log.info("\nRUN DEVICES SAME CHANNEL");
+// достать из каждого девайса громкость, отключить, разбудить, установить громкость ПАРАЛЕЛЬНО
+        devices.parallelStream().forEach(device -> {
+            String volume = device.capabilities.stream()
+                    .filter(cap -> cap.state != null)
+                    .filter(cap -> "volume".equals(cap.state.instance))
+                    .findFirst()
+                    .map(cap -> cap.state.value)
+                    .orElse(null);
+            Player player = lmsPlayers.playerByDeviceId(device.id);
+            if (player != null) player.unsync().ifExpiredAndNotPlayingUnsyncWakeSet(volume);
+        });
+// синхронизировать плееры
+        log.info("\nSYNC PLAYERS. SIZE=" + devices.size());
+        String previousPlayerName = null;
+        for (Device device : devices) {
+            Player player = lmsPlayers.playerByDeviceId(device.id);
+            if (player != null) {
+                if (previousPlayerName != null) player.syncTo(previousPlayerName);
+                previousPlayerName = player.name;
+                log.info("SET PREVIOUS PLAYER NAME: " + previousPlayerName);
             }
-            if (unicChannel == null) hasDifferentChannels = true;
-            log.info("PLAYERS CHANNELS: " + playersChannels + " IDENTICAL CHANNELS: " + !hasDifferentChannels + " UNIQUE CHANNEL: " + unicChannel);
-// определить девайсы которые надо включить или включить канал
-            List<Device> devicesForTurnOnOrSetChannel = devicesCopy.stream()
-                    .filter(device -> device.capabilities.stream()
-                            .anyMatch(capability -> {
-                                State state = capability.state;
-                                boolean isChannel = "channel".equals(state.instance) && state.value != null;
-                                boolean isOn = "on".equals(state.instance) && state.value.equals("true");
-                                return isChannel || isOn;
-                            }))
-                    .collect(Collectors.toList());
-            if (devicesForTurnOnOrSetChannel != null)
-                log.info("DEVICES FOR TURN ON OR SET CHANNEL COUNT: " + devicesForTurnOnOrSetChannel.size());
-// если каналы одинаковые или нет каналов но есть команды включить
-// сначала разбудить эти плееры, включить один, подключить поочереди остальные
-// если каналы разные - просто выполнить отдельно действия с каждым девайсом
-            if (!hasDifferentChannels && devicesForTurnOnOrSetChannel.size() > 1) {
-                return lmsPlayers.turnOnMusicMultiply(devicesForTurnOnOrSetChannel, unicChannel);
-            } else {
-                return CompletableFuture.allOf(
-                        devicesCopy.stream()
-                                .map(d -> runCapabilitiesDevices(d))
-                                .toArray(CompletableFuture[]::new)
-                );
+        }
+// включить общий канал
+        Integer channel = null;
+        try {
+            channel = Integer.valueOf(devices.get(0).capabilities.stream()
+                    .filter(capability -> capability.state.instance.equals("channel"))
+                    .findFirst().orElseGet(null)
+                    .state.value);
+        } catch (Exception e) {
+            log.info("ERROR: " + e);
+        }
+        log.info("\nPLAY SAME CHANNEL: " + channel);
+        Player player = lmsPlayers.playerByDeviceId(devices.get(0).id);
+        if (channel != null) player.playChannel(channel);
+        else player.playLast();
+    }
+
+    // выполнить действия листа колонок - power,channel,volume
+    public static void runDevicesDifferentChannel(List<Device> devices) {
+        log.info("\nRUN DEVICES DIFFERENT OR NO CHANNEL. SIZE = " + devices.size());
+// достать из каждого девайса громкость, отключить, разбудить, установить громкость ПАРАЛЕЛЬНО
+        devices.parallelStream().forEach(device -> {
+            Player player = lmsPlayers.playerByDeviceId(device.id);
+            if (player == null) return;
+            String power = device.capabilities.stream()
+                    .filter(cap -> cap.state != null)
+                    .filter(cap -> "on".equals(cap.state.instance)).findFirst()
+                    .map(cap -> cap.state.value).orElse(null);
+            String volume = device.capabilities.stream()
+                    .filter(cap -> cap.state != null)
+                    .filter(cap -> "volume".equals(cap.state.instance)).findFirst()
+                    .map(cap -> cap.state.value).orElse(null);
+            Boolean volumeRelative = device.capabilities.stream()
+                    .filter(cap -> cap.state != null)
+                    .filter(cap -> "volume".equals(cap.state.instance)).findFirst()
+                    .map(cap -> cap.state.relative).orElse(null);
+            String channel = device.capabilities.stream()
+                    .filter(cap -> cap.state != null)
+                    .filter(cap -> "channel".equals(cap.state.instance)).findFirst()
+                    .map(cap -> cap.state.value).orElse(null);
+            Boolean channelRelative = device.capabilities.stream()
+                    .filter(cap -> cap.state != null)
+                    .filter(cap -> "channel".equals(cap.state.instance)).findFirst()
+                    .map(cap -> cap.state.relative).orElse(null);
+
+            log.info("RUN " + player.name + " POWER: " + power + " CHANNEL: " + channel + " REL: " + channelRelative + " VOLUME: " + volume + " REL: " + volumeRelative);
+
+// выключить плеер
+            if ("false".equals(power)) {
+                log.info(player.name + " POWER: " + power);
+                player
+                        .unsync()
+                        .pause();
+                return;
             }
-        }).thenCompose(f -> f);
+// изменение громкости
+            if (volume != null && power == null && channel == null) {
+                log.info(player.name + "VOLUME SET: " + volume + " rel " + volumeRelative);
+                player
+                        .volumeRelativeOrAbsolute(volume, volumeRelative);
+                return;
+            }
+// изменение канала и громкости - разбудить, установить громкость, включить канал
+            if (volume != null && channel != null) {
+                log.info(player.name + "CHANNEL SET: " + channel + " rel " + channelRelative);
+                log.info(player.name + "VOLUME SET: " + volume + " rel " + volumeRelative);
+                player
+                        .ifExpiredAndNotPlayingUnsyncWakeSet(player.volumeRelativeOrAbsoluteGetValue(volume, volumeRelative))
+                        .playChannelRelativeOrAbsolute(channel, channelRelative);
+                return;
+            }
+// изменение канала - разбудить, установить громкость, включить канал
+            if (channel != null) {
+                log.info(player.name + "CHANNEL SET: " + channel + " rel " + channelRelative);
+                player
+                        .ifExpiredAndNotPlayingUnsyncWakeSet(null)
+                        .playChannelRelativeOrAbsolute(channel, channelRelative);
+                return;
+            }
+// включить если не играет
+            if ("true".equals(power) && !player.playing) {
+                log.info(player.name + " NOT PLAY. POWER SET: " + power + " - SYNC TO PLAYING OR PLAY LAST");
+                player.unsync().ifExpiredAndNotPlayingUnsyncWakeSet(player.volumeRelativeOrAbsoluteGetValue(volume, volumeRelative));
+                Player playingPlayer = lmsPlayers.playingPlayer(player.name, true);
+                if (playingPlayer != null && !player.separate && !playingPlayer.separate)
+                    player.syncTo(playingPlayer.name);
+                else player.playLast();
+                return;
+            }
+// включить если играет и есть играющий не в группе
+            if ("true".equals(power) && player.playing) {
+                log.info(player.name + "PLAY. POWER SET: " + power + " - SYNC TO PLAYING NOT IN GROUP");
+                List<String> playersNames = player.playingPlayersNamesNotInCurrentGroup(true);
+                Player playingPlayer = null;
+                if (!playersNames.isEmpty()) playingPlayer = lmsPlayers.playerByCorrectName(playersNames.get(0));
+                if (playingPlayer != null && !player.separate && !playingPlayer.separate)
+                    player.syncTo(playingPlayer.name);
+                return;
+            }
+            log.info("ERROR SKIP ALL ACTIONS");
+        });
     }
 
     public static Context errorContext(String errorMessage) {

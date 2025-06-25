@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+//import static jdk.javadoc.internal.doclets.formats.html.markup.HtmlStyle.title;
 import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
@@ -32,6 +33,7 @@ public class SwitchVoiceCommand {
         String answer = createAnswer(context);
 
         context.bodyResponse = createResponse(answer);
+
 //        context.bodyResponse = answer;
         context.code = 200;
         return context;
@@ -58,7 +60,6 @@ public class SwitchVoiceCommand {
         String body = context.body;
         String command = JsonUtils.jsonGetValue(body, "command");
         String clientId = JsonUtils.jsonGetValue(body, "client_id");
-//        log.info("COMMAND: " + command);
 // если запрос с колонки то завершить диалог чтобы не висеть в навыке, если диалог в браузере то не завершать
         if (clientId.contains("browser")) clientType = "browser";
         else clientType = "speaker";
@@ -68,9 +69,6 @@ public class SwitchVoiceCommand {
         aliceId = JsonUtils.jsonGetValue(body, "application_id");
         return processCommand(aliceId, command);
     }
-
-//    --------------------------------------------------------------------------------------------------------
-
 
     public static String processCommand(String roomId, String command) {
         String DEFAULT = "Я умею управлять плеерами подключенными в Lyrion Music Server. \n" +
@@ -218,11 +216,12 @@ public class SwitchVoiceCommand {
             log.info("ERROR NULL");
             return null;
         }
-        Device device = SmartHome.getDeviceByCorrectRoom(roomName);
+        Device device = smartHome.getDeviceByCorrectRoom(roomName);
         if (device == null) {
             log.info("CREATE NEW DEVICE IN SMART HOME ROOM: " + roomName);
-            SmartHome.create(roomName, null);
-            SmartHome.write();
+//            SmartHome.create(roomName, null); // selectPlayerInRoom
+            smartHome.create(roomName, playerName); // selectPlayerInRoom
+            smartHome.write();
         } else log.info("DEVICE EXISTS IN ROOM: " + device.room);
 
         log.info("SELECT PLAYER IN ROOM " + roomName + " BY PLAYER IN COMMAND: " + playerName);
@@ -320,7 +319,15 @@ public class SwitchVoiceCommand {
         log.info("\nWHATS PLAYING ON " + player.name);
         if (player == null) return "плеер не найден";
         if (!player.connected) return "плеер " + player.name + "  не подключен к медиасерверу";
-        String title = player.title();
+        String title = null;
+        try {
+             title = player.requestTitle();
+             title = player.playlistNameShort;
+        }
+        catch (Exception e){
+
+            log.info("ERROR: TITLE");
+        }
         if (title == null || "".equals(title) || "unknown".equals(title)) title = "ничего";
 // находим группы плееров которые играют вместе или отдельно, включая отделенные false
         player.playingPlayersNamesNotInCurrentGroup(false); // whatsPlaying

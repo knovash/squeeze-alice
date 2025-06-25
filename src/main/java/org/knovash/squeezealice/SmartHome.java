@@ -6,9 +6,7 @@ import org.knovash.squeezealice.provider.response.*;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Log4j2
 @Data
@@ -17,12 +15,17 @@ public class SmartHome {
     public static List<Device> devices = new ArrayList<>();
     public static String saveToFileJson = "data/devices.json";
 
-    public static Device getDeviceById(int deviceId) {
-        String index = String.valueOf(deviceId);
-        return devices.stream()
+    public  Device getDeviceById(String deviceIdExt) {
+//        log.info("DEVICE EXT ID: " + deviceIdExt);
+//        String index = String.valueOf(deviceId);
+        Device device =
+         devices.stream()
+//                .peek(d -> log.info("TRY DEVICE: " + d.id + " " + d.room))
                 .filter(d -> (d.id != null))
-                .filter(d -> d.id.equals(index))
+                .filter(d -> d.id.equals(deviceIdExt))
                 .findFirst().orElse(null);
+        if(device == null) log.info("ERROR: NO DEVICE " + deviceIdExt + " PLEASE ADD DEVICE TO YANDEX OR SELECT ROOM FOR DEVICE");
+        return device;
     }
 
     public static Device getDeviceByCorrectRoom(String room) {
@@ -35,41 +38,39 @@ public class SmartHome {
             log.info("NO DEVICE WITH ROOM: " + room);
             return null;
         }
-        log.info("BY ROOM " + room+ " GET DEVICE: " + device.room + " ID: " + device.id);
+        log.info("BY ROOM " + room + " GET DEVICE: " + device.room + " ID: " + device.id);
         return device;
     }
 
-    public static void create(String room, Integer index) {
+
+    public  void create(String deviceRoomName, String deviceExtIdPlayerName) {
 //        log.info("START CREATE ROOM: " + room + " INDEX: " + index);
 //        log.info("EXISTS: " + SmartHome.devices.stream().map(d -> d.id + ":" + d.room).collect(Collectors.toList()));
 //        SmartHome.devices.stream().forEach(d -> log.info("EXISTS LOCAL DEVICE ID: " + d.id + " ROOM: " + d.room));
+
 //        если локальных девайсов еще нет - создать пустой лист
         if (SmartHome.devices == null) SmartHome.devices = new ArrayList<>();
-//        если в метод не пришел индекс - создать индекс = существующий макс индекс + 1
-        if (index == null) {
-            int maxId = SmartHome.devices.stream()
-                    .mapToInt(d -> Integer.parseInt(d.id))
-                    .max()
-                    .orElse(0);
-            index = maxId + 1;
-            log.info("NEW ID IN SMART HOME: {}", index);
-        }
 
-// проверить если девайс с такой комнатой уже существует - выход
-        Integer counter = (int) SmartHome.devices.stream().filter(device1 -> device1.room.equals(room)).count();
-//        log.info("DEVICE EXISTS COUNTER: " + counter);
-        if (counter > 0) {
-            log.info("DEVICE EXISTS. CREATE SKIP");
+//        если в метод не пришел индекс - создать индекс = существующий макс индекс + 1
+//        if (deviceExtIdPlayerName == null) {
+//            int maxId = SmartHome.devices.stream()
+//                    .mapToInt(d -> Integer.parseInt(d.id))
+//                    .max()
+//                    .orElse(0);
+//            deviceExtIdPlayerName = maxId + 1;
+//            log.info("NEW ID IN SMART HOME: {}", deviceExtIdPlayerName);
+//        }
+
+// Проверяем существование устройства с указанной комнатой
+        if (SmartHome.devices.stream().anyMatch(d -> d.room.equals(deviceRoomName))) {
+            log.info("ROOM: " + deviceRoomName + " EXT ID: " + deviceExtIdPlayerName + " - DEVICE EXISTS. CREATE SKIP");
             return;
         }
 
 //        создать новый девайс
         Device device = new Device();
-        device.type = "devices.types.media_device.receiver";
-        device.room = room;
-
-//        log.info("NEW DEVICE: " + device);
-
+        device.room = deviceRoomName;
+        device.id = String.valueOf(deviceExtIdPlayerName); // TODO id переименовать в external_id
 
 //        создать для нового девайса капабилити
         Capability volume = new Capability();
@@ -99,7 +100,7 @@ public class SmartHome {
         channel.parameters.random_access = true; // Возможность устанавливать произвольные значения функции
         channel.parameters.range = new Range();
         channel.parameters.range.min = 1;
-        channel.parameters.range.max = 9;
+        channel.parameters.range.max = 200;
         channel.parameters.range.precision = 1;
         channel.state = new State();
         channel.state.instance = "channel";
@@ -126,25 +127,24 @@ public class SmartHome {
         device.capabilities.add(on_of);
 //        log.info("DEVICE ADD CAPABILITI ON_OF: " + device.capabilities.get(device.capabilities.indexOf(on_of)));
 
-// назначить девайсу индекс
-        device.id = String.valueOf(index);
+
         //        добавить девайс в лист локальных девайсов
         SmartHome.devices.add(device);
-//        log.info("CREATED DEVICE ID: " + device.id + " ROOM: " + device.room + " " + SmartHome.devices.stream().map(d -> d.id + ":" + d.room).collect(Collectors.toList()));
         log.info("CREATED DEVICE ID: " + device.id + " ROOM: " + device.room);
-//        log.info("CREATER DEVICE FULL: " + device);
-//        log.info("DEVICES: " + SmartHome.devices.size());
+
         //        return device;
     }
 
-    public static void read() {
+
+
+    public  void read() {
         devices = JsonUtils.jsonFileToList(SmartHome.saveToFileJson, Device.class);
         if (devices == null) devices = new ArrayList<>();
         log.info("DEVICES FROM devices.json: " + devices.size());
         log.debug("DEVICES: " + devices);
     }
 
-    public static void write() {
+    public  void write() {
         log.info("WRITE devices.json");
         JsonUtils.pojoToJsonFile(SmartHome.devices, SmartHome.saveToFileJson);
     }

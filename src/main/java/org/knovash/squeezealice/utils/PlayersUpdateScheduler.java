@@ -43,7 +43,9 @@ public class PlayersUpdateScheduler {
                             .filter(player -> player != null)
                             .filter(player -> player.deviceId != null)
                             .forEach(player ->
-                                    Yandex.sendDeviceState(player.deviceId, "on_off", "on", String.valueOf(player.playing), null)); // startPeriodicUpdate
+                            {  Yandex.sendDeviceState(player.deviceId, "on_off", "on", String.valueOf(player.playing), null);
+                                Yandex.sendDeviceState(player.deviceId, "range", "volume", String.valueOf(player.volume), null);
+                            }); // startPeriodicUpdate
                 } catch (Exception e) {
                     log.error("Failed to update players state", e);
                 }

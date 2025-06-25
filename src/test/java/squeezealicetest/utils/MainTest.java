@@ -1,49 +1,40 @@
 package squeezealicetest.utils;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.Config;
 import org.knovash.squeezealice.Hive;
-import org.knovash.squeezealice.Main;
-import org.knovash.squeezealice.yandex.Yandex;
-import squeezealicetest.steps.ConfigTest;
+import org.knovash.squeezealice.LmsPlayers;
+import org.knovash.squeezealice.SmartHome;
+import org.knovash.squeezealice.utils.Utils;
 import squeezealicetest.yandex.YandexTest;
 
-import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import static java.time.temporal.ChronoUnit.MINUTES;
-import static squeezealicetest.utils.TestDevice.payload;
 
 @Log4j2
 public class MainTest {
 
     public static LmsPlayersTest lmsPlayersTest = new LmsPlayersTest();
-    public static Map<String, String> idRooms = new HashMap<>();
-    public static List<String> rooms = new ArrayList<>();
-    public static ZoneId zoneId = ZoneId.of("Europe/Minsk");
-    public static ConfigTest configTest = new ConfigTest();
-    public static Boolean lmsServerOnline = true;
-    public static String yandexToken = "";
+    public static SmartHome smartHomeTest = new SmartHome();
+    public static List<String> roomsTest = new ArrayList<>();
+    public static Config configTest = new Config();
+    public static HiveTest hiveTest;
 
-    public static void main() {
-        log.info("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
-        log.info("OS: " + System.getProperty("os.name") + ", user.home: " + System.getProperty("user.home"));
-        System.setProperty("userApp.root", System.getProperty("user.home"));
-        log.info("userApp.root: " + System.getProperty("userApp.root"));
+    public static void init() {
+
+        configTest.readConfigProperties();
+        configTest.readConfigJson();
+
         lmsPlayersTest.read();
-//        lmsPlayersTest.updateLmsPlayers();
-//        Yandex.getRoomsAndDevices();
+        log.info("PLAYERS ------------------ " +lmsPlayersTest.players);
+
+        Utils.readAliceIdInRooms();
         YandexTest.getRoomsAndDevices();
-        HiveTest.start();
-//        hive = new Hive();
-//        hive.start();
-        HiveTest.subscribe("test");
-        payload.devices = new ArrayList<>();
-        log.info("VERSION 1.2");
-
-
+        hiveTest = new HiveTest();
+        hiveTest.start("ssl://811c56b338f24aeea3215cd680851784.s1.eu.hivemq.cloud:8883",
+                "novashki",
+                "Darthvader0");
+//        hiveTest.subscribeByYandex();
+        hiveTest.subscribe("test");
     }
 }

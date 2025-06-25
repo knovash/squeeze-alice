@@ -15,7 +15,7 @@ public class SwitchQueryCommand {
 
     public static Context action(Context context) {
         HashMap<String, String> queryParams = context.queryMap;
-        context.bodyResponse = "BAD REQUEST NO ACTION IN QUERY";
+        context.bodyResponse = "\nBAD REQUEST NO ACTION IN QUERY";
         if (!queryParams.containsKey("action")) return context;
         context.code = 200;
         String action = queryParams.get("action");
@@ -48,14 +48,16 @@ public class SwitchQueryCommand {
                 response = player.volumeRelativeOrAbsolute("3", true);
                 break;
             case ("channel"):
-                CompletableFuture.runAsync(() -> player.playChannelRelativeOrAbsolute(value, false, null))
+                CompletableFuture.runAsync(() -> player
+                                .ifExpiredAndNotPlayingUnsyncWakeSet(null)
+                                .playChannel(Integer.valueOf(value)))
                         .thenRunAsync(() -> lmsPlayers.afterAll());
                 response = player.name + " - play channel " + value;
                 break;
             case ("play"): // TODO неиспользует Таскер
-                CompletableFuture.runAsync(() -> player.turnOnMusic(null))
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
-                response = player.name + " - play";
+//                CompletableFuture.runAsync(() -> player.turnOnMusic(null))
+//                        .thenRunAsync(() -> lmsPlayers.afterAll());
+//                response = player.name + " - play";
                 break;
             case ("toggle_music"):
                 CompletableFuture.runAsync(() -> player.toggleMusic())
@@ -88,7 +90,7 @@ public class SwitchQueryCommand {
                 response = player.name + " - Next track";
                 break;
             case ("next_channel"): // TODO неиспользует Таскер
-                CompletableFuture.runAsync(() -> player.ctrlNextChannel())
+                CompletableFuture.runAsync(() -> player.ctrlNextChannel()) // case ("next_channel"):
                         .thenRunAsync(() -> lmsPlayers.afterAll());
                 response = player.name + " - Next channel";
                 break;

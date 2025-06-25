@@ -79,7 +79,9 @@ public class VoiceActions {
         channel = channel.replaceAll(":.*", "");
         answer = "включаю канал " + index + ", " + channel;
         log.info("INDEX: " + index);
-        CompletableFuture.runAsync(() -> player.playChannelRelativeOrAbsolute(String.valueOf(index), false, null))
+        CompletableFuture.runAsync(() -> player
+                        .ifExpiredAndNotPlayingUnsyncWakeSet(null)
+                        .playChannel(index))
                 .thenRunAsync(() -> lmsPlayers.afterAll());
         return answer;
     }

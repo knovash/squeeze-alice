@@ -7,10 +7,12 @@ import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.*;
 import org.knovash.squeezealice.utils.JsonUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.Main.smartHome;
 
 @Log4j2
 public class ProviderQuery {
@@ -18,7 +20,6 @@ public class ProviderQuery {
     private static Player player;
 
     public static Context providerQueryRun(Context context) {
-//        log.info("START QUERY");
         String body = context.body;
         List<String> xRequestIdList = context.headers.get("X-request-id");
         String xRequestId = xRequestIdList.get(0);
@@ -35,17 +36,25 @@ public class ProviderQuery {
 
         lmsPlayers.updateLmsPlayers(); // providerQueryRun TODO тут апдейт нужен только для обновления списка подключенных плееров
 
-
+        List<Device> jsonDevices = new ArrayList<>();
+        try {
 // лист девайсов для обновления их свойств
-        List<Device> jsonDevices = bodyPojo.devices.stream()
-                .map(d -> SmartHome.getDeviceById(Integer.parseInt(d.id)))
+            jsonDevices = bodyPojo.devices.stream()
+//                    .peek(d -> log.info("---DEVICE ID: " + d.id))
+                    .map(d -> smartHome.getDeviceById(d.id))
 // обратиться к каждому девайсу и обновить его свойства
-                .map(d -> updateDeviceCapabilities(d)).collect(Collectors.toList());
+                    .map(d -> updateDeviceCapabilities(d)).collect(Collectors.toList());
+        }
+        catch (Exception e){log.info("ERROR: " + e);}
+
         responseYandex.payload = new Payload();
         responseYandex.payload.devices = jsonDevices;
+
 // объект ответа преобразовать в json ответа
         json = JsonUtils.pojoToJson(responseYandex);
         json = json.replaceAll("(\"value\" :) \"([0-9a-z]+)\"", "$1 $2");
+
+//        log.info(json);
         context.bodyResponse = json;
         context.code = 200;
         log.info("RETURN CONTEXT");
