@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static squeezealicetest.utils.MainTest.configTest;
+import static squeezealicetest.utils.MainTest.smartHomeTest;
 
 @Log4j2
 @Data
@@ -36,6 +37,7 @@ public class YandexTest {
         log.debug("GET ROOMS FROM YANDEX SMART HOME");
         String json;
         String bearer = configTest.yandexToken;
+        log.info(configTest);
         try {
             Response response = Request.Get("https://api.iot.yandex.net/v1.0/user/info")
                     .setHeader("Authorization", "OAuth " + bearer)
@@ -47,8 +49,8 @@ public class YandexTest {
         }
         yandexInfo = JsonUtils.jsonToPojo(json, YandexInfoTest.class);
 //        log.info("YANDEX:" + json);
-        MainTest.rooms = yandexInfo.rooms.stream().map(r -> r.name).collect(Collectors.toList());
-        log.info("YANDEX ROOMS ALL: " + MainTest.rooms);
+        MainTest.roomsTest = yandexInfo.rooms.stream().map(r -> r.name).collect(Collectors.toList());
+        log.info("YANDEX ROOMS ALL: " + MainTest.roomsTest);
 //        SmartHome.devices = new ArrayList<>();
 
         log.info("YANDEX DEVICES ALL: " + yandexInfo.devices.size());
@@ -62,8 +64,8 @@ public class YandexTest {
 //        создать локальные девайсы Музыка из полученных из YandexInfo
         log.info("CREATE LOCAL DEVICES");
         yandexMusicDevices.stream()
-                .forEach(device -> SmartHome.create(roomNameByRoomId(device.room), Integer.valueOf(device.external_id)));
-        SmartHome.write();
+                .forEach(device -> smartHomeTest.create(roomNameByRoomId(device.room), device.external_id));
+        smartHomeTest.write();
 // для отображения на вебинтерфейсе
         yandexMusicDevListRooms = yandexInfo.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))

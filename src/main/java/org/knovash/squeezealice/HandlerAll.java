@@ -17,14 +17,10 @@ public class HandlerAll implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        log.info("");
-        log.info("---------------------------------------------------------------------------------------------");
-        log.info("");
-        log.info("HTTP HANDLER START >>>>>>>>>>>>");
+        log.info("\nRECIEVED HTTP REQUEST");
 //        извлечение данных из запроса в контекст
         Context context = Context.contextCreate(httpExchange);
         log.info("CLIENT ID IN QUERY: " + context.queryMap.get("client_id"));
-
         context = HandlerAll.processContext(context);
         String response = context.bodyResponse;
 
@@ -38,6 +34,7 @@ public class HandlerAll implements HttpHandler {
         log.info("HTTP HANDLER FINISH <<<<<<<<<<<");
     }
 
+// context приходит из http хэндлера - локальные команды или из mqtt хэндлера - команды яндекс
     public static Context processContext(Context context) {
         String path = context.path;
         log.info("SWITCH CONTEXT PATH: " + path);
@@ -58,16 +55,13 @@ public class HandlerAll implements HttpHandler {
                 context = SwitchQueryCommand.action(context);
                 break;
 
-
-
-//                Запрос от Яндекс приходит на сервер в облаке https://alice-lms.zeabur.app
-//            там запрос разбирается в context
-//            context отправляется в топик MQTT
-//      сюда context приходит из MQTT метода handleDeviceAndPublish
-//            тут context обрабатывается, возвращается в handleDeviceAndPublish
-//            и отправлятся в топик из которого забирает облачный сервер и отдает ответ в Яндекс умный дом
+// Запрос от Яндекс приходит на сервер в облаке https://alice-lms.zeabur.app
+// там запрос разбирается в context
+// context отправляется в топик MQTT to_lms_ + id пользователя яндекс id4098...
+// сюда context приходит из MQTT метода handleDeviceAndPublish
+// тут context обрабатывается, возвращается в handleDeviceAndPublish
+// и отправлятся в топик из которого забирает облачный сервер и отдает ответ в Яндекс умный дом
             case ("/alice/"):
-                log.info("CASE ALICE");
                 context = SwitchVoiceCommand.action(context);
                 break;
 //                yandex smart home commands
@@ -91,7 +85,6 @@ public class HandlerAll implements HttpHandler {
                 context = PageIndex.action(context);
                 break;
         }
-        log.info("FINISH. RETURN CONTEXT");
         return context;
     }
 }

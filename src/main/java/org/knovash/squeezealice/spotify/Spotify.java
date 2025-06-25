@@ -2,7 +2,6 @@ package org.knovash.squeezealice.spotify;
 
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.Hive;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.lms.PlayerStatus.PlaylistLoop;
 import org.knovash.squeezealice.spotify.spotify_pojo.*;
@@ -14,6 +13,7 @@ import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 import java.util.UUID;
 
 import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.Main.hive;
 import static org.knovash.squeezealice.spotify.SpotifyRequests.requestWithRefreshGet;
 
 @Log4j2
@@ -36,23 +36,21 @@ public class Spotify {
     }
 
     public static String getLinkArtist(String target) {
-        log.info("ARTIST TARGET: " + target);
+        log.info("ARTIST: " + target);
         target = target.replace(" ", "%20");
         String url = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "artist" + "&limit=" + "3" + "&market=ES";
         String json = requestWithRefreshGet(url);
         if (json == null) return null;
         json = json.replace("\\\"", ""); //  фикс для такого "name" : "All versions of Nine inch nails \"Closer\"",
         SpotifyArtists spotifyArtists = JsonUtils.jsonToPojo(json, SpotifyArtists.class);
-//        spotifyArtists.artists.items.forEach(it -> log.info("ARTIST: " + it.name));
         String uri = spotifyArtists.artists.items.get(0).uri;
         SwitchVoiceCommand.artist = spotifyArtists.artists.items.get(0).name;
-        log.info("ARTIST: " + SwitchVoiceCommand.artist);
-//        log.info("URI: " + uri);
+        log.info("ARTIST URI: " + uri);
         return uri;
     }
 
     public static String getLinkTrack(String target) {
-        log.info("TRACK TARGET: " + target);
+        log.info("TRACK: " + target);
         target = target.replace(" ", "%20");
         String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "track" + "&limit=" + "5" + "&market=ES";
         String json = requestWithRefreshGet(uri);
@@ -313,6 +311,10 @@ public class Spotify {
 
     public static Boolean transfer(Player player) {
         log.info("SPOTIFY START TRANSFER TO " + player.name);
+        if (config.spotifyToken == null) {
+            log.info("ERROR SPOTIFY TOKEN NULL");
+            return false;
+        }
         requestCurrentlyPlaying();
         log.info("currentlyPlaying: " + currentlyPlaying);
         if (currentlyPlaying == null || !currentlyPlaying.is_playing) {
@@ -341,22 +343,23 @@ public class Spotify {
         lastTitle = Spotify.getNameById(lastPath);
         log.info("LAST PATH: " + lastPath);
         log.info("LAST TITLE: " + lastTitle);
-        player.ifExpiredAndNotPlayingUnsyncWakeSet(null);
-        player.playPath(playingUri);
-        player.waitFor(1000);
-        player.pause();
+        player
+                .ifExpiredAndNotPlayingUnsyncWakeSet(null) // transfer
+                .playPath(playingUri)
+                .waitFor(1000)
+                .pause();
         Integer index = currentlyPlaying.item.track_number - 1;
         log.info("TYPE: " + currentlyPlaying.context.type);
         if (!currentlyPlaying.context.type.equals("album")) {
             log.info("PLAYER STATUS FOR PLAYLIST");
             player.waitFor(3000);
-            player.status();
+//            player.status(); //transfer
 //        Player.playerStatus.result.playlist_loop.stream()
 //                .forEach(playlistLoop -> log.info("-----" + playlistLoop.playlist_index + " " + playlistLoop.title + " = " + name));
             log.info("FILTER INDEX BY NAME: " + name);
-            log.info("LOOP: " + Player.playerStatus.result.playlist_loop);
-            if (Player.playerStatus.result.playlist_loop != null) {
-                PlaylistLoop playlistLoop = Player.playerStatus.result.playlist_loop.stream()
+            log.info("LOOP: " + player.playerStatus.result.playlist_loop);
+            if (player.playerStatus.result.playlist_loop != null) {
+                PlaylistLoop playlistLoop = player.playerStatus.result.playlist_loop.stream()
                         .peek(pl -> log.info("ALL: " + pl.playlist_index + " " + pl.title + " = " + name))
                         .filter(pl -> pl.title.equals(name))
                         .peek(pl -> log.info("FILTER: " + pl.playlist_index + " " + pl.title + " = " + name))
@@ -375,24 +378,19 @@ public class Spotify {
     }
 
     public static void ifExpiredRunRefersh() {
-        log.info("IF EXPIRED RUN REFRESH");
-        if (checkIfSpotifyTokenExpired()) requestRefreshToken();
-        log.info("NOT EXPIRED");
-    }
-
-    public static boolean checkIfSpotifyTokenExpired() {
         long timeNow = System.currentTimeMillis();
         long expiresAt = config.spotifyTokenExpiresAt;
         boolean result = timeNow > expiresAt;
-        log.info("EXPIRES AT: " + config.spotifyTokenExpiresAt);
-        log.info("TIME NOW: " + timeNow);
-        log.info("EXPIRED : " + result);
-        return result;
+        log.info("EXPIRES AT: " + config.spotifyTokenExpiresAt + " TIME NOW: " + timeNow + " EXPIRED : " + result);
+        if (result) {
+            log.info("\nSPOTIFY TOKEN EXPIRED. REQUEST REFRESH TOKEN");
+            requestRefreshToken();
+        }
     }
 
     public static void requestRefreshToken() {
         log.info("SPOTIFY REQUEST REFRESH TOKEN");
         String sessionId = UUID.randomUUID().toString();
-        Hive.publishContextWaitForContext("from_local_request", null, 10, "token_spotify_refresh", sessionId, config.spotifyRefreshToken);
+        hive.publishAndWaitForResponse("from_local_request", null, 10, "token_spotify_refresh", sessionId, config.spotifyRefreshToken);
     }
 }

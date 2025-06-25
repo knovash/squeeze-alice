@@ -29,6 +29,7 @@ public class ProviderUserDevices {
         log.info("USER: " + config.yandexUid);
         log.info("JSON: " + json);
 
+
         json = json.replace("\"true\"", "true");
         json = json.replace("\"false\"", "false");
 

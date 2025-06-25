@@ -13,7 +13,6 @@ import static org.knovash.squeezealice.Main.config;
 public class Server {
 
     public static void start() {
-        log.info("SERVER STARTING...");
         HttpServer server;
         try {
             server = HttpServer.create(new InetSocketAddress(config.port), 0);
@@ -34,6 +33,6 @@ public class Server {
 
         server.setExecutor(Executors.newCachedThreadPool());
         server.start();
-        log.info("SERVER STARTED OK http://localhost:" + config.port);
+        log.info("SERVER START http://localhost:" + config.port);
     }
 }

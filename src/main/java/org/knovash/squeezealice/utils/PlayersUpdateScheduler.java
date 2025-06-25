@@ -1,6 +1,8 @@
 package org.knovash.squeezealice.utils;
+
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Main;
+import org.knovash.squeezealice.yandex.Yandex;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,10 +20,12 @@ public class PlayersUpdateScheduler {
     private static volatile ScheduledFuture<?> scheduledTask;
 
     // Приватный конструктор для предотвращения инстанцирования
-    private PlayersUpdateScheduler() {}
+    private PlayersUpdateScheduler() {
+    }
 
     /**
      * Запускает периодический опрос плееров
+     *
      * @param periodMinutes интервал обновления в минутах
      */
     public static void startPeriodicUpdate(int periodMinutes) {
@@ -34,7 +38,14 @@ public class PlayersUpdateScheduler {
             public void run() {
                 try {
                     log.debug("Executing players state update");
-                    Main.lmsPlayers.updateLmsPlayers();
+                    Main.lmsPlayers.updateLmsPlayers(); // PlayersUpdateScheduler
+                    Main.lmsPlayers.players.stream()
+                            .filter(player -> player != null)
+                            .filter(player -> player.deviceId != null)
+                            .forEach(player ->
+                            {  Yandex.sendDeviceState(player.deviceId, "on_off", "on", String.valueOf(player.playing), null);
+                                Yandex.sendDeviceState(player.deviceId, "range", "volume", String.valueOf(player.volume), null);
+                            }); // startPeriodicUpdate
                 } catch (Exception e) {
                     log.error("Failed to update players state", e);
                 }

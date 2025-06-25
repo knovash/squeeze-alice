@@ -22,20 +22,14 @@ import static org.knovash.squeezealice.Main.config;
 public class SpotifyRequests {
 
     public static String requestWithRefreshGet(String uri) {
-        log.info("TRY REQUEST...");
         Spotify.ifExpiredRunRefersh();
-        String json = null;
-            json = SpotifyRequests.requestGetClosable(uri);
-        log.info("JSON=" + json);
-        return json;
+        return SpotifyRequests.requestGetClosable(uri);
     }
 
     public static String requestWithRetryPut(String uri) {
         log.info("START");
         Spotify.ifExpiredRunRefersh();
         String json = SpotifyRequests.requestPutClosable(uri);
-
-
         if (json.equals("401")) {
             log.info("401 RUN REFRESH TOKEN");
             json = SpotifyRequests.requestPutClosable(uri);
@@ -45,7 +39,6 @@ public class SpotifyRequests {
             return null;
         }
         if (json.equals("204")) {
-//            log.info("204");
             return null;
         }
         return json;

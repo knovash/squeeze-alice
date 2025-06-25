@@ -66,8 +66,21 @@ public class HandlerForm implements HttpHandler {
                     lmsPlayers.delayExpireSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
+                case (toggle_wake_save): // задержка пред включением
+                    log.info("START 1111111111111");
+                    lmsPlayers.toggleWakeSave((HashMap<String, String>) bodyMap);
+
+                    log.info("FINISH 222222222222222222");
+                    context.bodyResponse = PagePlayers.page();
+                    break;
                 case (autoremote_save): // таскер урл для обновления виджета НЕГОТОВО
+                    log.info("SAVE " + bodyMap);
                     lmsPlayers.autoremoteSave((HashMap<String, String>) bodyMap);
+                    context.bodyResponse = PagePlayers.page();
+                    break;
+                case (autoremote_remove): // таскер урл для обновления виджета НЕГОТОВО
+                    log.info("REMOVE " + bodyMap);
+                    lmsPlayers.autoremoteRemove((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
                 case (alt_sync_save): // синхронизация альтернативная
@@ -80,6 +93,11 @@ public class HandlerForm implements HttpHandler {
                     break;
                 case (player_save): // плеер сохранить
                     lmsPlayers.playerSave((HashMap<String, String>) bodyMap);
+                    context.code = 302;
+                    context.setRedirect("/players");
+                    break;
+                case (player_remove): // плеер удалить
+                    lmsPlayers.playerRemove((HashMap<String, String>) bodyMap);
                     context.code = 302;
                     context.setRedirect("/players");
                     break;

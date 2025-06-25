@@ -9,6 +9,7 @@ import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import static org.knovash.squeezealice.Main.config;
 import static org.knovash.squeezealice.Main.lmsPlayers;
@@ -31,11 +32,11 @@ public class Requests {
     }
 
     public static Response postToLmsForResponse(String json) {
-        log.info("REQUEST TO LMS: " + json);
+//        log.info("REQUEST TO LMS: " + json);
         Content content = null;
         Response response = null;
         try {
-            content = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
+            content = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8))
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -45,7 +46,7 @@ public class Requests {
             return null;
         }
         if (content != null) {
-            response = JsonUtils.jsonToPojo(content.asString(), Response.class);
+            response = JsonUtils.jsonToPojo(content.asString(StandardCharsets.UTF_8), Response.class);
         } else {
             log.info("ERROR RESPONSE IS EMPTY");
             return null;
@@ -59,7 +60,7 @@ public class Requests {
 
         String status = null;
         try {
-            status = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
+            status = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8))
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -67,45 +68,28 @@ public class Requests {
                     .getStatusLine()
                     .toString();
         } catch (IOException e) {
-            log.info("REQUEST ERROR " + e);
+            log.info("REQUEST ERROR " + e + "\n" + json);
             return null;
         }
         return status;
     }
 
-    public static String postToLmsForJsonBody(String json) {
-//  все запросы плеера для получения информации из Response response.result._artist
-        log.info("REQUEST TO LMS: " + json);
+    //  все запросы плеера для получения информации из Response response.result._artist
 
+    public static String postToLmsForJsonBody(String json) {
         Content content = null;
-        Response response = null;
         try {
-            content = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON)
+            content = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/")
+                    .bodyString(json, ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8))
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
                     .returnContent();
         } catch (IOException e) {
-            log.info("ERROR " + e);
+            log.debug("ERROR " + e);
             return null;
         }
-        return content.asString();
-    }
-
-    public static void autoRemoteRefresh() {
-// запрос обновления виджетов таскера выполняется при
-// действии пульта или таскера SwitchQueryCommand
-// действии приложения Умного дома ProviderAction
-// SwitchVoiceCommand тут есть действия pleer и надо добавить после них autoRemoteRefresh
-        log.info("REQUEST TO TASKER AUTO REMOTE FOR REFRESH");
-        String uri = lmsPlayers.autoRemoteRefresh;
-        if (uri == null) return;
-        try {
-            Request.Post(uri)
-                    .execute();
-        } catch (IOException e) {
-            log.info("TASKER ERROR");
-        }
+        return content.asString(StandardCharsets.UTF_8);
     }
 }
 

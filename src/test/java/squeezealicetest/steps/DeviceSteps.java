@@ -5,6 +5,8 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.knovash.squeezealice.Config;
+import org.knovash.squeezealice.utils.ConfigLoader;
 import squeezealicetest.utils.MainTest;
 import squeezealicetest.utils.TestDevice;
 
@@ -14,6 +16,10 @@ import static org.junit.Assert.assertTrue;
 
 public class DeviceSteps {
 
+    private static boolean initialized = false; // Статический флаг для контроля инициализации
+
+    private static Config testConfig; // Конфиг для тестов
+
     private String getValueOrEmpty(Map<String, String> params, String key) {
         String value = params.getOrDefault(key, "");
         return (value == null || value.trim().isEmpty()) ? "" : value;
@@ -21,7 +27,10 @@ public class DeviceSteps {
 
     @Before
     public void beforeEachScenario() {
-        MainTest.main();
+        if (!initialized) {
+            MainTest.init();
+            initialized = true;
+        }
         TestDevice.resetTestState();
     }
 

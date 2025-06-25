@@ -28,6 +28,28 @@ public class HiveTest {
 //    public static long spotifyExpiresAt;
 //    public static String correlationId = "";
 
+
+    public void start(String hiveBroker, String hiveUsername, String hivePassword) {
+        try {
+            mqttClient = new MqttClient(hiveBroker, MqttClient.generateClientId(), new MemoryPersistence());
+//            mqttClient.setCallback(this);
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setAutomaticReconnect(true); // Включаем встроенное авто-переподключение
+            options.setCleanSession(true);
+            options.setConnectionTimeout(10);
+            options.setKeepAliveInterval(30); // Частота проверки соединения
+            options.setMaxReconnectDelay(30000); // Максимальная задержка между попытками (30 сек)
+            options.setUserName(hiveUsername);
+            options.setPassword(hivePassword.toCharArray());
+            mqttClient.connect(options);
+            log.info("MQTT START");
+//            isConnected = true;
+        } catch (MqttException e) {
+            log.error("MQTT INITIAL CONNECTION ERROR: {}", e.getMessage());
+//            scheduleReconnection();
+        }
+    }
+
     public static void start() {
         log.info("MQTT STARTING...");
         try {
@@ -57,38 +79,47 @@ public class HiveTest {
     }
 
     private static void handleTest(String topicRecieved, MqttMessage message) {
-        log.info("RECIEVED MESSAGE FOR CHECK DEVICES STATE");
+        log.info("PLAYERS ACTIONS COMPLETED");
         TestDevice.checkdevicesState();
+    }
+
+    public static void publish(String topic, String message) {
+        log.info("PUBLISH TO TOPIC: " + topic);
+        try {
+            mqttClient.publish(topic, new MqttMessage(message.getBytes()));
+        } catch (MqttException e) {
+            log.info("ERROR: " + e);
+        }
     }
 
     //  это для паблиша
     public static String publishContextWaitForContext(String topic, Context context, Integer timeout, String action, String correlationId) {
-        log.info("WITHOUT TEXT text null");
+//        log.info("WITHOUT TEXT text null");
         return publishContextWaitForContext(topic, context, timeout, action, correlationId, null);
     }
 
     // ЭТО РАБОЧИЙ СЕЙЧАС МЕТОД ДЛЯ УДЯ КОМАНД
     public static String publishContextWaitForContext(String topic, Context context, Integer timeout, String action, String correlationId, String text) {
         log.info("MQTT PUBLISH TO TOPIC: " + topic);
-        log.info("TEXT: " + text);
+//        log.info("TEXT: " + text);
         if (context == null) context = new Context();
         if (correlationId == null) correlationId = UUID.randomUUID().toString();
         String responseBody = "";
         String contextJson = context.toJson();
 
 //        генерация топика для колбэка с токеном
-        String callbackTopic = "callback" + correlationId;
+//        String callbackTopic = "callback" + correlationId;
         //     подписаться на сгенерированый топик
-        subscribe(callbackTopic);
+//        subscribe(callbackTopic);
 
 //        подготовка пэйлоад
         try {
             String payload = "correlationId=" + correlationId + "&" +
-                    "callbackTopic=" + callbackTopic + "&" +
+                    "callbackTopic=" + "callbackTopic" + "&" +
                     "action=" + action + "&" +
                     "text=" + text + "&" +
                     "context=" + contextJson;
-            log.info("PAYLOAD: " + payload);
+//            log.info("PAYLOAD: " + payload);
 // Отправка запроса в MQTT
             mqttClient.publish(topic, new MqttMessage(payload.getBytes()));
         } catch (Exception e) {

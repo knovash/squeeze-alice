@@ -24,29 +24,31 @@ rm -r target
 mvn package
 
 # создать папку на ремоут
-echo -e ${BGreen}"MKDIR /opt/squeeze-alice-1.0"${NC}
+echo -e ${BGreen}"CREATE DIR /opt/squeeze-alice-1.0"${NC}
 sshpass -p "$password" ssh "$username@$remote" "mkdir -p /opt/squeeze-alice-1.0"
 
 # удалить настройки на ремоут
-echo -e ${BGreen}"RM /opt/squeeze-alice-1.0/data"${NC}
+echo -e ${BGreen}"REMOVE OLD DATA /opt/squeeze-alice-1.0/data"${NC}
 sshpass -p "$password" ssh "$username@$remote" "rm -r /opt/squeeze-alice-1.0/data"
 
 # копирование настроек на ремоут
-echo -e ${BGreen}"COPY DATA TO /opt/squeeze-alice-1.0/"${NC}
+echo -e ${BGreen}"COPY NEW DATA /opt/squeeze-alice-1.0/data"${NC}
 sshpass -p "$password" rsync -avh --progress data root@$remote:/opt/squeeze-alice-1.0/
 
 # копирование приложения на ремоут
-echo -e ${BGreen}"COPY JAR squeeze-alice-1.0.jar TO /opt/squeeze-alice-1.0/"${NC}
+echo -e ${BGreen}"COPY JAR /opt/squeeze-alice-1.0/squeeze-alice-1.0.jar"${NC}
 sshpass -p "$password" rsync -avh --progress target/squeeze-alice-1.0.jar root@$remote:/opt/squeeze-alice-1.0/
 sshpass -p "$password" rsync -avh --progress log.sh root@$remote:~/
 
-echo -e ${BGreen}"COPY SERVICE squeeze-alice.service TO /lib/systemd/system/"${NC}
+echo -e ${BGreen}"COPY SERVICE /lib/systemd/system/squeeze-alice.service"${NC}
 sshpass -p "$password" rsync -avh --progress utils/squeeze-alice.service root@$remote:/lib/systemd/system/
 
 # проверка файлов
-echo -e ${BGreen}"CHECK LS /opt/squeeze-alice-1.0/"${NC}
+echo -e ${BGreen}"\nCHECK /opt/squeeze-alice-1.0/"${NC}
 sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/"
-echo -e ${BGreen}"CHECK LS /lib/systemd/system/"${NC}
+echo -e ${BGreen}"CHECK /opt/squeeze-alice-1.0/data/"${NC}
+sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/data/"
+echo -e ${BGreen}"CHECK /lib/systemd/system/"${NC}
 sshpass -p "$password" ssh "$username@$remote" "ls /lib/systemd/system/sq*.service"
 
 # запуск сервиса
@@ -67,5 +69,5 @@ sleep 5
 echo -e ${BGreen}"\nLOG"${NC}
 sshpass -p "$password" ssh root@$remote tail -f /opt/squeeze-alice-1.0/data/log.txt
 
-#sleep 60
-$SHELL
+sleep 120
+#$SHELL

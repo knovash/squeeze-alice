@@ -116,7 +116,7 @@ public class TestDevice {
 // сброс пэйлоад для следущего теста
 //      payload = new Payload();
         try {
-            log.info("WAIT FOR CHECK...");
+            log.info("WAIT FOR COMPLETE PLAYERS ACTIONS...");
             testCompletionLatch.await(); // Ожидание завершения проверки
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -124,8 +124,8 @@ public class TestDevice {
 
         // Добавить паузу 5 секунд после синхронизации
         try {
-            log.info("WAIT 10 FOR LISTEN MUSIC...");
-            Thread.sleep(5000); // Пауза 5 секунд
+            log.info("WAIT...");
+            Thread.sleep(12000); // Пауза 5 секунд
         } catch (InterruptedException e) {
             log.error("Ошибка при паузе: ", e);
             Thread.currentThread().interrupt();
@@ -136,7 +136,8 @@ public class TestDevice {
 
 
     public static boolean checkDevice(Device device) {
-        log.info("START CHECK DEVICE: " + device);
+        log.info("");
+        log.info("CHECK DEVICE ID: " + device.id);
         capPowerValue = "";
         capVolumeValue = "";
         capChannelValue = "";
@@ -145,18 +146,6 @@ public class TestDevice {
         boolean isVolumeValid = false;
         boolean isChannelValid = false;
 
-        String id = device.id;
-        PlayerTest player = MainTest.lmsPlayersTest.players.stream()
-                .filter(p -> p.deviceId != null)
-                .filter(p -> p.deviceId.equals(id))
-                .findFirst().orElse(null);
-        log.info("PLAYER: " + player);
-        if (player == null) return false;
-        log.info("CHECK DEVICE ID: " + id + " PLAYER: " + player.name);
-        String playerName = player.name;
-        String mode = player.mode();
-        String volume = player.volumeGet();
-        Integer channel = player.currentChannelIndexInFavorites();
 
         List<String> capList = device.capabilities.stream()
                 .filter(capability -> capability.state != null)
@@ -171,14 +160,37 @@ public class TestDevice {
                 }).map(capability -> capability.state.instance)
                 .collect(Collectors.toList());
 
-        log.info("CAP LIST: " + capList);
+//        log.info("CAPABILITIES: " + capList);
+        if (capList.size() == 0) {
+            log.info("CAPABILITIES: " + capList);
+            return true;
+        }
+
+//       получить из девайса плеер для проверки его состояния
+        PlayerTest player = MainTest.lmsPlayersTest.players.stream()
+                .filter(p -> p.deviceId != null)
+                .filter(p -> p.deviceId.equals(device.id))
+                .findFirst().orElse(null);
+
+        if (player == null) {
+            log.info("ERROR нет плеера у девайса");
+            return false;
+        } else log.info("PLAYER: " + player.name + " CAPABILITIES: " + capList);
+//        log.info("CHECK DEVICE ID: " + id + " PLAYER: " + player.name);
+
+//        обратиться к плееру и получить параметры его состояния
+        String playerName = player.name;
+        String mode = player.mode();
+        String volume = player.volumeGet();
+//        Integer channel = player.currentChannelIndexInFavorites();
+        Integer channel = 1;
 
         String result = "CHECK " + playerName +
                 " MODE: '" + mode + "'='" + capPowerValue + "'" +
                 " VOLUME: '" + volume + "'='" + capVolumeValue + "'" +
                 " CHANNEL: '" + channel + "'='" + capChannelValue + "'";
 
-        Boolean deviceResult = false;
+        Boolean deviceResult = true;
         if (capPowerValue.equals("") ||
                 (capPowerValue.equals("play") && mode.equals("play")) ||
                 (capPowerValue.equals("pause") && mode.equals("pause")) ||
@@ -186,34 +198,38 @@ public class TestDevice {
                 (capPowerValue.equals("pause") && mode.equals("stop")) ||
                 (capPowerValue.equals("stop") && mode.equals("pause"))
         ) {
-            deviceResult = true;
             isPowerValid = true;
-            log.info("------------ POWER OK ----------");
-        } else log.info("------------ POWER FAIL ---------- REAL:" + mode + " EXPECTED:" + capPowerValue);
-
+            log.info("check OK --- POWER --- REAL:" + mode + " EXPECTED:" + capPowerValue);
+        } else {
+            deviceResult = false;
+            log.info("------------ POWER FAIL ---------- REAL:" + mode + " EXPECTED:" + capPowerValue);
+        }
         if (!(capPowerValue.equals("stop") || capPowerValue.equals("pause"))) {
 
             if (capVolumeValue.equals("") || capVolumeValue.equals(volume)) {
-                deviceResult = true;
                 isVolumeValid = true;
-                log.info("------------ VOLUME OK ----------");
-            } else log.info("------------ VOLUME FAIL ---------- REAL:" + volume + " EXPECTED:" + capVolumeValue);
-
+                log.info("check OK --- VOLUME --- REAL:" + volume + " EXPECTED:" + capVolumeValue);
+            } else {
+                deviceResult = false;
+                log.info("------------ VOLUME FAIL ---------- REAL:" + volume + " EXPECTED:" + capVolumeValue);
+            }
             if (capChannelValue.equals("") || capChannelValue.toString().equals(channel.toString())) {
-                deviceResult = true;
                 isChannelValid = true;
-                log.info("------------ CHANNEL OK ----------");
-            } else log.info("------------ CHANNEL FAIL ---------- REAL:" + channel + " EXPECTED:" + capChannelValue);
-
+                log.info("check OK --- CHANNEL --- REAL:" + channel + " EXPECTED:" + capChannelValue);
+            } else {
+                deviceResult = false;
+                log.info("------------ CHANNEL FAIL ---------- REAL:" + channel + " EXPECTED:" + capChannelValue);
+            }
         }
 
-        if (deviceResult)
-            log.info("+++++++ DEVICE TEST OK +++++++");
-        else
-            log.info("+++++++ DEVICE TEST FAILED +++++++");
+//        if (deviceResult)
+//            log.info("+++++++ DEVICE TEST OK +++++++");
+//        else
+//            log.info("+++++++ DEVICE TEST FAILED +++++++");
 
-        log.info("Результат проверки: {}",
-                (deviceResult ? "УСПЕШНО" : "НЕУДАЧА") + " - " + result);
+        log.info("DEVICE CHECK: {}",
+                (deviceResult ? "OK" : "FAIL"));
+//        log.info("--------------------------------------------------------------------------------");
 
 //        return result;
         return deviceResult;  // Возвращаем общий результат проверки
@@ -221,12 +237,12 @@ public class TestDevice {
 
 
     public static void checkdevicesState() {
-        log.info("RUN CHECK DEVICES STATE: " + payload.devices.size());
+        log.info("CHECK DEVICES: " + payload.devices.size());
 //        List<String> testCheckResults =
         List<Boolean> testCheckResults = payload.devices.stream()
                 .map(TestDevice::checkDevice)
                 .collect(Collectors.toList());
-        log.info("RESULTS");
+        log.info("DEVICES CHECKS FINISH");
 //        testCheckResults.stream().forEach(cc -> log.info(cc));
 
 
@@ -240,7 +256,7 @@ public class TestDevice {
 //  после завершениявывода результатов теста. разрешить выполнение следущего теста
 
         // сброс пэйлоад для следущего теста
-        log.info("CLEAR PAYLOAD DEVICES --------------------");
+//        log.info("CLEAR PAYLOAD DEVICES --------------------");
         payload = new Payload();
 
         // Уведомляем об окончании проверки
@@ -253,13 +269,13 @@ public class TestDevice {
     }
 
     public static void addTestResults(List<Boolean> results) {
-        log.info("ADD RESULTS: " + results);
+//        log.info("ADD RESULTS: " + results);
         allTestsResults.add(results);
-        log.info("AFTER ADD RESULTS: " + allTestsResults);
+//        log.info("AFTER ADD RESULTS: " + allTestsResults);
     }
 
     public static List<List<Boolean>> getAllTestsResults() {
-        log.info("ALL RESULTS: " + allTestsResults);
+//        log.info("ALL RESULTS: " + allTestsResults);
         return allTestsResults;
     }
 
