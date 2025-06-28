@@ -36,7 +36,7 @@ sshpass -p "$password" ssh "$username@$remote" "mkdir -p /opt/squeeze-alice-1.0"
 
 # копирование приложения на ремоут
 echo -e ${BGreen}"COPY JAR /opt/squeeze-alice-1.0/squeeze-alice-1.0.jar"${NC}
-sshpass -p "$password" rsync -avh --progress target/squeeze-alice-1.0.jar $username@$remote:/opt/squeeze-alice-1.0/
+sshpass -p "$password" rsync -avh --progress bin/squeeze-alice-1.0.jar $username@$remote:/opt/squeeze-alice-1.0/
 sshpass -p "$password" rsync -avh --progress log.sh $username@$remote:~/
 echo -e ${BGreen}"COPY SERVICE /lib/systemd/system/squeeze-alice.service"${NC}
 sshpass -p "$password" rsync -avh --progress utils/squeeze-alice.service $username@$remote:/lib/systemd/system/

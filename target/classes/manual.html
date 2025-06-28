@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 7.3.7.2 (Linux)"/>
+	<meta name="created" content="2025-03-22T14:51:36.974114753"/>
+	<meta name="changed" content="2025-04-13T02:05:10.811641055"/>
+	<style type="text/css">
+		@page { size: 210.01mm 297mm; margin-left: 20mm; margin-right: 10mm; margin-top: 10mm; margin-bottom: 10mm }
+		p { line-height: 115%; margin-bottom: 2.47mm; background: transparent; background: transparent }
+		strong { font-weight: bold }
+		a:link { color: #000080; text-decoration: underline }
+		a:visited { color: #800000; text-decoration: underline }
+	</style>
+</head>
+<body lang="en-US" link="#000080" vlink="#800000" dir="ltr"><p align="left">
+<font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><b>Это
+навык Умного дома с Алисой для управления
+плеерами LyrionMediaServer</b></font></font></p>
+<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><b>Установка:</b></font></font></p>
+<ol>
+	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Должен
+	быть запущен Lyrion Media Server <a href="https://lyrion.org/">https://lyrion.org</a></font></font></p>
+	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Скачать
+	</font></font><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">архив</font></font><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">
+	<a href="https://github.com/knovash/squeeze-alice/blob/main/squeeze-alice-local.tar.gz">https://github.com/knovash/squeeze-alice/blob/main/squeeze-alice-local.tar.gz</a></font></font></p>
+	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Запустить
+	скрипт install_ssh_192.168.1.123.sh скопирует файлы
+	и запустит сервис навыка, поменяйте в
+	названии файла на свой ip.</font></font></p>
+	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Открыть
+	http://192.168.1.123:8010/</font></font></p>
+	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Нажать
+	&quot;Авторизация в Яндекс&quot; - подтвердить
+	авторизацию в Яндекс</font></font></p>
+	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Нажать
+	&quot;Настройка плееров&quot; - выбрать
+	комнаты Умного дома для плееров LMS</font></font></p>
+	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Открыть
+	приложение &quot;Дом с Алисой&quot;</font></font></p>
+	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Добавить
+	Устройство умного дома</font></font></p>
+	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Найти
+	производителя &quot;Lyrion Media Server&quot;</font></font></p>
+	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Нажать
+	&quot;Привязать к Яндекс&quot;</font></font></p>
+	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Нажать
+	&quot;Обновить список устройств&quot;</font></font></p>
+	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Показаны
+	устройства &quot;<b>музыка</b>&quot; в комнатах</font></font></p>
+	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Ура,
+	теперь всё готово!</font></font></p>
+</ol>
+<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><b>Удаление:</b></font></font></p>
+<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Запустить
+скрипт uninstall_ssh_192.168.1.123.sh, поменяйте в
+названии файла на свой ip.</font></font></p>
+<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Скрипт
+удалит файлы</font></font></p>
+<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">rm
+-r /opt/squeeze-alice-1.0</font></font></p>
+<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">rm
+/lib/systemd/system/squeeze-alice.service</font></font></p>
+<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Остановит
+сервис навыка</font></font></p>
+<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">systemctl
+disable squeeze-alice.service</font></font></p>
+<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">systemctl
+daemon-reload</font></font></p>
+<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">В
+приложении &quot;Дом с Алисой&quot;</span></font></font><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">
+</font></font><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">удалите
+производителя и устройства</span></font></font></p>
+<p style="line-height: 100%"><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><br/>
+</font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
+<img src="manual_html_b6f73fc39d4026ab.png" name="Image12" align="bottom" width="672" height="378" border="0"/>
+
+<br/>
+</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">LMS
+запущен</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
+<br/>
+<img src="manual_html_8afba45dd4a58bd3.png" name="Image1" align="bottom" width="672" height="378" border="0"/>
+
+<br/>
+</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">Архив
+распакован</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
+<br/>
+<img src="manual_html_2677f4f0b44915d9.png" name="Image13" align="bottom" width="672" height="378" border="0"/>
+<br/>
+</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">Скрипт
+установки запущен</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
+<br/>
+<img src="manual_html_e4c25722f369f54b.png" name="Image2" width="672" height="378" border="0"/>
+<br/>
+</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">Сервис
+навыка запущен</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
+<br/>
+<img src="manual_html_e79bb3099c5dc734.png" name="Image3" align="bottom" width="672" height="378" border="0"/>
+<br/>
+</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">Авторизация
+в Яндекс выполнена</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
+<br/>
+<img src="manual_html_afe88dbad654eafd.png" name="Image14" align="bottom" width="672" height="378" border="0"/>
+<br/>
+</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">Выбор
+комнаты Умного дома для плеера
+LMS</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
+<br/>
+<img src="manual_html_a6103497bc12e8d1.png" name="Image15" align="bottom" width="672" height="378" border="0"/>
+<br/>
+</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">Устройства
+музыка созданы, можно обновить список
+устройств в умном доме</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
+<br/>
+<img src="manual_html_3878353738b930e.png" name="Image16" align="bottom" width="672" height="378" border="0"/>
+<br/>
+</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">4
+устройства Музыка подключены в Умный
+дом</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
+<br/>
+</span></font></font></strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><br/>
+<img src="manual_html_ab1461428766705b.png" name="Image4" align="bottom" width="416" height="696" border="0"/>
+
+<img src="manual_html_ac9592e17e88b792.png" name="Image5" align="bottom" width="416" height="696" border="0"/>
+
+<br/>
+<br/>
+<img src="manual_html_871524d7e3fa5106.png" name="Image6" align="bottom" width="416" height="696" border="0"/>
+
+<img src="manual_html_b97e11b34bf64375.png" name="Image10" align="bottom" width="416" height="696" border="0"/>
+
+<br/>
+<br/>
+<img src="manual_html_3852945214221813.png" name="Image7" align="bottom" width="416" height="696" border="0"/>
+
+<img src="manual_html_3267d1360873ebf9.png" name="Image8" align="bottom" width="416" height="696" border="0"/>
+
+<br/>
+<br/>
+<img src="manual_html_c766d35aba8e1b37.png" name="Image9" align="bottom" width="416" height="696" border="0"/>
+
+<img src="manual_html_d2ad6697278a02c6.png" name="Image11" align="bottom" width="416" height="696" border="0"/>
+
+<br/>
+</font></font><br/>
+<br/>
+
+</p>
+</body>
+</html>

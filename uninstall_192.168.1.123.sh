@@ -46,18 +46,20 @@ sshpass -p "$password" ssh "$username@$remote" systemctl disable squeeze-alice.s
 echo -e ${BGreen}"SYSTEMCTL stop, disable, daemon-reload"${NC}
 sshpass -p "$password" ssh "$username@$remote" systemctl daemon-reload
 
-# проверить что есть после удаления
-echo -e ${BGreen}"AFTER REMOVE"${NC}
-echo -e "\n"${BGreen}"CHECK LS /opt/"${NC}
-sshpass -p "$password" ssh "$username@$remote" "ls /opt/"
-echo -e "\n"${BGreen}"CHECK LS /opt/squeeze-alice-1.0/"${NC}
-sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/"
-echo -e "\n"${BGreen}"CHECK LS /opt/squeeze-alice-1.0/data/"${NC}
-sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/data/"
-echo -e "\n"${BGreen}"CHECK LS ~/"${NC}
-sshpass -p "$password" ssh "$username@$remote" "ls ~/"
-echo -e "\n"${BGreen}"CHECK LS /lib/systemd/system/"${NC}
-sshpass -p "$password" ssh "$username@$remote" "ls /lib/systemd/system/sq*.service"
+echo -e ${BGreen}"\nUNINSTALL FINISHED"${NC}
 
-#sleep 15
-$SHELL
+# проверить что есть после удаления
+#echo -e ${BGreen}"AFTER REMOVE"${NC}
+#echo -e "\n"${BGreen}"CHECK LS /opt/"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "ls /opt/"
+#echo -e "\n"${BGreen}"CHECK LS /opt/squeeze-alice-1.0/"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/"
+#echo -e "\n"${BGreen}"CHECK LS /opt/squeeze-alice-1.0/data/"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/data/"
+#echo -e "\n"${BGreen}"CHECK LS ~/"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "ls ~/"
+#echo -e "\n"${BGreen}"CHECK LS /lib/systemd/system/"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "ls /lib/systemd/system/sq*.service"
+
+sleep 30
+#$SHELL
