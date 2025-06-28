@@ -79,7 +79,7 @@ public class Links {
 
     public void write() {
         log.info("WRITE LINKS");
-        JsonUtils.pojoToJsonFile(this, "links.json");
+//        JsonUtils.pojoToJsonFile(this, "links.json");
     }
 
 
