@@ -45,6 +45,26 @@
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <version>3.3.1</version>
+        <executions>
+          <execution>
+            <id>copy-jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>bin</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>target</directory>
+                  <includes>
+                    <include>*.jar</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
         <configuration>
           <encoding>${project.build.sourceEncoding}</encoding>
         </configuration>
