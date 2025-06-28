@@ -59,5 +59,5 @@ sshpass -p "$password" ssh "$username@$remote" "ls ~/"
 echo -e "\n"${BGreen}"CHECK LS /lib/systemd/system/"${NC}
 sshpass -p "$password" ssh "$username@$remote" "ls /lib/systemd/system/sq*.service"
 
-#sleep 15
-$SHELL
+sleep 60
+#$SHELL
