@@ -35,19 +35,15 @@ public class Main {
         config.readConfigProperties();
         config.readConfigJson();
 
-
-
         config.write();
-        links.read();
+//        links.read();
         Utils.getMyIpAddres();
         lmsPlayers.searchForLmsIp();
         Utils.readAliceIdInRooms();
 
-
         log.info("AUTOREMOTEURLS: "+lmsPlayers.autoRemoteUrls);
         lmsPlayers.read();
         log.info("AUTOREMOTEURLS: "+lmsPlayers.autoRemoteUrls);
-
 
         lmsPlayers.updateLmsPlayers(); // Main
         Yandex.getRoomsAndDevices();
@@ -58,7 +54,6 @@ public class Main {
         hive.start();
         hive.subscribeByYandex();
         log.info("VERSION 1.2");
-
 
 //        PlayersUpdateScheduler.startPeriodicUpdate(1);
 //        Spotify.ifExpiredRunRefersh();
