@@ -1,11 +1,12 @@
 .idea
-target
 build
 log
 ignor
 data
 my_settings
 squeeze-alice-pak
+
+dependency-reduced-pom.xml
 
 *.class
 *.log

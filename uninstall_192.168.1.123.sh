@@ -20,17 +20,17 @@ echo $username" "$password
 #------------------------------------------------------------
 
 # проверить что есть перед удалением
-echo -e ${BGreen}"BEFORE REMOVE"${NC}
-echo -e "\n"${BGreen}"CHECK LS /opt/"${NC}
-sshpass -p "$password" ssh "$username@$remote" "ls /opt/"
-echo -e "\n"${BGreen}"CHECK LS /opt/squeeze-alice-1.0/"${NC}
-sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/"
-echo -e "\n"${BGreen}"CHECK LS /opt/squeeze-alice-1.0/data/"${NC}
-sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/data/"
-echo -e "\n"${BGreen}"CHECK LS ~/"${NC}
-sshpass -p "$password" ssh "$username@$remote" "ls ~/"
-echo -e "\n"${BGreen}"CHECK LS /lib/systemd/system/"${NC}
-sshpass -p "$password" ssh "$username@$remote" "ls /lib/systemd/system/sq*.service"
+#echo -e ${BGreen}"BEFORE REMOVE"${NC}
+#echo -e "\n"${BGreen}"CHECK LS /opt/"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "ls /opt/"
+#echo -e "\n"${BGreen}"CHECK LS /opt/squeeze-alice-1.0/"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/"
+#echo -e "\n"${BGreen}"CHECK LS /opt/squeeze-alice-1.0/data/"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/data/"
+#echo -e "\n"${BGreen}"CHECK LS ~/"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "ls ~/"
+#echo -e "\n"${BGreen}"CHECK LS /lib/systemd/system/"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "ls /lib/systemd/system/sq*.service"
 
 # удаление файлов
 echo -e ${BGreen}"REMOVE /opt/squeeze-alice-1.0"${NC}

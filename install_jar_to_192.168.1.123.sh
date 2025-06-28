@@ -39,7 +39,7 @@ echo -e ${BGreen}"COPY JAR /opt/squeeze-alice-1.0/squeeze-alice-1.0.jar"${NC}
 sshpass -p "$password" rsync -avh --progress bin/squeeze-alice-1.0.jar $username@$remote:/opt/squeeze-alice-1.0/
 sshpass -p "$password" rsync -avh --progress log.sh $username@$remote:~/
 echo -e ${BGreen}"COPY SERVICE /lib/systemd/system/squeeze-alice.service"${NC}
-sshpass -p "$password" rsync -avh --progress utils/squeeze-alice.service $username@$remote:/lib/systemd/system/
+sshpass -p "$password" rsync -avh --progress squeeze-alice.service $username@$remote:/lib/systemd/system/
 
 # проверка файлов
 echo -e ${BGreen}"\n/opt/squeeze-alice-1.0/"${NC}

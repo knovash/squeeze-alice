@@ -1,0 +1,32 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*' # Запускать при создании тегов вида v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+      # Для Gradle: run: gradle build
+      
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: target/your-app-name.jar # Путь к JAR
+        asset_name: your-app-${{ github.ref_name }}.jar
+        asset_content_type: application/java-archive
