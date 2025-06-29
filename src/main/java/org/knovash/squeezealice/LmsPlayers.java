@@ -57,6 +57,7 @@ public class LmsPlayers {
     public static String widgetsSyncs;
     public static String widgetsSeparates;
     public static String nowPlaying;
+    public static String nowPlayingTv;
 //    public static String widgetPlayersTitles;
 //    public static String joinedPlayersVolModTit;
 
@@ -83,7 +84,7 @@ public class LmsPlayers {
         if (!lmsServerOnline) return;
         if (this.players == null) this.players = new ArrayList<>();
         String json = Requests.postToLmsForJsonBody(RequestParameters.serverstatusname().toString());
-        log.info("UPDATE RESPONSE:\n" + json);
+//        log.info("UPDATE RESPONSE:\n" + json);
         if (json == null) return;
         json = JsonUtils.replaceSpace(json);
         json = json.replaceAll("\"newversion.*</a>\\.\"", "\"newversion\": \"--\"");
@@ -465,7 +466,13 @@ public class LmsPlayers {
             log.info("\nTASKER WIDGET ONE ICON NOW PLAYING");
 //            log.info("--- LmsPlayers.nowPlaying = player.playlistNameShort");
 //            log.info("PLAYLIST NAME SHORT: " + player.playlistNameShort);
-            LmsPlayers.nowPlaying = player.playlistNameShort; // для виджета одной иконкой для телефона где неработает плагин
+//            log.info("title: " + player.title);
+//            log.info("playlistName: " + player.playlistName);
+//            log.info("playlistNameShort: " + player.playlistNameShort);
+            String title = player.playlistNameShort;
+            if(player.playlistNameShort == null) title = player.requestTitle();
+            LmsPlayers.nowPlaying = title; // для виджета одной иконкой для телефона где неработает плагин
+            LmsPlayers.nowPlayingTv = player.name + " - " + player.volume + " - " + player.mode + " - " + title; // для виджета одной иконкой для телефона где неработает плагин
         }
 
 //        log.info("\nTASKER WIDGET PLAYERS LIST");
@@ -478,7 +485,8 @@ public class LmsPlayers {
                 "  \"MODES\": \"" + widgetsModes + "\",\n" +
                 "  \"SYNCS\": \"" + widgetsSyncs + "\",\n" +
                 "  \"SEPARATES\": \"" + widgetsSeparates + "\",\n" +
-                "  \"NOWPLAYING\": \"" + nowPlaying + "\"\n" +
+                "  \"NOWPLAYING\": \"" + nowPlaying + "\",\n" +
+                "  \"NOWPLAYINGTV\": \"" + nowPlayingTv + "\"\n" +
                 "}";
         log.info(responseJson);
         return responseJson;

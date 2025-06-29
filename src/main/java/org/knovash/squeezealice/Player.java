@@ -185,6 +185,7 @@ public class Player {
         if (title == null) title = "unknown";
 
         this.title = title;
+        log.info("THIS TITLE: " + this.title);
         return title;
     }
 
@@ -293,8 +294,8 @@ public class Player {
         log.info("PLAYER: " + this.name + " PLAYLISTNAME: " + response.result._name);
         this.playlistName = response.result._name;
         if (response.result._name != null){
-            log.info("--- this.playlistNameShort = playlistName");
-            log.info("--- PLAYLIST NAME: " + playlistName);
+//            log.info("--- this.playlistNameShort = playlistName");
+//            log.info("--- PLAYLIST NAME: " + playlistName);
             this.playlistNameShort = playlistName // playlistName
                     .replaceAll(":.*", "")
                     .replaceAll(" - .*", "")

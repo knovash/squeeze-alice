@@ -6,13 +6,13 @@ NC='\033[0m' # No Color
 file_name=$(basename "$0" .sh)
 remote="${file_name##*_}" 
 echo -e ${BGreen}"IP: $remote"${NC}
-#remote=192.168.1.123
 
-rm -r data
 
-echo -e "copy json from "${BGreen}$remote${NC}"\n"
-sshpass -p "12345" scp -r root@$remote:/opt/squeeze-alice-1.0/data .
+mkdir -p data/bak
 
-echo -e ${BGreen}"OK"${NC}
-sleep 5
+echo -e "copy /opt/squeeze-alice-1.0/data from remote"
+sshpass -p "12345" scp -r root@$remote:/opt/squeeze-alice-1.0/data data/bak/
+
+echo -e ${BGreen}"FINISHED"${NC}
+sleep 20
 #$SHELL
