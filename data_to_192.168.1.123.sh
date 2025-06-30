@@ -1,17 +1,25 @@
 #!/usr/bin/env bash
 # sudo chmod +x *.sh
-
 BGreen='\033[1;32m'
 NC='\033[0m' # No Color
 
 file_name=$(basename "$0" .sh)
 remote="${file_name##*_}" 
-echo -e ${BGreen}"IP: $remote"${NC}
-#remote=192.168.1.123
+echo -e ${BGreen}"DATA TO IP: $remote"${NC}
 
-echo -e "json to "${BGreen}$remote${NC}"\n"
-sshpass -p "12345" scp data/bak/*.json root@$remote:/opt/squeeze-alice-1.0/data/
+# Запрашиваем пользователя
+read -p "Enter SSH username. Press Enter for root: " username
+#read -p "Введите SSH пользователя. Нажмите Enter если root: " username
+username=${username:-root}
+# Запрашиваем пароль
+read -p "Enter SSH password. Press Enter for 12345: " password
+#read -p "Введите SSH пароль. Нажмите Enter если 12345: " password
+password=${password:-12345}
+echo $username" "$password
+#------------------------------------------------------------
 
-echo -e ${BGreen}"OK"${NC}
-sleep 5
+sshpass -p "$password" rsync -avh --progress data/bak/data/*.json $username@$remote:/opt/squeeze-alice-1.0/data/
+
+echo -e ${BGreen}"FINISHED"${NC}
+sleep 20
 #$SHELL
