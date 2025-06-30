@@ -3,41 +3,39 @@
 BGreen='\033[1;32m'
 NC='\033[0m' # No Color
 
-file_name=$(basename "$0" .sh)
-remote="${file_name##*_}" 
-echo -e ${BGreen}"INSTALL TO IP: $remote"${NC}
+#file_name=$(basename "$0" .sh)
+#remote="${file_name##*_}" 
+#echo -e ${BGreen}"INSTALL TO IP: $remote"${NC}
 
+# Запрашиваем ip
+read -p "Enter ip. Press Enter for 192.168.1.123: " remote
+remote=${remote:-192.168.1.123}
 # Запрашиваем пользователя
 read -p "Enter SSH username. Press Enter for root: " username
-#read -p "Введите SSH пользователя. Нажмите Enter если root: " username
 username=${username:-root}
 # Запрашиваем пароль
 read -p "Enter SSH password. Press Enter for 12345: " password
-#read -p "Введите SSH пароль. Нажмите Enter если 12345: " password
 password=${password:-12345}
-echo $username" "$password
+
+echo -e ${BGreen}"\nINSTALL TO: $username@$remote $password"${NC}
 #------------------------------------------------------------
 
-echo -e ${BGreen}"MVN PACKAGE"${NC}
-rm -r target
-mvn package
-
 # создать папку на ремоут
-echo -e ${BGreen}"CREATE DIR /opt/squeeze-alice-1.0"${NC}
+echo -e ${BGreen}"\nCREATE DIR $remote/opt/squeeze-alice-1.0"${NC}
 sshpass -p "$password" ssh "$username@$remote" "mkdir -p /opt/squeeze-alice-1.0"
 
 # копирование приложения на ремоут
-echo -e ${BGreen}"COPY JAR /opt/squeeze-alice-1.0/squeeze-alice-1.0.jar"${NC}
+echo -e ${BGreen}"\nCOPY JAR $remote/opt/squeeze-alice-1.0/squeeze-alice-1.0.jar"${NC}
 sshpass -p "$password" rsync -avh --progress bin/squeeze-alice-1.0.jar $username@$remote:/opt/squeeze-alice-1.0/
-echo -e ${BGreen}"COPY SCRIPT log.sh"${NC}
+echo -e ${BGreen}"COPY SCRIPT $remote~/log.sh"${NC}
 sshpass -p "$password" rsync -avh --progress log.sh $username@$remote:~/
-echo -e ${BGreen}"COPY SERVICE /lib/systemd/system/squeeze-alice.service"${NC}
+echo -e ${BGreen}"COPY SERVICE $remote/lib/systemd/system/squeeze-alice.service"${NC}
 sshpass -p "$password" rsync -avh --progress squeeze-alice.service $username@$remote:/lib/systemd/system/
 
 # проверка файлов
-echo -e ${BGreen}"\n/opt/squeeze-alice-1.0/"${NC}
+echo -e ${BGreen}"\n$remote/opt/squeeze-alice-1.0/"${NC}
 sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/"
-echo -e ${BGreen}"/lib/systemd/system/"${NC}
+echo -e ${BGreen}"$remote/lib/systemd/system/"${NC}
 sshpass -p "$password" ssh "$username@$remote" "ls /lib/systemd/system/sq*.service"
 
 # запуск сервиса

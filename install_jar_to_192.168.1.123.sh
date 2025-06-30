@@ -33,8 +33,6 @@ sshpass -p "$password" rsync -avh --progress squeeze-alice.service $username@$re
 # проверка файлов
 echo -e ${BGreen}"\n/opt/squeeze-alice-1.0/"${NC}
 sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/"
-#echo -e ${BGreen}"/opt/squeeze-alice-1.0/data/"${NC}
-#sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/data/"
 echo -e ${BGreen}"/lib/systemd/system/"${NC}
 sshpass -p "$password" ssh "$username@$remote" "ls /lib/systemd/system/sq*.service"
 
