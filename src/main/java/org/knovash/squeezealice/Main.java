@@ -1,7 +1,9 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.utils.ConfigLoader;
+import org.knovash.squeezealice.utils.PlayersUpdateScheduler;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.yandex.Yandex;
 
@@ -55,9 +57,9 @@ public class Main {
         hive.subscribeByYandex();
         log.info("VERSION 1.2");
 
-//        PlayersUpdateScheduler.startPeriodicUpdate(1);
-//        Spotify.ifExpiredRunRefersh();
-//        hive.periodicCheckStart();
+        PlayersUpdateScheduler.startPeriodicUpdate(1);
+        Spotify.ifExpiredRunRefersh();
+        hive.periodicCheckStart();
 
     }
 }
