@@ -42,7 +42,7 @@ public class ServerStatusByName {
         public int seq_no;
         public int isplaying;
         public String playerid;
-        public int firmware; // TODO String и на облакке
+//        public int firmware; // TODO String и на облакке
         public int isplayer;
         public int canpoweroff;
     }

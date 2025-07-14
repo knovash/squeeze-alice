@@ -84,7 +84,7 @@ public class LmsPlayers {
         if (!lmsServerOnline) return;
         if (this.players == null) this.players = new ArrayList<>();
         String json = Requests.postToLmsForJsonBody(RequestParameters.serverstatusname().toString());
-//        log.info("UPDATE RESPONSE:\n" + json);
+        log.info("UPDATE RESPONSE:\n" + json);
         if (json == null) return;
         json = JsonUtils.replaceSpace(json);
         json = json.replaceAll("\"newversion.*</a>\\.\"", "\"newversion\": \"--\"");
