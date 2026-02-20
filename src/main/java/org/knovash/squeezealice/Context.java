@@ -1,5 +1,7 @@
 package org.knovash.squeezealice;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.Headers;
@@ -22,20 +24,30 @@ public class Context {
     public String bodyResponse;
     public int code;
     public String path;
-    public Headers headers;
+
+    // Заголовки запроса – при сериализации будут записаны как "headers"
+    // (для совместимости со старыми версиями alicebroker)
+    @JsonProperty("headers")
+    public Headers requestHeaders = new Headers();
+
+    // Заголовки ответа – не сериализуются, чтобы не ломать старый код
+    @JsonIgnore
+    public Headers responseHeaders = new Headers();
+
     public String body;
     public String xRequestId;
     public String query;
     public HashMap<String, String> queryMap;
 
+    // Для тестов
     public static Context contextCreate(String path, String headersJson, String body, String query) {
-//        для теста
         Headers headers = HeadersParser.parseHeaders(headersJson);
         String xRequestId = headers.getFirst("X-request-id");
         HashMap<String, String> queryMap = (HashMap<String, String>) Parser.run(query);
         Context context = new Context();
         context.body = body;
-        context.headers = headers;
+        context.requestHeaders = headers;
+        context.responseHeaders = new Headers();
         context.path = path;
         context.xRequestId = xRequestId;
         context.query = query;
@@ -44,24 +56,18 @@ public class Context {
     }
 
     public static Context contextCreate(HttpExchange httpExchange) {
-//      METHOD
         String method = httpExchange.getRequestMethod();
-//      PATH
         String path = httpExchange.getRequestURI().getPath();
         if (path.equals("/favicon.ico")) {
             log.info("/favicon.ico");
             return null;
         }
-//      HEADERS
-        Headers headers = httpExchange.getRequestHeaders();
 
-        String host = headers.getFirst("Host");
-        String xRequestId = headers.getFirst("X-request-id");
-        log.info("REQUEST: " + method + " " + "http://" + host + path);
-//        log.info("PATH: " + path);
-//        log.info("HEADERS: " + headers.entrySet());
-//        log.info("XREQUESTID: " + xRequestId);
-//      BODY
+        Headers requestHeaders = httpExchange.getRequestHeaders();
+        String host = requestHeaders.getFirst("Host");
+        String xRequestId = requestHeaders.getFirst("X-request-id");
+        log.info("REQUEST: " + method + " http://" + host + path);
+
         String body = null;
         try {
             body = new String(httpExchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
@@ -69,30 +75,19 @@ public class Context {
             throw new RuntimeException(e);
         }
         log.info("BODY: " + body);
-//      QUERY
-        String query = httpExchange.getRequestURI().getQuery();
-//        log.info("*********** TEST NEW QUERY PARSER **************");
-//        HashMap<String, String> queryMap = HandlerUtils.convertQueryToMap(query);
-        HashMap<String, String> queryMap = (HashMap<String, String>) Parser.run(query);
-//        log.info("*********** TEST NEW QUERY PARSER **************");
 
+        String query = httpExchange.getRequestURI().getQuery();
+        HashMap<String, String> queryMap = (HashMap<String, String>) Parser.run(query);
         log.info("QUERY: " + query);
-//        log.info("QUERY MAP: " + queryMap);
 
         Context context = new Context();
         context.body = body;
-        context.headers = headers;
+        context.requestHeaders = requestHeaders;
+        context.responseHeaders = new Headers();
         context.path = path;
         context.xRequestId = xRequestId;
         context.query = query;
         context.queryMap = queryMap;
-
-//        context.requestHeaders = httpExchange.getRequestHeaders(); // Заголовки запроса
-//        context.responseHeaders = new Headers(); // Инициализация заголовков ответа
-
-//        context.responseHeaders.forEach((k, v) ->
-//                httpExchange.getResponseHeaders().put(k, v);
-
 
         return context;
     }
@@ -101,7 +96,8 @@ public class Context {
     public String toString() {
         return "Context{" + "\n" +
                 " path = " + path + "\n" +
-                " headers = " + headers.entrySet() + "\n" +
+                " requestHeaders = " + requestHeaders.entrySet() + "\n" +
+                " responseHeaders = " + responseHeaders.entrySet() + "\n" +
                 " xRequestId = " + xRequestId + "\n" +
                 " query = " + query + "\n" +
                 " queryMap = " + queryMap + "\n" +
@@ -111,13 +107,7 @@ public class Context {
                 '}';
     }
 
-    // Аннотация для игнорирования поля при сериализации (если нужно)
-//    @JsonIgnore
-//    public String query; // исключаем из JSON, т.к. используется только для логики
-
-    // Метод для преобразования объекта в JSON
     public String toJson() {
-//        log.info("CONTEXT TO JSON START");
         try {
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(this);
@@ -128,10 +118,7 @@ public class Context {
         }
     }
 
-    // Статический метод для создания объекта из JSON
     public static Context fromJson(String json) {
-//        log.info("CONTEXT FROM JSON START");
-//        log.info("JSON: " + json);
         try {
             ObjectMapper mapper = new ObjectMapper();
             return mapper.readValue(json, Context.class);
@@ -139,5 +126,11 @@ public class Context {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public void setRedirect(String location) {
+        this.code = 302;
+        this.responseHeaders.set("Location", location);
+        this.bodyResponse = "";
     }
 }

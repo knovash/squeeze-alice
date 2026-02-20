@@ -21,7 +21,7 @@ public class ProviderQuery {
 
     public static Context providerQueryRun(Context context) {
         String body = context.body;
-        List<String> xRequestIdList = context.headers.get("X-request-id");
+        List<String> xRequestIdList = context.requestHeaders.get("X-request-id");
         String xRequestId = xRequestIdList.get(0);
         log.info("XREQUESTID: " + xRequestId);
         log.info("BODY: " + body);

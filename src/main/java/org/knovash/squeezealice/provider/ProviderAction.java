@@ -21,7 +21,7 @@ public class ProviderAction {
         if (config.lmsIp == null) errorContext("LMS NULL");
         String body = context.body;
 // получить из хедеров запроса id запроса который надо вернуть в ответе яндексу
-        List<String> requestIdHeaders = context.headers.get("X-request-id");
+        List<String> requestIdHeaders = context.requestHeaders.get("X-request-id");
         if (requestIdHeaders == null || requestIdHeaders.isEmpty()) {
             log.info("X-request-id header missing");
             return errorContext("X-request-id header missing");

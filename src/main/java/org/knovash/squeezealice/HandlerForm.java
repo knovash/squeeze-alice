@@ -21,25 +21,23 @@ public class HandlerForm implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         log.info("HANDLER START >>>>>>>>>>>>>>>");
-        ContextForm context = ContextForm.contextCreate(httpExchange);
-
-
+        Context context = Context.contextCreate(httpExchange);
 
         log.info("PROCESS CONTEXT");
         processContext(context);
 
-//        если редирект
-        if (context.headers.containsKey("location")) {
-            log.info("REDIRRECT location");
+        // проверяем responseHeaders на наличие редиректа
+        if (context.responseHeaders.containsKey("Location")) {
+            log.info("REDIRECT location");
             String response = context.bodyResponse;
-//        отправка ответа сервера
             byte[] responseBytes = response.getBytes(StandardCharsets.UTF_8);
-            httpExchange.getResponseHeaders().putAll(context.headers);
+            httpExchange.getResponseHeaders().putAll(context.responseHeaders);
             httpExchange.sendResponseHeaders(context.code, responseBytes.length);
             try (OutputStream outputStream = httpExchange.getResponseBody()) {
                 outputStream.write(responseBytes);
             }
             log.info("HTTP HANDLER FINISH <<<<<<<<<<<");
+            return; // важно выйти, чтобы не отправлять ответ повторно
         }
 
         log.info("SEND RESPONSE context");
@@ -47,7 +45,7 @@ public class HandlerForm implements HttpHandler {
         log.info("HANDLER FINISH <<<<<<<<<<<<<<<");
     }
 
-    private ContextForm processContext(ContextForm context) {
+    private void processContext(Context context) {
         log.info("PROCESS CONTEXT START");
         Map<String, String> bodyMap = Parser.run(context.body);
         context.code = 200;
@@ -55,56 +53,44 @@ public class HandlerForm implements HttpHandler {
             String action = bodyMap.get("action");
             log.info("SWITCH CASE action: " + action);
             switch (action) {
-//  страница главная
-                case (statusbar_refresh): // информация кнопка обновить
+                case statusbar_refresh:
                     PageIndex.refresh((HashMap<String, String>) bodyMap);
-                    context.code = 302;
                     context.setRedirect("/");
                     break;
-//  страница Настройка плееров
-                case (delay_expire_save): // время до сброса громкости
+                case delay_expire_save:
                     lmsPlayers.delayExpireSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
-                case (toggle_wake_save): // задержка пред включением
-                    log.info("START 1111111111111");
+                case toggle_wake_save:
                     lmsPlayers.toggleWakeSave((HashMap<String, String>) bodyMap);
-
-                    log.info("FINISH 222222222222222222");
                     context.bodyResponse = PagePlayers.page();
                     break;
-                case (autoremote_save): // таскер урл для обновления виджета НЕГОТОВО
-                    log.info("SAVE " + bodyMap);
+                case autoremote_save:
                     lmsPlayers.autoremoteSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
-                case (autoremote_remove): // таскер урл для обновления виджета НЕГОТОВО
-                    log.info("REMOVE " + bodyMap);
+                case autoremote_remove:
                     lmsPlayers.autoremoteRemove((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
-                case (alt_sync_save): // синхронизация альтернативная
+                case alt_sync_save:
                     lmsPlayers.altSyncSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
-                case (last_this_save): // включать последнее игравшее тут
+                case last_this_save:
                     lmsPlayers.lastThisSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
-                case (player_save): // плеер сохранить
+                case player_save:
                     lmsPlayers.playerSave((HashMap<String, String>) bodyMap);
-                    context.code = 302;
                     context.setRedirect("/players");
                     break;
-                case (player_remove): // плеер удалить
+                case player_remove:
                     lmsPlayers.playerRemove((HashMap<String, String>) bodyMap);
-                    context.code = 302;
                     context.setRedirect("/players");
                     break;
-//  страница Настройка ЛМС
-                case (lms_save): // кнопка Сохранить
+                case lms_save:
                     lmsPlayers.lmsSave((HashMap<String, String>) bodyMap);
-                    context.code = 302;
                     context.setRedirect("/lms");
                     break;
                 default:
@@ -113,24 +99,21 @@ public class HandlerForm implements HttpHandler {
             }
         }
         log.info("PROCESS CONTEXT FINISH");
-        return context;
     }
 
-
-    private void sendResponse(HttpExchange exchange, ContextForm context) throws IOException {
+    private void sendResponse(HttpExchange exchange, Context context) throws IOException {
         log.info("SEND RESPONSE");
         context.responseHeaders.set("Content-Type", "text/html; charset=UTF-8");
         context.responseHeaders.set("X-Content-Type-Options", "nosniff");
         exchange.getResponseHeaders().putAll(context.responseHeaders);
-        // Обработка редиректов
+
         if (context.code >= 300 && context.code < 400) {
             log.info("REDIRECT " + context.code);
-            exchange.getResponseHeaders().putAll(context.responseHeaders);
-            exchange.sendResponseHeaders(context.code, -1); // Без тела ответа
+            exchange.sendResponseHeaders(context.code, -1);
             return;
         }
+
         byte[] responseBytes = context.bodyResponse.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().putAll(context.responseHeaders);
         exchange.sendResponseHeaders(context.code, responseBytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(responseBytes);

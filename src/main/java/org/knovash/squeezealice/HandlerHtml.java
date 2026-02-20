@@ -14,9 +14,8 @@ public class HandlerHtml implements HttpHandler {
     public void handle(HttpExchange httpExchange) throws IOException {
         log.info("HANDLER HTML START >>>>>>>>>>>>>>>");
 
-        ContextForm context = ContextForm.contextCreate(httpExchange);
+        Context context = Context.contextCreate(httpExchange);
         if (context.path.equals("/html/manual")) {
-
             try {
                 byte[] response = getResource("manual.html");
                 httpExchange.getResponseHeaders().set("Content-Type", "text/html");
@@ -32,7 +31,6 @@ public class HandlerHtml implements HttpHandler {
             String path = context.path;
             String image = path.replaceAll(".*html/", "");
             log.info("IMAGE:" + image);
-
             try {
                 byte[] response = getResource(image);
                 httpExchange.getResponseHeaders().set("Content-Type", "image/png");
@@ -45,8 +43,6 @@ public class HandlerHtml implements HttpHandler {
                 httpExchange.close();
             }
         }
-
-
         log.info("HANDLER HTML FINISH <<<<<<<<<<<<<<<");
     }
 

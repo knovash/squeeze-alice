@@ -11,22 +11,20 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-
 @Log4j2
 public class HandlerAll implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         log.info("\nRECIEVED HTTP REQUEST");
-//        извлечение данных из запроса в контекст
         Context context = Context.contextCreate(httpExchange);
         log.info("CLIENT ID IN QUERY: " + context.queryMap.get("client_id"));
         context = HandlerAll.processContext(context);
         String response = context.bodyResponse;
 
-//        отправка ответа сервера
         byte[] responseBytes = response.getBytes(StandardCharsets.UTF_8);
-        httpExchange.getResponseHeaders().putAll(context.headers);
+        // используем responseHeaders для ответа
+        httpExchange.getResponseHeaders().putAll(context.responseHeaders);
         httpExchange.sendResponseHeaders(context.code, responseBytes.length);
         try (OutputStream outputStream = httpExchange.getResponseBody()) {
             outputStream.write(responseBytes);
@@ -34,50 +32,37 @@ public class HandlerAll implements HttpHandler {
         log.info("HTTP HANDLER FINISH <<<<<<<<<<<");
     }
 
-// context приходит из http хэндлера - локальные команды или из mqtt хэндлера - команды яндекс
     public static Context processContext(Context context) {
         String path = context.path;
         log.info("SWITCH CONTEXT PATH: " + path);
         switch (path) {
-//            web pages
-            case ("/"):
+            case "/":
                 return PageIndex.action(context);
-            case ("/players"):
+            case "/players":
                 return PagePlayers.action(context);
-            case ("/manual"):
+            case "/manual":
                 return PageManual.action(context);
-//            case ("/spotify"):
-//                return PageSpotify.action(context);
-            case ("/lms"):
+            case "/lms":
                 return PageLms.action(context);
-//                tasker query commands
-            case ("/cmd"):
+            case "/cmd":
                 context = SwitchQueryCommand.action(context);
                 break;
-
-// Запрос от Яндекс приходит на сервер в облаке https://alice-lms.zeabur.app
-// там запрос разбирается в context
-// context отправляется в топик MQTT to_lms_ + id пользователя яндекс id4098...
-// сюда context приходит из MQTT метода handleDeviceAndPublish
-// тут context обрабатывается, возвращается в handleDeviceAndPublish
-// и отправлятся в топик из которого забирает облачный сервер и отдает ответ в Яндекс умный дом
-            case ("/alice/"):
+            case "/alice/":
                 context = SwitchVoiceCommand.action(context);
                 break;
-//                yandex smart home commands
-            case ("/v1.0"):
+            case "/v1.0":
                 context = ProviderCheck.providerCheckRun(context);
                 break;
-            case ("/v1.0/user/unlink"):
+            case "/v1.0/user/unlink":
                 context = ProviderUserUnlink.providerUserUnlinkRun(context);
                 break;
-            case ("/v1.0/user/devices"):
+            case "/v1.0/user/devices":
                 context = ProviderUserDevices.providerUserDevicesRun(context);
                 break;
-            case ("/v1.0/user/devices/query"):
+            case "/v1.0/user/devices/query":
                 context = ProviderQuery.providerQueryRun(context);
                 break;
-            case ("/v1.0/user/devices/action"):
+            case "/v1.0/user/devices/action":
                 context = ProviderAction.providerActionRun(context);
                 break;
             default:

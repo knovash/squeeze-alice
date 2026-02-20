@@ -31,34 +31,6 @@ public class Utils {
 
     public static Map<String, String> altNames;
 
-//    public static String getPlayerByNameInQuery(String name) {
-//        log.info("NAME: " + name + " ALT NAMES: " + altNames);
-//        if (altNames.containsKey(name)) {
-//            name = altNames.get(name);
-//        } else {
-//            log.info("NO ALT NAME FOR " + name);
-//        }
-//        return name;
-//    }
-
-
-//    public static String timeVolumeGet(Player player) {
-//        return player.schedule.entrySet().toString();
-//    }
-//
-//    public static String timeVolumeSet(Player player, HashMap<String, String> parameters) {
-//        Integer time = Integer.valueOf(parameters.get("time"));
-//        Integer volume = Integer.valueOf(parameters.get("volume"));
-//        player.schedule.put(time, volume);
-//        return "SET " + time + " : " + volume;
-//    }
-//
-//    public static String timeVolumeDel(Player player, HashMap<String, String> parameters) {
-//        Integer time = Integer.valueOf(parameters.get("time"));
-//        player.schedule.remove(time);
-//        return "REMOVED time:" + time;
-//    }
-
     public static boolean checkIpIsLms(String ip) {
         String uri = "http://" + ip + ":" + config.lmsPort;
         HttpResponse response = headToUriForHttpResponse(uri);

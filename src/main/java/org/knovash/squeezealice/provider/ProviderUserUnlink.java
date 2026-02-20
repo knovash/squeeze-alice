@@ -9,10 +9,9 @@ public class ProviderUserUnlink {
     public static Context providerUserUnlinkRun(Context context) {
         log.info("");
 
-        String xRequestId = context.headers.getFirst("X-request-id");
+        String xRequestId = context.requestHeaders.getFirst("X-request-id");
         log.info("XREQUESTID: " + xRequestId);
 
-//        String xRequestId = context.xRequestId;
         String json = "{\"request_id\":\"" + xRequestId + "\"}";
         log.info("RESPONSE: " + json);
         context.bodyResponse = json;
