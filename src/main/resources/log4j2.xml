@@ -2,13 +2,13 @@
 <Configuration status="WARN">
     <Appenders>
         <File name="File" fileName="data/log.txt" append="false">
-            <PatternLayout pattern="[%d{HH:mm:ss} %c.%method] - %msg%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss} %c{1}.%method - %msg%n"/>
         </File>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="[%d{HH:mm:ss} %c.%method] - %msg%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss} %c{1}.%method - %msg%n"/>
         </Console>
         <File name="File2" fileName="${sys:user.home}/log_voice.txt" append="true">
-            <PatternLayout pattern="[%d{YYYY.MM.dd HH:mm:ss} %c.%method] - %msg%n"/>
+            <PatternLayout pattern="%d{YYYY.MM.dd HH:mm:ss} %c{1}.%method - %msg%n"/>
         </File>
     </Appenders>
     <Loggers>

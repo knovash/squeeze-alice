@@ -7,6 +7,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
 import org.apache.http.util.EntityUtils;
+import org.knovash.squeezealice.Config;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.utils.JsonUtils;
@@ -123,11 +124,23 @@ public class Yandex {
     public static void sendDeviceState(String deviceId, String type, String instance, String capState, String status) {
 //        Уведомление об изменении состояний устройств
 //        https://yandex.ru/dev/dialogs/smart-home/doc/ru/reference-alerts/post-skill_id-callback-state
-        log.info("ID: " + deviceId + " PLAYER: " + lmsPlayers.playerByDeviceId(deviceId).name + " INSTANCE: " + instance + " TYPE: " + type + " STATE: " + capState);
+       log.info(String.format(
+                       "ID:%-15s" +
+                       "PLAYER:%-15s " +
+                       "INSTANCE:%-7s " +
+                       "TYPE:%-7s " +
+                       "STATE:%-6s ",
+                       deviceId,
+                       lmsPlayers.playerByDeviceId(deviceId).name,
+                       instance,
+                       type,
+                       capState
+       ));
+
         CompletableFuture.runAsync(() -> {
             HttpResponse response = null;
             try {
-                String url = "https://dialogs.yandex.net/api/v1/skills/5e3196e7-dc7c-4de3-b42a-95f56f58a9fe/callback/state";
+                String url = "https://dialogs.yandex.net/api/v1/skills/"+ config.skillId +"/callback/state";
                 Map<String, Object> deviceMap = new HashMap<>();
                 deviceMap.put("id", deviceId);
                 Map<String, Object> capabilityMap = new HashMap<>();

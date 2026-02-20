@@ -35,6 +35,7 @@ public class Config {
     public String yandexToken; // для получения списка комнат в умном доме
     public String yandexName; // для отображения кто вошел
     public String yandexUid; // для уникального названия топика пользователя
+    public String skillId; // id навыка Lyrion Music Server публичный
     //    Spotify
     public String spotifyToken; // для запросов поиска
     public String spotifyName; // для отображения кто вошел
@@ -54,6 +55,7 @@ public class Config {
         this.hiveBroker = bundle.getString("hiveBroker");
         this.hiveUsername = bundle.getString("hiveUsername");
         this.hivePassword = bundle.getString("hivePassword");
+        this.skillId = bundle.getString("skillId");
         log.info("CONFIG FROM config.properties : " + config);
     }
 
