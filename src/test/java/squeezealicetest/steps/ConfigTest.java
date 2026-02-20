@@ -32,9 +32,15 @@ public class ConfigTest {
     public String hiveUsername="novashki";
     public String hivePassword="Darthvader0";
     //    Yandex
-    public String yandexToken ="y0__xDzxbXDARi79i4g1Kq52BLBrH5AiuK_6jAmQvamADVB964geA"; // для получения списка комнат в умном доме
-    public String yandexName="Константин Н."; // для отображения кто вошел
-    public String yandexUid="409821939"; // для уникального названия топика пользователя
+//    public String yandexToken ="y0__xDzxbXDARi79i4g1Kq52BLBrH5AiuK_6jAmQvamADVB964geA"; // для получения списка комнат в умном доме
+//    public String yandexName="Константин Н."; // для отображения кто вошел
+//    public String yandexUid="409821939"; // для уникального названия топика пользователя
+
+    public String yandexToken; // для получения списка комнат в умном доме
+    public String yandexName; // для отображения кто вошел
+    public String yandexUid; // для уникального названия топика пользователя
+
+
     //    Spotify
     public String spotifyToken; // для запросов поиска
     public String spotifyName; // для отображения кто вошел

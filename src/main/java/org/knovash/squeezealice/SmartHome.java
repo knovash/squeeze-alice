@@ -30,15 +30,19 @@ public class SmartHome {
 
     public static Device getDeviceByCorrectRoom(String room) {
 //        log.info("SEARCH BY ROOM: " + room + " IN DEVICES: " + devices.size());
-        Device device = devices.stream()
-                .filter(d -> (d.room != null))
-                .filter(d -> d.room.equalsIgnoreCase(room))
-                .findFirst().orElse(null);
-        if (device == null) {
-            log.info("NO DEVICE WITH ROOM: " + room);
+        if (room == null) {
+            log.info("getDeviceByCorrectRoom called with null room");
             return null;
         }
-        log.info("BY ROOM " + room + " GET DEVICE: " + device.room + " ID: " + device.id);
+        Device device = devices.stream()
+                .filter(d -> room.equalsIgnoreCase(d.room)) // безопасно, т.к. room не null, а d.room может быть null → false
+                .findFirst()
+                .orElse(null);
+        if (device == null) {
+            log.info("NO DEVICE WITH ROOM: {}", room);
+        } else {
+            log.info("BY ROOM {} GET DEVICE: {} ID: {}", room, device.room, device.id);
+        }
         return device;
     }
 

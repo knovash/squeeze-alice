@@ -21,7 +21,15 @@ public class ProviderAction {
         if (config.lmsIp == null) errorContext("LMS NULL");
         String body = context.body;
 // получить из хедеров запроса id запроса который надо вернуть в ответе яндексу
-        xRequestId = context.headers.get("X-request-id").get(0);
+        List<String> requestIdHeaders = context.headers.get("X-request-id");
+        if (requestIdHeaders == null || requestIdHeaders.isEmpty()) {
+            log.info("X-request-id header missing");
+            return errorContext("X-request-id header missing");
+        } else {
+            xRequestId = requestIdHeaders.get(0);
+        }
+//        xRequestId = context.headers.get("X-request-id").get(0);
+
         if (body.equals("") || body == null) return errorContext("BODY NULL");
 // создать ответ из запроса
         ResponseYandex responseYandex = JsonUtils.jsonToPojo(body, ResponseYandex.class);
@@ -38,10 +46,10 @@ public class ProviderAction {
                                 " RELATIVE: " + c.state.relative)));
 
 // обновить состояние плееров из LMS
-        log.info("\nUPDATE LMS PLAYERS");
+        log.info("UPDATE LMS PLAYERS");
         lmsPlayers.updateLmsPlayers();
 
-        log.info("\nSET DEVICES CAPABILITIES. SIZE=" + responseYandex.payload.devices.size());
+        log.info("SET DEVICES CAPABILITIES. SIZE=" + responseYandex.payload.devices.size());
 // обновить для всех девайсов все капабилити
         List<Device> jsonDevices = responseYandex.payload.devices.parallelStream()
                 .map(d -> setDeviceCapabilities(d)) // если устройство недоступно то статус DEVICE_UNREACHABLE
@@ -161,7 +169,7 @@ public class ProviderAction {
                 log.info("DEVICE: " + device.id)));
 
 //  если включи все только 1 колонка то выполнять действие как для одной попытаться подключить к тграющей
-        if(!devicesTurnOnAll.isEmpty() && devicesTurnOnAll.size()<2) devicesTurnOnAll = new ArrayList<>();
+        if (!devicesTurnOnAll.isEmpty() && devicesTurnOnAll.size() < 2) devicesTurnOnAll = new ArrayList<>();
 
         noChannelDevices.removeAll(devicesTurnOnAll);
 

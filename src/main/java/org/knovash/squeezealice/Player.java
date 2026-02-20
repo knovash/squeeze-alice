@@ -1043,19 +1043,45 @@ public class Player {
         return lmsPlayers.playingPlayersNamesNotInCurrentGrop;
     }
 
+//    @Override
+//    public String toString() {
+//        return ""
+//                + "CON:" + this.connected
+//                + " SEP:" + this.separate
+//                + " SYNC:" + this.sync
+//                + " VOL:" + this.volume
+//                + " MODE:" + this.mode
+//                + " PLAY:" + this.playing
+//                + " TIME:" + this.lastPlayTime
+//                + " NAME:" + this.name
+//                + " ROOM:" + this.room;
+//    }
+
     @Override
     public String toString() {
-        return ""
-                + "CONNECTED:" + this.connected
-                + " SEPARATE:" + this.separate
-                + " SYNC:" + this.sync
-                + " VOLUME:" + this.volume
-                + " MODE:" + this.mode
-                + " PLAYING:" + this.playing
-                + " TIME:" + this.lastPlayTime
-                + " PLAYER:" + this.name
-                + " ROOM:" + this.room;
+        return String.format(
+                "ROOM:%-10s" +
+                "NAME:%-15s " +
+                "CONNECTED:%-5b " +
+                "SEPARATED:%-5b " +
+                "SYNC:%-5b " +
+                "VOL:%-3s " +
+                "MODE:%-7s " +
+                "PLAY:%-5b " +
+                "TIME:%-5s ",
+                room,
+                name,
+                connected,
+                separate,
+                sync,
+                volume,
+                mode,
+                playing,
+                lastPlayTime
+        );
     }
+
+
 
     @Override
     public boolean equals(Object o) {
