@@ -2,6 +2,7 @@ package org.knovash.squeezealice.voice;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Player;
+import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.utils.Levenstein;
 
 import java.util.List;
@@ -22,10 +23,18 @@ public class VoiceActions {
 
     //      СИНХРОНИЗАЦИЯ
     public static String syncSwitchToHere(Player player) {
-        log.info("SWITCH TO HERE");
-        CompletableFuture.runAsync(() -> player.switchToHere())
-                .thenRunAsync(() -> lmsPlayers.afterAll());
-        return "переключаю музыку на " + player.name;
+        log.info("SWITCH TO " + player.name);
+        Spotify.currentlyPlaying();
+
+        boolean spotifyPlaying = Spotify.currentlyPlaying != null && Spotify.currentlyPlaying.is_playing;
+        player.switchToHereAsync(spotifyPlaying);
+        if (Spotify.currentlyPlaying != null && Spotify.currentlyPlaying.is_playing) {
+            log.info("Spotify is playing. Transfer to player");
+            return "переключаю spotify на " + player.name;
+        } else {
+            log.info("Transfer LMS player to player");
+            return "переключаю музыку на " + player.name;
+        }
     }
 
     public static String shuffleOn(Player player) {

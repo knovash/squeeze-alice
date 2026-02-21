@@ -41,10 +41,10 @@ public class SwitchQueryCommand {
 // управление с пульта или виджетов таскер
 // респонс для отображения действия на телевизоре или планшете
         switch (action) {
-            case ("volume_dn"): // TODO неиспользует Таскер
+            case ("volume_dn"):
                 response = player.volumeRelativeOrAbsolute("-3", true);
                 break;
-            case ("volume_up"): // TODO неиспользует Таскер
+            case ("volume_up"):
                 response = player.volumeRelativeOrAbsolute("3", true);
                 break;
             case ("channel"):
@@ -54,7 +54,7 @@ public class SwitchQueryCommand {
                         .thenRunAsync(() -> lmsPlayers.afterAll());
                 response = player.name + " - play channel " + value;
                 break;
-            case ("play"): // TODO неиспользует Таскер
+            case ("play"):
 //                CompletableFuture.runAsync(() -> player.turnOnMusic(null))
 //                        .thenRunAsync(() -> lmsPlayers.afterAll());
 //                response = player.name + " - play";
@@ -79,22 +79,22 @@ public class SwitchQueryCommand {
                         .thenRunAsync(() -> lmsPlayers.afterAll());
                 response = player.name + " - Prev";
                 break;
-            case ("next_track"): // TODO неиспользует Таскер
+            case ("next_track"):
                 CompletableFuture.runAsync(() -> player.ctrlNextTrack())
                         .thenRunAsync(() -> lmsPlayers.afterAll());
                 response = player.name + " - Next track";
                 break;
-            case ("prev_track"): // TODO неиспользует Таскер
+            case ("prev_track"):
                 CompletableFuture.runAsync(() -> player.ctrlPrevTrack())
                         .thenRunAsync(() -> lmsPlayers.afterAll());
                 response = player.name + " - Next track";
                 break;
-            case ("next_channel"): // TODO неиспользует Таскер
+            case ("next_channel"):
                 CompletableFuture.runAsync(() -> player.ctrlNextChannel()) // case ("next_channel"):
                         .thenRunAsync(() -> lmsPlayers.afterAll());
                 response = player.name + " - Next channel";
                 break;
-            case ("prev_channel"): // TODO неиспользует Таскер
+            case ("prev_channel"):
                 CompletableFuture.runAsync(() -> player.ctrlPrevChannel())
                         .thenRunAsync(() -> lmsPlayers.afterAll());
                 response = player.name + " - Prev channel";
@@ -128,11 +128,12 @@ public class SwitchQueryCommand {
                         .thenRunAsync(() -> lmsPlayers.afterAll());
                 response = "FAVORITES ADD";
                 break;
+
             case ("get_room_player"): // Таскер по названию виджета вернуть комнату и плеер при активации нового виджета
-                response = lmsPlayers.playerNameByWidgetName(value);
+                response = Tasker.playerNameByWidgetName(value);
                 break;
             case ("get_refresh_json"): // Таскер для виджетов иконок плееров
-                response = lmsPlayers.forTaskerWidgetsRefreshJson(player, value);
+                response = Tasker.forTaskerWidgetsRefreshJson(player, value);
                 break;
             default:
                 log.info("ACTION NOT FOUND: " + action);

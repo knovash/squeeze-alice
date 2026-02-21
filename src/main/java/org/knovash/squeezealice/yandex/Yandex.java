@@ -143,10 +143,13 @@ public class Yandex {
                 String url = "https://dialogs.yandex.net/api/v1/skills/"+ config.skillId +"/callback/state";
                 Map<String, Object> deviceMap = new HashMap<>();
                 deviceMap.put("id", deviceId);
+
                 Map<String, Object> capabilityMap = new HashMap<>();
                 capabilityMap.put("type", "devices.capabilities." + type);
+
                 Map<String, Object> stateMap = new HashMap<>();
                 stateMap.put("instance", instance);
+
                 if (instance.equals("volume")) {
                     int valueInt = Integer.parseInt(capState);
                     stateMap.put("value", valueInt);
@@ -164,12 +167,13 @@ public class Yandex {
                 String jsonBody = JsonUtils.pojoToJson(requestBody);
 //                log.info("Request body: " + jsonBody);
                 // Отправляем запрос и получаем ответ
-                response = null;
                 response = Request.Post(url)
-                        .setHeader("Authorization", "OAuth " + "y0__xDzxbXDARij9xMgof3dqBNVNLZJ5TUBmwMndUdpOq_rMn5GQw")
+//                        .setHeader("Authorization", "OAuth " + "y0__xDzxbXDARij9xMgof3dqBNVNLZJ5TUBmwMndUdpOq_rMn5GQw")
+                        .setHeader("Authorization", "OAuth " + config.yandextSkillTokenDeveloper)
                         .setHeader("Content-Type", "application/json")
                         .bodyString(jsonBody, ContentType.APPLICATION_JSON)
-                        .execute().returnResponse();
+                        .execute()
+                        .returnResponse();
 //Тип токена: OAuth-токен разработчика навыка.
 //Как получить: Через консоль разработчика Яндекс.Диалогов: Навык → Настройки → Авторизация для HTTP-запросов → Скопировать OAuth-токен.
 //Не требует программирования – токен статичен для навыка.
@@ -180,7 +184,6 @@ public class Yandex {
                 int statusCode = response.getStatusLine().getStatusCode();
                 String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
                 if(statusCode != 202){
-                    log.info("ERROR: Request body: " + jsonBody);
                     log.info("ERROR: Response status: " + statusCode + " Response body: " + responseBody);
                 }
             } catch (IOException e) {

@@ -321,10 +321,11 @@ public class SwitchVoiceCommand {
         if (!player.connected) return "плеер " + player.name + "  не подключен к медиасерверу";
         String title = null;
         try {
-             title = player.requestTitle();
-             title = player.playlistNameShort;
-        }
-        catch (Exception e){
+            title = player.requestTitle();
+            log.info("requestTitle: " + title);
+            if (title == null) title = player.playlistNameShort;
+            log.info("playlistNameShort: " + title);
+        } catch (Exception e) {
 
             log.info("ERROR: TITLE");
         }

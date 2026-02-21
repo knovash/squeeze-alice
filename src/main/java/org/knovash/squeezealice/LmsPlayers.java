@@ -52,17 +52,7 @@ public class LmsPlayers {
     public List<String> playingPlayersNamesNotInCurrentGrop;
     public List<String> playersNamesInCurrentGroup;
 
-    public static String widgetsNames;
-    public static String widgetsModes;
-    public static String widgetsSyncs;
-    public static String widgetsSeparates;
-    public static String nowPlaying;
-    public static String nowPlayingTv;
-//    public static String widgetPlayersTitles;
-//    public static String joinedPlayersVolModTit;
 
-    public static String widgetPlayersPlay;
-    public static String widgetPlayersStop;
     public Boolean toggleWake = false;
 
     public Map<Integer, Integer> scheduleAll = new HashMap<>(Map.of(
@@ -196,26 +186,18 @@ public class LmsPlayers {
     }
 
     public Player playerByCorrectRoom(String room) {
-//        log.info("ROOM: " + room);
-        Player player = new Player();
-        Optional<Player> optionalPlayer = this.players.stream()
-                .filter(p -> (p.room != null))
-//                .peek(p -> log.info("0: " + p.name + " " + p.room + " = " + room + " " + p.room.equals(room)))
-                .filter(p -> p.room.equals(room))
+        if (room == null) return null;
+        return this.players.stream()
                 .filter(Objects::nonNull)
-                .findFirst();
-        player = (Player) optionalPlayer.orElse(null);
-//        if (player != null) log.info("ROOM: " + room + " PLAYER: " + player.name);
-//        if (player == null) log.info("PLAYER NOT FOUND WHITH ROOM " + room);
-        return player;
+                .filter(p -> room.equals(p.room))
+                .findFirst()
+                .orElse(null);
     }
 
     public Player playerByNearestRoom(String room) {
-//        log.info("GET PLAYER BY NEAREST ROOM: " + room);
         if (room == null) return null;
         room = Utils.getCorrectRoomName(room);
-        Player player = this.playerByCorrectRoom(room);
-        return player;
+        return this.playerByCorrectRoom(room);
     }
 
     public Player playingPlayer(String exceptName, boolean exceptSeparated) {
@@ -225,16 +207,15 @@ public class LmsPlayers {
     }
 
     public List<Player> playingPlayers(String exceptName, boolean exceptSeparated) {
-        List<Player> playingPlayers = null;
-        playingPlayers = this.players.stream()
+        List<Player> playingPlayers = this.players.stream()
                 .filter(p -> !exceptSeparated || !p.separate)
-                .filter(p -> p.playing) // playingPlayers
+                .filter(p -> p.playing)
                 .filter(p -> !exceptName.equals(p.name))
                 // TODO вернуть если ошибки с плеерами которые играют тишину
-//                .filter(p -> {
-//                    String path = p.path();
-//                    return path != null && !path.equals(config.silence);
-//                })
+                .filter(p -> {
+                    String path = p.path();
+                    return path != null && !path.equals(config.silence);
+                })
                 .collect(Collectors.toList());
         if (playingPlayers == null || playingPlayers.size() == 0) {
             log.info("SEARCH FOR PLAYING. EXCEPT NAME: " + exceptName + ". EXCEPT SEPARATED: " + exceptSeparated + " NO PLAYING PLAYERS");
@@ -289,8 +270,6 @@ public class LmsPlayers {
         String roomName = parameters.getOrDefault(player_room_value, "null");
         log.info("name: " + playerName);
         log.info("room: " + roomName);
-//        linkss.addLinkPlayer(roomName,playerName);
-//        log.info(linkss);
 
         Player player = this.playerByCorrectName(playerName);
         log.info("PLAYER DEVICE ID: " + player.deviceId);
@@ -309,22 +288,11 @@ public class LmsPlayers {
             log.info("ERROR NULL ID: " + extIdPlayerName);
             return null;
         }
-
-//        Player player = this.players.stream()
-////                .peek(p -> log.info("PLAYER ID: " + p.deviceId + " ROOM: " + p.room))
-//                .filter(p -> p.room != null)
-//                .filter(p -> p.name != null)
-//                .filter(p -> p.name.equals(extIdPlayerName))
-//                .findFirst().orElse(null);
-
         Player player = this.players.stream()
-//                .peek(p -> log.info("PLAYER ID: " + p.deviceId + " ROOM: " + p.room))
                 .filter(p -> p.room != null)
                 .filter(p -> p.deviceId != null)
                 .filter(p -> p.deviceId.equals(extIdPlayerName))
                 .findFirst().orElse(null);
-
-//        log.info("ID: " + id + " PLAYER BY ID: " + player);
         if (player != null) log.debug("BY ID: " + extIdPlayerName + " PLAYER: " + player.name);
         else log.info("ERROR PLAYER NULL BY ID: " + extIdPlayerName);
         return player;
@@ -447,92 +415,6 @@ public class LmsPlayers {
         });
     }
 
-    public String forTaskerWidgetsRefreshJson(Player player, String lines) {
-        log.info("\nSTART TASKER WIDGETS REFRESH JSON");
-        log.info("\nTASKER WIDGET PLAYERS LIST");
-        this.forTaskerPlayersList(); // для виджета списка плееров name-volume-mode-title
-        log.info("\nTASKER WIDGET ICONS");
-        this.forTaskerWidgetsIcons(); // для виджетов иконок плееров
-        String responsePlaylist = "[]";
-        LmsPlayers.nowPlaying = "offline";
-        if (player != null) {
-            log.info("\nTASKER WIDGET PLAY LIST FOR " + player.name);
-            responsePlaylist = player.forTaskerPlaylist(lines); // для виджета плейлиста
-            if (responsePlaylist == null) {
-//                log.info("--- responsePlaylist = player.playlistNameShort;");
-//                log.info("--- PLAYLIST NAME SHORT: " + player.playlistNameShort);
-                responsePlaylist = player.playlistNameShort;
-            }
-            log.info("\nTASKER WIDGET ONE ICON NOW PLAYING");
-//            log.info("--- LmsPlayers.nowPlaying = player.playlistNameShort");
-//            log.info("PLAYLIST NAME SHORT: " + player.playlistNameShort);
-//            log.info("title: " + player.title);
-//            log.info("playlistName: " + player.playlistName);
-//            log.info("playlistNameShort: " + player.playlistNameShort);
-            String title = player.playlistNameShort;
-            if(player.playlistNameShort == null) title = player.requestTitle();
-            LmsPlayers.nowPlaying = title; // для виджета одной иконкой для телефона где неработает плагин
-            LmsPlayers.nowPlayingTv = player.name + " - " + player.volume + " - " + player.mode + " - " + title; // для виджета одной иконкой для телефона где неработает плагин
-        }
-
-//        log.info("\nTASKER WIDGET PLAYERS LIST");
-//        this.forTaskerPlayersList(); // для виджета списка плееров name-volume-mode-title
-        String responseJson = "{\n" +
-                "  \"PLAYLIST\": \"" + responsePlaylist + "\",\n" +
-                "  \"PLAYERS_PLAY\": \"" + widgetPlayersPlay + "\",\n" +
-                "  \"PLAYERS_STOP\": \"" + widgetPlayersStop + "\",\n" +
-                "  \"ROOMSPLAYERS\": \"" + widgetsNames + "\",\n" +
-                "  \"MODES\": \"" + widgetsModes + "\",\n" +
-                "  \"SYNCS\": \"" + widgetsSyncs + "\",\n" +
-                "  \"SEPARATES\": \"" + widgetsSeparates + "\",\n" +
-                "  \"NOWPLAYING\": \"" + nowPlaying + "\",\n" +
-                "  \"NOWPLAYINGTV\": \"" + nowPlayingTv + "\"\n" +
-                "}";
-        log.info(responseJson);
-        return responseJson;
-    }
-
-    public void forTaskerWidgetsIcons() {
-        this.syncgroups();
-        List<String> iconsNames = new ArrayList<>(rooms);
-        iconsNames.addAll(this.players.stream().map(p -> p.name).collect(Collectors.toList()));
-        List<String> modes = new ArrayList<>();
-        List<String> syncs = new ArrayList<>();
-        List<String> separates = new ArrayList<>();
-        iconsNames.forEach(name -> {
-            Player player = this.playerByCorrectRoom(name);
-            if (player == null) player = this.playerByCorrectName(name);
-            modes.add(player != null ? player.mode : "null"); // forTaskerWidgetsIcons
-            syncs.add(player != null ? String.valueOf(player.sync) : "false");
-            separates.add(player != null ? String.valueOf(player.separate) : "null");
-        });
-        log.info("NAMES: " + iconsNames);
-        log.info("MODES: " + modes);
-        log.info("SYNCS:" + syncs);
-        log.info("SEPARATES: " + separates);
-        widgetsNames = String.join(",", iconsNames);
-        widgetsModes = String.join(",", modes);
-        widgetsSyncs = String.join(",", syncs);
-        widgetsSeparates = String.join(",", separates);
-    }
-
-
-    public String playerNameByWidgetName(String value) {
-        log.info("GET PLAYER BY WIDGET: " + value);
-        Player player1 = null;
-        String playerName = "ERROR";
-        String roomName;
-        roomName = Utils.getCorrectRoomName(value);
-        if (roomName != null) player1 = this.playerByCorrectRoom(roomName);
-        if (player1 != null) playerName = player1.name;
-        if (player1 == null) {
-            playerName = Utils.getCorrectPlayerName(value);
-            if (playerName != null) roomName = this.playerByCorrectName(playerName).room;
-        }
-        log.info("ROOM: " + roomName + " PLAYER: " + playerName);
-        String result = roomName + "," + playerName;
-        return result;
-    }
 
     public List<List<String>> syncgroups() {
         Response response = Requests.postToLmsForResponse(RequestParameters.syncgroups().toString());
@@ -564,50 +446,6 @@ public class LmsPlayers {
         }
     }
 
-    public String forTaskerPlayersList() {
-        log.info("TASKER PLAYERS LIST");
-        List<String> favList = this.players.get(0).favorites(); // forTaskerPlayersList
-
-        Function<Player, String> playerFormatter = p -> {
-            if (!p.connected) p.playlistNameShort = "unknown";
-            if (!p.connected) p.playlistNameShort = "offline";
-            String playlistName = p.requestPlaylistName(); // forTaskerPlayersList -------------------------------------
-            String favoritesIndex = "";
-            if (playlistName != null && favList.contains(playlistName))
-                favoritesIndex = (favList.indexOf(playlistName) + 1) + ".";
-            if (playlistName == null) playlistName = p.requestTitle(); // --------------------------------------
-            else playlistName = p.playlistNameShort; // forTaskerPlayersList
-            String roomNamePlayerName = p.room + " - " + p.name;
-            if (p.room == null) roomNamePlayerName = p.name;
-//            log.info(roomNamePlayerName + " - " + p.volume + " - " + favoritesIndex + playlistName);
-            return roomNamePlayerName + " - " + p.volume + " - " + favoritesIndex + playlistName;
-        };
-
-        log.info("\nPLAYING PLAYERS LIST:");
-        widgetPlayersPlay = this.players.stream()
-                .filter(p -> p.playing)
-                .sorted(Comparator.comparing(
-                        p -> p.playlistNameShort,
-                        Comparator.nullsLast(Comparator.naturalOrder())
-                ))
-                .map(playerFormatter)
-                .collect(Collectors.joining(","));
-        if (widgetPlayersPlay.isEmpty()) widgetPlayersPlay = "all players stop";
-        log.info("\nNOT PLAYING PLAYERS LIST:");
-        widgetPlayersStop = this.players.stream()
-                .filter(p -> !p.playing)
-                .sorted(Comparator.comparing(
-                        p -> p.playlistNameShort,
-                        Comparator.nullsLast(Comparator.naturalOrder())
-                ))
-                .map(playerFormatter)
-                .collect(Collectors.joining(","));
-        if (widgetPlayersStop.isEmpty()) widgetPlayersStop = "all players play";
-        log.info("RESULT PLAYING PLAYERS LIST: " + widgetPlayersPlay);
-        log.info("RESULT NOT PLAYING PLAYERS LIST: " + widgetPlayersStop);
-        String result = widgetPlayersPlay + ";" + widgetPlayersStop;
-        return result;
-    }
 
     public void checkRooms() {
         log.info("START CHECK ROOMS");

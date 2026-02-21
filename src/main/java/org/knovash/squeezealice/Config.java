@@ -36,6 +36,13 @@ public class Config {
     public String yandexName; // для отображения кто вошел
     public String yandexUid; // для уникального названия топика пользователя
     public String skillId; // id навыка Lyrion Music Server публичный
+    public String yandextSkillTokenDeveloper; // id навыка Lyrion Music Server публичный
+    //Тип токена: OAuth-токен разработчика навыка.
+//Как получить: Через консоль разработчика Яндекс.Диалогов: Навык → Настройки → Авторизация для HTTP-запросов → Скопировать OAuth-токен.
+//Не требует программирования – токен статичен для навыка.
+//Назначение: Управление состоянием навыка Алисы (отправка событий, состояние сессии).
+//Срок жизни: Бессрочный (но можно перегенерировать вручную).
+
     //    Spotify
     public String spotifyToken; // для запросов поиска
     public String spotifyName; // для отображения кто вошел
@@ -56,6 +63,7 @@ public class Config {
         this.hiveUsername = bundle.getString("hiveUsername");
         this.hivePassword = bundle.getString("hivePassword");
         this.skillId = bundle.getString("skillId");
+        this.yandextSkillTokenDeveloper = bundle.getString("yandextSkillTokenDeveloper");
         log.info("CONFIG FROM config.properties : " + config);
     }
 

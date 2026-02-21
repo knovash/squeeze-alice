@@ -47,6 +47,9 @@ public class HandlerAll implements HttpHandler {
             case "/cmd":
                 context = SwitchQueryCommand.action(context);
                 break;
+            case "/spotify":
+                context = SwitchSpotify.action(context);
+                break;
             case "/alice/":
                 context = SwitchVoiceCommand.action(context);
                 break;

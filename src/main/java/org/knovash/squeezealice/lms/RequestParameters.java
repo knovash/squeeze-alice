@@ -44,7 +44,7 @@ public class RequestParameters {
     }
 
     public static RequestToLms favoritesAdd(String player, String url, String title) {
-//        {"id":"1","method":"slim.request","params":["",["favorites","add","url:http://prem2.di.fm/chillout_hi?780a4f0bfb95c977ceab43a2","title:SSSSS"]]}
+//        {"id":"1","method":"slim.request","params":["",["favorites","add","url:http://prem2.di.fm/chillout_hi?78------7ceab43a2","title:SSSSS"]]}
         return RequestToLms.create(player, new String[]{"favorites", "add", "url:" + url, "title:" + title});
     }
 
@@ -92,12 +92,20 @@ public class RequestParameters {
         return RequestToLms.create(head, new String[]{"sync", player});
     }
 
-    public static RequestToLms shuffleon(String player) {
+    public static RequestToLms shuffleOn(String player) {
         return RequestToLms.create(player, new String[]{"playlist", "shuffle", "1"});
     }
 
-    public static RequestToLms shuffleoff(String player) {
+    public static RequestToLms shuffleOff(String player) {
         return RequestToLms.create(player, new String[]{"playlist", "shuffle", "0"});
+    }
+
+    public static RequestToLms repeatOn(String player) {
+        return RequestToLms.create(player, new String[]{"playlist", "repeat", "1"});
+    }
+
+    public static RequestToLms repeatOff(String player) {
+        return RequestToLms.create(player, new String[]{"playlist", "repeat", "0"});
     }
 
     public static RequestToLms prevtrack(String player) {

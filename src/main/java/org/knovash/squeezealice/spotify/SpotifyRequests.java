@@ -15,20 +15,22 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.Main.hive;
 
 @Log4j2
 public class SpotifyRequests {
 
     public static String requestWithRefreshGet(String uri) {
-        Spotify.ifExpiredRunRefersh();
+        ifExpiredRunRefersh();
         return SpotifyRequests.requestGetClosable(uri);
     }
 
     public static String requestWithRetryPut(String uri) {
         log.info("START");
-        Spotify.ifExpiredRunRefersh();
+        ifExpiredRunRefersh();
         String json = SpotifyRequests.requestPutClosable(uri);
         if (json.equals("401")) {
             log.info("401 RUN REFRESH TOKEN");
@@ -183,5 +185,22 @@ public class SpotifyRequests {
             throw new RuntimeException(e);
         }
         return json;
+    }
+
+    public static void ifExpiredRunRefersh() {
+        long timeNow = System.currentTimeMillis();
+        long expiresAt = config.spotifyTokenExpiresAt;
+        boolean result = timeNow > expiresAt;
+        log.info("EXPIRES AT: " + config.spotifyTokenExpiresAt + " TIME NOW: " + timeNow + " EXPIRED : " + result);
+        if (result) {
+            log.info("\nSPOTIFY TOKEN EXPIRED. REQUEST REFRESH TOKEN");
+            requestRefreshToken();
+        }
+    }
+
+    public static void requestRefreshToken() {
+        log.info("SPOTIFY REQUEST REFRESH TOKEN");
+        String sessionId = UUID.randomUUID().toString();
+        hive.publishAndWaitForResponse("from_local_request", null, 10, "token_spotify_refresh", sessionId, config.spotifyRefreshToken);
     }
 }

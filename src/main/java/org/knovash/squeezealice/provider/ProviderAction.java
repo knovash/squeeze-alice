@@ -68,7 +68,7 @@ public class ProviderAction {
         }
 
         List<Device> devicesForAsync = responseYandex.payload.devices;
-        log.info("\nRUN DEVICES CAPABILITIES. SIZE=" + devicesForAsync.size());
+        log.info("RUN DEVICES CAPABILITIES. SIZE=" + devicesForAsync.size());
 // если устройств нет - выход
         if (!devicesForAsync.isEmpty()) {
             CompletableFuture.runAsync(() -> {

@@ -293,7 +293,7 @@ public class Player {
         }
         log.info("PLAYER: " + this.name + " PLAYLISTNAME: " + response.result._name);
         this.playlistName = response.result._name;
-        if (response.result._name != null){
+        if (response.result._name != null) {
 //            log.info("--- this.playlistNameShort = playlistName");
 //            log.info("--- PLAYLIST NAME: " + playlistName);
             this.playlistNameShort = playlistName // playlistName
@@ -302,8 +302,8 @@ public class Player {
                     .replaceAll("\\(.*", "")
                     .replaceAll("\\[.*", "")
                     .replaceAll(",", " ")
-                    .replaceAll("  ", " ");}
-        else this.playlistNameShort = null; // playlistName
+                    .replaceAll("  ", " ");
+        } else this.playlistNameShort = null; // playlistName
         return response.result._name;
     }
 
@@ -423,6 +423,8 @@ public class Player {
 
     public Player ctrlPrevTrack() {
         log.info("PLAYER: " + this.name + " NEXT TRACK");
+//        this.shuffleOff();
+        this.repeatOff();
         int tracks = this.playerStatus.result.playlist_tracks;
         if (tracks > 1)
 //        if (!this.tracks().equals("1"))
@@ -432,6 +434,8 @@ public class Player {
 
     public Player ctrlNextTrack() {
         log.info("PLAYER: " + this.name + " NEXT TRACK");
+//        this.shuffleOff();
+        this.repeatOff();
         if (this.playerStatus.result.playlist_tracks > 1)
             Requests.postToLmsForStatus(RequestParameters.nexttrack(this.name).toString());
         return this;
@@ -445,13 +449,25 @@ public class Player {
 
     public Player shuffleOn() {
         log.info("PLAYER: " + this.name + " SHUFFLE ON");
-        Requests.postToLmsForStatus(RequestParameters.shuffleon(this.name).toString());
+        Requests.postToLmsForStatus(RequestParameters.shuffleOn(this.name).toString());
         return this;
     }
 
     public Player shuffleOff() {
         log.info("PLAYER: " + this.name + " SHUFFLE OFF");
-        Requests.postToLmsForStatus(RequestParameters.shuffleoff(this.name).toString());
+        Requests.postToLmsForStatus(RequestParameters.shuffleOff(this.name).toString());
+        return this;
+    }
+
+    public Player repeatOn() {
+        log.info("PLAYER: " + this.name + " REPEAT ON");
+        Requests.postToLmsForStatus(RequestParameters.repeatOn(this.name).toString());
+        return this;
+    }
+
+    public Player repeatOff() {
+        log.info("PLAYER: " + this.name + " REPEAT OFF");
+        Requests.postToLmsForStatus(RequestParameters.repeatOff(this.name).toString());
         return this;
     }
 
@@ -459,6 +475,27 @@ public class Player {
         log.info("SYNC " + this.name + " TO " + toPlayerName + " SYNC=true");
         Requests.postToLmsForStatus(RequestParameters.sync(this.name, toPlayerName).toString());
         this.sync = true;
+        return this;
+    }
+
+    public Player syncToPlaying() {
+        Player playingPlayer = lmsPlayers.playingPlayer(this.name, false);
+        if (playingPlayer == null) {
+            log.info("NO PLAYING PLAYER");
+        } else {
+            this.syncTo(playingPlayer.name);
+            this.sync = true;
+        }
+        return this;
+    }
+
+    public Player syncToPlayingAndStopPlayingPlayer() {
+        Player playingPlayer = lmsPlayers.playingPlayer(this.name, false);
+        if (playingPlayer != null) {
+            this.syncTo(playingPlayer.name);
+            this.sync = true;
+            playingPlayer.turnOffMusic();
+        }
         return this;
     }
 
@@ -678,11 +715,13 @@ public class Player {
         String url = this.path();
         String title = "this.title"; // favoritesAdd
         log.info("NOW PATH: " + url);
-        if (url.contains("spotify")) {
-            url = Spotify.lastPath;
-            title = Spotify.lastTitle;
-            log.info("SPOTIFY LAST: " + url);
-        }
+        title = this.requestTitle();
+//        if (url.contains("spotify")) {
+//            url = Spotify.lastPath;
+//
+////            title = Spotify.lastTitle;
+//            log.info("SPOTIFY LAST: " + url);
+//        }
         int size = this.favorites().size() + 1;
         log.info("FAVORITES BEFORE SIZE: " + size);
         title = size + " " + title;
@@ -994,19 +1033,24 @@ public class Player {
         return expired;
     }
 
-    public Player switchToHere() {
-        log.info("TRY TRANSFER IF SPOTIFY PLAY");
-        if (Spotify.transfer(this)) {
-            log.info("SPOTIFY TRANSFER TO " + this.name + " FINISHED OK");
-            return this;
-        }
-        if (this.playing) {
-            log.info("PLAYER PLAYING. STOP ALL OTHER");
-        } else {
-            log.info("PLAYER NOT PLAY. SYNC TO PLAYING OR PLAY LAST. STOP ALL OTHER");
-            this.turnOnMusic(null); // switchToHere
-        }
-        this.stopAllOther(); // switchToHere
+    public Player switchToHereAsync(boolean spotifyPlaying) {
+//      Spotify.currentlyPlaying(); выполняется в VoiceActions.syncSwitchToHere
+        CompletableFuture.runAsync(() -> {
+
+            log.info("Spotify check if playing");
+            if (spotifyPlaying) {
+                log.info("Spotify is playing. Transferring to player: {}", this.name);
+                Spotify.transfer(this);
+            } else {
+                log.info("Spotify is not playing. Syncing to playing player and stopping others.");
+                this.syncToPlaying();
+                this.stopAllOther();
+                if (!this.mode().equals("play")) {
+                    log.info("No player is playing. Turning on music for player: {}", this.name);
+                    this.turnOnMusic(null);
+                }
+            }
+        }).thenRunAsync(() -> lmsPlayers.afterAll());
         return this;
     }
 
@@ -1061,14 +1105,14 @@ public class Player {
     public String toString() {
         return String.format(
                 "ROOM:%-10s" +
-                "NAME:%-15s " +
-                "CONNECTED:%-5b " +
-                "SEPARATED:%-5b " +
-                "SYNC:%-5b " +
-                "VOL:%-3s " +
-                "MODE:%-7s " +
-                "PLAY:%-5b " +
-                "TIME:%-5s ",
+                        "NAME:%-15s " +
+                        "CONNECTED:%-5b " +
+                        "SEPARATED:%-5b " +
+                        "SYNC:%-5b " +
+                        "VOL:%-3s " +
+                        "MODE:%-7s " +
+                        "PLAY:%-5b " +
+                        "TIME:%-5s ",
                 room,
                 name,
                 connected,
@@ -1080,7 +1124,6 @@ public class Player {
                 lastPlayTime
         );
     }
-
 
 
     @Override
