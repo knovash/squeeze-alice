@@ -38,19 +38,34 @@ public class VoiceActions {
     }
 
     public static String shuffleOn(Player player) {
-        log.info("SEPARATE ON");
+        log.info("SHUFFLE ON");
         CompletableFuture.runAsync(() -> player.shuffleOn())
                 .thenRunAsync(() -> lmsPlayers.afterAll());
         return "включаю рандом";
     }
 
     public static String shuffleOff(Player player) {
-        log.info("SEPARATE ON");
+        log.info("SHUFFLE OFF");
         CompletableFuture.runAsync(() -> player.shuffleOff())
                 .thenRunAsync(() -> lmsPlayers.afterAll());
         return "выключаю рандом";
     }
 
+    public static String repeatOn(Player player) {
+        log.info("REPEAT ON");
+        CompletableFuture.runAsync(() -> player.repeatOn())
+                .thenRunAsync(() -> lmsPlayers.afterAll());
+        return "включаю повтор";
+    }
+
+    public static String repeatOff(Player player) {
+        log.info("REPEAT OFF");
+        CompletableFuture.runAsync(() -> player.repeatOff())
+                .thenRunAsync(() -> lmsPlayers.afterAll());
+        return "выключаю повтор";
+    }
+    
+    
     public static String separateOn(Player player) {
         log.info("SEPARATE ON");
         CompletableFuture.runAsync(() -> player.separateOn())
@@ -90,7 +105,7 @@ public class VoiceActions {
         log.info("INDEX: " + index);
         CompletableFuture.runAsync(() -> player
                         .ifExpiredAndNotPlayingUnsyncWakeSet(null)
-                        .playChannel(index))
+                        .playChannelRelativeOrAbsolute(String.valueOf(index),false))
                 .thenRunAsync(() -> lmsPlayers.afterAll());
         return answer;
     }

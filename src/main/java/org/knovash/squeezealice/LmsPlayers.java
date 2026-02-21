@@ -18,7 +18,6 @@ import org.knovash.squeezealice.yandex.Yandex;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
@@ -31,11 +30,8 @@ import static org.knovash.squeezealice.web.PagePlayers.*;
 public class LmsPlayers {
 
     public List<Player> players;
-    //    public List<String> playersNames = new ArrayList<>();
-//    public List<String> playersNamesOnLine = new ArrayList<>();
-//    public List<String> playersNamesOffLine = new ArrayList<>();
-    public String lastPath;
-    public int lastChannel = 1;
+    public String lastPathCommon;
+    public int lastChannelCommon = 1;
     public String btPlayerInQuery = "homepod";
     public String btPlayerName = "HomePod";
     public String tvPlayerInQuery = "homepod1";
@@ -47,14 +43,10 @@ public class LmsPlayers {
     public static ServerStatusByName serverStatus = new ServerStatusByName();
     public List<String> autoRemoteUrls = new ArrayList<>();
     public static String saveToFileJson = "data/lms_players.json";
-
     public List<String> playingPlayersNames;
     public List<String> playingPlayersNamesNotInCurrentGrop;
     public List<String> playersNamesInCurrentGroup;
-
-
     public Boolean toggleWake = false;
-
     public Map<Integer, Integer> scheduleAll = new HashMap<>(Map.of(
             0, 10,
             7, 15,
@@ -74,7 +66,8 @@ public class LmsPlayers {
         if (!lmsServerOnline) return;
         if (this.players == null) this.players = new ArrayList<>();
         String json = Requests.postToLmsForJsonBody(RequestParameters.serverstatusname().toString());
-//        log.info("UPDATE RESPONSE:\n" + json);
+//        log.info("GET SERVER STATUS NAME");
+//        log.info(json);
         if (json == null) return;
         json = JsonUtils.replaceSpace(json);
         json = json.replaceAll("\"newversion.*</a>\\.\"", "\"newversion\": \"--\"");
@@ -123,43 +116,19 @@ public class LmsPlayers {
             log.info("NO PLAYERS lms_players.json");
             return;
         }
-
         // Сохраняем все поля из прочитанного объекта
         this.players = lp.players;
         this.autoRemoteUrls = lp.autoRemoteUrls; // <-- Теперь это поле тоже загружается
-
         this.toggleWake = lp.toggleWake;
-
-
-        this.lastPath = lp.lastPath;
-        this.lastChannel = lp.lastChannel;
-//        this.btPlayerInQuery = lp.btPlayerInQuery;
+        this.lastPathCommon = lp.lastPathCommon;
+        this.lastChannelCommon = lp.lastChannelCommon;
         this.btPlayerName = lp.btPlayerName;
-//        this.tvPlayerInQuery = lp.tvPlayerInQuery;
-//        this.tvPlayerName = lp.tvPlayerName;
         this.delayUpdate = lp.delayUpdate;
         this.delayExpire = lp.delayExpire;
         this.syncAlt = lp.syncAlt;
         this.lastThis = lp.lastThis;
-//        this.playingPlayersNames = lp.playingPlayersNames;
-//        this.playingPlayersNamesNotInCurrentGrop = lp.playingPlayersNamesNotInCurrentGrop;
-//        this.playersNamesInCurrentGroup = lp.playersNamesInCurrentGroup;
-
         log.info("PLAYERS FROM lms_players.json: " + this.players.stream().map(p -> p.name).collect(Collectors.toList()));
         log.info("autoRemoteUrls LOADED: " + this.autoRemoteUrls);
-    }
-
-
-    public void read2() {
-        log.info("READ FILE: " + LmsPlayers.saveToFileJson);
-        this.players = new ArrayList<>();
-        LmsPlayers lp = JsonUtils.jsonFileToPojo(LmsPlayers.saveToFileJson, LmsPlayers.class);
-        if (lp == null) {
-            log.info("NO PLAYERS lms_players.json");
-        } else {
-            this.players = lp.players;
-        }
-        log.info("PLAYERS FROM lms_players.json: " + this.players.stream().map(p -> p.name).collect(Collectors.toList()));
     }
 
     public Player playerByCorrectName(String name) {
@@ -379,9 +348,7 @@ public class LmsPlayers {
     public void autoremoteRequest() {
         log.info("REQUEST TASKER AUTOREMOTE REFRESH");
         log.info("URLS SIZE: {}", this.autoRemoteUrls.size());
-
         this.autoRemoteUrls.forEach(url -> {
-
             log.info("POST TO AUTOREMOTE: {}", url);
             try {
                 HttpResponse response = Request.Post(url)
@@ -389,7 +356,6 @@ public class LmsPlayers {
                         .socketTimeout(5000)
                         .execute()
                         .returnResponse();
-
                 int statusCode = response.getStatusLine().getStatusCode();
 
                 log.error("POST. Status: {}, URL: {}", statusCode, url);
@@ -399,22 +365,6 @@ public class LmsPlayers {
             }
         });
     }
-
-
-    public void autoremoteпRequest() {
-        log.info("\nREQUEST TASKER AUTOREMOTE REFRESH");
-        log.info("URLS SIZE: " + this.autoRemoteUrls.size());
-        this.autoRemoteUrls.stream().forEach(url -> {
-            log.info("POST TO AUTOREMOTE: " + url);
-            if (url == null) return;
-            try {
-                Request.Post(url).execute();
-            } catch (IOException e) {
-                log.info("POST ERROR " + e);
-            }
-        });
-    }
-
 
     public List<List<String>> syncgroups() {
         Response response = Requests.postToLmsForResponse(RequestParameters.syncgroups().toString());
@@ -469,21 +419,13 @@ public class LmsPlayers {
 
 
     public void afterAll() {
-        log.info("\nAFTER ALL - SAVE LAST TIME");
-        // сохранить состояние плееров - время и путь
+// сохранить состояние плееров - время и путь
         this.players.stream().filter(player -> player.connected).forEach(player -> player.saveLastTimePath());
-        this.write();
 // запрос на обновление виджетов таскера
-
-        log.info("\nAFTER ALL - AUTOREMOTE REFRESH");
         this.autoremoteRequest();
-//        обновить отображение в Яндекс
+// обновить отображение в Яндекс
         this.updateLmsPlayers();
         Yandex.sendAllStates();
 
-// для автотеста - все действия завершены
-
-        log.info("\nAFTER ALL - HIVE TEST");
-        hive.publish("test", "test");
     }
 }

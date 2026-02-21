@@ -15,8 +15,9 @@ public class SwitchQueryCommand {
 
     public static Context action(Context context) {
         HashMap<String, String> queryParams = context.queryMap;
-        context.bodyResponse = "\nBAD REQUEST NO ACTION IN QUERY";
+        context.bodyResponse = "BAD REQUEST NO ACTION IN QUERY";
         if (!queryParams.containsKey("action")) return context;
+
         context.code = 200;
         String action = queryParams.get("action");
         String playerInQuery = queryParams.get("player");
@@ -29,13 +30,13 @@ public class SwitchQueryCommand {
 // найти плеер по похожему имени
 // если плеер не найден попробовать взять плеер по похожему названию комнаты
         player = null;
-        if (playerInQuery != null) {
-            if (playerInQuery.equals("btremote")) playerInQuery = lmsPlayers.btPlayerName;
-            player = lmsPlayers.playerByNearestName(playerInQuery);
-            if (player == null) player = lmsPlayers.playerByNearestRoom(playerInQuery);
-        }
+        if (playerInQuery == null && roomInQuery != null) player = lmsPlayers.playerByNearestRoom(roomInQuery);
+        if (playerInQuery != null && playerInQuery.equals("btremote")) playerInQuery = lmsPlayers.btPlayerName;
+        if (playerInQuery != null) player = lmsPlayers.playerByNearestName(playerInQuery);
 
-        log.info("\nUPDATE LMS PLAYERS");
+        log.info("PLAYER: " + player);
+
+        log.info("UPDATE LMS PLAYERS");
         lmsPlayers.updateLmsPlayers();
 
 // управление с пульта или виджетов таскер
@@ -50,14 +51,14 @@ public class SwitchQueryCommand {
             case ("channel"):
                 CompletableFuture.runAsync(() -> player
                                 .ifExpiredAndNotPlayingUnsyncWakeSet(null)
-                                .playChannel(Integer.valueOf(value)))
+                                .playChannelRelativeOrAbsolute(value,false))
                         .thenRunAsync(() -> lmsPlayers.afterAll());
                 response = player.name + " - play channel " + value;
                 break;
             case ("play"):
-//                CompletableFuture.runAsync(() -> player.turnOnMusic(null))
-//                        .thenRunAsync(() -> lmsPlayers.afterAll());
-//                response = player.name + " - play";
+                CompletableFuture.runAsync(() -> player.turnOnMusic(null))
+                        .thenRunAsync(() -> lmsPlayers.afterAll());
+                response = player.name + " - play";
                 break;
             case ("toggle_music"):
                 CompletableFuture.runAsync(() -> player.toggleMusic())
@@ -134,6 +135,10 @@ public class SwitchQueryCommand {
                 break;
             case ("get_refresh_json"): // Таскер для виджетов иконок плееров
                 response = Tasker.forTaskerWidgetsRefreshJson(player, value);
+                break;
+            case ("update_players"):
+                lmsPlayers.updateLmsPlayers();
+                response = "update players";
                 break;
             default:
                 log.info("ACTION NOT FOUND: " + action);

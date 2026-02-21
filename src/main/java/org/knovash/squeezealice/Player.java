@@ -43,17 +43,17 @@ public class Player {
 
     public String title;
     //    public String remoteMetaTitle; // определяется  playerStatus.result.remoteMeta.title
-    public Integer currentChannel = 0;
+    public Integer currentChannelPlayer = 0;
     public String playlistName;
     public String playlistNameShort;
 
-    public String lastPath;
-    public String lastPlayTime;
+    public String lastPathPlayer;
+    public String lastPlayTimePlayer;
+    public int lastChannelPlayer = 0; // для переключения канала в next и prev channel
 
     public Integer delay;
     public boolean separate = false;
     public boolean connected = false;
-    public int lastChannel = 0; // для переключения канала в next и prev channel
     public PlayerStatus playerStatus;
     public boolean sync;
 
@@ -94,6 +94,8 @@ public class Player {
 
     public void requestPlayerStatus() {
         String json = Requests.postToLmsForJsonBody(RequestParameters.status(this.name, 200).toString());
+//        log.info("PLAYER STATUS");
+//        log.info(json);
         if (json == null) {
             this.playerStatus = null;
             log.info("ERROR REQUEST PLAYER STATUS NULL " + this.name);
@@ -402,18 +404,11 @@ public class Player {
         Requests.postToLmsForStatus(RequestParameters.play(this.name, path).toString());
         Utils.sleep(1000);
         if (path.contains("spotify"))
-            this.lastPath = path; // TODO при сохранении последнего пути спотифай не затирается
+            this.lastPathPlayer = path; // TODO при сохранении последнего пути спотифай не затирается
         return this;
     }
 
-    public Player playChannel(Integer channel) {
-        if (channel == null) return this;
-        this.currentChannel = channel; // playChannel
-        log.info("CHANNEL: " + channel + " PLAYER: " + this.name);
-        Requests.postToLmsForStatus(RequestParameters.play(this.name, channel - 1).toString());
-        Utils.sleep(1000);
-        return this;
-    }
+
 
     public Player playSilence() {
         log.info("PLAYER: " + this.name + " PLAY SILENCE");
@@ -643,39 +638,65 @@ public class Player {
             else this.volumeSet("+" + value);
         }
         if (relative != null && relative.equals(false)) this.volumeSet(value);
-        return this.name + "-" + this.volume;
+        return this.name + " " + this.volume;
+    }
+
+
+
+
+
+
+
+
+
+    public Player playChannel(Integer channel) {
+        if (channel == null || channel == 0) return this;
+        Requests.postToLmsForStatus(RequestParameters.play(this.name, channel - 1).toString());
+        Utils.sleep(1000);
+        return this;
     }
 
     public String playChannelRelativeOrAbsolute(String value, Boolean relative) {
         if (value == null) return "ERROR CHANNEL NULL";
         int channel = Integer.parseInt(value);
         int delta = Integer.parseInt(value);
+        log.info("LAST CHANNEL PLAYER: " + lastChannelPlayer + " COMMON: " + lmsPlayers.lastChannelCommon);
 
         if (relative != null && relative.equals(true)) {
-            channel = 1;
+            channel = 0;
 // определить канал сейчас попробовать найти его номер в избранном
-            this.currentChannelIndexInFavorites(); // playChannelRelativeOrAbsolute
-            if (lastChannel != 0) channel = lastChannel + delta; // playChannelRelativeOrAbsolute
-            if (currentChannel != 0) channel = currentChannel + delta;
-            log.info("RELATIVE: " + relative + " CURRENT CHANNEL: " + currentChannel + " SET CHANNEL: " + channel + " PLAYER: " + this.name);
-        } else
+            channel = this.currentChannelIndexInFavorites(); // playChannelRelativeOrAbsolute
+            log.info("CHANNEL CURRENT FROM FAVORITES: " + channel);
+            if (channel == 0) channel = lastChannelPlayer;
+            log.info("CHANNEL LAST PLAYER: " + channel);
+            if (channel == 0) channel = lmsPlayers.lastChannelCommon;
+            log.info("CHANNEL LAST COMMON: " + channel);
+            log.info("CHANNEL DELTA: " + delta);
+            channel = channel + delta; // playChannelRelativeOrAbsolute
+            log.info("CHANNEL + DELTA: " + channel);
+            log.info("RELATIVE: " + relative + " CURRENT CHANNEL: " + currentChannelPlayer + " SET CHANNEL: " + channel + " PLAYER: " + this.name);
+        }
+        else
             log.info("RELATIVE: " + relative + " NEW CHANNEL: " + value + " SET CHANNEL: " + channel + " PLAYER: " + this.name);
 // включить канал
         this.playChannel(Integer.valueOf(channel)); // playChannelRelativeOrAbsolute
-        lmsPlayers.lastChannel = channel;
+
+
+        lmsPlayers.lastChannelCommon = channel;
+        lastChannelPlayer = channel;
+        log.info("LAST CHANNEL SET PLAYER: " + lastChannelPlayer + " COMMON: " + lmsPlayers.lastChannelCommon);
         return "PLAY CHANNEL " + channel;
     }
 
     public Integer currentChannelIndexInFavorites() {
-        String currentTitle = this.requestPlaylistName(); // currentChannelIndexInFavorites
-        currentChannel = 0; // currentChannelIndexInFavorites
-        List<String> favList = this.favorites(); // currentChannelIndexInFavorites
+        String currentTitle = this.requestPlaylistName();
+        currentChannelPlayer = 0;
+        List<String> favList = this.favorites();
         if (favList.contains(currentTitle)) {
-            currentChannel = favList.indexOf(currentTitle) + 1; // currentChannelIndexInFavorites
+            currentChannelPlayer = favList.indexOf(currentTitle) + 1;
         }
-        return currentChannel;
+        return currentChannelPlayer;
     }
-
 
     // выбор предыдущего канала через определение что сейчас играет или от последнего сохраненного канала
     public Player ctrlPrevChannel() {
@@ -693,20 +714,27 @@ public class Player {
 
     public Player ctrlNextChannelOrTrack() {
         log.info("PLAYER: " + this.name + " NEXT");
-        if (this.playerStatus.result.playlist_tracks < 2) this.ctrlNextChannel(); // ctrlNextChannelOrTrack
+        if (this.playerStatus.result.playlist_tracks < 2) this.ctrlNextChannel();
         else this.ctrlNextTrack();
         return this;
     }
 
     public Player ctrlPrevChannelOrTrack() {
         log.info("PLAYER: " + this.name + " PREV");
-//        int tracks = Integer.parseInt(this.tracks());
-//        int tracks = Integer.parseInt(String.valueOf(this.playerStatus.result.playlist_tracks));
-//        log.info("TRACKS IN PLAYLIST: " + tracks);
         if (this.playerStatus.result.playlist_tracks < 2) this.ctrlPrevChannel();
         else this.ctrlPrevTrack();
         return this;
     }
+
+
+
+
+
+
+
+
+
+
 
     public String favoritesAdd() {
         log.info("START ADD ON " + this.name);
@@ -787,8 +815,8 @@ public class Player {
     public Player playLast() {
         log.info("PLAY LAST");
         String thisPath = this.path();
-        String thisLastPath = this.lastPath;
-        String commonLastPath = lmsPlayers.lastPath;
+        String thisLastPath = this.lastPathPlayer;
+        String commonLastPath = lmsPlayers.lastPathCommon;
         log.info("THIS PATH: " + thisPath);
         log.info("THIS LAST PATH: " + thisLastPath);
         log.info("COMMON LAST PATH: " + commonLastPath);
@@ -798,24 +826,18 @@ public class Player {
         if (thisPath != null && !thisPath.equals(config.silence) && !thisPath.equals("")) {
             log.info("PUSH PLAY BUTTON: " + thisPath);
             this.play();
-            // TODO проверить если не играет включить канал 1
-            replay();
             return this;
         }
 // если у этого плеера нет пути играть последний сохраненый этого
         if (thisLastPath != null && !thisLastPath.equals(config.silence) && !thisLastPath.equals("") && lmsPlayers.lastThis) {
             log.info("PLAY THIS LAST PATH: " + thisLastPath);
             this.playPath(thisLastPath);
-            // TODO проверить если не играет включить канал 1
-            replay();
             return this;
         }
 // если у этого плеера нет пути и нет последнего этого то играть последний сохраненный общий
         if (commonLastPath != null && !commonLastPath.equals(config.silence) && !commonLastPath.equals("")) {
             log.info("PLAY COMMON LAST PATH: " + commonLastPath);
             this.playPath(commonLastPath);
-            // TODO проверить если не играет включить канал 1
-            replay();
             return this;
         }
 // если ничего не подошло - играть избранное 1
@@ -887,18 +909,18 @@ public class Player {
 
     public Player saveLastTimePath() {
 // сохранить последнее время
-        if (this.playing) this.lastPlayTime = LocalTime.now(zoneId).truncatedTo(MINUTES).toString();
+        if (this.playing) this.lastPlayTimePlayer = LocalTime.now(zoneId).truncatedTo(MINUTES).toString();
 // охранить последний путь
         String path = this.path();
-        if (this.lastPath != null && this.lastPath.contains("spotify") && path.contains("spotify")) {
+        if (this.lastPathPlayer != null && this.lastPathPlayer.contains("spotify") && path.contains("spotify")) {
             log.info("PATH IS SPOTIFY - SKIP SAVE LAST PATH : " + path);
             return this;
         }
         if (path != null && !path.equals(config.silence)) {
-            this.lastPath = path;
-            lmsPlayers.lastPath = this.lastPath;
+            this.lastPathPlayer = path;
+            lmsPlayers.lastPathCommon = this.lastPathPlayer;
         }
-        log.info(this.name + " SAVE  LAST TIME: " + this.lastPlayTime + " SAVE LAST PATH: " + this.lastPath);
+        log.info(this.name + " SAVE  LAST TIME: " + this.lastPlayTimePlayer + " SAVE LAST PATH: " + this.lastPathPlayer);
         return this;
     }
 
@@ -1024,12 +1046,12 @@ public class Player {
     public boolean checkLastPlayTimeExpired() {
 // 10 минут до сброса громкости на значаение по пресету когда не играет
         long delayExpire = lmsPlayers.delayExpire;
-        if (this.lastPlayTime == null) return true;
-        LocalTime playerTime = LocalTime.parse(this.lastPlayTime).truncatedTo(MINUTES);
+        if (this.lastPlayTimePlayer == null) return true;
+        LocalTime playerTime = LocalTime.parse(this.lastPlayTimePlayer).truncatedTo(MINUTES);
         LocalTime nowTime = LocalTime.now(zoneId).truncatedTo(MINUTES);
         long diff = playerTime.until(nowTime, MINUTES);
         Boolean expired = diff > delayExpire || diff < 0;
-        log.info("LAST PLAY TIME: " + this.lastPlayTime + " NOW: " + nowTime + " DELAY MINUTES: " + delayExpire + " DIFF: " + diff + " EXPIRED: " + expired);
+        log.info("LAST PLAY TIME: " + this.lastPlayTimePlayer + " NOW: " + nowTime + " DELAY MINUTES: " + delayExpire + " DIFF: " + diff + " EXPIRED: " + expired);
         return expired;
     }
 
@@ -1121,7 +1143,7 @@ public class Player {
                 volume,
                 mode,
                 playing,
-                lastPlayTime
+                lastPlayTimePlayer
         );
     }
 
@@ -1164,18 +1186,5 @@ public class Player {
         log.info("PLAYLIST: " + list);
         return result;
     }
-
-
-    public void replay() {
-        log.info("CHECK PLAY");
-        // TODO проверить если не играет включить канал 1
-//        Utils.sleep(3000);
-//        String mode = this.mode();
-//        if (!mode.equals("play")) {
-//            log.info("CHECK PLAY FAILED. PLAY CHANNEL 1");
-//            this.playChannel(1); // replay
-//        }
-    }
-
 
 }

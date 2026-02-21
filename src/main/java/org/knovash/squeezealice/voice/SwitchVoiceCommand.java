@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-//import static jdk.javadoc.internal.doclets.formats.html.markup.HtmlStyle.title;
 import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
@@ -23,7 +22,7 @@ public class SwitchVoiceCommand {
 
     public static String aliceId;
     public static String room;
-    public static String clientType = "speaker"; // если запрос с колонки то завершить диалог чтобы не висеть в навыке, если диалог в браузере то не завершать
+//    public static String clientType = "speaker"; // ВОЗМОЖНО ИСПОЛЬЗУЕТСЯ НА СТОРОНЕ ОБЛАКА если запрос с колонки то завершить диалог чтобы не висеть в навыке, если диалог в браузере то не завершать
     public static String artist;
     public static String album;
     public static String track;
@@ -31,43 +30,57 @@ public class SwitchVoiceCommand {
 
     public static Context action(Context context) {
         String answer = createAnswer(context);
+//        обрабатывает котекст и возвращает просто текст ответа для алисы
+        log.info("ANSWER: " + answer);
+// кладет текст в контекст запроса алисы
+        context.bodyResponse = answer;
+//        context.bodyResponse = createResponse(answer);
 
-        context.bodyResponse = createResponse(answer);
-
+        log.info("bodyResponse: " +  context.bodyResponse.toString());
 //        context.bodyResponse = answer;
         context.code = 200;
         return context;
     }
-
-    public static String createResponse(String text) {
-        AliceVoiceResponsePojo alice = new AliceVoiceResponsePojo();
-        AliceVoiceResponsePojo.ResponseAlice responseAlice = new AliceVoiceResponsePojo.ResponseAlice();
-        responseAlice.text = text;
-        responseAlice.end_session = true;
-// если запрос с колонки то завершить диалог чтобы не висеть в навыке, если диалог в браузере то не завершать
-        if (clientType.equals("browser")) responseAlice.end_session = false;
-        log.info("END SESSION: " + responseAlice.end_session);
-        alice.version = "1.0";
-        alice.response = responseAlice;
-        String json = "";
-//        json = JsonUtils.pojoToJson(alice);
-//        json = json.replaceAll("\\n", "");
-        json = text;
-        return json;
-    }
+//Облачный прокси-сервис, который принимает HTTP-запросы от Алисы и отправляет MQTT-сообщения, получает этот ответ,
+// формирует из него полноценный JSON-ответ согласно требованиям Яндекс.Диалогов (добавляет version, session,
+// response.end_session и т.д.) и отправляет его обратно Алисе.
+//    public static String createResponse(String text) { // возможно метод ненужен
+//        log.info("TEXT: " + text);
+//        AliceVoiceResponsePojo alice = new AliceVoiceResponsePojo();
+//        AliceVoiceResponsePojo.ResponseAlice responseAlice = new AliceVoiceResponsePojo.ResponseAlice();
+//        responseAlice.text = text;
+//        responseAlice.end_session = true;
+//// если запрос с колонки то завершить диалог чтобы не висеть в навыке, если диалог в браузере то не завершать
+//        if (clientType.equals("browser")) responseAlice.end_session = false;
+//        log.info("END SESSION: " + responseAlice.end_session);
+//        alice.version = "1.0";
+//        alice.response = responseAlice;
+//        String json = "";
+////        json = JsonUtils.pojoToJson(alice);
+////        json = json.replaceAll("\\n", "");
+//        json = text;
+//        return json;
+//    }
 
     public static String createAnswer(Context context) {
+//        сюда приходит весь запрос от алисы
+//        log.info("CONTEXT: " + context.toJson().toString());
         String body = context.body;
         String command = JsonUtils.jsonGetValue(body, "command");
-        String clientId = JsonUtils.jsonGetValue(body, "client_id");
+
+
+//         ВОЗМОЖНО ИСПОЛЬЗУЕТСЯ НА СТОРОНЕ ОБЛАКА
 // если запрос с колонки то завершить диалог чтобы не висеть в навыке, если диалог в браузере то не завершать
-        if (clientId.contains("browser")) clientType = "browser";
-        else clientType = "speaker";
-        log.info("COMMAND: " + command + " CLIENT_TYPE: " + clientType);
+//        String clientId = JsonUtils.jsonGetValue(body, "client_id");
+//        if (clientId.contains("browser")) clientType = "browser";
+//        else clientType = "speaker";
+//        log.info("COMMAND: " + command + " CLIENT_TYPE: " + clientType);
+
         if (command == null) return "я не поняла команду";
 //        определить идентификатор application_id колонки с алисой для привязки к комнате где она находится
         aliceId = JsonUtils.jsonGetValue(body, "application_id");
         return processCommand(aliceId, command);
+//        возвращает просто текст ответа
     }
 
     public static String processCommand(String roomId, String command) {
@@ -86,14 +99,15 @@ public class SwitchVoiceCommand {
         if (cmd.contains("помощь") || cmd.contains("помоги") || cmd.contains("подскажи")) return HELP;
         if (cmd.contains("что ты умеешь") || cmd.contains("что ты можешь")) return CAPABILITIES;
 
-        // Определение типа клиента
-        clientType = cmd.isEmpty() ? "browser" : "speaker";
+        // Определение типа клиента ВОЗМОЖНО ИСПОЛЬЗУЕТСЯ НА СТОРОНЕ ОБЛАКА
+//        clientType = cmd.isEmpty() ? "browser" : "speaker";
 
+        if (config.lmsIp == null) return "медиасервер не найден";
         // Обработка команд привязки комнаты
         if (cmd.startsWith("это комната")) {
-            return cmd.contains("с колонкой")
-                    ? selectRoomWithSpeaker(command)
-                    : selectRoomByCommand(command);
+            if (cmd.contains("с колонкой"))
+                return selectRoomWithSpeaker(command);
+            return selectRoomByCommand(command);
         }
 
         // Получение текущей комнаты
@@ -112,7 +126,6 @@ public class SwitchVoiceCommand {
         Device device = SmartHome.getDeviceByCorrectRoom(room);
         if (device == null) return "устройство не найдено. скажите навыку, выбери колонку и название колонки";
         Player player = lmsPlayers.playerByDeviceId(device.id);
-        if (config.lmsIp == null) return "медиасервер не найден";
         if (player == null)
             return "в комнате " + room + " колонка еще не выбрана. скажите навыку, выбери колонку и название колонки";
 
@@ -126,6 +139,8 @@ public class SwitchVoiceCommand {
         if (cmd.matches("(включи )?вместе")) return VoiceActions.separateAllOff(player);
         if (cmd.matches("(включи )?(рандом|шафл|shuffle|random)")) return VoiceActions.shuffleOn(player);
         if (cmd.matches("(выключи )?(рандом|шафл|shuffle|random)")) return VoiceActions.shuffleOff(player);
+        if (cmd.matches("(включи )?(повтор)")) return VoiceActions.repeatOn(player);
+        if (cmd.matches("(выключи )?(повтор)")) return VoiceActions.repeatOff(player);
         if (cmd.matches("(включи )?(дальше|следующий)")) return playlistNextTrack(player);
         if (cmd.matches("(включи|подключи) пульт")) return connectBtRemote(command, player);
         if (cmd.contains("где пульт")) return whereBtRemote();
@@ -168,7 +183,6 @@ public class SwitchVoiceCommand {
         room = target;
         log.info("ROOM: " + room);
 
-// selectRoomByCorrectRoom] - TRY WRITE TO rooms.json ID: {null=Веранда}
         selectRoomByCorrectRoom(target);
 
         log.info("SELECT ROOM OK");

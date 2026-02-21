@@ -246,7 +246,7 @@ public class ProviderAction {
         }
         log.info("\nPLAY SAME CHANNEL: " + channel);
         Player player = lmsPlayers.playerByDeviceId(devices.get(0).id);
-        if (channel != null) player.playChannel(channel);
+        if (channel != null) player.playChannelRelativeOrAbsolute(channel.toString(),false);
         else player.playLast();
     }
 
