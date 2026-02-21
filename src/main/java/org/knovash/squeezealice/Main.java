@@ -58,7 +58,7 @@ public class Main {
         log.info("VERSION 1.2");
 
         PlayersUpdateScheduler.startPeriodicUpdate(1);
-        SpotifyRequests.ifExpiredRunRefersh();
+//        SpotifyRequests.ifExpiredRunRefersh();
         hive.periodicCheckStart();
 
 

@@ -335,10 +335,10 @@ public class Hive implements MqttCallbackExtended {
         config.spotifyTokenExpiresAt = spotifyExpiresAt;
 
         // Получаем имя пользователя Spotify
-        config.spotifyName = SpotifyUserParser.parseUserInfo(Spotify.me()).getDisplayName();
+//        config.spotifyName = SpotifyUserParser.parseUserInfo(Spotify.me()).getDisplayName();
         config.write();
 
-        log.info("Spotify user: {}", config.spotifyName);
+//        log.info("Spotify user: {}", config.spotifyName);
         responseManager.completeResponse(correlationId, "OK");
     }
 

@@ -1,6 +1,7 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.voice.VoiceActions;
 
 import java.util.HashMap;
@@ -139,6 +140,10 @@ public class SwitchQueryCommand {
             case ("update_players"):
                 lmsPlayers.updateLmsPlayers();
                 response = "update players";
+                break;
+            case ("spotify_me"):
+                Spotify.me();
+                response = "spotify_me";
                 break;
             default:
                 log.info("ACTION NOT FOUND: " + action);
