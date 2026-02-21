@@ -9,6 +9,8 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Log4j2
@@ -25,7 +27,7 @@ public class Spotify {
         log.info("SPOTIFY INFO ME");
         String uri = "https://api.spotify.com/v1/me";
         log.info("URI: " + uri);
-        String body = SpotifyRequests.requestWithRefreshGet(uri);  // использует старый requestGet
+        String body = SpotifyRequests.requestGet(uri);  // использует старый requestGet
         log.info("SPOTY ME BODY: " + body);
         return body;
     }
@@ -34,52 +36,109 @@ public class Spotify {
 
     public static String getLinkArtist(String target) {
         log.info("ARTIST: " + target);
-        target = target.replace(" ", "%20");
-        String url = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "artist" + "&limit=" + "3" + "&market=ES";
-        String json = SpotifyRequests.requestWithRefreshGet(url);
-        if (json == null) return null;
-        json = json.replace("\\\"", "");
-        SpotifyArtists spotifyArtists = JsonUtils.jsonToPojo(json, SpotifyArtists.class);
-        String uri = spotifyArtists.artists.items.get(0).uri;
-        SwitchVoiceCommand.artist = spotifyArtists.artists.items.get(0).name;
-        log.info("ARTIST URI: " + uri);
-        return uri;
+        try {
+            String encodedQuery = URLEncoder.encode(target, StandardCharsets.UTF_8);
+            String url = "https://api.spotify.com/v1/search?q=" + encodedQuery + "&type=artist&limit=3&market=ES";
+            String json = SpotifyRequests.requestGet(url);
+            if (json == null) return null;
+            json = json.replace("\\\"", ""); // Осторожно: может повредить JSON
+            SpotifyArtists spotifyArtists = JsonUtils.jsonToPojo(json, SpotifyArtists.class);
+            if (spotifyArtists.artists.items.isEmpty()) {
+                log.warn("No artists found for: " + target);
+                return null;
+            }
+            String uri = spotifyArtists.artists.items.get(0).uri;
+            SwitchVoiceCommand.artist = spotifyArtists.artists.items.get(0).name;
+            log.info("ARTIST URI: " + uri);
+            return uri;
+        } catch (Exception e) {
+            log.error("Encoding error", e);
+            return null;
+        }
     }
 
     public static String getLinkTrack(String target) {
         log.info("TRACK: " + target);
-        target = target.replace(" ", "%20");
-        String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "track" + "&limit=" + "5" + "&market=ES";
-        String json = SpotifyRequests.requestWithRefreshGet(uri);
-        if (json == null) return null;
-        json = json.replace("\\\"", "");
-        SpotifySearchTrack spotifySearchTrack = JsonUtils.jsonToPojo(json, SpotifySearchTrack.class);
-        spotifySearchTrack.tracks.items.forEach(it -> log.info("TRACK: " + it.artists.get(0).name + " - " + it.name));
-        String link = spotifySearchTrack.tracks.items.get(0).uri;
-        SwitchVoiceCommand.artist = spotifySearchTrack.tracks.items.get(0).artists.get(0).name;
-        SwitchVoiceCommand.track = spotifySearchTrack.tracks.items.get(0).name;
-        log.info("ARTIST: " + SwitchVoiceCommand.artist);
-        log.info("TRACK: " + SwitchVoiceCommand.track);
-        log.info("URI: " + link);
-        return link;
+        try {
+            String encodedQuery = URLEncoder.encode(target, StandardCharsets.UTF_8);
+            String url = "https://api.spotify.com/v1/search?q=" + encodedQuery + "&type=track&limit=5&market=ES";
+            String json = SpotifyRequests.requestGet(url);
+            if (json == null) return null;
+            json = json.replace("\\\"", "");
+            SpotifySearchTrack spotifySearchTrack = JsonUtils.jsonToPojo(json, SpotifySearchTrack.class);
+            if (spotifySearchTrack.tracks.items.isEmpty()) {
+                log.warn("No tracks found for: " + target);
+                return null;
+            }
+            spotifySearchTrack.tracks.items.forEach(it -> log.info("TRACK: " + it.artists.get(0).name + " - " + it.name));
+            String link = spotifySearchTrack.tracks.items.get(0).uri;
+            SwitchVoiceCommand.artist = spotifySearchTrack.tracks.items.get(0).artists.get(0).name;
+            SwitchVoiceCommand.track = spotifySearchTrack.tracks.items.get(0).name;
+            log.info("ARTIST: " + SwitchVoiceCommand.artist);
+            log.info("TRACK: " + SwitchVoiceCommand.track);
+            log.info("URI: " + link);
+            return link;
+        } catch (Exception e) {
+            log.error("Encoding error", e);
+            return null;
+        }
     }
 
     public static String getLinkAlbum(String target) {
         log.info("ALBUM TARGET: " + target);
-        target = target.replace(" ", "%20");
-        String uri = "https://api.spotify.com/v1/search?q=" + target + "&type=" + "album" + "&limit=" + "5" + "&market=ES";
-        String json = SpotifyRequests.requestWithRefreshGet(uri);
-        if (json == null) return null;
-        json = json.replace("\\\"", "");
-        SpotifySearchAlbum spotifySearchAlbum = JsonUtils.jsonToPojo(json, SpotifySearchAlbum.class);
-        spotifySearchAlbum.albums.items.forEach(it -> log.info("ALBUM: " + it.artists.get(0).name + " - " + it.name));
-        String link = spotifySearchAlbum.albums.items.get(0).uri;
-        SwitchVoiceCommand.artist = spotifySearchAlbum.albums.items.get(0).artists.get(0).name;
-        SwitchVoiceCommand.album = spotifySearchAlbum.albums.items.get(0).name;
-        log.info("ARTIST: " + SwitchVoiceCommand.artist);
-        log.info("ALBUM: " + SwitchVoiceCommand.album);
-        log.info("URI: " + link);
-        return link;
+        try {
+            String encodedQuery = URLEncoder.encode(target, StandardCharsets.UTF_8);
+            String url = "https://api.spotify.com/v1/search?q=" + encodedQuery + "&type=album&limit=5&market=ES";
+            String json = SpotifyRequests.requestGet(url);
+            if (json == null) return null;
+            json = json.replace("\\\"", "");
+            SpotifySearchAlbum spotifySearchAlbum = JsonUtils.jsonToPojo(json, SpotifySearchAlbum.class);
+            if (spotifySearchAlbum.albums.items.isEmpty()) {
+                log.warn("No albums found for: " + target);
+                return null;
+            }
+            spotifySearchAlbum.albums.items.forEach(it -> log.info("ALBUM: " + it.artists.get(0).name + " - " + it.name));
+            String link = spotifySearchAlbum.albums.items.get(0).uri;
+            SwitchVoiceCommand.artist = spotifySearchAlbum.albums.items.get(0).artists.get(0).name;
+            SwitchVoiceCommand.album = spotifySearchAlbum.albums.items.get(0).name;
+            log.info("ARTIST: " + SwitchVoiceCommand.artist);
+            log.info("ALBUM: " + SwitchVoiceCommand.album);
+            log.info("URI: " + link);
+            return link;
+        } catch (Exception e) {
+            log.error("Encoding error", e);
+            return null;
+        }
+    }
+
+    public static String getLinkPlaylist(String target) {
+        log.info("PLAYLIST TARGET: " + target);
+        try {
+            String encodedQuery = URLEncoder.encode(target, StandardCharsets.UTF_8);
+            // Исправлен тип на playlist
+            String url = "https://api.spotify.com/v1/search?q=" + encodedQuery + "&type=playlist&limit=5&market=ES";
+            String json = SpotifyRequests.requestGet(url);
+            if (json == null) return null;
+            json = json.replace("\\\"", "");
+            // Используем новый класс для плейлистов
+            SpotifySearchPlaylist spotifySearchPlaylist = JsonUtils.jsonToPojo(json, SpotifySearchPlaylist.class);
+            if (spotifySearchPlaylist.playlists.items.isEmpty()) {
+                log.warn("No playlists found for: " + target);
+                return null;
+            }
+            spotifySearchPlaylist.playlists.items.forEach(it ->
+                    log.info("PLAYLIST: " + it.owner.display_name + " - " + it.name));
+            String link = spotifySearchPlaylist.playlists.items.get(0).uri;
+            SwitchVoiceCommand.artist = spotifySearchPlaylist.playlists.items.get(0).owner.display_name;
+            SwitchVoiceCommand.playlist = spotifySearchPlaylist.playlists.items.get(0).name;
+            log.info("OWNER: " + SwitchVoiceCommand.artist);
+            log.info("PLAYLIST: " + SwitchVoiceCommand.playlist);
+            log.info("URI: " + link);
+            return link;
+        } catch (Exception e) {
+            log.error("Encoding error", e);
+            return null;
+        }
     }
 
     // ------- ОПТИМИЗИРОВАННЫЕ МЕТОДЫ -------
@@ -89,7 +148,7 @@ public class Spotify {
      * @return объект CurrentlyPlaying или null
      */
     public static CurrentlyPlaying getCurrentlyPlaying() {
-        String json = SpotifyRequests.requestWithRefreshGet("https://api.spotify.com/v1/me/player/currently-playing");
+        String json = SpotifyRequests.requestGet("https://api.spotify.com/v1/me/player/currently-playing");
         if (json == null) return null;
         json = json.replace("\\\"", "");
         CurrentlyPlaying cp = JsonUtils.jsonToPojo(json, CurrentlyPlaying.class);
@@ -118,22 +177,22 @@ public class Spotify {
     // Управление воспроизведением
     public static void pause() {
         log.info("Pausing Spotify");
-        SpotifyRequests.requestWithRetryPut("https://api.spotify.com/v1/me/player/pause");
+        SpotifyRequests.requestPut("https://api.spotify.com/v1/me/player/pause");
     }
 
     public static void play() {
         log.info("Resuming Spotify");
-        SpotifyRequests.requestWithRetryPut("https://api.spotify.com/v1/me/player/play");
+        SpotifyRequests.requestPut("https://api.spotify.com/v1/me/player/play");
     }
 
     public static void next() {
         log.info("Next track");
-        SpotifyRequests.requestWithRetryPost("https://api.spotify.com/v1/me/player/next");
+        SpotifyRequests.requestPost("https://api.spotify.com/v1/me/player/next");
     }
 
     public static void prev() {
         log.info("Previous track");
-        SpotifyRequests.requestWithRetryPost("https://api.spotify.com/v1/me/player/previous");
+        SpotifyRequests.requestPost("https://api.spotify.com/v1/me/player/previous");
     }
 
     // Громкость
@@ -153,7 +212,7 @@ public class Spotify {
                 return;
             }
             String uri = "https://api.spotify.com/v1/me/player/volume?volume_percent=" + volume;
-            SpotifyRequests.requestPutHttpClient(uri);
+            SpotifyRequests.requestPut(uri);
         } catch (NumberFormatException e) {
             log.error("Invalid volume value: {}", value);
         }
@@ -184,7 +243,7 @@ public class Spotify {
 
     // Состояние плеера
     public static PlayerState requestPlayerState() {
-        String json = SpotifyRequests.requestWithRefreshGet("https://api.spotify.com/v1/me/player/");
+        String json = SpotifyRequests.requestGet("https://api.spotify.com/v1/me/player/");
         if (json == null) return null;
         json = json.replace("\\\"", "");
         PlayerState state = JsonUtils.jsonToPojo(json, PlayerState.class);
@@ -204,7 +263,7 @@ public class Spotify {
         if (id.contains("album")) {
             String albumId = id.replace("spotify:album:", "");
             String uri = "https://api.spotify.com/v1/albums/" + albumId + "?fields=name,artists.name";
-            String json = SpotifyRequests.requestWithRefreshGet(uri);
+            String json = SpotifyRequests.requestGet(uri);
             if (json != null) {
                 AlbumsArtistTitle album = JsonUtils.jsonToPojo(json, AlbumsArtistTitle.class);
                 if (album.artists != null && !album.artists.isEmpty()) {
@@ -214,14 +273,14 @@ public class Spotify {
         } else if (id.contains("artist")) {
             String artistId = id.replace("spotify:artist:", "");
             String uri = "https://api.spotify.com/v1/artists/" + artistId + "?fields=name";
-            String json = SpotifyRequests.requestWithRefreshGet(uri);
+            String json = SpotifyRequests.requestGet(uri);
             if (json != null) {
                 name = JsonUtils.jsonGetValue(json, "name");
             }
         } else if (id.contains("playlist")) {
             String playlistId = id.replace("spotify:playlist:", "");
             String uri = "https://api.spotify.com/v1/playlists/" + playlistId + "?fields=name";
-            String json = SpotifyRequests.requestWithRefreshGet(uri);
+            String json = SpotifyRequests.requestGet(uri);
             if (json != null) {
                 name = JsonUtils.jsonGetValue(json, "name");
             }

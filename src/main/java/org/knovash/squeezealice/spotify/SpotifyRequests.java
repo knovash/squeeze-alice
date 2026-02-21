@@ -51,7 +51,7 @@ public class SpotifyRequests {
             log.debug("Request to {} returned {}", request.getURI(), statusCode);
 
             if (statusCode == 204) {
-                return null; // нет содержимого
+                return null;
             }
 
             String json = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
@@ -82,28 +82,16 @@ public class SpotifyRequests {
         }
     }
 
-    // ------ Публичные методы (сохранены исходные сигнатуры) ------
-
-    /**
-     * Метод для совместимости со старым кодом (используется только в me()).
-     * Не использует автоматическое обновление токена и повтор при 401,
-     * чтобы полностью сохранить оригинальное поведение.
-     */
-
-    public static String requestWithRefreshGet(String uri) {
+    public static String requestGet(String uri) {
         return executeRequest(new HttpGet(uri), true);
     }
 
-    public static String requestWithRetryPut(String uri) {
+    public static String requestPut(String uri) {
         return executeRequest(new HttpPut(uri), false);
     }
 
-    public static String requestWithRetryPost(String uri) {
+    public static String requestPost(String uri) {
         return executeRequest(new HttpPost(uri), true);
-    }
-
-    public static String requestPutHttpClient(String uri) {
-        return executeRequest(new HttpPut(uri), false);
     }
 
 }

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
-import static org.knovash.squeezealice.voice.SwitchVoiceCommand.spotifyPlayArtist;
+import static org.knovash.squeezealice.voice.SwitchVoiceCommand.*;
 
 @Log4j2
 public class VoiceActions {
@@ -17,6 +17,24 @@ public class VoiceActions {
     public static String playArtist(Player player, String command) {
         log.info("PLAY ARTIST");
         CompletableFuture.runAsync(() -> spotifyPlayArtist(command, player))
+                .thenRunAsync(() -> lmsPlayers.afterAll());
+        return "включаю";
+    }
+    public static String playAlbum(Player player, String command) {
+        log.info("PLAY ALBUM");
+        CompletableFuture.runAsync(() -> spotifyPlayAlbum(command, player))
+                .thenRunAsync(() -> lmsPlayers.afterAll());
+        return "включаю";
+    }
+    public static String playTrack(Player player, String command) {
+        log.info("PLAY TRACK");
+        CompletableFuture.runAsync(() -> spotifyPlayTrack(command, player))
+                .thenRunAsync(() -> lmsPlayers.afterAll());
+        return "включаю";
+    }
+    public static String playPlaylist(Player player, String command) {
+        log.info("PLAY PLAYLIST");
+        CompletableFuture.runAsync(() -> spotifyPlayPlaylist(command, player))
                 .thenRunAsync(() -> lmsPlayers.afterAll());
         return "включаю";
     }

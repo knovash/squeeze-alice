@@ -61,6 +61,17 @@ public class SwitchSpotify {
             case "currentlyPlayingDetails":
                 response = "Spotify currently playing details: " + Spotify.currentlyPlayingDetails();
                 break;
+
+            case "playAlbum":
+                response = "Spotify currently playing details: " + Spotify.getLinkAlbum(value);
+                break;
+            case "playTrack":
+                response = "Spotify currently playing details: " + Spotify.getLinkTrack(value);
+                break;
+            case "playPlaylist":
+                response = "Spotify currently playing details: " + Spotify.getLinkPlaylist(value);
+                break;
+
             default:
                 log.info("ACTION NOT FOUND: " + action);
                 response = "ACTION NOT FOUND: " + action;

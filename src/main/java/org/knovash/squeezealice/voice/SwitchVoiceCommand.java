@@ -22,11 +22,12 @@ public class SwitchVoiceCommand {
 
     public static String aliceId;
     public static String room;
-//    public static String clientType = "speaker"; // ВОЗМОЖНО ИСПОЛЬЗУЕТСЯ НА СТОРОНЕ ОБЛАКА если запрос с колонки то завершить диалог чтобы не висеть в навыке, если диалог в браузере то не завершать
+    //    public static String clientType = "speaker"; // ВОЗМОЖНО ИСПОЛЬЗУЕТСЯ НА СТОРОНЕ ОБЛАКА если запрос с колонки то завершить диалог чтобы не висеть в навыке, если диалог в браузере то не завершать
     public static String artist;
     public static String album;
     public static String track;
     public static String saveToFileJson = "data/rooms.json";
+    public static String playlist;
 
     public static Context action(Context context) {
         String answer = createAnswer(context);
@@ -36,7 +37,7 @@ public class SwitchVoiceCommand {
         context.bodyResponse = answer;
 //        context.bodyResponse = createResponse(answer);
 
-        log.info("bodyResponse: " +  context.bodyResponse.toString());
+        log.info("bodyResponse: " + context.bodyResponse.toString());
 //        context.bodyResponse = answer;
         context.code = 200;
         return context;
@@ -144,6 +145,9 @@ public class SwitchVoiceCommand {
         if (cmd.matches("(включи )?(дальше|следующий)")) return playlistNextTrack(player);
         if (cmd.matches("(включи|подключи) пульт")) return connectBtRemote(command, player);
         if (cmd.contains("где пульт")) return whereBtRemote();
+        if (cmd.startsWith("включи альбом")) return VoiceActions.playAlbum(player, command);
+        if (cmd.startsWith("включи трек")) return VoiceActions.playTrack(player, command);
+        if (cmd.startsWith("включи плейлист")) return VoiceActions.playPlaylist(player, command);
         if (cmd.startsWith("включи")) return VoiceActions.playArtist(player, command);
         return "Я не поняла команду";
     }
@@ -394,7 +398,8 @@ public class SwitchVoiceCommand {
     public static String spotifyPlayArtist(String command, Player player) {
         String target = command
                 .replaceAll(".*включи\\S*\\s", "")
-                .replaceAll("\"", "").replaceAll("\\s\\s", " ");
+                .replaceAll("\"", "")
+                .replaceAll("\\s\\s", " ");
         log.info("\nGET LINK BY ARTIST: " + target);
         String link = Spotify.getLinkArtist(target);
         log.info("\nPLAY LINK: " + link);
@@ -403,27 +408,29 @@ public class SwitchVoiceCommand {
                 .ifExpiredAndNotPlayingUnsyncWakeSet(null)
                 .playPath(link)
                 .syncAllOtherPlayingToThis();
-        String answer = "включаю " + artist;
+        String answer = "включаю " + target;
         return answer;
     }
 
     public static String spotifyPlayTrack(String command, Player player) {
         String target = command.replaceAll(".*включи\\S*\\s", "")
-                .replaceAll("трэк", "").replaceAll("трек", "")
-                .replaceAll("\"", "").replaceAll("\\s\\s", " ");
+                .replaceAll("трэк", "")
+                .replaceAll("\"", "")
+                .replaceAll("\\s\\s", " ");
         log.info("TARGET: " + target);
         String link = Spotify.getLinkTrack(target);
         log.info("LINK: " + link);
         if (link == null) return "настройте спотифай";
         CompletableFuture.runAsync(() -> player.playPath(link));
-        String answer = "включаю " + artist + ", " + track;
+        String answer = "включаю " + target;
         return answer;
     }
 
     public static String spotifyPlayAlbum(String command, Player player) {
         String target = command.replaceAll(".*включи\\S*\\s", "")
                 .replaceAll("альбом", "")
-                .replaceAll("\"", "").replaceAll("\\s\\s", " ");
+                .replaceAll("\"", "")
+                .replaceAll("\\s\\s", " ");
         log.info("TARGET: " + target);
         String link = Spotify.getLinkAlbum(target);
         log.info("LINK: " + link);
@@ -432,34 +439,51 @@ public class SwitchVoiceCommand {
 // player.shuffleOff();
             player.playPath(link);
         });
-        String answer = "включаю " + artist + ", " + album;
+        String answer = "включаю " + target;
         return answer;
     }
 
-    public static String spotifyPlayArtistAlbum(String command, Player player) {
-
-        String artist = command.replaceAll(".*включи ", "")
-                .replaceAll(" альбом.*", "");
-
-        String album = command.replaceAll(".*альбом ", "");
-
-        log.info("ARTIST: " + artist);
-        log.info("ALBUM: " + album);
-
+    public static String spotifyPlayPlaylist(String command, Player player) {
         String target = command.replaceAll(".*включи\\S*\\s", "")
-                .replaceAll("альбом", "")
-                .replaceAll("\"", "").replaceAll("\\s\\s", " ");
+                .replaceAll("плэйлист", "")
+                .replaceAll("\"", "")
+                .replaceAll("\\s\\s", " ");
         log.info("TARGET: " + target);
-        String link = Spotify.getLinkAlbum(target);
+        String link = Spotify.getLinkPlaylist(target);
         log.info("LINK: " + link);
         if (link == null) return "настройте спотифай";
         CompletableFuture.runAsync(() -> {
-            player.shuffleOff();
+// player.shuffleOff();
             player.playPath(link);
         });
-        String answer = "сейчас, мой господин, включаю " + SwitchVoiceCommand.artist + ", " + target;
+        String answer = "включаю " + target;
         return answer;
     }
+
+//    public static String spotifyPlayArtistAlbum(String command, Player player) {
+//
+//        String artist = command.replaceAll(".*включи ", "")
+//                .replaceAll(" альбом.*", "");
+//
+//        String album = command.replaceAll(".*альбом ", "");
+//
+//        log.info("ARTIST: " + artist);
+//        log.info("ALBUM: " + album);
+//
+//        String target = command.replaceAll(".*включи\\S*\\s", "")
+//                .replaceAll("альбом", "")
+//                .replaceAll("\"", "").replaceAll("\\s\\s", " ");
+//        log.info("TARGET: " + target);
+//        String link = Spotify.getLinkAlbum(target);
+//        log.info("LINK: " + link);
+//        if (link == null) return "настройте спотифай";
+//        CompletableFuture.runAsync(() -> {
+//            player.shuffleOff();
+//            player.playPath(link);
+//        });
+//        String answer = "сейчас, мой господин, включаю " + SwitchVoiceCommand.artist + ", " + target;
+//        return answer;
+//    }
 
     private static String playlistNextTrack(Player player) { // дальше, следующий
         String answer;
