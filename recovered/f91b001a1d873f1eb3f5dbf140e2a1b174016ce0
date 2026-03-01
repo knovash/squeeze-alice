@@ -1,0 +1,35 @@
+package org.knovash.squeezealice.Broker;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class Headers {
+    @JsonProperty("Accept-Encoding")
+    public String acceptEncoding;
+
+    @JsonProperty("Accept")
+    public String accept;
+
+    @JsonProperty("Host")
+    public String host;
+
+    @JsonProperty("User-Agent")
+    public String userAgent;
+
+    @JsonProperty("Request-Timeout")
+    public String requestTimeout;
+
+    @JsonProperty("X-Forwarded-Host")
+    public String xForwardedHost;
+
+    @JsonProperty("Content-Type")
+    public String contentType;
+
+    @JsonProperty("X-Forwarded-For")
+    public String xForwardedFor;
+
+    @JsonProperty("X-Forwarded-Proto")
+    public String xForwardedProto;
+
+    @JsonProperty("Content-Length")
+    public String contentLength;
+}

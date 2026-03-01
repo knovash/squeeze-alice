@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# sudo chmod +x *.sh
+BGreen='\033[1;32m'
+NC='\033[0m' # No Color
+echo -e ${BGreen}"START"${NC}
+file_name=$(basename "$0" .sh)
+remote="${file_name##*_}" 
+echo -e ${BGreen}"IP: $remote"${NC}
+
+#rm -r target
+#mvn package
+ssh root@$remote "mkdir -p /opt/squeeze-alice-1.0"
+
+echo -e ${BGreen}"COPY JAR squeeze-alice-1.0.jar TO /opt/squeeze-alice-1.0/"${NC}
+sshpass -p "12345" rsync -avh --progress target/*.jar root@$remote:/opt/squeeze-alice-1.0/
+
+echo -e ${BGreen}"COPY SERVICE squeeze-alice.service TO /lib/systemd/system/"${NC}
+sshpass -p "12345" rsync -avh --progress utils/squeeze-alice.service root@$remote:/lib/systemd/system/
+
+echo -e ${BGreen}"SYSTEMCTL ENABLE, RELOAD, RESTART"${NC}
+ssh root@$remote sudo systemctl enable squeeze-alice.service
+ssh root@$remote sudo systemctl daemon-reload
+ssh root@$remote sudo systemctl restart squeeze-alice.service
+echo -e ${BGreen}"FINISH"${NC}
+
+echo -e "\n"${BGreen}"http://"$remote":8010"${NC}
+
+#sleep 10
+echo -e ${BGreen}"\nSTATUS"${NC}
+ssh root@$remote sudo systemctl status squeeze-alice.service
+echo -e ${BGreen}"\nLOG"${NC}
+ssh root@$remote tail -f /opt/squeeze-alice-1.0/data/log.txt
+
+#sleep 60
+$SHELL

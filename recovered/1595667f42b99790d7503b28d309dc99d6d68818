@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+value=`cat set_remote_ip.txt`
+echo "$value"
+$SHELL

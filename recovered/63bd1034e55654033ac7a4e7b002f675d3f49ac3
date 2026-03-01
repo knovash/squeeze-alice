@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+tar -czvf squeeze-alice-local.tar.gz target/*.jar utils/squeeze-alice.service *install*.sh

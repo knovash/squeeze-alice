@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+BGreen='\033[1;32m'
+NC='\033[0m' # No Color
+name=$(basename "$0")
+echo $name
+name=${name/.sh/}
+echo $name
+name=${name/fav_to_/}
+echo $name
+echo -e "favorites to "${BGreen}$name${NC}"\n"
+sshpass -p "12345" scp *.opml root@$name:/var/lib/squeezeboxserver/prefs/
+$SHELL

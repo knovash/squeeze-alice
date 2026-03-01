@@ -1,0 +1,78 @@
+package org.knovash.alicebroker;
+
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
+public class PageIndex {
+
+    public static String pageMessageId;
+    public static String pageMessagePublished;
+    public static String pageMessageRecieved;
+    public static String pageMessageQuery;
+    public static String pageMessageBody;
+    public static String pageMessagePath;
+
+    public static String page() {
+        log.info("PAGE INDEX");
+
+        String page = "<!doctype html><html lang=\"ru\">\n" +
+                "<head>\n" +
+                "<meta charSet=\"utf-8\" />\n" +
+                "<title>Squeeze-Alice</title>" +
+                "</head>\n" +
+                "<body> \n" +
+
+                "<p><strong>Привет! это навык Алисы для управления плеерами Logitech Media Server</strong></p> \n" +
+
+                "<p><strong>Установка</strong></p> \n" +
+                "<p>1. Установить LMS https://lyrion.org</p> \n" +
+                "<p>2. Проверить что LMS запущен локально http://localhost:9000</p> \n" +
+                "<p>3. Установить squeeze-alice</p> \n" +
+                "<p>4. Проверить что SA запущен локально http://localhost:8010</p> \n" +
+
+                "<form method='POST' action='/form'>" +
+                "<input name='name' placeholder='User name' required> Name<br>" +
+                "<input name='email' placeholder='User email' required> Email<br>" +
+                "<input name='actnnnion' type='hidden'  value='spotify_save_creds'>" +
+                "<button type='submit'>Save</button>" +
+                "</form>" +
+
+                "<br>" +
+                "<p><strong>Комнды</strong></p> \n" +
+
+                "<p>Алиса, скажи раз два, что играет</p> \n" +
+                "<p>а) Ответ: сейчас на Homepod1 играет Chillout</p> \n" +
+                "<p>б) Ответ: сейчас на Homepod1 не играет Chillout</p> \n" +
+                "<p>в) Ответ: скажите навыку, это комната и название комнаты, например Гостиная</p> \n" +
+
+                "<p>Алиса, скажи раз два, это комната гостиная</p> \n" +
+                "<p>а) Ответ: это комната Гостиная. колонка в комнате еще не выбрана</p> \n" +
+                "<p>б) Ответ: это комната Гостиная. с колонкой Homepod1</p> \n" +
+
+                "<p>Алиса, скажи раз два, выбери колонку homepod</p> \n" +
+                "<p>Ответ: выбрана колонка Homepod1 в комнате Гостиная</p> \n" +
+
+                "<p>Алиса, скажи раз два, включи канал минимал</p> \n" +
+                "<p>Алиса, скажи раз два, включи избранное минимал</p> \n" +
+                "<p>а) сейчас, мой господин, включаю канал 9, Minimal</p> \n" +
+                "<p>б) повторите</p> \n" +
+
+                "<br>" +
+                "<p><strong>Логи</strong></p> \n" +
+                "<p>" + "LAST REQUEST" +
+                "<p>" + "PATH: " + pageMessagePath +
+                "<p>" + "QUERY: " + pageMessageQuery +
+                "<p>" + "BODY: " + pageMessageBody +
+
+                "<p>" + "------" +
+                "<p>" + "LAST RESPONSE" +
+                "<p>" + "ID: " + pageMessageId +
+                "<p>" + "MESSAGE PUBLISHED: " + pageMessagePublished +
+                "<p>" + "MESSAGE RECIEVED: " + pageMessageRecieved +
+
+                "</body>\n" +
+                "</html>";
+        log.info("OK");
+        return page;
+    }
+}

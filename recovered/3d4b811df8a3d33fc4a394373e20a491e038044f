@@ -1,0 +1,260 @@
+package org.knovash.squeezealice;
+
+import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpExchange;
+import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.*;
+
+public class WebServer {
+    private static final int PORT = 8010;
+    private static final String HIVE_BROKER = "ssl://811c56b338f24aeea3215cd680851784.s1.eu.hivemq.cloud:8883";
+    private static final String HIVE_USERNAME = "novashki";
+    private static final String HIVE_PASSWORD = "Darthvader0";
+
+    private MqttClient mqttClient;
+    private final ResponseManager responseManager = new ResponseManager();
+
+    public static void main(String[] args) throws IOException {
+        WebServer server = new WebServer();
+        server.start();
+    }
+
+    public void start() throws IOException {
+        // Инициализация HTTP сервера
+        HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
+
+        // Регистрация обработчиков
+        server.createContext("/", this::handleRoot);
+        server.createContext("/players", this::handlePlayers);
+        server.createContext("/spotify", this::handleSpotify);
+        server.createContext("/yandex", this::handleYandex);
+        server.createContext("/cmd", this::handleCmd);
+
+        server.createContext("/v1.0", this::handleV1);
+        server.createContext("/v1.0/user/unlink", this::handleV1);
+        server.createContext("/v1.0/user/devices", this::handleV1);
+        server.createContext("/v1.0/user/devices/query", this::handleV1);
+        server.createContext("/v1.0/user/devices/action", this::handleV1);
+
+        server.createContext("/auth", this::handleAuth);
+        server.createContext("/token", this::handleToken);
+        server.createContext("/spoti_auth", this::handleSpotiAuth);
+        server.createContext("/spoti_callback", this::handleSpotiCallback);
+
+        server.setExecutor(Executors.newCachedThreadPool());
+        server.start();
+
+        // Подключение к MQTT
+        connectToMqtt();
+    }
+
+    private void connectToMqtt() {
+        try {
+            mqttClient = new MqttClient(HIVE_BROKER, MqttClient.generateClientId(), new MemoryPersistence());
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setUserName(HIVE_USERNAME);
+            options.setPassword(HIVE_PASSWORD.toCharArray());
+            mqttClient.connect(options);
+
+            // Подписка на топики ответов
+            mqttClient.subscribe("from_lms_query", this::handleMqttMessage);
+            mqttClient.subscribe("from_lms", this::handleMqttMessage);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // region Basic Handlers
+    private void handleRoot(HttpExchange exchange) throws IOException {
+        sendResponse(exchange, "HELLO!");
+    }
+
+    private void handlePlayers(HttpExchange exchange) throws IOException {
+        sendResponse(exchange, "PLAYERS");
+    }
+
+    private void handleSpotify(HttpExchange exchange) throws IOException {
+        sendResponse(exchange, "SPOTIFY");
+    }
+
+    private void handleYandex(HttpExchange exchange) throws IOException {
+        sendResponse(exchange, "YANDEX");
+    }
+    // endregion
+
+    // region Command Handler
+    private void handleCmd(HttpExchange exchange) throws IOException {
+        String query = exchange.getRequestURI().getQuery();
+        String correlationId = UUID.randomUUID().toString();
+
+        try {
+            // Отправка запроса в MQTT
+            String payload = String.format("correlationId=%s&query=%s", correlationId, URLDecoder.decode(query, StandardCharsets.UTF_8));
+            mqttClient.publish("to_lms_query", new MqttMessage(payload.getBytes()));
+
+            // Ожидание ответа
+            CompletableFuture<String> future = responseManager.waitForResponse(correlationId);
+            String body;
+            try {
+                body = future.get(5, TimeUnit.SECONDS);
+            } catch (TimeoutException e) {
+                body = localProcessQuery(query);
+            }
+
+            sendResponse(exchange, body);
+        } catch (Exception e) {
+            sendResponse(exchange, "Error processing request", 500);
+        }
+    }
+
+    private String localProcessQuery(String query) {
+        return "Local response for: " + query;
+    }
+    // endregion
+
+    // region V1 Handlers
+    private void handleV1(HttpExchange exchange) throws IOException {
+        String requestId = exchange.getRequestHeaders().getFirst("request-id");
+        String body = readRequestBody(exchange);
+        String correlationId = UUID.randomUUID().toString();
+
+        try {
+            // Отправка запроса в MQTT
+            String payload = String.format("correlationId=%s&requestId=%s&body=%s",
+                    correlationId, requestId, body);
+            mqttClient.publish("to_lms", new MqttMessage(payload.getBytes()));
+
+            // Ожидание ответа
+            CompletableFuture<String> future = responseManager.waitForResponse(correlationId);
+            String responseBody;
+            try {
+                responseBody = future.get(5, TimeUnit.SECONDS);
+            } catch (TimeoutException e) {
+                responseBody = localProcessBody(body);
+            }
+
+            exchange.getResponseHeaders().set("request-id", requestId);
+            sendResponse(exchange, responseBody);
+        } catch (Exception e) {
+            sendResponse(exchange, "Error processing request", 500);
+        }
+    }
+
+    private String localProcessBody(String body) {
+        return "Local processed: " + body;
+    }
+    // endregion
+
+    // region Auth Handlers
+    private void handleAuth(HttpExchange exchange) throws IOException {
+        String query = exchange.getRequestURI().getQuery();
+        sendResponse(exchange, authenficate(query));
+    }
+
+    private String authenficate(String query) {
+        return "Auth: " + query;
+    }
+
+    private void handleToken(HttpExchange exchange) throws IOException {
+        String query = exchange.getRequestURI().getQuery();
+        sendResponse(exchange, token(query));
+    }
+
+    private String token(String query) {
+        return "Token: " + query;
+    }
+
+    private void handleSpotiAuth(HttpExchange exchange) throws IOException {
+        String query = exchange.getRequestURI().getQuery();
+        sendResponse(exchange, spotiAuth(query));
+    }
+
+    private String spotiAuth(String query) {
+        return "Spoti Auth: " + query;
+    }
+
+    private void handleSpotiCallback(HttpExchange exchange) throws IOException {
+        String query = exchange.getRequestURI().getQuery();
+        sendResponse(exchange, spotiCallback(query));
+    }
+
+    private String spotiCallback(String query) {
+        return "Spoti Callback: " + query;
+    }
+    // endregion
+
+    // region MQTT Handler
+    private void handleMqttMessage(String topic, MqttMessage message) {
+        String payload = new String(message.getPayload());
+        Map<String, String> params = parseParams(payload);
+
+        if (params.containsKey("correlationId")) {
+            String correlationId = params.get("correlationId");
+            String body = params.getOrDefault("body", "");
+            responseManager.completeResponse(correlationId, body);
+        }
+    }
+    // endregion
+
+    // region Utils
+    private String readRequestBody(HttpExchange exchange) throws IOException {
+        InputStream is = exchange.getRequestBody();
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int length;
+        while ((length = is.read(buffer)) != -1) {
+            result.write(buffer, 0, length);
+        }
+        return result.toString(StandardCharsets.UTF_8.name());
+    }
+
+    private void sendResponse(HttpExchange exchange, String response) throws IOException {
+        sendResponse(exchange, response, 200);
+    }
+
+    private void sendResponse(HttpExchange exchange, String response, int code) throws IOException {
+        exchange.sendResponseHeaders(code, response.length());
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(response.getBytes());
+        }
+    }
+
+    private Map<String, String> parseParams(String query) {
+        Map<String, String> params = new HashMap<>();
+        for (String pair : query.split("&")) {
+            int idx = pair.indexOf("=");
+            if (idx > 0) {
+                String key = URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8);
+                String value = URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8);
+                params.put(key, value);
+            }
+        }
+        return params;
+    }
+
+    private static class ResponseManager {
+        private final ConcurrentMap<String, CompletableFuture<String>> responses = new ConcurrentHashMap<>();
+
+        public CompletableFuture<String> waitForResponse(String correlationId) {
+            CompletableFuture<String> future = new CompletableFuture<>();
+            responses.put(correlationId, future);
+            return future;
+        }
+
+        public void completeResponse(String correlationId, String body) {
+            CompletableFuture<String> future = responses.remove(correlationId);
+            if (future != null) {
+                future.complete(body);
+            }
+        }
+    }
+    // endregion
+}

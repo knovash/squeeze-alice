@@ -1,0 +1,87 @@
+package steps;
+
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import io.cucumber.datatable.DataTable;
+import org.knovash.squeezealice.Config;
+import org.knovash.squeezealice.Hive;
+import org.knovash.squeezealice.LmsPlayers;
+import org.knovash.squeezealice.TestDevice;
+import org.knovash.squeezealice.yandex.Yandex;
+
+import static java.time.temporal.ChronoUnit.MINUTES;
+import static org.junit.Assert.*;
+import static org.knovash.squeezealice.Hive.subscribe;
+import static org.knovash.squeezealice.TestDevice.payload;
+
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class DeviceSteps {
+    public static LmsPlayers lmsPlayers = new LmsPlayers();
+    public static Map<String, String> idRooms = new HashMap<>();
+    public static List<String> rooms = new ArrayList<>();
+    public static ZoneId zoneId = ZoneId.of("Europe/Minsk");
+    public static ConfigTest config = new ConfigTest();
+    public static Boolean lmsServerOnline;
+    public static String yandexToken = "";
+
+    private String getValueOrEmpty(Map<String, String> params, String key) {
+        String value = params.getOrDefault(key, "");
+        return (value == null || value.trim().isEmpty()) ? "" : value;
+    }
+
+    @Before
+    public void beforeEachScenario() {
+
+
+        System.setProperty("userApp.root", System.getProperty("user.home"));
+//        log.info("userApp.root: " + System.getProperty("userApp.root"));
+//        config.readConfigProperties();
+//        config.readConfigJson();
+//        config.write();
+        lmsPlayers.searchForLmsIp();
+        lmsPlayers.read();
+        lmsPlayers.updateLmsPlayers();
+//        lmsPlayers.write();
+
+        Yandex.getRoomsAndDevices();
+
+        Hive.start();
+        subscribe("test");
+        payload.devices = new ArrayList<>();
+
+        TestDevice.resetTestState();
+    }
+
+    @Given("Создано тестовое устройство {string} с параметрами:")
+    public void createTestDevice(String deviceName, DataTable dataTable) {
+        Map<String, String> params = dataTable.transpose().asMap(String.class, String.class);
+
+        TestDevice.addDevice(
+                deviceName,
+                getValueOrEmpty(params, "power"),
+                getValueOrEmpty(params, "volume"),
+                getValueOrEmpty(params, "channel")
+        );
+    }
+
+    @When("Запускается тест {string}")
+    public void runTest(String testName) {
+        TestDevice.runTest(testName);
+    }
+
+    @Then("Проверяем корректность состояния устройств")
+    public void verifyDevicesState() {
+        assertTrue("Проверка состояний устройств не пройдена",
+                TestDevice.getAllTestsResults()
+                        .stream()
+                        .allMatch(results -> results.stream().allMatch(Boolean::booleanValue)));
+    }
+}

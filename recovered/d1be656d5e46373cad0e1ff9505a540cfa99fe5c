@@ -1,0 +1,356 @@
+
+
+
+
+
+
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="/html/ext/resources/css/ext-browse.css?r=1707395499" />
+
+		<title>Logitech Media Server</title>
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="stylesheet" type="text/css" href="/slimserver.css?r=1707395499"/>
+<link rel="stylesheet" type="text/css" href="/skin.css?r=1707395499"/>
+<link rel="apple-touch-icon" href="/html/images/apple-touch-icon.png"/>
+
+
+
+
+		
+			<script type="text/javascript">// useful global vars for javascripts needing info from template toolkit on page loads.
+	var webroot       = "/";
+	
+	var player        = "aa%3Aaa%3Ac2%3A7c%3Ae0%3A12";
+	var playerid      = "aa:aa:c2:7c:e0:12";
+	var url           = "status.html";
+	var statusroot    = "status.html";
+	var browserTarget;
+	browserTarget = "browser";
+	var orderByUrl    = '';
+</script>
+			<script type="text/javascript" src="/html/js-browse.html?r=1707395499"></script>
+			<script type="text/javascript">/* 
+ * Globally used Logitech Media Server strings.
+ * This file should be PROCESSed if SqueezeJS.UI is used.
+ */
+
+		SqueezeJS.Strings['power'] = "Power";
+	
+
+		SqueezeJS.Strings['play'] = "Play";
+	
+
+		SqueezeJS.Strings['pause'] = "Pause";
+	
+
+		SqueezeJS.Strings['next'] = "Next";
+	
+
+		SqueezeJS.Strings['previous'] = "Previous";
+	
+
+		SqueezeJS.Strings['connecting_for'] = "Connecting...";
+	
+
+
+		SqueezeJS.Strings['shuffle'] = "Shuffle";
+	
+
+		SqueezeJS.Strings['shuffle0'] = "Don't Shuffle Playlist";
+	
+
+		SqueezeJS.Strings['shuffle1'] = "Shuffle by Song";
+		 
+
+		SqueezeJS.Strings['shuffle2'] = "Shuffle by Album";
+	
+
+
+		SqueezeJS.Strings['repeat'] = "Repeat";
+	
+
+		SqueezeJS.Strings['repeat0'] = "Repeat off";
+	
+
+		SqueezeJS.Strings['repeat1'] = "Repeat current song";
+		 
+
+		SqueezeJS.Strings['repeat2'] = "Repeat playlist";
+	
+
+
+		SqueezeJS.Strings['volume'] = "Volume";
+	
+SqueezeJS.Strings['volume'] += ':';
+
+		SqueezeJS.Strings['volumeup'] = "Louder";
+	
+
+		SqueezeJS.Strings['volumedown'] = "Softer";
+	
+
+
+		SqueezeJS.Strings['by'] = "by";
+	
+
+		SqueezeJS.Strings['from'] = "from";
+	
+
+		SqueezeJS.Strings['colon'] = ":";
+	 	
+
+		SqueezeJS.Strings['on'] = "on";
+	
+
+		SqueezeJS.Strings['off'] = "off";
+	
+
+		SqueezeJS.Strings['yes'] = "Yes";
+	
+
+		SqueezeJS.Strings['no'] = "No";
+	
+
+
+		SqueezeJS.Strings['album'] = "Album";
+	
+
+		SqueezeJS.Strings['artist'] = "Artist";
+	
+
+		SqueezeJS.Strings['year'] = "Year";
+	
+
+
+		SqueezeJS.Strings['close'] = "Close";
+	
+
+		SqueezeJS.Strings['cancel'] = "Cancel";
+	
+
+		SqueezeJS.Strings['choose_player'] = "Choose Player";
+	
+
+		SqueezeJS.Strings['synchronize'] = "Synchronize";
+	
+
+		SqueezeJS.Strings['setup_synchronize_desc'] = "The player can be synchronized with other players, enabling them to play the same music simultaneously. Choose the players you would like to synchronize with from the list of available synchronization groups. Choose No Synchronization to stop synchronization.";
+	
+
+		SqueezeJS.Strings['setup_no_synchronization'] = "No Synchronization";
+	
+
+		SqueezeJS.Strings['no_player'] = "Your player was not found.";
+	
+
+		SqueezeJS.Strings['no_player_details'] = "<b>If you own a Squeezebox or Transporter:</b><ul><li>Make sure that your player is plugged in and its networking settings are correct. Click the Refresh button once your player is connected.</ul><p><b>If you do not own a Squeezebox or Transporter:</b><ul><li>You can listen to your music library using <a target=\"_top\" href=\"/html/softsqueeze/index.html\">SoftSqueeze</a>, a software version of Squeezebox.<li>You can use MP3 player software (such as Winamp or iTunes) to listen to your music library with Logitech Media Server by connecting to this URL: <a target=\"stream\" href=\"http://localhost:9000/stream.mp3\">http://localhost:9000/stream.mp3</a></ul>";
+	
+
+		SqueezeJS.Strings['squeezenetwork'] = "mysqueezebox.com";
+	
+
+		SqueezeJS.Strings['squeezebox_server'] = "Logitech Media Server";
+	
+
+		SqueezeJS.Strings['sc_want_switch'] = "This player is currently connected to %s. Do you want it to switch to this Logitech Media Server?";
+	
+
+		SqueezeJS.Strings['browse'] = "Browse";
+	
+
+		SqueezeJS.Strings['choose_folder'] = "Please select a folder";
+	
+
+		SqueezeJS.Strings['choose_file'] = "Please select a file";
+	
+
+if (Ext.MessageBox) {
+	Ext.MessageBox.buttonText.yes = 'Yes';
+	Ext.MessageBox.buttonText.no = 'No';
+	Ext.MessageBox.buttonText.cancel = 'Cancel';
+}</script>
+
+			<script type="text/javascript">
+				
+		SqueezeJS.Strings['loading'] = "Loading...";
+	
+				var hideSearchTimer;
+
+				// IE is executing JS very early - add dummy highlighter to prevent crash
+				var Highlighter = {
+					highlight: function(){}
+				};
+
+				Ext.onReady(function() {
+					// overwrite default Ext Button layout
+					SqueezeJS.UI.buttonTemplate = new Ext.Template(
+						'<table border="0" cellpadding="0" cellspacing="0"><tbody><tr>',
+						'<td></td><td><button type="{0}" style="padding:0" class="x-btn-text {2}"></button></td><td></td>',
+						'</tr></tbody></table>'
+					);
+					SqueezeJS.UI.buttonTemplate.compile();
+
+					SqueezeJS.UI.splitButtonTemplate = new Ext.Template(
+						'<table id="{4}" cellspacing="0" class="x-btn {3}"><tbody class="{1}">',
+						'<tr><td class="x-btn-ml"><i>&#160;</i></td><td class="x-btn-mc"><em class="{2}" unselectable="on"><button type="{0}"></button></em></td><td class="x-btn-mr"><i>&#160;</i></td></tr>',
+						'</tbody></table>'
+					);
+					SqueezeJS.UI.splitButtonTemplate.compile();
+
+					if (SqueezeJS.UI) {
+						Highlighter = new SqueezeJS.UI.Highlight({
+							unHighlight : 'content'
+						});
+						SqueezeJS.UI.ScrollPanel.init();
+					}
+				});
+			</script>
+
+				<script type="text/javascript">
+		
+		SqueezeJS.Strings['switch_to_list'] = "Text only";
+	
+		
+		SqueezeJS.Strings['switch_to_extended_list'] = "Small Artwork";
+	
+		
+			
+		SqueezeJS.Strings['switch_to_gallery'] = "Large Artwork";
+	
+		
+		
+		SqueezeJS.Strings['display_options'] = "Albumview options";
+	
+	</script>
+
+	
+		<script type="text/javascript">
+			var orderByList;
+			
+
+			Ext.onReady(function(){
+				Browse.init();
+			});
+		</script>
+	
+
+		
+
+		
+	</head>
+	<body  >
+		<div id="inner_header">
+
+			<div class="pagetitle pagetitleWithIcon">					<img src="/plugins/Spotty/html/images/93aac68fb06348598c1e67734dfaceee_25x25_f.png" srcset=/plugins/Spotty/html/images/93aac68fb06348598c1e67734dfaceee_50x50.png 2x" class="pageicon" width="25" height="25" border="0" alt="">				<span>&nbsp;</span>
+				
+				<span id="headerSearch">
+					<form method="GET" action="/search.html">
+						<input type="hidden" name="player" value="">
+						<input type="text" id="headerSearchInput" autocomplete="off" name="query"
+						id="search" class="x-form-focus searchInput" style="display:none" size="30">&nbsp;<input type="image"
+						id="headerSearchBtn" src="/html/images/spacer.gif" width="17px" height="17px" alt="Search">
+					</form>
+				</span>			</div>
+		</div>
+
+		<div class="inner_content">
+
+			
+			
+			<div id="crumblist" class="crumblist"><a href="/home.html?player=aa%3Aaa%3Ac2%3A7c%3Ae0%3A12">Home</a> &gt; 
+			<a href="index.html?player=aa%3Aaa%3Ac2%3A7c%3Ae0%3A12&amp;index=&amp;sess=">Spotty</a>
+		 &gt; 
+			<a href="index.html?player=aa%3Aaa%3Ac2%3A7c%3Ae0%3A12&amp;index=10&amp;sess=">Transfer Playback</a>
+		 &gt; 
+			<a href="index.html?player=aa%3Aaa%3Ac2%3A7c%3Ae0%3A12&amp;index=10.1&amp;sess="></a>
+		
+			</div>
+			
+
+			
+
+			<div id="content" class="scrollingPanel">
+
+
+
+
+	
+
+	<div id="songInfo">
+
+	<div id="COVERART">
+		<span class="songInfoText">			<a href="/music/0/cover.jpg" target="cover">
+				<img src="/music/0/cover.jpg" onLoad="resize(this)"/>
+			</a>
+		</span>
+	</div>
+
+	<div id="linkedSongInfoItems">
+		
+
+		
+	<div id="TITLE">
+		<span class="songInfoTitle">
+			Title:
+		</span>
+		<span class="songInfoText"></span>
+	</div>
+
+		
+		
+
+		
+	</div>
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+</div>
+
+
+
+
+			</div>
+		</div>
+
+		
+		<div id="infoTab" class="infoTab">
+			
+			&nbsp;
+		</div>
+		
+
+	</body>
+</html>
+
+
+
+

@@ -1,0 +1,15 @@
+package org.knovash.squeezealice.provider.api.pojo;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class DeviceInfo {
+    public String manufacturer = "LMS";
+    public String model = "virtual";
+    public String hw_version = "1";
+    public String sw_version = "1";
+}

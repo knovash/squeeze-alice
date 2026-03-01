@@ -1,0 +1,46 @@
+package org.knovash.squeezealice.provider;
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.Utils;
+import org.knovash.squeezealice.provider.pojo.Payload;
+import org.knovash.squeezealice.provider.pojo.Response;
+import org.knovash.squeezealice.utils.JsonUtils;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
+@Log4j2
+public class HandlerDevicesQuery implements HttpHandler {
+
+    @Override
+    public void handle(HttpExchange httpExchange) throws IOException {
+        log.info("");
+        log.info(" ---===[ REQUEST DEVICES QUERY ]===---");
+        String head = httpExchange.getRequestHeaders().values().toString();
+        log.info("HEAD: " + head);
+        String query = httpExchange.getRequestURI().getQuery();
+        log.info("QUERY: " + query);
+        String body = Utils.httpExchangeGetBody(httpExchange);
+        log.info("BODY: " + body);
+
+        Payload payload = JsonUtils.jsonToPojo(body, Payload.class);
+        payload.devices.forEach(device -> log.info("DEVICE ID: " + device.id));
+
+        // узнать состояние девайсов
+//        payload.devices.forEach(device -> device.properties.get(0).volume = "3");
+
+        Response response = new Response();
+        response.request_id = "33";
+        response.payload = payload;
+        log.info(response);
+        String json = JsonUtils.pojoToJson(response);
+        log.info("RESPONSE: " + json);
+        httpExchange.sendResponseHeaders(200, json.getBytes().length);
+        OutputStream outputStream = httpExchange.getResponseBody();
+        outputStream.write(json.getBytes());
+        outputStream.flush();
+        outputStream.close();
+    }
+}

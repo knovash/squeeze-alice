@@ -1,0 +1,23 @@
+package org.knovash.squeezealice.provider;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ResponseQuery {
+    public String request_id;
+    public Payload payload;
+
+
+    public static class Device{
+        public String id;
+        public ArrayList<Object> capabilities;
+        public ArrayList<Object> properties;
+        public String error_code;
+        public String error_message;
+    }
+}

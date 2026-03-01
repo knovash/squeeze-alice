@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# sudo chmod +x *.sh
+BGreen='\033[1;32m'
+NC='\033[0m' # No Color
+
+file_name=$(basename "$0" .sh)
+remote="${file_name##*_}" 
+echo -e ${BGreen}"INSTALL TO IP: $remote"${NC}
+
+# Запрашиваем пользователя
+echo -e "Enter SSH username. ${BGreen}Press Enter for root:${NC} "
+read -p "" username
+username=${username:-root}
+# Запрашиваем пароль
+echo -e "Enter SSH password. ${BGreen}Press Enter for 12345:${NC} "
+read -p "" password
+password=${password:-12345}
+echo $username" "$password
+#------------------------------------------------------------
+
+echo -e ${BGreen}"MVN PACKAGE"${NC}
+rm -r target
+mvn package
+sleep 120
+#$SHELL

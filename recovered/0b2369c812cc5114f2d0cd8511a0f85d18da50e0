@@ -1,0 +1,100 @@
+package org.knovash.squeezealice;
+
+import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+
+public class HiveMQServer {
+
+    // Конфигурация HiveMQ Cloud
+//    private static final String BROKER = "ssl://YOUR_CLUSTER_ID.s1.eu.hivemq.cloud:8883";
+//    private static final String CLIENT_ID = "JavaServer";
+//    private static final String USERNAME = "your-username";
+//    private static final String PASSWORD = "your-password";
+    private static final String BROKER = "ssl://811c56b338f24aeea3215cd680851784.s1.eu.hivemq.cloud:8883";
+    private static final String CLIENT_ID = "JavaClient";
+    private static final String USERNAME = "novashki";
+    private static final String PASSWORD = "Darthvader0";
+    private static final String TOPIC = "test";
+
+    // Топики для работы
+//    private static final String SUBSCRIBE_TOPIC = "server/commands";
+//    private static final String PUBLISH_TOPIC = "server/status";
+
+    private static final String SUBSCRIBE_TOPIC = "test";
+    private static final String PUBLISH_TOPIC = "test";
+
+    private static MqttClient client;
+
+    public static void HiveMain() {
+        try {
+            // Настройка клиента
+            client = new MqttClient(BROKER, CLIENT_ID, new MemoryPersistence());
+
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setUserName(USERNAME);
+            options.setPassword(PASSWORD.toCharArray());
+            options.setCleanSession(true);
+            options.setAutomaticReconnect(true);
+
+            // Подключение
+            System.out.println("Connecting to HiveMQ Cloud...");
+            client.connect(options);
+            System.out.println("Connected!");
+
+            // Настройка callback
+            client.setCallback(new MqttCallback() {
+                @Override
+                public void connectionLost(Throwable cause) {
+                    System.out.println("Connection lost: " + cause.getMessage());
+                }
+
+                @Override
+                public void messageArrived(String topic, MqttMessage message) {
+                    handleMessage(topic, new String(message.getPayload()));
+                }
+
+                @Override
+                public void deliveryComplete(IMqttDeliveryToken token) {
+                    // Обработка подтверждения доставки
+                }
+            });
+
+            // Подписка на топик
+            client.subscribe(SUBSCRIBE_TOPIC, 1);
+            System.out.println("Subscribed to: " + SUBSCRIBE_TOPIC);
+
+            // Пример отправки сообщения
+            sendMessage("Server started successfully");
+
+            // Держим соединение активным
+            while(true) {
+                Thread.sleep(1000);
+            }
+
+        } catch (MqttException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void handleMessage(String topic, String payload) {
+        System.out.println("Received message:");
+        System.out.println("Topic: " + topic);
+        System.out.println("Payload: " + payload);
+
+        // Обработка сообщения
+        if(payload.equals("get_status")) {
+            sendMessage("Status: OK");
+        }
+    }
+
+    public static void sendMessage(String message) {
+        try {
+            MqttMessage mqttMessage = new MqttMessage(message.getBytes());
+            mqttMessage.setQos(1);
+            client.publish(PUBLISH_TOPIC, mqttMessage);
+            System.out.println("Message sent: " + message);
+        } catch (MqttException e) {
+            System.err.println("Error sending message: " + e.getMessage());
+        }
+    }
+}

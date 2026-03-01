@@ -1,0 +1,121 @@
+package org.knovash.squeezealice;
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.spotify.SpotifyAuth;
+import org.knovash.squeezealice.web.PageHive;
+import org.knovash.squeezealice.web.PageIndex;
+import org.knovash.squeezealice.web.PagePlayers;
+import org.knovash.squeezealice.web.PageSpotify;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.knovash.squeezealice.Main.hiveUsers;
+import static org.knovash.squeezealice.Main.lmsPlayers;
+
+@Log4j2
+public class HandlerFormNew implements HttpHandler {
+
+    @Override
+    public void handle(HttpExchange httpExchange) throws IOException {
+        log.info("HANDLER START >>>>>>>>>>>>>>>");
+        ContextForm context = ContextForm.contextCreate(httpExchange);
+        processContext(context );
+        sendResponse(httpExchange, context);
+        log.info("HANDLER FINISH <<<<<<<<<<<<<<<");
+    }
+
+
+    private ContextForm processContext(ContextForm context) {
+        log.info("HANDLER FORM OVERRIDE PROCESS CONTEXT START >>>");
+        log.info("BODY: " + context.body);
+        Map<String, String> bodyMap = parse(context.body);
+
+        context.code = 200;
+        if (bodyMap.containsKey("action")) {
+            String action = bodyMap.get("action");
+            switch (action) {
+                case ("spotify_save_creds"):
+                    SpotifyAuth.save((HashMap<String, String>) bodyMap);
+                    context.bodyResponse = PageSpotify.page();
+                    break;
+                case ("hive_save_user"):
+                    hiveUsers.createUser(bodyMap);
+                    context.bodyResponse = PageHive.page();
+                    break;
+                case ("delay_expire_save"):
+                    lmsPlayers.delayExpireSave((HashMap<String, String>) bodyMap);
+                    context.bodyResponse = PagePlayers.page();
+                    break;
+                case ("alt_sync_save"):
+                    lmsPlayers.altSyncSave((HashMap<String, String>) bodyMap);
+                    context.bodyResponse = PagePlayers.page();
+                    break;
+                case ("last_this_save"):
+                    lmsPlayers.lastThisSave((HashMap<String, String>) bodyMap);
+                    context.bodyResponse = PagePlayers.page();
+                    break;
+                case ("lms_save"):
+                    lmsPlayers.lmsSave((HashMap<String, String>) bodyMap);
+                    log.info("SAVED ----------");
+                    context.code = 302; // HTTP Found - редирект
+                    log.info("302");
+                    context.setRedirect("/lms");
+
+
+//                    context.headers.put("Location", Collections.singletonList("/lms")); // Перенаправление на GET /lms
+//                    context.bodyResponse = PageLms.page();
+                    log.info("FINISH");
+                    break;
+                case ("statusbar_refresh"):
+                    PageIndex.refresh((HashMap<String, String>) bodyMap);
+                    context.bodyResponse = PageIndex.page();
+                    break;
+                default:
+                    log.info("ACTION ERROR " + action);
+                    break;
+            }
+        }
+        log.info("HANDLER FORM FINISH <<<<<");
+        return context;
+    }
+
+    public static Map<String, String> parse(String query) {
+        Map<String, String> result = new HashMap<>();
+        if (query == null || query.isEmpty()) {
+            return result;
+        }
+        String[] pairs = query.split("&");
+        for (String pair : pairs) {
+            if (pair.isEmpty()) {
+                continue;
+            }
+            String[] keyValue = pair.split("=", 2);
+            String key = keyValue[0];
+            String value = keyValue.length > 1 ? keyValue[1] : null;
+            result.put(key, value);
+        }
+        return result;
+    }
+
+    private void sendResponse(HttpExchange exchange, ContextForm context) throws IOException {
+        exchange.getResponseHeaders().putAll(context.responseHeaders);
+        // Обработка редиректов
+        if (context.code >= 300 && context.code < 400) {
+            exchange.sendResponseHeaders(context.code, -1); // Без тела ответа
+            return;
+        }
+
+        byte[] responseBytes = context.bodyResponse.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().putAll(context.headers);
+        exchange.sendResponseHeaders(context.code, responseBytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(responseBytes);
+        }
+    }
+}

@@ -1,0 +1,15 @@
+[Unit]
+Description=Tunnel
+After=multi-user.target
+After=network.target
+After=network-online.target
+[Service]
+Type=simple
+User=konstantin
+Restart=yes
+#Restart=on-failure
+#Restart=always
+RestartSec=4
+ExecStart= /home/konstantin/tunnel.sh
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,70 @@
+package org.knovash.alicebroker;
+
+import lombok.extern.log4j.Log4j2;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static org.knovash.alicebroker.Main.usersSystem;
+
+
+@Log4j2
+public class HandlerForm extends HandlerAbstract {
+
+    @Override
+    protected Context processContext(Context context) {
+        System.out.println("HANDLER FORM START >>>");
+
+        log.info("-----" + context.body);
+
+        Map<String, String> bodyMap = parse(context.body);
+
+        log.info("SET: " + bodyMap.entrySet());
+        log.info("name: " + bodyMap.get("name"));
+        log.info("email: " + bodyMap.get("email"));
+
+
+//        Users usersSystem = new Users();
+//        Map<String, String> user1Data = new HashMap<>();
+//        user1Data.put("name", "Alice Smith");
+//        user1Data.put("email", "alice@example.com");
+//        user1Data.put("login", "alice2023");
+//        user1Data.put("password", "secure123");
+//        user1Data.put("topic", "Java Programming");
+//        boolean result1 = usersSystem.createUser(user1Data);
+
+        log.info("USERS: " + usersSystem.getUsers().size());
+
+        usersSystem.createUser(bodyMap);
+
+        log.info("USERS: " + usersSystem.getUsers().size());
+        usersSystem.getUsers().stream().
+                map(user -> user.getName() + " " + user.getEmail())
+                .forEach(s -> log.info(s));
+
+
+        log.info("HANDLER FORM FINISH <<<<<");
+        context.bodyResponse = PageIndex.page();
+        context.code = 200;
+        return context;
+    }
+
+    public static Map<String, String> parse(String query) {
+        Map<String, String> result = new HashMap<>();
+        if (query == null || query.isEmpty()) {
+            return result;
+        }
+        String[] pairs = query.split("&");
+        for (String pair : pairs) {
+            if (pair.isEmpty()) {
+                continue;
+            }
+            String[] keyValue = pair.split("=", 2);
+            String key = keyValue[0];
+            String value = keyValue.length > 1 ? keyValue[1] : null;
+            result.put(key, value);
+        }
+        return result;
+    }
+}

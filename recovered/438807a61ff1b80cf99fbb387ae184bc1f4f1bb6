@@ -1,0 +1,104 @@
+package org.knovash.squeezealice;
+
+import lombok.extern.log4j.Log4j2;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.Option.Builder;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.ParseException;
+
+@Log4j2
+public class ArgsParser {
+
+    public static void main(String [] args) throws ParseException {
+
+        CommandLine commandLine;
+
+//        Option option_lmsip = Option.builder("lmsip")
+//                .required(true)
+////                .desc("The lmsip option")
+////                .longOpt("opt1")
+//                .build();
+//        Option option_lmsport = Option.builder("lmsport")
+//                .required(true)
+////                .desc("The lmsport option")
+////                .longOpt("opt2")
+//                .build();
+//        Option option_port = Option.builder("port")
+//                .required(true)
+////                .desc("The port option")
+////                .longOpt("opt3")
+//                .build();
+//        Option option_context = Option.builder("context")
+//                .required(true)
+////                .desc("The context option")
+////                .longOpt("opt4")
+//                .build();
+
+        Options options = new Options();
+        CommandLineParser parser = new DefaultParser();
+
+
+
+        options.addOption("i", "input", true, "Specify input file");
+
+        options.addOption("port","ppp");
+        options.addOption("context","ppp");
+
+
+        String[] testArgs = {
+                "-lmsip", "localhost",
+                "-lmsport", "9000",
+                "-port", "8000",
+                "-context", "cmd"
+        };
+
+        commandLine = parser.parse(options, testArgs);
+        log.info(            commandLine.getOptionValue("context"));
+
+//        options.addOption(option_lmsip);
+//        options.addOption(option_lmsport);
+//        options.addOption(option_port);
+//        options.addOption(option_context);
+
+        try {
+            commandLine = parser.parse(options, testArgs);
+
+            if (commandLine.hasOption("lmsip")) {
+                System.out.print("Option lmsip is present.  The value is: ");
+                System.out.println(commandLine.getOptionValue("lmsip"));
+            }
+            if (commandLine.hasOption("lmsport")) {
+                System.out.print("Option lmsport is present.  The value is: ");
+                System.out.println(commandLine.getOptionValue("lmsport"));
+            }
+            if (commandLine.hasOption("port")) {
+                System.out.print("Option port is present.  The value is: ");
+                System.out.println(commandLine.getOptionValue("port"));
+            }
+            if (commandLine.hasOption("context")) {
+                System.out.print("Option context is present.  The value is: ");
+                System.out.println(commandLine.getOptionValue("context"));
+            }
+
+            log.info(            commandLine.getOptionValue("context"));
+
+            {
+                String[] remainder = commandLine.getArgs();
+                System.out.print("Remaining arguments: ");
+                for (String argument : remainder) {
+                    System.out.print(argument);
+                    System.out.print(" ");
+                }
+
+                System.out.println();
+            }
+
+        } catch (ParseException exception) {
+            System.out.print("Parse error: ");
+            System.out.println(exception.getMessage());
+        }
+    }
+}

@@ -1,0 +1,50 @@
+package org.knovash.squeezealice;
+
+import com.sun.net.httpserver.HttpServer;
+import lombok.extern.log4j.Log4j2;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.ResourceBundle;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+
+@Log4j2
+public class Controller {
+
+
+    public static void start() {
+        log.info("server try");
+        HttpServer server = null;
+        try {
+            server = HttpServer.create(new InetSocketAddress(8005), 0);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        server.createContext("/cmd", new Handler());
+            server.setExecutor(null); // creates a default executor
+             server.start();
+        log.info("server started");
+    }
+}
+
+//    private static ResourceBundle bundle = ResourceBundle.getBundle("config");
+//    private static final String HOSTNAME = bundle.getString("hostname");
+//    private static final Integer PORT = Integer.valueOf(bundle.getString("port"));
+//    private static final String CONTEXT = bundle.getString("context");
+//
+//    public static void start() {
+//        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+//        HttpServer server = null;
+//        try {
+//            server = HttpServer.create(new InetSocketAddress(8003), 0);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//        server.createContext(CONTEXT, new Handler());
+////        server.setExecutor(threadPoolExecutor);
+//        server.setExecutor(null);
+//        server.start();
+//        log.info("server started on port " + PORT);
+//    }
+//}

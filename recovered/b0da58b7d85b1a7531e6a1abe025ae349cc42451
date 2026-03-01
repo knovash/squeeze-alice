@@ -1,0 +1,43 @@
+package org.knovash.squeezealice;
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import lombok.extern.log4j.Log4j2;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
+@Log4j2
+public class HandlerIndex implements HttpHandler {
+
+    @Override
+    public void handle(HttpExchange httpExchange) throws IOException {
+        String head;
+        String query;
+        String response;
+        log.info("");
+        log.info(" ---===[ REQUEST FROM Kuzja ]===---");
+        head = httpExchange.getRequestHeaders().values().toString();
+        query = httpExchange.getRequestURI().getQuery();
+        log.info("HEAD: " + head);
+        log.info("QUERY: " + query);
+        response = "" +
+                "<p><strong>Hellow! its LMS control</strong></p>\n" +
+                "\n" +
+                "<p><a href=\"https://oauth.yandex.ru/authorize?response_type=code&amp;client_id=04046b5a2b0e41ef82feff72f1dacb27&amp;state=etcCpwmsrknC348Y81kU1w==\">login by Yandex</a></p>\n" +
+                "\n" +
+                "<p>/cmd?action=channel&amp;player=homepod&amp;value=1 &nbsp;- &nbsp;Play favorites 1 from LMS on player HomePod<br />\n" +
+                "/cmd?action=turnon&amp;player=homepod &nbsp;- &nbsp;Start play music on HomePod<br />\n" +
+                "/cmd?action=turnoff&amp;player=homepod &nbsp;- &nbsp;Stop play music on HomePod<br />\n" +
+                "/cmd?action=log &nbsp;- &nbsp;Show server log<br />\n" +
+                "/cmd?action=state &nbsp;- &nbsp;Show server state</p>";
+
+        log.info("RESPONSE: " + response);
+        httpExchange.sendResponseHeaders(200, response.getBytes().length);
+        OutputStream outputStream = httpExchange.getResponseBody();
+        outputStream.write(response.getBytes());
+        outputStream.flush();
+        outputStream.close();
+    }
+}
+

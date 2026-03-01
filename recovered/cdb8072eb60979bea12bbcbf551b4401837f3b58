@@ -1,0 +1,23 @@
+package org.knovash.squeezealice.web;
+
+import com.sun.net.httpserver.Headers;
+import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.provider.Context;
+
+@Log4j2
+public class ActionPlayers {
+
+    public static Context action(Context context) {
+        String body = context.body;
+        Headers headers = context.headers;
+        String path = context.path;
+        String xRequestId = context.xRequestId;
+
+        String json = Html.formPlayers();
+
+        context.json = json;
+        context.code = 200;
+        return context;
+    }
+}
+
