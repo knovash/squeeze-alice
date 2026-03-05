@@ -1,144 +1,153 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.voice.VoiceActions;
+import org.knovash.squeezealice.spotify.Spotify;
+import org.knovash.squeezealice.voice.ActionsAsync;
 
 import java.util.HashMap;
-import java.util.concurrent.CompletableFuture;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 public class SwitchQueryCommand {
 
-    private static Player player;
-
     public static Context action(Context context) {
         HashMap<String, String> queryParams = context.queryMap;
-        context.bodyResponse = "\nBAD REQUEST NO ACTION IN QUERY";
+        context.bodyResponse = "BAD REQUEST NO ACTION IN QUERY";
         if (!queryParams.containsKey("action")) return context;
+
         context.code = 200;
         String action = queryParams.get("action");
-        String playerInQuery = queryParams.get("player");
-        String roomInQuery = queryParams.get("room");
+        String playerName = queryParams.get("player");
+        String room = queryParams.get("room");
         String value = queryParams.get("value");
         String response = "null";
-        log.info("PLAYER: " + playerInQuery + " ROOM: " + roomInQuery);
+        log.info("PLAYER: " + playerName + " ROOM: " + room + " ACTION: " + action + " VALUE: " + value);
 
-// проверка что пришло, имя плеера или комнаты, если пришла комната - взять плеер по комнате
-// найти плеер по похожему имени
-// если плеер не найден попробовать взять плеер по похожему названию комнаты
-        player = null;
-        if (playerInQuery != null) {
-            if (playerInQuery.equals("btremote")) playerInQuery = lmsPlayers.btPlayerName;
-            player = lmsPlayers.playerByNearestName(playerInQuery);
-            if (player == null) player = lmsPlayers.playerByNearestRoom(playerInQuery);
-        }
+        Player player = null;
+        if (playerName == null && room != null) player = lmsPlayers.playerByNearestRoom(room);
+        if (playerName != null && playerName.equals("btremote")) playerName = lmsPlayers.btPlayerName;
+        if (playerName != null) player = lmsPlayers.playerByNearestName(playerName);
 
-        log.info("\nUPDATE LMS PLAYERS");
-        lmsPlayers.updateLmsPlayers();
+        log.info("PLAYER: " + player);
 
-// управление с пульта или виджетов таскер
-// респонс для отображения действия на телевизоре или планшете
+        lmsPlayers.fastUpdateServer(); // обновить перед всеми командами с пульта или планшета /cmd
+
+        // Управление с пульта или виджетов таскер через http запрос
+        // Респонс для отображения действия на телевизоре или планшете
+
         switch (action) {
-            case ("volume_dn"): // TODO неиспользует Таскер
-                response = player.volumeRelativeOrAbsolute("-3", true);
+            // ========== Основные операции управления плеером ==========
+            case "volume_dn":
+//                player.volume("-3");
+                if (value == null) value = "-3";
+                player.volumeSetLimited("-" + value);
+                response = player.name + " - play volume " + value;
                 break;
-            case ("volume_up"): // TODO неиспользует Таскер
-                response = player.volumeRelativeOrAbsolute("3", true);
+            case "volume_up":
+//                player.volume("+3");
+                if (value == null) value = "+3";
+                player.volumeSetLimited("+" + value);
+                response = player.name + " - play volume " + value;
                 break;
-            case ("channel"):
-                CompletableFuture.runAsync(() -> player
-                                .ifExpiredAndNotPlayingUnsyncWakeSet(null)
-                                .playChannel(Integer.valueOf(value)))
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
+            case "channel":
+                ActionsAsync.turnOnChannel(player, value);
                 response = player.name + " - play channel " + value;
                 break;
-            case ("play"): // TODO неиспользует Таскер
-//                CompletableFuture.runAsync(() -> player.turnOnMusic(null))
-//                        .thenRunAsync(() -> lmsPlayers.afterAll());
-//                response = player.name + " - play";
+            case "play":
+            case "turn_on_music":
+                ActionsAsync.turnOnMusic(player);
+                response = player.name + " - play";
                 break;
-            case ("toggle_music"):
-                CompletableFuture.runAsync(() -> player.toggleMusic())
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
-                response = player.name + " - play/pause";
+            case "play_pause":
+            case "toggle_music":
+                ActionsAsync.toggleMusic(player);
+                response = player.name + " - toggle music";
                 break;
-            case ("stop_all"):
-                CompletableFuture.runAsync(() -> lmsPlayers.turnOffMusicAll())
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
-                response = "All players - Stop";
+            case "stop_all":
+                ActionsAsync.stopAll();
+                response = "stop all";
                 break;
-            case ("next"):
-                CompletableFuture.runAsync(() -> player.ctrlNextChannelOrTrack())
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
-                response = player.name + " - Next";
+            case "next":
+                ActionsAsync.nextChannelOrTrack(player);
+                response = player.name + " - next";
                 break;
-            case ("prev"):
-                CompletableFuture.runAsync(() -> player.ctrlPrevChannelOrTrack())
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
-                response = player.name + " - Prev";
+            case "prev":
+                ActionsAsync.prevChannelOrTrack(player);
+                response = player.name + " - prev";
                 break;
-            case ("next_track"): // TODO неиспользует Таскер
-                CompletableFuture.runAsync(() -> player.ctrlNextTrack())
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
-                response = player.name + " - Next track";
+            case "next_track":
+                ActionsAsync.nextTrack(player);
+                response = player.name + " - next track";
                 break;
-            case ("prev_track"): // TODO неиспользует Таскер
-                CompletableFuture.runAsync(() -> player.ctrlPrevTrack())
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
-                response = player.name + " - Next track";
+            case "prev_track":
+                ActionsAsync.prevTrack(player);
+                response = player.name + " - prev track";
                 break;
-            case ("next_channel"): // TODO неиспользует Таскер
-                CompletableFuture.runAsync(() -> player.ctrlNextChannel()) // case ("next_channel"):
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
-                response = player.name + " - Next channel";
+            case "next_channel":
+                ActionsAsync.ctrlNextChannel(player);
+                response = player.name + " - next channel";
                 break;
-            case ("prev_channel"): // TODO неиспользует Таскер
-                CompletableFuture.runAsync(() -> player.ctrlPrevChannel())
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
-                response = player.name + " - Prev channel";
+            case "prev_channel":
+                ActionsAsync.prevChannel(player);
+                response = player.name + " - prev channel";
                 break;
-            case ("separate_on"):
-                VoiceActions.separateOn(player);
-                response = "Separate On";
+            case "switch_here":
+                ActionsAsync.switchHere(player);
+                response = player.name + " - switch here";
                 break;
-            case ("separate_off"):
-                VoiceActions.separateOff(player);
-                response = "Separate Off";
+
+            // ========== Дополнительные опции (режимы, избранное) ==========
+            case "separate_on":
+                ActionsAsync.separateOn(player);
+                response = player.name + " - separate on";
                 break;
-            case ("switch_here"):
-                CompletableFuture.runAsync(() -> VoiceActions.syncSwitchToHere(player))
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
-                response = "Switch music to " + player.name;
+            case "separate_off":
+                ActionsAsync.separateOff(player);
+                response = player.name + " - separate off";
                 break;
-            case ("shuffle_on"):
-                CompletableFuture.runAsync(() -> player.shuffleOn())
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
-                response = "SHUFFLE ON";
+            case "shuffle_on":
+                ActionsAsync.shuffleOn(player);
+                response = player.name + " - shuffle on";
                 break;
-            case ("shuffle_off"):
-                CompletableFuture.runAsync(() -> player.shuffleOff())
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
-                response = "SHUFFLE OFF";
+            case "shuffle_off":
+                ActionsAsync.shuffleOff(player);
+                response = player.name + " - shuffle off";
                 break;
-            case ("favorites_add"):
-                log.info("CASE FAVORITES ADD");
-                CompletableFuture.runAsync(() -> player.favoritesAdd())
-                        .thenRunAsync(() -> lmsPlayers.afterAll());
-                response = "FAVORITES ADD";
+            case "favorites_add":
+                ActionsAsync.favoritesAdd(player);
+                response = player.name + " - favorites add";
                 break;
-            case ("get_room_player"): // Таскер по названию виджета вернуть комнату и плеер при активации нового виджета
-                response = lmsPlayers.playerNameByWidgetName(value);
+
+            // ========== Информационные запросы ==========
+            case "title":
+                response = player.title();
                 break;
-            case ("get_refresh_json"): // Таскер для виджетов иконок плееров
-                response = lmsPlayers.forTaskerWidgetsRefreshJson(player, value);
+            case "get_room_player": // Таскер по названию виджета вернуть комнату и плеер при активации нового виджета
+                response = Tasker.playerNameByWidgetName(value);
                 break;
+            case "get_refresh_json": // Таскер для виджетов иконок плееров
+                response = Tasker.forTaskerWidgetsRefreshJson(player, value);
+                break;
+
+            // ========== Утилитные действия (обновление, внешние сервисы) ==========
+            case "update_players":
+                lmsPlayers.fastUpdateServer(); // ручное обновление
+                response = "update players";
+                break;
+            case "spotify_me":
+                Spotify.me();
+                response = "spotify_me";
+                break;
+
+            // ========== Неизвестная команда ==========
             default:
                 log.info("ACTION NOT FOUND: " + action);
                 response = "ACTION NOT FOUND: " + action;
                 break;
         }
+
+
         if (response != "null") {
             context.bodyResponse = response;
             return context;

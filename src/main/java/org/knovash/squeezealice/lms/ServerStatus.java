@@ -11,7 +11,7 @@ import java.util.ArrayList;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ServerStatusByName {
+public class ServerStatus {
 
     public Result result;
     public int id;

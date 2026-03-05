@@ -36,6 +36,13 @@ public class Config {
     public String yandexName; // для отображения кто вошел
     public String yandexUid; // для уникального названия топика пользователя
     public String skillId; // id навыка Lyrion Music Server публичный
+    public String yandextSkillTokenDeveloper; // id навыка Lyrion Music Server публичный
+    //Тип токена: OAuth-токен разработчика навыка.
+//Как получить: Через консоль разработчика Яндекс.Диалогов: Навык → Настройки → Авторизация для HTTP-запросов → Скопировать OAuth-токен.
+//Не требует программирования – токен статичен для навыка.
+//Назначение: Управление состоянием навыка Алисы (отправка событий, состояние сессии).
+//Срок жизни: Бессрочный (но можно перегенерировать вручную).
+
     //    Spotify
     public String spotifyToken; // для запросов поиска
     public String spotifyName; // для отображения кто вошел
@@ -43,8 +50,13 @@ public class Config {
     public long spotifyTokenExpiresAt; // системное время когда истекает токен
 
 
+    public String fileRooms = "data/rooms.json";
+    public String fileDevices = "data/devices.json";
+    public String fileLmsPlayers = "data/lms_players.json";
+
+
     public void readConfigProperties() {
-        log.debug("READ CONFIG FROM config.properties");
+        log.info("READ config.properties");
         ResourceBundle bundle = ResourceBundle.getBundle("config");
         this.port = Integer.parseInt(bundle.getString("port"));
         this.domain = bundle.getString("domain");
@@ -56,11 +68,12 @@ public class Config {
         this.hiveUsername = bundle.getString("hiveUsername");
         this.hivePassword = bundle.getString("hivePassword");
         this.skillId = bundle.getString("skillId");
-        log.info("CONFIG FROM config.properties : " + config);
+        this.yandextSkillTokenDeveloper = bundle.getString("yandextSkillTokenDeveloper");
+        log.debug("CONFIG FROM config.properties : " + config);
     }
 
     public void readConfigJson() {
-        log.debug("READ CONFIG FROM config.json");
+        log.info("READ config.json");
         Config jsonConfig = JsonUtils.jsonFileToPojo("data/config.json", Config.class);
         if (jsonConfig == null) {
             log.info("NO FILE config.json WRITE NEW");
@@ -88,7 +101,7 @@ public class Config {
         this.spotifyName = jsonConfig.spotifyName;
         this.spotifyRefreshToken = jsonConfig.spotifyRefreshToken;
         this.spotifyTokenExpiresAt = jsonConfig.spotifyTokenExpiresAt;
-        log.info("CONFIG FROM config.json : " + config);
+        log.debug("CONFIG FROM config.json : " + config);
     }
 
     @Override
@@ -118,7 +131,7 @@ public class Config {
     }
 
     public void write() {
-        log.info("WRITE CONFIG TO config.json");
+        log.info("WRITE config.json");
         JsonUtils.pojoToJsonFile(this, "data/config.json");
     }
 }

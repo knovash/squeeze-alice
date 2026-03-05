@@ -3,6 +3,7 @@ package org.knovash.squeezealice.utils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.knovash.squeezealice.LmsPlayers;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
@@ -30,34 +31,6 @@ import static org.knovash.squeezealice.Requests.headToUriForHttpResponse;
 public class Utils {
 
     public static Map<String, String> altNames;
-
-//    public static String getPlayerByNameInQuery(String name) {
-//        log.info("NAME: " + name + " ALT NAMES: " + altNames);
-//        if (altNames.containsKey(name)) {
-//            name = altNames.get(name);
-//        } else {
-//            log.info("NO ALT NAME FOR " + name);
-//        }
-//        return name;
-//    }
-
-
-//    public static String timeVolumeGet(Player player) {
-//        return player.schedule.entrySet().toString();
-//    }
-//
-//    public static String timeVolumeSet(Player player, HashMap<String, String> parameters) {
-//        Integer time = Integer.valueOf(parameters.get("time"));
-//        Integer volume = Integer.valueOf(parameters.get("volume"));
-//        player.schedule.put(time, volume);
-//        return "SET " + time + " : " + volume;
-//    }
-//
-//    public static String timeVolumeDel(Player player, HashMap<String, String> parameters) {
-//        Integer time = Integer.valueOf(parameters.get("time"));
-//        player.schedule.remove(time);
-//        return "REMOVED time:" + time;
-//    }
 
     public static boolean checkIpIsLms(String ip) {
         String uri = "http://" + ip + ":" + config.lmsPort;
@@ -203,14 +176,14 @@ public class Utils {
 
 
     public static void readAliceIdInRooms() {
-        log.debug("READ ALICE IN ROOMS FROM rooms.json");
-        idRooms = JsonUtils.jsonFileToMap(SwitchVoiceCommand.saveToFileJson, String.class, String.class);
+        log.debug("READ rooms.json");
+        idRooms = JsonUtils.jsonFileToMap(config.fileRooms, String.class, String.class);
         if (idRooms == null) {
             idRooms = new HashMap<>();
             log.info("READ NO ROOMS");
             return;
         }
-        log.info("ALICE IN ROOMS FROM rooms.json: " + Main.idRooms);
+        log.info("READ rooms.json: " + Main.idRooms);
     }
 
     public static String getCorrectRoomName(String approxRoomName) {

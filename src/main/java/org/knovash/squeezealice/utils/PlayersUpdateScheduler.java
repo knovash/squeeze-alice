@@ -38,7 +38,7 @@ public class PlayersUpdateScheduler {
             public void run() {
                 try {
                     log.debug("Executing players state update");
-                    Main.lmsPlayers.updateLmsPlayers(); // PlayersUpdateScheduler
+                    Main.lmsPlayers.fastUpdateServer(); // PlayersUpdateScheduler
                     Main.lmsPlayers.players.stream()
                             .filter(player -> player != null)
                             .filter(player -> player.deviceId != null)
