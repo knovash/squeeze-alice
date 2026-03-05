@@ -1,10 +1,0 @@
---2024-02-16 16:46:49--  http://192.168.1.110:9000/plugins/spotty/index.html?index=10.1
-Connecting to 192.168.1.110:9000... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 8225 (8,0K) [text/html]
-Saving to: ‘index.html?index=10.1.5’
-
-index.html?index=10.1.5                   0%[                                                                              ]       0  --.-KB/s               index.html?index=10.1.5                 100%[=============================================================================>]   8,03K  --.-KB/s    in 0s      
-
-2024-02-16 16:46:50 (16,8 MB/s) - ‘index.html?index=10.1.5’ saved [8225/8225]
-

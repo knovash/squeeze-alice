@@ -16,10 +16,10 @@ public class HandlerAll implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        log.info("\nRECIEVED HTTP REQUEST");
+        log.info("----- RECEIVED HTTP REQUEST -----");
         Context context = Context.contextCreate(httpExchange);
-        log.info("CLIENT ID IN QUERY: " + context.queryMap.get("client_id"));
-        context = HandlerAll.processContext(context);
+        log.debug("CLIENT ID IN QUERY: " + context.queryMap.get("client_id"));
+        context = HandlerAll.switchPath(context);
         String response = context.bodyResponse;
 
         byte[] responseBytes = response.getBytes(StandardCharsets.UTF_8);
@@ -29,10 +29,10 @@ public class HandlerAll implements HttpHandler {
         try (OutputStream outputStream = httpExchange.getResponseBody()) {
             outputStream.write(responseBytes);
         }
-        log.info("HTTP HANDLER FINISH <<<<<<<<<<<");
+        log.info("--- FINISH ---");
     }
 
-    public static Context processContext(Context context) {
+    public static Context switchPath(Context context) {
         String path = context.path;
         log.info("SWITCH CONTEXT PATH: " + path);
         switch (path) {
@@ -51,7 +51,7 @@ public class HandlerAll implements HttpHandler {
                 context = SwitchSpotify.action(context);
                 break;
             case "/alice/":
-                context = SwitchVoiceCommand.action(context);
+                context = SwitchVoiceCommand.processContext(context);
                 break;
             case "/v1.0":
                 context = ProviderCheck.providerCheckRun(context);

@@ -34,14 +34,14 @@ public class ProviderQuery {
         ResponseYandex responseYandex = new ResponseYandex();
         responseYandex.request_id = xRequestId;
 
-        lmsPlayers.updateLmsPlayers(); // providerQueryRun TODO тут апдейт нужен только для обновления списка подключенных плееров
+        lmsPlayers.fastUpdateServer(); // providerQueryRun TODO тут апдейт нужен только для обновления списка подключенных плееров
 
         List<Device> jsonDevices = new ArrayList<>();
         try {
 // лист девайсов для обновления их свойств
             jsonDevices = bodyPojo.devices.stream()
 //                    .peek(d -> log.info("---DEVICE ID: " + d.id))
-                    .map(d -> smartHome.getDeviceById(d.id))
+                    .map(d -> smartHome.deviceById(d.id))
 // обратиться к каждому девайсу и обновить его свойства
                     .map(d -> updateDeviceCapabilities(d)).collect(Collectors.toList());
         }

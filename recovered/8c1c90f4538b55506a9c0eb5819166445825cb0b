@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-sshpass -p "$password" ssh $username@$remote sudo systemctl restart lyrionmusicserver.service
-sshpass -p "$password" ssh $username@$remote tail -f /opt/squeeze-alice-1.0/data/log.txt
- 
-sleep 120
-#$SHELL
-

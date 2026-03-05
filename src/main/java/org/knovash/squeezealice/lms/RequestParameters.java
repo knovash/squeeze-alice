@@ -30,17 +30,17 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"pause", "0"});
     }
 
-    public static RequestToLms play(String player, Integer id) {
+    public static RequestToLms playFavoritesId(String player, Integer id) { // id начинается с 0
         return RequestToLms.create(player, new String[]{"favorites", "playlist", "play", "item_id:" + id});
+
     }
 
     public static RequestToLms play(String player, String url) {
         return RequestToLms.create(player, new String[]{"playlist", "play", url});
     }
 
-    public static RequestToLms favorites(String player, int value) {
-//        {"id":"1","method":"slim.request","params":["",["favorites","items","0","5","want_url:1"]]}
-        return RequestToLms.create(player, new String[]{"favorites", "items", "0", "want_url:0"});
+    public static RequestToLms favorites(String player, String value) {
+        return RequestToLms.create(player, new String[]{"favorites", "items", value, "want_url:0"});
     }
 
     public static RequestToLms favoritesAdd(String player, String url, String title) {
@@ -65,7 +65,7 @@ public class RequestParameters {
     }
 
     public static RequestToLms playlisturl(String player) {
-        return RequestToLms.create(player, new String[]{player, "playlist", "url", "?"});
+        return RequestToLms.create(player, new String[]{"playlist", "url", "?"});
     }
 
     public static RequestToLms albumname(String player) {
@@ -81,7 +81,7 @@ public class RequestParameters {
     }
 
     public static RequestToLms syncgroups() {
-            return RequestToLms.create("", new String[]{"syncgroups", "?"});
+        return RequestToLms.create("", new String[]{"syncgroups", "?"});
     }
 
     public static RequestToLms unsync(String player) {

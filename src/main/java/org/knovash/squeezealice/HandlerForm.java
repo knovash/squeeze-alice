@@ -73,10 +73,10 @@ public class HandlerForm implements HttpHandler {
                     lmsPlayers.autoremoteRemove((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
-                case alt_sync_save:
-                    lmsPlayers.altSyncSave((HashMap<String, String>) bodyMap);
-                    context.bodyResponse = PagePlayers.page();
-                    break;
+//                case alt_sync_save:
+//                    lmsPlayers.altSyncSave((HashMap<String, String>) bodyMap);
+//                    context.bodyResponse = PagePlayers.page();
+//                    break;
                 case last_this_save:
                     lmsPlayers.lastThisSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();

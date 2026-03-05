@@ -184,7 +184,7 @@ public class PagePlayers {
         if (p.connected) inLmsState = "LMS <span style='color: green;'>" + "подключен" + "</span>";
         String roomState = "<span style='color: red;'>" + "комната" + "</span>";
         if (p.room != null) roomState = "<span style='color: green;'>" + "комната" + "</span>";
-        p.requestPlayerStatus();
+//        p.requestPlayerStatus(); // TODO
         String form =
                 "<br>" +
                         "<form method='POST' action='/form' enctype='application/x-www-form-urlencoded'>" + // Добавить enctype

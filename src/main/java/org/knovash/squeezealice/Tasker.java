@@ -14,6 +14,7 @@ import static org.knovash.squeezealice.Main.rooms;
 
 @Log4j2
 public class Tasker {
+
     public static String widgetsNames;
     public static String widgetsModes;
     public static String widgetsSyncs;
@@ -22,102 +23,22 @@ public class Tasker {
     public static String nowPlayingTv;
     public static String widgetPlayersPlay;
     public static String widgetPlayersStop;
-
-    public static String playerNameByWidgetName(String value) {
-        log.info("GET PLAYER BY WIDGET: " + value);
-        Player player1 = null;
-        String playerName = "ERROR";
-        String roomName;
-        roomName = Utils.getCorrectRoomName(value);
-        if (roomName != null) player1 = lmsPlayers.playerByCorrectRoom(roomName);
-        if (player1 != null) playerName = player1.name;
-        if (player1 == null) {
-            playerName = Utils.getCorrectPlayerName(value);
-            if (playerName != null) roomName = lmsPlayers.playerByCorrectName(playerName).room;
-        }
-        log.info("ROOM: " + roomName + " PLAYER: " + playerName);
-        String result = roomName + "," + playerName;
-        return result;
-    }
-
-
-    public static String forTaskerPlayersList() {
-        log.info("TASKER PLAYERS LIST");
-        List<String> favList = lmsPlayers.players.get(0).favorites(); // forTaskerPlayersList
-
-        Function<Player, String> playerFormatter = p -> {
-            if (!p.connected) p.playlistNameShort = "unknown";
-            if (!p.connected) p.playlistNameShort = "offline";
-            String playlistName = p.requestPlaylistName(); // forTaskerPlayersList -------------------------------------
-            String favoritesIndex = "";
-            if (playlistName != null && favList.contains(playlistName))
-                favoritesIndex = (favList.indexOf(playlistName) + 1) + ".";
-            if (playlistName == null) playlistName = p.requestTitle(); // --------------------------------------
-            else playlistName = p.playlistNameShort; // forTaskerPlayersList
-            String roomNamePlayerName = p.room + " - " + p.name;
-            if (p.room == null) roomNamePlayerName = p.name;
-//            log.info(roomNamePlayerName + " - " + p.volume + " - " + favoritesIndex + playlistName);
-            return roomNamePlayerName + " - " + p.volume + " - " + favoritesIndex + playlistName;
-        };
-
-        log.info("\nPLAYING PLAYERS LIST:");
-        widgetPlayersPlay = lmsPlayers.players.stream()
-                .filter(p -> p.playing)
-                .sorted(Comparator.comparing(
-                        p -> p.playlistNameShort,
-                        Comparator.nullsLast(Comparator.naturalOrder())
-                ))
-                .map(playerFormatter)
-                .collect(Collectors.joining(","));
-        if (widgetPlayersPlay.isEmpty()) widgetPlayersPlay = "all players stop";
-        log.info("\nNOT PLAYING PLAYERS LIST:");
-        widgetPlayersStop = lmsPlayers.players.stream()
-                .filter(p -> !p.playing)
-                .sorted(Comparator.comparing(
-                        p -> p.playlistNameShort,
-                        Comparator.nullsLast(Comparator.naturalOrder())
-                ))
-                .map(playerFormatter)
-                .collect(Collectors.joining(","));
-        if (widgetPlayersStop.isEmpty()) widgetPlayersStop = "all players play";
-        log.info("RESULT PLAYING PLAYERS LIST: " + widgetPlayersPlay);
-        log.info("RESULT NOT PLAYING PLAYERS LIST: " + widgetPlayersStop);
-        String result = widgetPlayersPlay + ";" + widgetPlayersStop;
-        return result;
-    }
+    public static String widgetPlaylist;
 
     public static String forTaskerWidgetsRefreshJson(Player player, String lines) {
-        log.info("\nSTART TASKER WIDGETS REFRESH JSON");
-        log.info("\nTASKER WIDGET PLAYERS LIST");
+        log.info("----------UPDATE START---------");
+        lmsPlayers.fastUpdateServer(); // пред обновлением виджетов таскера
+        lmsPlayers.players.forEach(p -> p.status());
+        lmsPlayers.players.stream().filter(p -> p.connected).forEach(p -> p.title());
+        log.info("----------UPDATE FINISH---------");
+        nowPlaying = player.title; // для виджета одной иконкой для телефона где неработает плагин
+        nowPlayingTv = player.name + " - " + player.volume + " - " + player.mode + " - " + player.title; // для виджета одной иконкой для телефона где неработает плагин
+        forTaskerPlaylist(player, Integer.valueOf(lines)); // для виджета плейлиста
         forTaskerPlayersList(); // для виджета списка плееров name-volume-mode-title
-        log.info("\nTASKER WIDGET ICONS");
         forTaskerWidgetsIcons(); // для виджетов иконок плееров
-        String responsePlaylist = "[]";
-        nowPlaying = "offline";
-        if (player != null) {
-            log.info("\nTASKER WIDGET PLAY LIST FOR " + player.name);
-            responsePlaylist = player.forTaskerPlaylist(lines); // для виджета плейлиста
-            if (responsePlaylist == null) {
-//                log.info("--- responsePlaylist = player.playlistNameShort;");
-//                log.info("--- PLAYLIST NAME SHORT: " + player.playlistNameShort);
-                responsePlaylist = player.playlistNameShort;
-            }
-            log.info("\nTASKER WIDGET ONE ICON NOW PLAYING");
-//            log.info("--- LmsPlayers.nowPlaying = player.playlistNameShort");
-//            log.info("PLAYLIST NAME SHORT: " + player.playlistNameShort);
-//            log.info("title: " + player.title);
-//            log.info("playlistName: " + player.playlistName);
-//            log.info("playlistNameShort: " + player.playlistNameShort);
-            String title = player.playlistNameShort;
-            if(player.playlistNameShort == null) title = player.requestTitle();
-            nowPlaying = title; // для виджета одной иконкой для телефона где неработает плагин
-            nowPlayingTv = player.name + " - " + player.volume + " - " + player.mode + " - " + title; // для виджета одной иконкой для телефона где неработает плагин
-        }
 
-//        log.info("\nTASKER WIDGET PLAYERS LIST");
-//        this.forTaskerPlayersList(); // для виджета списка плееров name-volume-mode-title
         String responseJson = "{\n" +
-                "  \"PLAYLIST\": \"" + responsePlaylist + "\",\n" +
+                "  \"PLAYLIST\": \"" + widgetPlaylist + "\",\n" +
                 "  \"PLAYERS_PLAY\": \"" + widgetPlayersPlay + "\",\n" +
                 "  \"PLAYERS_STOP\": \"" + widgetPlayersStop + "\",\n" +
                 "  \"ROOMSPLAYERS\": \"" + widgetsNames + "\",\n" +
@@ -131,6 +52,70 @@ public class Tasker {
         return responseJson;
     }
 
+    public static String playerNameByWidgetName(String value) {
+        log.info("GET PLAYER BY WIDGET: " + value);
+        Player player1 = null;
+        String playerName = "ERROR";
+        String roomName;
+        roomName = Utils.getCorrectRoomName(value);
+        if (roomName != null) player1 = lmsPlayers.playerByRoom(roomName);
+        if (player1 != null) playerName = player1.name;
+        if (player1 == null) {
+            playerName = Utils.getCorrectPlayerName(value);
+            if (playerName != null) roomName = lmsPlayers.playerByName(playerName).room;
+        }
+        log.info("ROOM: " + roomName + " PLAYER: " + playerName);
+        String result = roomName + "," + playerName;
+        return result;
+    }
+
+    public static String forTaskerPlaylist(Player player, Integer lines) {
+        List<String> playlist = player.playerStatus.result.playlist_loop.stream()
+                .map(item -> (item.playlist_index + 1) + ". " + item.title)
+                .collect(Collectors.toList());
+        log.info("PLAYLIST " + playlist);
+// удалить из названий символы , потому что в таскере , разделитель строк
+        playlist.replaceAll(t -> t.replaceAll(",", " "));
+        Integer index = Integer.parseInt(player.playerStatus.result.playlist_cur_index);
+        log.info("PLAYLIST INDEX: " + index);
+// Заменяем элемент по конкретному индексу
+        playlist.set(index, ">" + playlist.get(index));
+// показывать только часть плейлиста вокруг играющего
+        playlist = Utils.linesFromList(playlist, index, lines);
+        String result = String.join(", ", playlist);
+        log.info("PLAYLIST: " + playlist);
+        widgetPlaylist = result;
+        return result;
+    }
+
+    public static String forTaskerPlayersList() {
+        log.info("TASKER PLAYERS LIST");
+        Function<Player, String> formatter = p -> {
+            String name = (p.room != null) ? p.room + " - " + p.name : p.name;
+            String vol = (p.volume != null) ? p.volume : "-";
+            if (!p.connected) return name + " - offline";
+            return name + " - " + vol + " - " + p.title;
+        };
+        Comparator<Player> byTitle = Comparator.comparing(player -> player.title, Comparator.nullsLast(Comparator.naturalOrder()));
+        String playing = lmsPlayers.players.stream() // Играющие плееры
+                .filter(p -> p.playing)
+                .sorted(byTitle)
+                .map(formatter)
+                .collect(Collectors.joining(","));
+        if (playing.isEmpty()) playing = "all players stop";
+        String notPlaying = lmsPlayers.players.stream() // Неиграющие плееры
+                .filter(p -> !p.playing)
+                .sorted(byTitle)
+                .map(formatter)
+                .collect(Collectors.joining(","));
+        if (notPlaying.isEmpty()) notPlaying = "all players play";
+        log.info("Playing: " + playing);
+        log.info("Not playing: " + notPlaying);
+        widgetPlayersPlay = playing;
+        widgetPlayersStop = notPlaying;
+        return playing + ";" + notPlaying;
+    }
+
     public static void forTaskerWidgetsIcons() {
         lmsPlayers.syncgroups();
         List<String> iconsNames = new ArrayList<>(rooms);
@@ -139,21 +124,16 @@ public class Tasker {
         List<String> syncs = new ArrayList<>();
         List<String> separates = new ArrayList<>();
         iconsNames.forEach(name -> {
-            Player player = lmsPlayers.playerByCorrectRoom(name);
-            if (player == null) player = lmsPlayers.playerByCorrectName(name);
-            modes.add(player != null ? player.mode : "null"); // forTaskerWidgetsIcons
+            Player player = lmsPlayers.playerByRoom(name);
+            if (player == null) player = lmsPlayers.playerByName(name);
+            modes.add(player != null ? player.mode : "null");
             syncs.add(player != null ? String.valueOf(player.sync) : "false");
             separates.add(player != null ? String.valueOf(player.separate) : "null");
         });
-        log.info("NAMES: " + iconsNames);
-        log.info("MODES: " + modes);
-        log.info("SYNCS:" + syncs);
-        log.info("SEPARATES: " + separates);
         widgetsNames = String.join(",", iconsNames);
         widgetsModes = String.join(",", modes);
         widgetsSyncs = String.join(",", syncs);
         widgetsSeparates = String.join(",", separates);
     }
-
 
 }

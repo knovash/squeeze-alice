@@ -32,11 +32,13 @@ public class Requests {
     }
 
     public static Response postToLmsForResponse(String json) {
-//        log.info("REQUEST TO LMS: " + json);
+
+        String uri = "http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/";
+        log.info(uri + " " + json);
         Content content = null;
         Response response = null;
         try {
-            content = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8))
+            content = Request.Post(uri).bodyString(json, ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8))
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -56,11 +58,12 @@ public class Requests {
     }
 
     public static String postToLmsForStatus(String json) {
-        log.info("REQUEST TO LMS: " + json);
-
+//        log.info("REQUEST TO LMS: " + json);
+        String uri = "http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/";
+        log.info(uri + " " + json);
         String status = null;
         try {
-            status = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/").bodyString(json, ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8))
+            status = Request.Post(uri).bodyString(json, ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8))
                     .connectTimeout(1000)
                     .socketTimeout(1000)
                     .execute()
@@ -78,8 +81,10 @@ public class Requests {
 
     public static String postToLmsForJsonBody(String json) {
         Content content = null;
+        String uri = "http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/";
+        log.info(uri + " " + json);
         try {
-            content = Request.Post("http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/")
+            content = Request.Post(uri)
                     .bodyString(json, ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8))
                     .connectTimeout(1000)
                     .socketTimeout(1000)

@@ -7,11 +7,12 @@ import org.knovash.squeezealice.spotify.spotify_pojo.*;
 import org.knovash.squeezealice.spotify.spotify_pojo.spotify_artists.SpotifyArtists;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
-import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+
+import static org.knovash.squeezealice.Main.config;
 
 @Log4j2
 public class Spotify {
@@ -23,11 +24,15 @@ public class Spotify {
 
     // ------- МЕТОД, КОТОРЫЙ НЕ ИЗМЕНЯТЬ (me) -------
 
-    public static String me() { // нужен только для получения имени пользователя показать на web
+    public static String me() {
         log.info("SPOTIFY INFO ME");
+        if (config.spotifyToken == null || config.spotifyToken.isEmpty()) {
+            log.info("NO SPOTIFY TOKEN");
+            return null;
+        }
         String uri = "https://api.spotify.com/v1/me";
         log.info("URI: " + uri);
-        String body = SpotifyRequests.requestGet(uri);  // использует старый requestGet
+        String body = SpotifyRequests.requestGet(uri);
         log.info("SPOTY ME BODY: " + body);
         return body;
     }
@@ -48,8 +53,7 @@ public class Spotify {
                 return null;
             }
             String uri = spotifyArtists.artists.items.get(0).uri;
-            SwitchVoiceCommand.artist = spotifyArtists.artists.items.get(0).name;
-            log.info("ARTIST URI: " + uri);
+            log.info("ARTIST URI: " + uri + " name: " + spotifyArtists.artists.items.get(0).name);
             return uri;
         } catch (Exception e) {
             log.error("Encoding error", e);
@@ -72,10 +76,8 @@ public class Spotify {
             }
             spotifySearchTrack.tracks.items.forEach(it -> log.info("TRACK: " + it.artists.get(0).name + " - " + it.name));
             String link = spotifySearchTrack.tracks.items.get(0).uri;
-            SwitchVoiceCommand.artist = spotifySearchTrack.tracks.items.get(0).artists.get(0).name;
-            SwitchVoiceCommand.track = spotifySearchTrack.tracks.items.get(0).name;
-            log.info("ARTIST: " + SwitchVoiceCommand.artist);
-            log.info("TRACK: " + SwitchVoiceCommand.track);
+            log.info("ARTIST: " + spotifySearchTrack.tracks.items.get(0).artists.get(0).name);
+            log.info("TRACK: " + spotifySearchTrack.tracks.items.get(0).name);
             log.info("URI: " + link);
             return link;
         } catch (Exception e) {
@@ -99,10 +101,8 @@ public class Spotify {
             }
             spotifySearchAlbum.albums.items.forEach(it -> log.info("ALBUM: " + it.artists.get(0).name + " - " + it.name));
             String link = spotifySearchAlbum.albums.items.get(0).uri;
-            SwitchVoiceCommand.artist = spotifySearchAlbum.albums.items.get(0).artists.get(0).name;
-            SwitchVoiceCommand.album = spotifySearchAlbum.albums.items.get(0).name;
-            log.info("ARTIST: " + SwitchVoiceCommand.artist);
-            log.info("ALBUM: " + SwitchVoiceCommand.album);
+            log.info("ARTIST: " + spotifySearchAlbum.albums.items.get(0).artists.get(0).name);
+            log.info("ALBUM: " + spotifySearchAlbum.albums.items.get(0).name);
             log.info("URI: " + link);
             return link;
         } catch (Exception e) {
@@ -129,10 +129,8 @@ public class Spotify {
             spotifySearchPlaylist.playlists.items.forEach(it ->
                     log.info("PLAYLIST: " + it.owner.display_name + " - " + it.name));
             String link = spotifySearchPlaylist.playlists.items.get(0).uri;
-            SwitchVoiceCommand.artist = spotifySearchPlaylist.playlists.items.get(0).owner.display_name;
-            SwitchVoiceCommand.playlist = spotifySearchPlaylist.playlists.items.get(0).name;
-            log.info("OWNER: " + SwitchVoiceCommand.artist);
-            log.info("PLAYLIST: " + SwitchVoiceCommand.playlist);
+            log.info("OWNER: " + spotifySearchPlaylist.playlists.items.get(0).owner.display_name);
+            log.info("PLAYLIST: " + spotifySearchPlaylist.playlists.items.get(0).name);
             log.info("URI: " + link);
             return link;
         } catch (Exception e) {
@@ -145,6 +143,7 @@ public class Spotify {
 
     /**
      * Получить информацию о текущем треке.
+     *
      * @return объект CurrentlyPlaying или null
      */
     public static CurrentlyPlaying getCurrentlyPlaying() {

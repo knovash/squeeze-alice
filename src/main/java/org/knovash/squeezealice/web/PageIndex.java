@@ -40,7 +40,7 @@ public class PageIndex {
     public static void refresh(HashMap<String, String> parameters) {
         log.info("REFRESH");
         if (!lmsServerOnline) lmsPlayers.searchForLmsIp();
-        lmsPlayers.updateLmsPlayers(); // refresh
+        lmsPlayers.fastUpdateServer(); // refresh
         Yandex.getRoomsAndDevices();
     }
 

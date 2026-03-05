@@ -54,17 +54,17 @@ public class Yandex {
         yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
 //        log.info("YANDEX:" + json);
         Main.rooms = yandexInfo.rooms.stream().map(r -> r.name).collect(Collectors.toList());
-        log.info("YANDEX ROOMS ALL: " + Main.rooms + " DEVICES ALL: " + yandexInfo.devices.size());
+        log.debug("YANDEX ROOMS: " + Main.rooms + " DEVICES: " + yandexInfo.devices.size());
 
         List<YandexInfo.Device> yandexMusicDevices = yandexInfo.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                 .filter(device -> device.name.equals("музыка"))
                 .sorted(Comparator.comparing(device -> device.external_id))
-                .peek(device -> log.info("DEVICE ID: " + device.external_id + " ROOM: " + roomNameByRoomId(device.room)))
+                .peek(device -> log.info("DEVICE: " + device.external_id + " ROOM: " + roomNameByRoomId(device.room)))
                 .peek(device -> links.addLinkRoom(device.id, device.external_id, device.room, Yandex.roomNameByRoomId(device.room), null))
                 .collect(Collectors.toList());
 
-        links.write();
+//        links.write();
 
         yandexMusicDevCounter = yandexMusicDevices.size();
 

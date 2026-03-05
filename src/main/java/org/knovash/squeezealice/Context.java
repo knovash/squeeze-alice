@@ -74,7 +74,7 @@ public class Context {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        log.info("BODY: " + body);
+        log.debug("BODY: " + body);
 
         String query = httpExchange.getRequestURI().getQuery();
         HashMap<String, String> queryMap = (HashMap<String, String>) Parser.run(query);

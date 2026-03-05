@@ -24,11 +24,20 @@ public class SpotifyRequests {
      * Блокирует поток до получения нового токена.
      */
     private static synchronized void refreshTokenIfExpired() {
+        // Если нет токена вообще — ничего не делаем
+        if (config.spotifyToken == null || config.spotifyToken.isEmpty()) {
+            log.debug("No access token, cannot refresh");
+            return;
+        }
+        // Если нет refresh token — тоже не можем обновить
+        if (config.spotifyRefreshToken == null || config.spotifyRefreshToken.isEmpty()) {
+            log.debug("No refresh token, cannot refresh");
+            return;
+        }
         long now = System.currentTimeMillis();
         if (now > config.spotifyTokenExpiresAt) {
             log.info("Spotify token expired. Requesting refresh...");
             String sessionId = UUID.randomUUID().toString();
-            // Предполагается, что hive.publishAndWaitForResponse блокирует выполнение до получения ответа
             hive.publishAndWaitForResponse("from_local_request", null, 10,
                     "token_spotify_refresh", sessionId, config.spotifyRefreshToken);
             log.info("Token refreshed. New expiry: {}", config.spotifyTokenExpiresAt);
@@ -37,13 +46,14 @@ public class SpotifyRequests {
 
     /**
      * Универсальный метод выполнения HTTP-запроса к Spotify API.
-     *
-     * @param request    подготовленный запрос (HttpGet, HttpPut и т.д.)
-     * @param expectBody true, если ожидается тело ответа (для методов с возможным 204 No Content)
-     * @return тело ответа в виде строки или null, если ответ без тела или ошибка
      */
     private static String executeRequest(HttpUriRequest request, boolean expectBody) {
         refreshTokenIfExpired();
+        // Если после refresh токен всё ещё отсутствует, не пытаемся делать запрос
+        if (config.spotifyToken == null || config.spotifyToken.isEmpty()) {
+            log.error("No access token, aborting request to {}", request.getURI());
+            return null;
+        }
         request.setHeader(new BasicHeader("Authorization", "Bearer " + config.spotifyToken));
 
         try (CloseableHttpResponse response = httpClient.execute(request)) {
@@ -59,9 +69,12 @@ public class SpotifyRequests {
             if (statusCode == 200) {
                 return json;
             } else if (statusCode == 401) {
-                // Возможно, токен устарел сразу после проверки – пробуем обновить и повторить один раз
                 log.warn("Received 401, forcing token refresh and retry...");
                 refreshTokenIfExpired();
+                if (config.spotifyToken == null || config.spotifyToken.isEmpty()) {
+                    log.error("Still no access token after refresh, cannot retry");
+                    return null;
+                }
                 request.setHeader("Authorization", "Bearer " + config.spotifyToken);
                 try (CloseableHttpResponse retryResponse = httpClient.execute(request)) {
                     int retryCode = retryResponse.getStatusLine().getStatusCode();
@@ -93,5 +106,4 @@ public class SpotifyRequests {
     public static String requestPost(String uri) {
         return executeRequest(new HttpPost(uri), true);
     }
-
 }

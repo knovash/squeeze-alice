@@ -15,67 +15,46 @@ public class SmartHome {
     public static List<Device> devices = new ArrayList<>();
     public static String saveToFileJson = "data/devices.json";
 
-    public  Device getDeviceById(String deviceIdExt) {
-//        log.info("DEVICE EXT ID: " + deviceIdExt);
-//        String index = String.valueOf(deviceId);
-        Device device =
-         devices.stream()
-//                .peek(d -> log.info("TRY DEVICE: " + d.id + " " + d.room))
+    public Device deviceById(String deviceId) {
+        Device device = devices.stream()
                 .filter(d -> (d.id != null))
-                .filter(d -> d.id.equals(deviceIdExt))
-                .findFirst().orElse(null);
-        if(device == null) log.info("ERROR: NO DEVICE " + deviceIdExt + " PLEASE ADD DEVICE TO YANDEX OR SELECT ROOM FOR DEVICE");
+                .filter(d -> d.id.equals(deviceId))
+                .findFirst()
+                .orElse(null);
+        if (device == null) log.info("ERROR NO DEVICE " + deviceId);
         return device;
     }
 
-    public static Device getDeviceByCorrectRoom(String room) {
-//        log.info("SEARCH BY ROOM: " + room + " IN DEVICES: " + devices.size());
+    public static Device deviceByRoom(String room) {
         if (room == null) {
-            log.info("getDeviceByCorrectRoom called with null room");
+            log.info("ERROR ROOM null");
             return null;
         }
         Device device = devices.stream()
-                .filter(d -> room.equalsIgnoreCase(d.room)) // безопасно, т.к. room не null, а d.room может быть null → false
+                .filter(d -> room.equalsIgnoreCase(d.room))
                 .findFirst()
                 .orElse(null);
         if (device == null) {
-            log.info("NO DEVICE WITH ROOM: {}", room);
+            log.info("NO DEVICE IN ROOM: " + room);
         } else {
-            log.info("BY ROOM {} GET DEVICE: {} ID: {}", room, device.room, device.id);
+            log.info("BY ROOM " + room + " DEVICE " + device.id);
         }
         return device;
     }
 
 
-    public  void create(String deviceRoomName, String deviceExtIdPlayerName) {
-//        log.info("START CREATE ROOM: " + room + " INDEX: " + index);
-//        log.info("EXISTS: " + SmartHome.devices.stream().map(d -> d.id + ":" + d.room).collect(Collectors.toList()));
-//        SmartHome.devices.stream().forEach(d -> log.info("EXISTS LOCAL DEVICE ID: " + d.id + " ROOM: " + d.room));
-
+    public void create(String deviceRoomName, String deviceExtIdPlayerName) {
 //        если локальных девайсов еще нет - создать пустой лист
         if (SmartHome.devices == null) SmartHome.devices = new ArrayList<>();
-
-//        если в метод не пришел индекс - создать индекс = существующий макс индекс + 1
-//        if (deviceExtIdPlayerName == null) {
-//            int maxId = SmartHome.devices.stream()
-//                    .mapToInt(d -> Integer.parseInt(d.id))
-//                    .max()
-//                    .orElse(0);
-//            deviceExtIdPlayerName = maxId + 1;
-//            log.info("NEW ID IN SMART HOME: {}", deviceExtIdPlayerName);
-//        }
-
 // Проверяем существование устройства с указанной комнатой
         if (SmartHome.devices.stream().anyMatch(d -> d.room.equals(deviceRoomName))) {
             log.info("ROOM: " + deviceRoomName + " EXT ID: " + deviceExtIdPlayerName + " - DEVICE EXISTS. CREATE SKIP");
             return;
         }
-
 //        создать новый девайс
         Device device = new Device();
         device.room = deviceRoomName;
         device.id = String.valueOf(deviceExtIdPlayerName); // TODO id переименовать в external_id
-
 //        создать для нового девайса капабилити
         Capability volume = new Capability();
         volume.type = "devices.capabilities.range"; // Тип умения. channel     volume
@@ -140,15 +119,14 @@ public class SmartHome {
     }
 
 
-
-    public  void read() {
+    public void read() {
         devices = JsonUtils.jsonFileToList(SmartHome.saveToFileJson, Device.class);
         if (devices == null) devices = new ArrayList<>();
         log.info("DEVICES FROM devices.json: " + devices.size());
         log.debug("DEVICES: " + devices);
     }
 
-    public  void write() {
+    public void write() {
         log.info("WRITE devices.json");
         JsonUtils.pojoToJsonFile(SmartHome.devices, SmartHome.saveToFileJson);
     }

@@ -3,6 +3,7 @@ package org.knovash.squeezealice.utils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.knovash.squeezealice.LmsPlayers;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
@@ -175,14 +176,14 @@ public class Utils {
 
 
     public static void readAliceIdInRooms() {
-        log.debug("READ ALICE IN ROOMS FROM rooms.json");
-        idRooms = JsonUtils.jsonFileToMap(SwitchVoiceCommand.saveToFileJson, String.class, String.class);
+        log.debug("READ rooms.json");
+        idRooms = JsonUtils.jsonFileToMap(config.fileRooms, String.class, String.class);
         if (idRooms == null) {
             idRooms = new HashMap<>();
             log.info("READ NO ROOMS");
             return;
         }
-        log.info("ALICE IN ROOMS FROM rooms.json: " + Main.idRooms);
+        log.info("READ rooms.json: " + Main.idRooms);
     }
 
     public static String getCorrectRoomName(String approxRoomName) {

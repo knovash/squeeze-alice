@@ -1,8 +1,0 @@
-package org.knovash.squeezealice.pojo;
-
-import java.util.ArrayList;
-
-public class JonTest {
-
-        public ArrayList<Profile> profiles;
-    }
