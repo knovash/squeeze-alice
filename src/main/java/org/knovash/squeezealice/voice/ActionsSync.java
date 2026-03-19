@@ -5,18 +5,21 @@ import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.spotify.Spotify;
-import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
+import org.knovash.squeezealice.yandex.Yandex;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 public class ActionsSync {
+
+    public static String answer = null;
 
     // =========================================================================
     // СПОТИФАЙ (синхронные версии)
@@ -32,9 +35,9 @@ public class ActionsSync {
         log.info("\nPLAY LINK: " + link);
         if (link == null) return "настройте спотифай";
         player
-                .ifExpiredAndNotPlayingUnsyncWakeSet(null)
+                .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null)
                 .playPath(link)
-                .syncAllOtherPlayingToThis();
+                .syncOtherPlayingNotInGroupToThis();
         lmsPlayers.afterAll();
         return "включаю " + target;
     }
@@ -44,17 +47,20 @@ public class ActionsSync {
     // =========================================================================
 
     public static String syncSwitchToHere(Player player) {
+        if (player == null) return "ошибка, плеер не найден";
+        player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null);
         log.info("SWITCH TO " + player.name);
-        Spotify.currentlyPlaying = null;
         boolean spotifyPlaying = Spotify.currentlyPlaying != null && Spotify.currentlyPlaying.is_playing;
-        player.switchToHereAsync(spotifyPlaying);
-        if (Spotify.currentlyPlaying != null && Spotify.currentlyPlaying.is_playing) {
-            log.info("Spotify is playing. Transfer to player");
-            return "переключаю spotify на " + player.name;
+        log.info("Spotify check if playing");
+        if (spotifyPlaying) {
+            log.info("Spotify is playing. Transferring to player: {}", player.name);
+            Spotify.transfer(player);
         } else {
-            log.info("Transfer LMS player to player");
-            return "переключаю музыку на " + player.name;
+            log.info("Spotify is not playing. Syncing to playing player and stopping others.");
+            player.syncToPlayingOrPlayLast();
+            player.stopOther();
         }
+        return "преключаю музыку";
     }
 
     // =========================================================================
@@ -67,6 +73,7 @@ public class ActionsSync {
         if (player == null) return "плеер не найден";
         if (!player.connected) return "плеер " + player.name + "  не подключен к медиасерверу";
         String title = player.title();
+        player.volumeGet();
 
         if (title == null || "".equals(title) || "unknown".equals(title)) title = "ничего";
         Map<String, List<String>> pp = player.playingPlayersNameGroups(false);
@@ -129,7 +136,7 @@ public class ActionsSync {
                 .replaceAll(".*с колонкой", "")
                 .replaceAll("\\s", "");
         player = Utils.convertCyrilic(player);
-        player = correctPlayerName(player);
+        player = playerNameMatch(player);
         if (player == null) return "нет такой колонки";
         log.info("SELECT ROOM: " + room);
         selectRoomByCorrectRoom(room, aliceId);
@@ -163,94 +170,103 @@ public class ActionsSync {
 
     public static void selectRoomByCorrectRoom(String target, String aliceId) {
         log.info("START SELECT ROOM: " + target);
-        idRooms.put(aliceId, target);
-        JsonUtils.mapToJsonFile(idRooms, config.fileRooms);
+        roomsAndAliceIds.put(aliceId, target);
+        Utils.writeRoomsAndAliceIds();
     }
 
-    public static String selectPlayerByCommand(String command, String room) {
+    public static void selectPlayerByCommand(String command, String room, Boolean start) {
         log.info("SELECT PLAYER BY COMMAND: " + command);
         String target = command
                 .replaceAll(".*колонку\\S*\\s", "")
                 .replaceAll("\"", "")
                 .replaceAll("\\s\\s", " ");
-
+        target = playerNameMatch(target);
         log.info("TARGET: " + target);
-        target = correctPlayerName(target);
-        log.info("TARGET: " + target);
-        if (target == null) return "нет такой колонки";
 
-        Player player = selectPlayerInRoom(target, room, true);
+        selectPlayerInRoom(target, room, start);
 
-        if (player == null) {
-            log.info("PLAYER OFFLINE: " + target);
-            return "колонка недоступна. " + target + " в комнате " + room;
-        } else {
-            log.info("PLAYER SELECTED: " + target);
-            return "выбрана колонка " + target +
-                    " в комнате " + room;
-        }
     }
 
     public static Player selectPlayerInRoom(String playerName, String roomName, Boolean start) {
-        log.info("CHECK IF DEVICE EXISTS IN SMART HOME " + roomName);
         if (playerName == null || roomName == null) {
-            log.info("ERROR NULL");
+            log.info("PLAYER NAME OR ROOM IS NULL");
+            answer = "колонка недоступна";
             return null;
         }
         Device device = smartHome.deviceByRoom(roomName);
-        if (device == null) {
-            log.info("CREATE NEW DEVICE IN SMART HOME ROOM: " + roomName);
-            smartHome.create(roomName, playerName);
+//        log.info("GET DEVICE: ROOM:" + device.room + " EXTID " + device.external_id);
+        if (device == null) { // если девайса с такой комнатой еще нет то создать девайс. надо будет подключить его в яндексе
+            log.info("CREATE NEW DEVICE FOR YANDEX IN ROOM: " + roomName + " PLAYER: " + playerName);
+            smartHome.create(roomName, null); // TODO добавить проверку что девайс создался
             smartHome.write();
-        } else log.info("DEVICE EXISTS IN ROOM: " + device.room);
+        } else log.info("DEVICE ROOM: " + device.room + " ID: " + device.id);
 
-        log.info("SELECT PLAYER IN ROOM " + roomName + " BY PLAYER IN COMMAND: " + playerName);
-        List<String> playerNames = lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList());
-        log.info("PLAYERS IN LMS: " + playerNames);
-        Player playerNew = lmsPlayers.playerByName(playerName);
-
-        if (!playerNew.connected) {
-            log.info("PLAYER OFFLINE " + playerName);
+        log.info("SEARCH NEW PLAYER: " + playerName);
+        log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(player -> player.name + ":" + player.getClass().getName()).collect(Collectors.toList()));
+        Player playerNew = lmsPlayers.playerByName(playerName); // поиск нового плеера по имени плеера для комнаты и проверка что доступен
+        log.info("PLAYER NEW: " + playerNew.getClass().getName());
+        log.info("PLAYER NEW: " + playerNew);
+        if (!Boolean.TRUE.equals(playerNew.connected)) { // если плеер недоступен остановить выбор плеера
+            log.info("PLAYER NOT CONNECTED: {}", playerName);
+            answer = "колонка " + playerName + " недоступна";
             return null;
         }
-        if (playerNew != null) log.info("PLAYER NEW: " + playerNew.name);
-        Player playerNow = lmsPlayers.playerByRoom(roomName);
-        if (playerNow != null) log.info("PLAYER NOW: " + playerNow.name);
 
-        if (playerNow != null) {
-            log.info("SWAP PLAYERS IN ROOM: " + roomName + " NOW: " + playerNow.name + " ID: " + playerNow.deviceId +
-                    " <- NEW: " + playerNew.name + " ID: " + playerNew.deviceId);
-            String playerNowDeviceId = playerNow.deviceId;
-            log.info("ROOM: " + roomName + " ID: " + playerNowDeviceId);
-            playerNow.room = null;
-            playerNow.deviceId = null;
-            playerNew.room = roomName;
-            playerNew.deviceId = playerNowDeviceId;
+        Player playerNow = lmsPlayers.playerByRoom(roomName); // поиск текущего плеера в комнате по имени комнаты
+
+        if (playerNow != null && playerNow.equals(playerNew)) { // если плееры одинаковы ничего не делать
+            log.info("NEW PLAYER = NOW PLAYER");
+            answer = "колонка " + playerName + " уже была подключена в комнате " + roomName;
+            roomsAndPlayers.put(playerNew.name, playerNew.room); // сохранить файл соответствия плееров в комнатах
+            Utils.writeRoomsAndPlayers();
+            smartHome.write();
+            lmsPlayers.write();
+            return playerNow;
         } else {
-            log.info("SWAP PLAYERS IN ROOM: " + roomName + " NOW: --- " +
-                    " <- NEW: " + playerNew.name + " ID: " + playerNew.deviceId);
-            playerNew.room = roomName;
-            playerNew.deviceId = SmartHome.deviceByRoom(roomName).id;
+            if (playerNow == null) { // привязка нового плеера к комнате
+                playerNew.room = roomName;
+//                playerNew.deviceId = device.id;
+                log.info("ASSIGN NEW PLAYER: " + playerNew.name + " TO ROOM: " + roomName);
+                answer = "подключена новая колонка " + playerName + " в комнате " + roomName;
+            } else { // замена плеера в комнате
+                playerNew.room = roomName;
+                playerNow.room = null;
+                playerNow.unsync().pause();
+                if (playerNow.playing) start = true; // если текущий плеер играл то новый тоже включить
+                log.info("CHANGE PLAYER " + playerNow.name + " TO " + playerNew.name + " IN ROOM " + roomName);
+                answer = "в комнате " + roomName + " изменена колонка " + playerNow.name + " на " + playerName;
+            }
+
+            roomsAndPlayers.put(playerNew.name, playerNew.room); // сохранить файл соответствия плееров в комнатах
+            Utils.writeRoomsAndPlayers();
+
+            smartHome.write();
+            lmsPlayers.write();
+
+            log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(p -> p.name).collect(Collectors.toList()));
+            log.info("YANDEX DEVICES: " + SmartHome.devices.stream().filter(Objects::nonNull).map(d -> d.room).collect(Collectors.toList()));
+
         }
-        lmsPlayers.write();
+
         if (start) {
             log.info("TURN ON NEW PLAYER " + playerNew.name);
-            playerNew.turnOnMusic(null);
-            if (playerNow != null) {
-                log.info("STOP CURRENT PLAYER " + playerNow.name);
-                playerNow.unsync().pause();
-            }
+            playerNew.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null);
+            if (!playerNew.playing)
+                playerNew.syncToPlayingOrPlayLast();
+
+            answer = answer + ". включаю";
         }
         return playerNew;
     }
 
-    public static String correctPlayerName(String player) {
-        log.info("START: " + player);
+    public static String playerNameMatch(String player) {
         List<String> players = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
         player = Utils.convertCyrilic(player);
+        log.info("PLAYER " + player);
+        log.info("PLAYERS " + players);
         String correctPlayer = Levenstein.getNearestElementInListWord(player, players);
         if (correctPlayer == null) log.info("ERROR PLAYER NOT EXISTS IN LMS ");
-        log.info("CORRECT PLAYER: " + player + " -> " + correctPlayer);
+        log.info("PLAYER NAME " + player + " MATCH TO " + correctPlayer);
         return correctPlayer;
     }
 
@@ -275,7 +291,7 @@ public class ActionsSync {
             if (playerName != null) player = lmsPlayers.playerByName(playerName);
             if (player == null) return "плеер не найден " + command;
 
-            String roomName = Levenstein.search(command, rooms);
+            String roomName = Levenstein.search(command, Yandex.rooms);
             log.info("ROOM NAME: " + roomName);
             if (roomName != null) player = lmsPlayers.playerByRoom(roomName);
             if (player == null) return "плеер не найден " + command;

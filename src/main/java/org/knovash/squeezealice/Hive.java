@@ -17,9 +17,9 @@ import static org.knovash.squeezealice.Main.*;
 @Log4j2
 public class Hive implements MqttCallbackExtended {
 
-    private static final String CLIENT_ID = "squeeze-alice-client";
+    private static final String CLIENT_ID = "squeeze-alice-client2";
 
-    private MqttClient mqttClient;
+    public MqttClient mqttClient;
     private final String hiveBroker = config.hiveBroker;
     private final String hiveUsername = config.hiveUsername;
     private final String hivePassword = config.hivePassword;
@@ -79,6 +79,7 @@ public class Hive implements MqttCallbackExtended {
     @Override
     public void connectionLost(Throwable cause) {
         log.warn("MQTT CONNECTION LOST: {}", cause.getMessage());
+        log.error("MQTT CONNECTION LOST: {}", cause.toString(), cause);
         isConnected = false;
     }
 
@@ -167,7 +168,7 @@ public class Hive implements MqttCallbackExtended {
                     "text=" + (text != null ? text : "") + "&" +
                     "context=" + context.toJson();
 
-            log.info("PAYLOAD: {}", payload);
+//            log.info("PAYLOAD: {}", payload);
             mqttClient.publish(topic, new MqttMessage(payload.getBytes()));
 
             CompletableFuture<String> future = responseManager.waitForResponse(correlationId);
@@ -271,7 +272,7 @@ public class Hive implements MqttCallbackExtended {
             config.yandexName = yandexName;
             config.write();
 
-            lmsPlayers.checkRooms();
+//            lmsPlayers.checkRooms();
             lmsPlayers.write();
         }
 

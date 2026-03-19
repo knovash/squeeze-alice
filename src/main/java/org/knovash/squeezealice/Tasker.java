@@ -2,6 +2,7 @@ package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.utils.Utils;
+import org.knovash.squeezealice.yandex.Yandex;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -10,7 +11,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
-import static org.knovash.squeezealice.Main.rooms;
 
 @Log4j2
 public class Tasker {
@@ -24,18 +24,29 @@ public class Tasker {
     public static String widgetPlayersPlay;
     public static String widgetPlayersStop;
     public static String widgetPlaylist;
+    public static String ready;
 
     public static String forTaskerWidgetsRefreshJson(Player player, String lines) {
         log.info("----------UPDATE START---------");
-        lmsPlayers.fastUpdateServer(); // пред обновлением виджетов таскера
-        lmsPlayers.players.forEach(p -> p.status());
-        lmsPlayers.players.stream().filter(p -> p.connected).forEach(p -> p.title());
+        log.info("PLAYER " + player);
+//        lmsPlayers.updatePlayers(); // пред обновлением виджетов таскера
+        lmsPlayers.players.stream().filter(p -> p.connected).forEach(p -> {
+            p.volumeGet();
+            p.title();
+        });
         log.info("----------UPDATE FINISH---------");
         nowPlaying = player.title; // для виджета одной иконкой для телефона где неработает плагин
+        log.info("1111");
         nowPlayingTv = player.name + " - " + player.volume + " - " + player.mode + " - " + player.title; // для виджета одной иконкой для телефона где неработает плагин
+
+        log.info("2222   " + lines);
+        log.info("++++   " + player);
         forTaskerPlaylist(player, Integer.valueOf(lines)); // для виджета плейлиста
+        log.info("333");
         forTaskerPlayersList(); // для виджета списка плееров name-volume-mode-title
+        log.info("444");
         forTaskerWidgetsIcons(); // для виджетов иконок плееров
+        log.info("555");
 
         String responseJson = "{\n" +
                 "  \"PLAYLIST\": \"" + widgetPlaylist + "\",\n" +
@@ -70,6 +81,9 @@ public class Tasker {
     }
 
     public static String forTaskerPlaylist(Player player, Integer lines) {
+        log.info("---REQUEST PLAYLIST ----");
+        player.requestPlaylistTracks();
+        log.info("----5555  " + player.playerStatus);
         List<String> playlist = player.playerStatus.result.playlist_loop.stream()
                 .map(item -> (item.playlist_index + 1) + ". " + item.title)
                 .collect(Collectors.toList());
@@ -118,7 +132,7 @@ public class Tasker {
 
     public static void forTaskerWidgetsIcons() {
         lmsPlayers.syncgroups();
-        List<String> iconsNames = new ArrayList<>(rooms);
+        List<String> iconsNames = new ArrayList<>(Yandex.rooms);
         iconsNames.addAll(lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList()));
         List<String> modes = new ArrayList<>();
         List<String> syncs = new ArrayList<>();

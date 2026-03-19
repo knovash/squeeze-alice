@@ -3,6 +3,7 @@ package org.knovash.squeezealice;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.volumio.Volumio;
 import org.knovash.squeezealice.web.PageIndex;
 import org.knovash.squeezealice.web.PagePlayers;
 
@@ -20,15 +21,15 @@ public class HandlerForm implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        log.info("HANDLER START >>>>>>>>>>>>>>>");
+        log.info("----- RECEIVED HTTP REQUEST -----");
         Context context = Context.contextCreate(httpExchange);
 
-        log.info("PROCESS CONTEXT");
+//        log.info("PROCESS CONTEXT");
         processContext(context);
 
         // проверяем responseHeaders на наличие редиректа
         if (context.responseHeaders.containsKey("Location")) {
-            log.info("REDIRECT location");
+//            log.info("REDIRECT location");
             String response = context.bodyResponse;
             byte[] responseBytes = response.getBytes(StandardCharsets.UTF_8);
             httpExchange.getResponseHeaders().putAll(context.responseHeaders);
@@ -36,17 +37,17 @@ public class HandlerForm implements HttpHandler {
             try (OutputStream outputStream = httpExchange.getResponseBody()) {
                 outputStream.write(responseBytes);
             }
-            log.info("HTTP HANDLER FINISH <<<<<<<<<<<");
+//            log.info("HTTP HANDLER FINISH <<<<<<<<<<<");
             return; // важно выйти, чтобы не отправлять ответ повторно
         }
 
-        log.info("SEND RESPONSE context");
+//        log.info("SEND RESPONSE context");
         sendResponse(httpExchange, context);
-        log.info("HANDLER FINISH <<<<<<<<<<<<<<<");
+//        log.info("HANDLER FINISH <<<<<<<<<<<<<<<");
     }
 
     private void processContext(Context context) {
-        log.info("PROCESS CONTEXT START");
+//        log.info("PROCESS CONTEXT START");
         Map<String, String> bodyMap = Parser.run(context.body);
         context.code = 200;
         if (bodyMap.containsKey("action")) {
@@ -93,22 +94,34 @@ public class HandlerForm implements HttpHandler {
                     lmsPlayers.lmsSave((HashMap<String, String>) bodyMap);
                     context.setRedirect("/lms");
                     break;
+                case volumio_save:
+                    lmsPlayers.volumioSave((HashMap<String, String>) bodyMap);
+                    context.setRedirect("/volumio_settings");
+                    break;
+                case volumio_on:
+                    Volumio.createPlayer();
+                    context.setRedirect("/volumio_settings");
+                    break;
+                case volumio_off:
+                    Volumio.removePlayer();
+                    context.setRedirect("/volumio_settings");
+                    break;
                 default:
                     log.info("ACTION ERROR " + action);
                     break;
             }
         }
-        log.info("PROCESS CONTEXT FINISH");
+//        log.info("PROCESS CONTEXT FINISH");
     }
 
     private void sendResponse(HttpExchange exchange, Context context) throws IOException {
-        log.info("SEND RESPONSE");
+//        log.info("SEND RESPONSE");
         context.responseHeaders.set("Content-Type", "text/html; charset=UTF-8");
         context.responseHeaders.set("X-Content-Type-Options", "nosniff");
         exchange.getResponseHeaders().putAll(context.responseHeaders);
 
         if (context.code >= 300 && context.code < 400) {
-            log.info("REDIRECT " + context.code);
+//            log.info("REDIRECT " + context.code);
             exchange.sendResponseHeaders(context.code, -1);
             return;
         }

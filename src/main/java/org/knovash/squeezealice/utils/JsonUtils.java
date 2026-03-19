@@ -210,6 +210,18 @@ public class JsonUtils {
         return json;
     }
 
+    public static String fixQuote(String jsonResponse) {
+        Pattern pattern = Pattern.compile("(\"_album\":\\s*\")(.*?)(\")");
+        Matcher matcher = pattern.matcher(jsonResponse);
+        return matcher.replaceAll(matchResult -> {
+            String prefix = matchResult.group(1);
+            String content = matchResult.group(2);
+            String suffix = matchResult.group(3);
+            String fixedContent = content.replace("\"", "\\\"");
+            return prefix + fixedContent + suffix;
+        });
+    }
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

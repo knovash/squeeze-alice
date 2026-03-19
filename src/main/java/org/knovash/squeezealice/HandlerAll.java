@@ -4,7 +4,9 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.*;
+import org.knovash.squeezealice.utils.SchedulerYandexGetNewDevice;
 import org.knovash.squeezealice.voice.SwitchVoiceCommand;
+import org.knovash.squeezealice.volumio.VolumioSwitchQueryCommand;
 import org.knovash.squeezealice.web.*;
 
 import java.io.IOException;
@@ -44,8 +46,13 @@ public class HandlerAll implements HttpHandler {
                 return PageManual.action(context);
             case "/lms":
                 return PageLms.action(context);
+            case "/volumio_settings":
+                return PageVolumio.action(context);
             case "/cmd":
                 context = SwitchQueryCommand.action(context);
+                break;
+            case "/volumio":
+                context = VolumioSwitchQueryCommand.action(context);
                 break;
             case "/spotify":
                 context = SwitchSpotify.action(context);
@@ -61,6 +68,8 @@ public class HandlerAll implements HttpHandler {
                 break;
             case "/v1.0/user/devices":
                 context = ProviderUserDevices.providerUserDevicesRun(context);
+                SchedulerYandexGetNewDevice.requestYandexForDevices(10, 5); // в течении минуты пытаться получить сохраненные в яндесе девайсы
+
                 break;
             case "/v1.0/user/devices/query":
                 context = ProviderQuery.providerQueryRun(context);

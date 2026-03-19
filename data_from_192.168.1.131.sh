@@ -5,24 +5,51 @@ NC='\033[0m' # No Color
 
 file_name=$(basename "$0" .sh)
 remote="${file_name##*_}" 
-echo -e ${BGreen}"DATA FROM IP: $remote"${NC}
+echo -e ${BGreen}"SSH"${NC}
+
+# Запрашиваем ip
+echo -e "Enter SSH ip. ${BGreen}Press Enter for [$remote]"${NC}
+read -p "" remote
+remote=${remote:-192.168.1.131}
 
 # Запрашиваем пользователя
-read -p "Enter SSH username. Press Enter for root: " username
-#read -p "Введите SSH пользователя. Нажмите Enter если root: " username
+echo -e "Enter SSH username. ${BGreen}Press Enter for [root]:${NC} "
+read -p "" username
 username=${username:-root}
+
 # Запрашиваем пароль
-read -p "Enter SSH password. Press Enter for 12345: " password
-#read -p "Введите SSH пароль. Нажмите Enter если 12345: " password
+echo -e "Enter SSH password. ${BGreen}Press Enter for [12345]:${NC} "
+read -p "" password
 password=${password:-12345}
-echo $username" "$password
+
+echo $remote" "$username" "$password
+
 #------------------------------------------------------------
 
+# data from remote
 mkdir -p data/bak
-#sshpass -p "$password" scp -r $username@$remote:/opt/squeeze-alice-1.0/data data/bak/
+sshpass -p "$password" rsync -avh --progress $username@$remote:/opt/squeeze-alice-1.0/data/* data/
+# data to remote
+#sshpass -p "$password" rsync -avh --progress /data/*.json $username@$remote:/opt/squeeze-alice-1.0/data/
 
-sshpass -p "$password" rsync -avh --progress $username@$remote:/opt/squeeze-alice-1.0/data data/bak/
+#sshpass -p "$password" ssh $username@$remote systemctl start squeeze-alice.service
+#sshpass -p "$password" ssh $username@$remote systemctl stop squeeze-alice.service
+#sshpass -p "$password" ssh $username@$remote systemctl restart squeeze-alice.service
 
-echo -e ${BGreen}"FINISHED"${NC}
-sleep 20
-#$SHELL
+#sshpass -p "$password" ssh $username@$remote systemctl start lyrionmusicserver.service
+#sshpass -p "$password" ssh $username@$remote systemctl stop lyrionmusicserver.service
+#sshpass -p "$password" ssh $username@$remote systemctl restart lyrionmusicserver.service
+
+#sshpass -p "$password" ssh $username@$remote tail -f /opt/squeeze-alice-1.0/data/log.txt
+#sshpass -p "$password" ssh $username@$remote systemctl daemon-reload
+#sshpass -p "$password" ssh $username@$remote reboot
+
+# подключиться
+#ssh $username@$remote
+
+echo "OK"
+sleep 10
+
+
+
+

@@ -4,9 +4,14 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.response.*;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.yandex.YandexUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+
+import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.Main.smartHome;
 
 @Log4j2
 @Data
@@ -15,53 +20,88 @@ public class SmartHome {
     public static List<Device> devices = new ArrayList<>();
     public static String saveToFileJson = "data/devices.json";
 
-    public Device deviceById(String deviceId) {
-        Device device = devices.stream()
-                .filter(d -> (d.id != null))
-                .filter(d -> d.id.equals(deviceId))
+    public Device deviceByExternalId(String deviceId) { // приходит от яндекса EXT ID
+//        log.info(">>> DEVICE ID " + deviceId);
+        return devices.stream()
+                .filter(d -> d.id != null && d.external_id.equals(deviceId))
                 .findFirst()
                 .orElse(null);
-        if (device == null) log.info("ERROR NO DEVICE " + deviceId);
-        return device;
     }
 
     public static Device deviceByRoom(String room) {
-        if (room == null) {
-            log.info("ERROR ROOM null");
-            return null;
-        }
-        Device device = devices.stream()
+        if (room == null) return null;
+        return devices.stream()
                 .filter(d -> room.equalsIgnoreCase(d.room))
                 .findFirst()
                 .orElse(null);
-        if (device == null) {
-            log.info("NO DEVICE IN ROOM: " + room);
-        } else {
-            log.info("BY ROOM " + room + " DEVICE " + device.id);
-        }
-        return device;
     }
 
+    /**
+     * Создаёт или обновляет устройство.
+     *
+     * @param deviceRoomName название комнаты (для голосовой команды)
+     * @param yandexDevice   данные устройства из Яндекса (при синхронизации)
+     */
+    public void create(String deviceRoomName, YandexUtils.MusicDevice yandexDevice) {
+        if (devices == null) devices = new ArrayList<>();
+//        log.info(">>> ROOM NAME: " + deviceRoomName);
+//        log.info(">>> DEVICE YANDEX: " + yandexDevice.roomName + " " + yandexDevice.id);
 
-    public void create(String deviceRoomName, String deviceExtIdPlayerName) {
-//        если локальных девайсов еще нет - создать пустой лист
-        if (SmartHome.devices == null) SmartHome.devices = new ArrayList<>();
-// Проверяем существование устройства с указанной комнатой
-        if (SmartHome.devices.stream().anyMatch(d -> d.room.equals(deviceRoomName))) {
-            log.info("ROOM: " + deviceRoomName + " EXT ID: " + deviceExtIdPlayerName + " - DEVICE EXISTS. CREATE SKIP");
-            return;
+        // Случай 1: синхронизация с Яндексом
+        if (yandexDevice != null) {
+            String deviceId = yandexDevice.id;
+            String deviceExternalId = yandexDevice.externalId;
+            String roomId = yandexDevice.roomId;
+            String room = yandexDevice.roomName;
+            String name = yandexDevice.name;
+
+            // 1. проверить что в локальных девайсах devices нет девайса полученого от яндекса. если есть то создавать не надо а только обновить
+            if (devices.stream().noneMatch(d ->
+                    (deviceId != null && deviceId.equals(d.id))
+                            || (deviceExternalId != null && deviceExternalId.equals(d.external_id))
+                            || (room != null && room.equals(d.room))
+            )) {
+//          нет в локальных. надо создать новый девайс из полученого от яндекса
+                Device device = createNewDevice(room, deviceId, deviceExternalId, name);
+                devices.add(device);
+                log.info("CREATED NEW DEVICE FROM YANDEX DEVICE. ROOM: {} ID: {} EXT_ID: {}", device.room, device.id, device.external_id);
+            } else {
+                log.info("DEVICE EXISTS. SKIP CREATE FROM YANDEX DEVICE");
+            }
+        } else {
+            // создание 1. глосом 2. веб. используя имя комнаты. если девай еще небыл создан и его нет в локальных девайсах по имени комнаты тогда создавать ненадо
+            if (devices.stream().noneMatch(d -> (deviceRoomName != null && deviceRoomName.equalsIgnoreCase(d.room)))) {
+                log.info("DEVICE NOT EXISTS. CREATE NEW DEVICE FROM PLAYER ROOM NAME: " + deviceRoomName);
+                //    Объект devices
+//    id        String              Идентификатор устройства. Должен быть уникален среди всех устройств производителя.
+//    name      String              Название устройства.
+//    room      String              Название помещения, в котором расположено устройство.
+//    external_id
+                String id = String.valueOf(UUID.randomUUID());
+                String extid = String.valueOf(UUID.randomUUID());
+                Device device = createNewDevice(deviceRoomName, id, extid, "музыка");
+                devices.add(device);
+                log.info("CREATED NEW DEVICE BY VOICE OR WEB. ROOM: {} ID: {} EXT_ID: {}", device.room, device.id, device.external_id);
+            } else {
+                log.info("DEVICE EXISTS. SKIP CREATE BY VOICE OR WEB");
+            }
         }
-//        создать новый девайс
+//        smartHome.write();
+    }
+
+    private Device createNewDevice(String roomName, String deviceId, String deviceExternalId, String deviceName) {
         Device device = new Device();
-        device.room = deviceRoomName;
-        device.id = String.valueOf(deviceExtIdPlayerName); // TODO id переименовать в external_id
-//        создать для нового девайса капабилити
+        device.room = roomName;
+        device.id = deviceId;
+        device.external_id = deviceExternalId;
+        device.name = deviceName;
+        // Capability volume
         Capability volume = new Capability();
-        volume.type = "devices.capabilities.range"; // Тип умения. channel     volume
-        volume.retrievable = true; // Доступен ли для данного умения устройства запрос состояния
-        volume.reportable = true; // Признак включенного оповещения об изменении состояния умения
-        volume.parameters.instance = "volume"; // Название функции для данного умения. volume channel
-        volume.parameters.random_access = true; // Возможность устанавливать произвольные значения функции
+        volume.type = "devices.capabilities.range";
+        volume.retrievable = true;
+        volume.reportable = true;
+        volume.parameters.instance = "volume";
+        volume.parameters.random_access = true;
         volume.parameters.range = new Range();
         volume.parameters.range.min = 1;
         volume.parameters.range.max = 100;
@@ -70,17 +110,15 @@ public class SmartHome {
         volume.state.instance = "volume";
         volume.state.value = "0";
         volume.state.action_result = new ActionResult();
-        volume.state.action_result.error_code = null;
-        volume.state.action_result.error_message = null;
+        volume.state.action_result.status = "DONE";
         device.capabilities.add(volume);
-//        log.info("DEVICE ADD CAPABILITI VOLUME: " + device.capabilities.get(device.capabilities.indexOf(volume)));
-
+        // Capability channel
         Capability channel = new Capability();
-        channel.type = "devices.capabilities.range"; // Тип умения. channel     volume
-        channel.retrievable = true; // Доступен ли для данного умения устройства запрос состояния
-        channel.reportable = true; // Признак включенного оповещения об изменении состояния умения
-        channel.parameters.instance = "channel"; // Название функции для данного умения. volume channel
-        channel.parameters.random_access = true; // Возможность устанавливать произвольные значения функции
+        channel.type = "devices.capabilities.range";
+        channel.retrievable = true;
+        channel.reportable = true;
+        channel.parameters.instance = "channel";
+        channel.parameters.random_access = true;
         channel.parameters.range = new Range();
         channel.parameters.range.min = 1;
         channel.parameters.range.max = 200;
@@ -90,44 +128,27 @@ public class SmartHome {
         channel.state.value = null;
         channel.state.relative = false;
         channel.state.action_result = new ActionResult();
-        channel.state.action_result.error_code = null;
-        channel.state.action_result.error_message = null;
+        channel.state.action_result.status = "DONE";
         device.capabilities.add(channel);
-//        log.info("DEVICE ADD CAPABILITI CHANNEL: " + device.capabilities.get(device.capabilities.indexOf(channel)));
-
-        Capability on_of = new Capability();
-        on_of.type = "devices.capabilities.on_off"; // Тип умения. channel     volume
-        on_of.retrievable = true; // Доступен ли для данного умения устройства запрос состояния
-        on_of.reportable = true; // Признак включенного оповещения об изменении состояния умения
-        on_of.parameters.instance = "on"; // Название функции для данного умения. volume channel
-//        on_of.state = new State();
-//        on_of.state.instance = "on";
-//        on_of.state.value = null;
-//        on_of.state.relative = false;
-//        on_of.state.action_result = new ActionResult();
-//        on_of.state.action_result.error_code = null;
-//        on_of.state.action_result.error_message = null;
-        device.capabilities.add(on_of);
-//        log.info("DEVICE ADD CAPABILITI ON_OF: " + device.capabilities.get(device.capabilities.indexOf(on_of)));
-
-
-        //        добавить девайс в лист локальных девайсов
-        SmartHome.devices.add(device);
-        log.info("CREATED DEVICE ID: " + device.id + " ROOM: " + device.room);
-
-        //        return device;
-    }
-
-
-    public void read() {
-        devices = JsonUtils.jsonFileToList(SmartHome.saveToFileJson, Device.class);
-        if (devices == null) devices = new ArrayList<>();
-        log.info("DEVICES FROM devices.json: " + devices.size());
-        log.debug("DEVICES: " + devices);
+        // Capability on_off
+        Capability onOff = new Capability();
+        onOff.type = "devices.capabilities.on_off";
+        onOff.retrievable = true;
+        onOff.reportable = true;
+        onOff.parameters.instance = "on";
+        // onOff.state = null; // необязательно
+        device.capabilities.add(onOff);
+        return device;
     }
 
     public void write() {
-        log.info("WRITE devices.json");
-        JsonUtils.pojoToJsonFile(SmartHome.devices, SmartHome.saveToFileJson);
+//        log.info("WRITE: {}", config.fileDevices);
+//        JsonUtils.pojoToJsonFile(devices, config.fileDevices);
+    }
+
+    public void read() {
+//        devices = JsonUtils.jsonFileToList(config.fileDevices, Device.class);
+//        if (devices == null) devices = new ArrayList<>();
+//        log.info("DEVICES FROM devices.json: {}", devices.size());
     }
 }

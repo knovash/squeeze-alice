@@ -19,8 +19,6 @@ public class PageLms {
         log.info("PAGE LMS START");
         String pageInner =
 
-//                PageIndex.statusBar() +
-
                         "<form method='POST' action='/form'>" +
 
                         "<p>" +

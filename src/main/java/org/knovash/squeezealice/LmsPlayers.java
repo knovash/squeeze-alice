@@ -4,16 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
 import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.lms.ServerStatus;
-import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.ActionsSync;
+import org.knovash.squeezealice.volumio.VolumioPlayer;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,16 +25,10 @@ import static org.knovash.squeezealice.web.PagePlayers.*;
 @AllArgsConstructor
 public class LmsPlayers {
 
-    public List<Player> players;
-    public String lastPathCommon;
-    public int lastChannelCommon = 1;
-//    public String btPlayerInQuery = "homepod";
+    public List<Player> players = new ArrayList<>();
     public String btPlayerName = "HomePod";
-//    public String tvPlayerInQuery = "homepod1";
-//    public String tvPlayerName = "HomePod1";
     public int delayUpdate = 5; // MINUTES
     public int delayExpire = 10; // MINUTES
-//    public boolean syncAlt = false;
     public boolean lastThis = true;
     public static ServerStatus serverStatus = new ServerStatus();
     public List<String> autoRemoteUrls = new ArrayList<>();
@@ -48,73 +40,67 @@ public class LmsPlayers {
             20, 15,
             22, 5));
 
-    public List<String> favorites() {
-        log.info("GET FAVORITES LIST");
-        Response response = Requests.postToLmsForResponse(RequestParameters.favorites("", "100").toString());
-        List<String> favList = response.result.loop_loop.stream().map(loopLoop -> loopLoop.name).collect(Collectors.toList());
-        return favList;
-    }
-
-    public void fastUpdateServer() {
+    public void updatePlayers() {
+        log.info("UPDATE PLAYERS FROM LMS");
+        if (lmsPlayers.players == null) lmsPlayers.players = new ArrayList<>();
         String json = Requests.postToLmsForJsonBody(RequestParameters.serverstatusname().toString());
         if (json == null) return;
         json = JsonUtils.replaceSpace(json);
         json = json.replaceAll("\"newversion.*</a>\\.\"", "\"newversion\": \"--\"");
         ServerStatus serverStatus = JsonUtils.jsonToPojo(json, ServerStatus.class);
         if (serverStatus == null) return;
-        serverStatus.result.players_loop.forEach(this::fastUpdatePlayer);
-    }
 
-    private void fastUpdatePlayer(ServerStatus.PlayersLoop p) {
-        Player player = lmsPlayers.playerByName(p.name);
-        if (player == null) {
-            player = new Player(p.name);
-            log.info("ADD NEW PLAYER: " + player.name);
-            this.players.add(player);
-        }
-        player.connected = false;
-        player.mode = "stop";
-        player.playing = false;
-        if (p.isplaying == 1) {
-            player.mode = "play";
-            player.playing = true;
-        }
-        if (p.connected == 1) player.connected = true;
+        if (players != null) this.players.stream().forEach(p -> p.cleanPlayer()); // очистить все плеееры
 
-        log.info(String.format("" +
-                        "PLAYER: %-12s" +
-                        "CONNECTED: %-6s " +
-                        "MODE: %-6s ",
-                player.name,
-                player.connected,
-                player.mode
-        ));
+
+        serverStatus.result.players_loop.stream()
+                .filter(pl -> lmsPlayers.playerByName(pl.name) == null)
+                .forEach(pl -> {
+                    log.info("ADD NEW PLAYER " + pl.name);
+                    lmsPlayers.players.add(new Player(pl.name));
+                });
+
+        serverStatus.result.players_loop.stream()
+                .filter(pl -> lmsPlayers.playerByName(pl.name) != null)
+                .forEach(pl -> lmsPlayers.playerByName(pl.name).update(pl)); // так сделано потому что для volumio свой update
+
+
+        lmsPlayers.players.stream()
+                .sorted(Comparator.comparing(p -> !p.connected))
+                .forEach(p ->
+                        log.info(String.format("" +
+                                        "UPDATED PLAYER: %-14s" +
+                                        "ROOM: %-10s " +
+                                        "CONNECTED: %-6s " +
+                                        "SEPARATED: %-6s " +
+                                        "MODE: %-6s ",
+                                p.name,
+                                p.room,
+                                p.connected,
+                                p.separate,
+                                p.mode
+                        )));
+        log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(player -> player.name).collect(Collectors.toList()));
     }
 
     public void write() {
-        log.info("WRITE " + config.fileLmsPlayers);
+        log.info("WRITE: " + config.fileLmsPlayers);
         JsonUtils.pojoToJsonFile(this, config.fileLmsPlayers);
     }
 
     public void read() {
-        log.debug("READ FILE: " + config.fileLmsPlayers);
+        log.debug("READ: " + config.fileLmsPlayers);
         LmsPlayers lp = JsonUtils.jsonFileToPojo(config.fileLmsPlayers, LmsPlayers.class);
-        if (lp == null) {
-            log.info("NO PLAYERS lms_players.json");
-            return;
+        if (lp != null) {
+            this.players = lp.players;
+            this.autoRemoteUrls = lp.autoRemoteUrls;
+            this.toggleWake = lp.toggleWake;
+            this.btPlayerName = lp.btPlayerName;
+            this.delayUpdate = lp.delayUpdate;
+            this.delayExpire = lp.delayExpire;
+            this.lastThis = lp.lastThis;
         }
-        // Сохраняем все поля из прочитанного объекта
-        this.players = lp.players;
-        this.autoRemoteUrls = lp.autoRemoteUrls; // <-- Теперь это поле тоже загружается
-        this.toggleWake = lp.toggleWake;
-        this.lastPathCommon = lp.lastPathCommon;
-        this.lastChannelCommon = lp.lastChannelCommon;
-        this.btPlayerName = lp.btPlayerName;
-        this.delayUpdate = lp.delayUpdate;
-        this.delayExpire = lp.delayExpire;
-//        this.syncAlt = lp.syncAlt;
-        this.lastThis = lp.lastThis;
-        log.info("PLAYERS SETTINGS lms_players.json: " + this.players.stream().map(p -> p.name).collect(Collectors.toList()));
+        log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(player -> player.name).collect(Collectors.toList()));
     }
 
     public Player playerByName(String name) {
@@ -129,7 +115,6 @@ public class LmsPlayers {
     }
 
     public Player playerByNearestName(String player) {
-//        log.info("START: " + player);
         if (player == null) return null;
         List<String> players = this.players.stream().map(p -> p.name).collect(Collectors.toList());
         player = Utils.convertCyrilic(player);
@@ -162,16 +147,12 @@ public class LmsPlayers {
     }
 
     public List<Player> playingPlayers(String exceptName, boolean exceptSeparated) {
-        lmsPlayers.fastUpdateServer(); // TODO удалить
+        log.info(" ------- ПРОВЕРЯТЬ ЧТО СОСТОЯНИЕ ПЛЕЕРОВ ОБНОВЛЕНО !!! -----");
+//        lmsPlayers.fastUpdateServer(); // тут надо потому что иногда вызывается после unsync all
         List<Player> playingPlayers = this.players.stream()
-                .filter(p -> !exceptSeparated || !p.separate)
-                .filter(p -> p.playing)
-                .filter(p -> !exceptName.equals(p.name))
-//                .filter(p -> { // TODO вернуть если ошибки с плеерами которые играют тишину
-//                    log.info("check path not silence");
-//                    String path = p.path();
-//                    return path != null && !path.equals(config.silence);
-//                })
+                .filter(p -> !exceptSeparated || !p.separate) // исключить отдельные
+                .filter(p -> p.playing) // выбрать играющие
+                .filter(p -> !exceptName.equals(p.name)) // кроме этого
                 .collect(Collectors.toList());
         if (playingPlayers == null || playingPlayers.isEmpty()) {
             log.info("NO PLAYING PLAYERS. EXCEPT NAME: " + exceptName + ". EXCEPT SEPARATED: " + exceptSeparated);
@@ -200,9 +181,6 @@ public class LmsPlayers {
         log.info("volumeMax: " + volumeMax);
         log.info("schedule: " + schedule);
 
-        links.addLinkPlayer(roomName, playerName);
-        links.write();
-        log.info(links);
 
         if (playerName.equals("null") || roomName.equals("null") || delay.equals("null") || schedule.equals("null")) {
             log.info("ERROR PARAMETER NULL");
@@ -228,36 +206,15 @@ public class LmsPlayers {
         log.info("room: " + roomName);
 
         Player player = this.playerByName(playerName);
-        log.info("PLAYER DEVICE ID: " + player.deviceId);
+
         String id = null;
-        if (player.deviceId != null) id = player.deviceId;
+
         log.info("PLAYER REMOVE: " + player);
         this.players.remove(player);
-        if (id != null) smartHome.devices.remove(smartHome.deviceById(id));
+        if (id != null) smartHome.devices.remove(smartHome.deviceByExternalId(id));
 //        Device device = SmartHome.getDeviceById(id);
         write();
         return "OK";
-    }
-
-    public Player playerByDeviceId(String extIdPlayerName) {
-        if (extIdPlayerName == null) {
-            log.info("ERROR NULL ID: " + extIdPlayerName);
-            return null;
-        }
-        Player player = this.players.stream()
-                .filter(p -> p.room != null)
-                .filter(p -> p.deviceId != null)
-                .filter(p -> p.deviceId.equals(extIdPlayerName))
-                .findFirst().orElse(null);
-        if (player != null) log.debug("BY ID: " + extIdPlayerName + " PLAYER: " + player.name);
-        else log.info("ERROR PLAYER NULL BY ID: " + extIdPlayerName);
-        return player;
-    }
-
-    public String playerNameByDeviceId(String id) {
-        Player player = playerByDeviceId(id);
-        if (player == null) return null;
-        return player.name;
     }
 
     public void delayExpireSave(HashMap<String, String> parameters) {
@@ -295,14 +252,6 @@ public class LmsPlayers {
         write();
     }
 
-//    public void altSyncSave(HashMap<String, String> parameters) {
-//        String tmp = parameters.get(alt_sync_value);
-//        if (tmp == null) return;
-//        syncAlt = Boolean.parseBoolean(tmp);
-//        log.info("ALT SYNC SAVE syncAlt: " + syncAlt);
-//        write();
-//    }
-
     public void lastThisSave(HashMap<String, String> parameters) {
         String tmp = parameters.get(last_this_value);
         if (tmp == null) return;
@@ -318,9 +267,18 @@ public class LmsPlayers {
         config.lmsPort = tmp2;
         config.write();
         this.searchForLmsIp();
-
         log.info("\nUPDATE LMS PLAYERS");
-        this.fastUpdateServer(); // после сохранения ip lms обновить плееры
+        this.updatePlayers(); // после сохранения ip lms обновить плееры
+    }
+
+    public void volumioSave(HashMap<String, String> parameters) {
+        log.info("PARAMETERS: " + parameters);
+        String tmp1 = parameters.get(volumio_ip_value);
+        log.info(tmp1);
+        if (tmp1 == null) return;
+        config.volumioIp = tmp1;
+        log.info(config);
+        config.write();
     }
 
     public void turnOffMusicAll() { // для Таскер только
@@ -331,27 +289,26 @@ public class LmsPlayers {
                 .forEach(player -> player.turnOffMusic());
     }
 
-
-    public void autoremoteRequest() {
-        log.info("REQUEST TASKER AUTOREMOTE REFRESH");
-        log.info("URLS SIZE: {}", this.autoRemoteUrls.size());
-        this.autoRemoteUrls.forEach(url -> {
-            log.info("POST TO AUTOREMOTE: {}", url);
-            try {
-                HttpResponse response = Request.Post(url)
-                        .connectTimeout(5000)
-                        .socketTimeout(5000)
-                        .execute()
-                        .returnResponse();
-                int statusCode = response.getStatusLine().getStatusCode();
-
-                log.error("POST. Status: {}, URL: {}", statusCode, url);
-
-            } catch (Exception e) {
-                log.error("POST ERROR. URL: " + url, e);
-            }
-        });
-    }
+//    public void autoremoteRequest() {
+//        log.info("REQUEST TASKER AUTOREMOTE REFRESH");
+//        log.info("URLS SIZE: {}", this.autoRemoteUrls.size());
+//        this.autoRemoteUrls.forEach(url -> {
+//            log.info("POST TO AUTOREMOTE: {}", url);
+//            try {
+//                HttpResponse response = Request.Post(url)
+//                        .connectTimeout(5000)
+//                        .socketTimeout(5000)
+//                        .execute()
+//                        .returnResponse();
+//                int statusCode = response.getStatusLine().getStatusCode();
+//
+//                log.error("POST. Status: {}, URL: {}", statusCode, url);
+//
+//            } catch (Exception e) {
+//                log.error("POST ERROR. URL: " + url, e);
+//            }
+//        });
+//    }
 
     public List<List<String>> syncgroups() {
         Response response = Requests.postToLmsForResponse(RequestParameters.syncgroups().toString());
@@ -387,37 +344,22 @@ public class LmsPlayers {
         }
     }
 
-
-    public void checkRooms() {
-        log.info("CHECK ROOMS");
-        this.players.stream()
-                .filter(player -> player.room != null)
-                .filter(player -> player.deviceId != null)
-                .forEach(p -> {
-//                    log.info("PLAYER: " + p.name + " ROOM: " + p.room + " ID: " + p.deviceId);
-                    Device dev = SmartHome.devices.stream()
-                            .filter(device -> device.room.equals(p.room))
-                            .findFirst().orElse(null);
-                    if (dev != null) {
-//                        log.info("DEVICE ROOM:" + dev.room + " ID: " + dev.id);
-                        if (!p.deviceId.equals(dev.id)) {
-                            p.deviceId = dev.id;
-                            log.info("FIX PLAYER: " + p.name + " ROOM: " + p.room + " ID: " + p.deviceId);
-                        }
-                    }
-                });
-    }
-
-
     public void afterAll() {
+        log.info("AFTER ALL");
 // сохранить состояние плееров - время и путь
         this.players.stream().filter(player -> player.connected).forEach(player -> player.saveLastTimePath());
 // запрос на обновление виджетов таскера
 //        this.autoremoteRequest();
 // обновить отображение в Яндекс
 //        this.fastUpdateServer();
+        Tasker.ready = "yes";
+        log.info("TASKER READY: " + Tasker.ready);
 //        Yandex.sendAllStates();
 
+    }
+
+    public void logPlayersNames(){
+        log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(player -> player.name).collect(Collectors.toList()));
     }
 
 }

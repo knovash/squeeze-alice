@@ -30,6 +30,7 @@ public class SwitchVoiceCommand {
 
     public static String processCommand(String aliceId, String command) {
         String cmd = command.trim().toLowerCase();
+        log.info("COMMAND: " + command);
 
         // Базовые команды без зависимостей
         if (cmd.isEmpty())
@@ -53,22 +54,26 @@ public class SwitchVoiceCommand {
         }
 
         // Получаем комнату по идентификатору сессии
-        String room = Main.idRooms.get(aliceId);
+        String room = Main.roomsAndAliceIds.get(aliceId);
         if (room == null)
             return "скажите навыку, это комната и название комнаты";
 
         // Команды выбора колонки (требуют комнату, но не плеер)
-        if (cmd.matches("(выбери|включи) колонку.*"))
+        if (cmd.matches("выбери колонку.*"))
             return ActionsAsync.selectPlayerByCommand(command, room);
+        if (cmd.matches("включи колонку.*"))
+            return ActionsAsync.runPlayerByCommand(command, room);
 
         // Ищем устройство в комнате и соответствующий плеер
         Device device = SmartHome.deviceByRoom(room);
         if (device == null)
-            return "устройство не найдено. скажите навыку, выбери колонку и название колонки";
+            return "устройство в умном доме не найдено, скажите навыку, выбери колонку, и название колонки";
 
-        Player player = lmsPlayers.playerByDeviceId(device.id);
+        lmsPlayers.updatePlayers();
+
+        Player player = lmsPlayers.playerByRoom(device.room);
         if (player == null)
-            return String.format("в комнате %s колонка еще не выбрана. скажите навыку, выбери колонку и название колонки", room);
+            return "колонка в комнате не выбрана, скажите навыку, выбери колонку, и название колонки";
 
         // Обработка всех команд, требующих плеер (обернуто в try-catch для устойчивости)
         try {
@@ -85,7 +90,9 @@ public class SwitchVoiceCommand {
             if (cmd.matches("(включи )?отдельно"))
                 return ActionsAsync.separateOn(player);
             if (cmd.matches("(включи )?вместе"))
-                return ActionsAsync.separateAllOff(player);
+                return ActionsAsync.separateOff(player);
+            if (cmd.matches("(включи )?только тут"))
+                return ActionsAsync.onlyHere(player);
             if (cmd.matches("(включи )?(рандом|шафл|shuffle|random)"))
                 return ActionsAsync.shuffleOn(player);
             if (cmd.matches("(выключи )?(рандом|шафл|shuffle|random)"))
@@ -94,8 +101,10 @@ public class SwitchVoiceCommand {
                 return ActionsAsync.repeatOn(player);
             if (cmd.matches("(выключи )?(повтор)"))
                 return ActionsAsync.repeatOff(player);
-            if (cmd.matches("(включи )?(дальше|следующий)"))
-                return ActionsAsync.nextTrack(player);
+            if (cmd.matches("(включи )?(дальше|следующий)")) {
+                ActionsAsync.nextChannelOrTrack(player);
+                return "включаю следующий";
+            }
             if (cmd.matches("подключи пульт (к|в|на).*"))
                 return ActionsAsync.connectBtRemote(command, player);
             if (cmd.contains("где пульт"))
