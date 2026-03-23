@@ -54,6 +54,7 @@ public class SwitchVoiceCommand {
         }
 
         // Получаем комнату по идентификатору сессии
+        lmsPlayers.updatePlayers();
         String room = Main.roomsAndAliceIds.get(aliceId);
         if (room == null)
             return "скажите навыку, это комната и название комнаты";
@@ -68,8 +69,6 @@ public class SwitchVoiceCommand {
         Device device = SmartHome.deviceByRoom(room);
         if (device == null)
             return "устройство в умном доме не найдено, скажите навыку, выбери колонку, и название колонки";
-
-        lmsPlayers.updatePlayers();
 
         Player player = lmsPlayers.playerByRoom(device.room);
         if (player == null)

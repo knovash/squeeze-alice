@@ -71,6 +71,7 @@ public class ActionsSync {
         String answer = "";
         log.info("WHATS PLAYING ON " + player.name);
         if (player == null) return "плеер не найден";
+        lmsPlayers.checkUpdated(); // TODO DEBUG
         if (!player.connected) return "плеер " + player.name + "  не подключен к медиасерверу";
         String title = player.title();
         player.volumeGet();
@@ -176,12 +177,18 @@ public class ActionsSync {
 
     public static void selectPlayerByCommand(String command, String room, Boolean start) {
         log.info("SELECT PLAYER BY COMMAND: " + command);
-        String target = command
+        String name = command
                 .replaceAll(".*колонку\\S*\\s", "")
                 .replaceAll("\"", "")
                 .replaceAll("\\s\\s", " ");
-        target = playerNameMatch(target);
-        log.info("TARGET: " + target);
+        String target;
+        target = playerNameMatch(name);
+
+        log.info("NAME: " + name + " TARGET: " + target);
+        if (target == null) {
+            answer = "в медиасервере нет колонки " + name;
+            return;
+        }
 
         selectPlayerInRoom(target, room, start);
 
@@ -206,6 +213,7 @@ public class ActionsSync {
         Player playerNew = lmsPlayers.playerByName(playerName); // поиск нового плеера по имени плеера для комнаты и проверка что доступен
         log.info("PLAYER NEW: " + playerNew.getClass().getName());
         log.info("PLAYER NEW: " + playerNew);
+        lmsPlayers.checkUpdated(); // TODO DEBUG
         if (!Boolean.TRUE.equals(playerNew.connected)) { // если плеер недоступен остановить выбор плеера
             log.info("PLAYER NOT CONNECTED: {}", playerName);
             answer = "колонка " + playerName + " недоступна";
@@ -281,6 +289,8 @@ public class ActionsSync {
         command = command.replaceAll(".*пульт", "");
         log.info("COMMAND: _" + command + "_");
         String playerName = null;
+
+        lmsPlayers.checkUpdated(); // TODO DEBUG
         if (!command.equals("\\s*") && !command.equals("")) {
             List<String> pll = lmsPlayers.players.stream()
                     .filter(p -> p.connected)

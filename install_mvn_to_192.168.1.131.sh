@@ -34,6 +34,10 @@ sshpass -p "$password" rsync -avh --progress log.sh $username@$remote:~/
 echo -e ${BGreen}"COPY SERVICE /lib/systemd/system/squeeze-alice.service"${NC}
 sshpass -p "$password" rsync -avh --progress squeeze-alice.service $username@$remote:/lib/systemd/system/
 
+# удалить лог на ремоут
+echo -e ${BGreen}"DELETE LOG /opt/squeeze-alice-1.0/data/log.txt"${NC}
+sshpass -p "$password" ssh "$username@$remote" "rm /opt/squeeze-alice-1.0/data/log.txt"
+
 # проверка файлов
 echo -e ${BGreen}"\n/opt/squeeze-alice-1.0/"${NC}
 sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/"

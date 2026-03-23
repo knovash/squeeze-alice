@@ -107,6 +107,8 @@ public class Player {
         if (p.isplaying == 1) {
             this.mode = "play";
             this.playing = true;
+            this.saveLastTime();
+
         }
         if (p.connected == 1) this.connected = true;
     }
@@ -141,14 +143,14 @@ public class Player {
     }
 
     public String title() {
-        String requestPlaylistName1 = this.requestPlaylistName();
-        String artistName = this.artistName();
-        String albumName = this.albumName();
-        String trackName = this.trackName();
-        log.info("requestPlaylistName: " + requestPlaylistName1);
-        log.info("artistName: " + artistName);
-        log.info("albumName: " + albumName);
-        log.info("trackname: " + trackName);
+//        String requestPlaylistName1 = this.requestPlaylistName();
+//        String artistName = this.artistName();
+//        String albumName = this.albumName();
+//        String trackName = this.trackName();
+//        log.info("requestPlaylistName: " + requestPlaylistName1);
+//        log.info("artistName: " + artistName);
+//        log.info("albumName: " + albumName);
+//        log.info("trackname: " + trackName);
 
 
         String title = null;
@@ -377,7 +379,10 @@ public class Player {
     }
 
     public Player syncTo(String toPlayerName) {
-        if (this.name.equals(toPlayerName)) return this;
+        if (this.name.equals(toPlayerName)) {
+            log.info("SKIP SYNC source and target player are the same " + this.name);
+            return this;
+        }
         log.info("SYNC " + this.name + " TO " + toPlayerName + " SYNC=true");
         Requests.postToLmsForStatus(RequestParameters.sync(this.name, toPlayerName).toString());
         this.sync = true;
@@ -599,8 +604,8 @@ public class Player {
         } else
 // если играет и время не просрочено - set volume если пришла громкость
         {
+            log.info("PLAYER " + this.name + " PLAYING - SKIP WAKE, SET VOLUME " + volume);
             if (volume != null) {
-                log.info("PLAYER " + this.name + " PLAY - SKIP WAKE, SET VOLUME " + volume);
                 this.volumeSetLimited(volume);
             }
         }
@@ -609,6 +614,7 @@ public class Player {
 
     private Player wakeAndSetVolume(String volume) {
         log.info("WAKE START PLAYER: " + this.name + " WAIT: " + this.delay + " VOLUME: " + volume);
+//        this.saveLastPathThis();
         if (volume == null) volume = String.valueOf(this.valueVolumeByTime());
         if (delay == null) delay = 10;
         this.playSilence();
@@ -636,6 +642,7 @@ public class Player {
 
     public Player stopOther() {
         log.info("STOP ALL except " + this.name);
+        lmsPlayers.checkUpdated(); // TODO DEBUG
         lmsPlayers.players.parallelStream()
                 .filter(p -> !p.name.equals(this.name))
                 .filter(p -> p.connected)
@@ -727,8 +734,20 @@ public class Player {
 
     public Player saveLastTime() {
 // сохранить последнее время
-        if (this.playing) this.lastPlayTimePlayer = LocalTime.now(zoneId).truncatedTo(MINUTES).toString();
+        this.lastPlayTimePlayer = LocalTime.now(zoneId).truncatedTo(MINUTES).toString();
         log.info(this.name + " LAST TIME: " + this.lastPlayTimePlayer + " LAST PATH: " + this.lastPathPlayer);
+        lmsPlayers.write();
+        return this;
+    }
+
+    public Player saveLastPathThis() {
+// охранить последний путь
+        String path = this.path();
+        if (path != null && !path.equals(config.silence)) {
+            this.lastPathPlayer = path;
+        }
+        log.info(this.name + " LAST PATH THIS: " + this.lastPathPlayer);
+        lmsPlayers.write();
         return this;
     }
 
@@ -742,6 +761,7 @@ public class Player {
             Player.lastPathCommon = path;
         }
         log.info(this.name + " LAST TIME: " + this.lastPlayTimePlayer + " LAST PATH: " + this.lastPathPlayer);
+        lmsPlayers.write();
         return this;
     }
 
@@ -822,7 +842,10 @@ public class Player {
     public boolean checkLastPlayTimeExpired() {
 // 10 минут до сброса громкости на значаение по пресету когда не играет
         long delayExpire = lmsPlayers.delayExpire;
-        if (this.lastPlayTimePlayer == null) return true;
+        if (this.lastPlayTimePlayer == null) {
+            log.info("EXPIRED " + this.name + " LAST TIME " + this.lastPlayTimePlayer);
+            return true;
+        }
         LocalTime playerTime = LocalTime.parse(this.lastPlayTimePlayer).truncatedTo(MINUTES);
         LocalTime nowTime = LocalTime.now(zoneId).truncatedTo(MINUTES);
         long diff = playerTime.until(nowTime, MINUTES);

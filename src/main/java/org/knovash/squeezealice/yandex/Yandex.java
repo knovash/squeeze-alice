@@ -69,7 +69,7 @@ public class Yandex {
         return musicDevices;
     }
 
-    public static void createDevicesFromYandexDevices(  List<YandexUtils.MusicDevice> yandexMusicDevices) {
+    public static void createDevicesFromYandexDevices(List<YandexUtils.MusicDevice> yandexMusicDevices) {
         if (yandexMusicDevices == null) {
             log.info("FAILED TO CREATE DEVICES. NO DEVICES FROM YANDEX");
             return;
@@ -93,7 +93,9 @@ public class Yandex {
         String deviceId = yandexInfo.devices.stream()
                 .filter(d -> d.name.equals("музыка"))
                 .filter(d -> d.room.equals(roomId))
-                .findFirst().get().external_id;
+                .map(d -> d.external_id)
+                .findFirst()
+                .orElse(null);
 //        log.info("DEVICE ID: " + deviceId);
         return deviceId;
     }
@@ -153,6 +155,7 @@ public class Yandex {
                 String jsonBody = JsonUtils.pojoToJson(requestBody);
 //                log.info("Request body: " + jsonBody);
                 // Отправляем запрос и получаем ответ
+                log.info("POST " + url);
                 response = Request.Post(url)
 //                        .setHeader("Authorization", "OAuth " + "y0__xDzxbXDARij9xMgof3dqBNVNLZJ5TUBmwMndUdpOq_rMn5GQw")
                         .setHeader("Authorization", "OAuth " + config.yandextSkillTokenDeveloper)

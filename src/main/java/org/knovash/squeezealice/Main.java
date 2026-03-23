@@ -1,11 +1,9 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.utils.PlayersUpdateScheduler;
+import org.knovash.squeezealice.utils.SchedulerPlayersUpdate;
 import org.knovash.squeezealice.utils.SchedulerSpotifyRefreshToken;
 import org.knovash.squeezealice.utils.Utils;
-import org.knovash.squeezealice.volumio.Volumio;
-import org.knovash.squeezealice.volumio.VolumioPlayer;
 import org.knovash.squeezealice.yandex.Yandex;
 import org.knovash.squeezealice.yandex.YandexUtils;
 
@@ -31,9 +29,9 @@ public class Main {
     public static Hive hive;
 
     public static void main(String[] args) {
-        log.debug("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
+        log.info("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
         System.setProperty("userApp.root", System.getProperty("user.home"));
-        log.debug("OS: " + System.getProperty("os.name") + ", user.home: " + System.getProperty("user.home") + " userApp.root: " + System.getProperty("userApp.root"));
+        log.info("OS: " + System.getProperty("os.name") + ", user.home: " + System.getProperty("user.home") + " userApp.root: " + System.getProperty("userApp.root"));
         config.readConfigProperties();
         config.readConfigJson();
         config.write();
@@ -47,7 +45,7 @@ public class Main {
         lmsPlayers.write();
         lmsPlayers.logPlayersNames();
 
-        Volumio.createPlayer();
+//        Volumio.createPlayer();
 
         log.info("YANDEX DEVICES: " + SmartHome.devices.stream().filter(Objects::nonNull).map(device -> device.room).collect(Collectors.toList()));
         List<YandexUtils.MusicDevice> yandexInfoDevices = Yandex.devicesGetFromYandexInfo(); // получить устройства "Музыка" которые уже есть в Яндексе
@@ -63,7 +61,7 @@ public class Main {
 
         SchedulerSpotifyRefreshToken.startPeriodicRefresh(60, 5); // Spotify периодическое обновление токена
 
-//        PlayersUpdateScheduler.startPeriodicUpdate(1); // Yandex периодическая отправка состояния плееров
+//        SchedulerPlayersUpdate.startPeriodicUpdate2(1); // Yandex периодическая отправка состояния плееров
 
     }
 }

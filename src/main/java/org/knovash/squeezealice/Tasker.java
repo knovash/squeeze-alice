@@ -30,6 +30,7 @@ public class Tasker {
         log.info("----------UPDATE START---------");
         log.info("PLAYER " + player);
 //        lmsPlayers.updatePlayers(); // пред обновлением виджетов таскера
+        lmsPlayers.checkUpdated(); // TODO DEBUG
         lmsPlayers.players.stream().filter(p -> p.connected).forEach(p -> {
             p.volumeGet();
             p.title();
@@ -104,6 +105,7 @@ public class Tasker {
 
     public static String forTaskerPlayersList() {
         log.info("TASKER PLAYERS LIST");
+        lmsPlayers.checkUpdated(); // TODO DEBUG
         Function<Player, String> formatter = p -> {
             String name = (p.room != null) ? p.room + " - " + p.name : p.name;
             String vol = (p.volume != null) ? p.volume : "-";

@@ -187,6 +187,8 @@ public class PagePlayers {
             inYaState = " Yandex <span style='color: green;'>" + "подключен" + "</span>";
         }
         String inLmsState = "LMS <span style='color: red;'>" + "отключен" + "</span>";
+
+        lmsPlayers.checkUpdated(); // TODO DEBUG
         if (p.connected) inLmsState = "LMS <span style='color: green;'>" + "подключен" + "</span>";
         String roomState = "<span style='color: red;'>" + "комната" + "</span>";
         if (p.room != null) roomState = "<span style='color: green;'>" + "комната" + "</span>";

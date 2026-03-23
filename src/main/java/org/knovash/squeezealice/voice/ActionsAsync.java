@@ -225,7 +225,9 @@ public class ActionsAsync {
         log.info("LINK: " + link);
         if (link == null) return "настройте спотифай";
         CompletableFuture.runAsync(() -> player.playPath(link));
+
         String answer = "включаю " + target;
+        Utils.sleep(1000);
         return answer;
     }
 
@@ -284,13 +286,12 @@ public class ActionsAsync {
 
     public static String selectPlayerByCommand(String command, String room) {
         log.info("SELECT PLAYER BY COMMAND: " + command + " IN ROOM: " + room);
+        ActionsSync.answer = "пытаюсь подключить колонку в комнате " + room;
         CompletableFuture.runAsync(() -> {
             ActionsSync.selectPlayerByCommand(command, room, false);
         });
-        Utils.sleep(2000);
-        log.info("ANSWER: " + ActionsSync.answer);
-        if (ActionsSync.answer != null) return ActionsSync.answer;
-        return "пытаюсь подключить колонку в комнате " + room;
+        Utils.sleep(1000);
+        return ActionsSync.answer;
     }
 
     public static String runPlayerByCommand(String command, String room) {
@@ -298,6 +299,7 @@ public class ActionsAsync {
         CompletableFuture.runAsync(() -> {
             ActionsSync.selectPlayerByCommand(command, room, true);
         });
+        Utils.sleep(1000);
         log.info(ActionsSync.answer);
         if (ActionsSync.answer != null) return ActionsSync.answer;
         return "пытаюсь включить колонку в комнате " + room;

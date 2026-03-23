@@ -13,9 +13,13 @@ import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.ActionsSync;
 import org.knovash.squeezealice.volumio.VolumioPlayer;
 
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.time.temporal.ChronoUnit.MINUTES;
+import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.knovash.squeezealice.Main.*;
 import static org.knovash.squeezealice.web.PagePlayers.*;
 
@@ -39,6 +43,25 @@ public class LmsPlayers {
             9, 20,
             20, 15,
             22, 5));
+    private String lastUpdateTime;
+
+    public void checkUpdated() {
+        if (lastUpdateTime == null) log.info("--- UPDATE EXPIRED ---- ERROR -----------");
+        LocalTime lastTime = LocalTime.parse(this.lastUpdateTime).truncatedTo(SECONDS);
+        LocalTime nowTime = LocalTime.now(zoneId).truncatedTo(SECONDS);
+        long diff = lastTime.until(nowTime, MINUTES);
+        Boolean expired = diff > delayExpire || diff < 0;
+        if (expired) log.info("--- UPDATE EXPIRED ---- ERROR -----------");
+        else log.info("OK");
+
+    }
+
+    public void saveUpdsteTime() {// сохранить последнее время обновления
+        this.lastUpdateTime = LocalTime.now(zoneId).truncatedTo(SECONDS).toString();
+        log.info("LAST UPDATE TIME: " + this.lastUpdateTime);
+        lmsPlayers.write();
+    }
+
 
     public void updatePlayers() {
         log.info("UPDATE PLAYERS FROM LMS");
@@ -80,7 +103,7 @@ public class LmsPlayers {
                                 p.separate,
                                 p.mode
                         )));
-        log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(player -> player.name).collect(Collectors.toList()));
+        this.saveUpdsteTime();
     }
 
     public void write() {
@@ -141,13 +164,45 @@ public class LmsPlayers {
     }
 
     public Player playingPlayer(String exceptName, boolean exceptSeparated) {
-        List<Player> playingPlayers = playingPlayers(exceptName, exceptSeparated); //playingPlayer
-        if (playingPlayers != null) return playingPlayers.get(0);
-        return null;
+        List<Player> playingPlayers = playingPlayers(exceptName, exceptSeparated);
+        if (playingPlayers == null || playingPlayers.isEmpty()) {
+            return null;
+        }
+        return playingPlayers.stream()
+                .sorted(Comparator.comparing(Player::getLastPlayTimePlayer,
+                        Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                .findFirst()
+                .orElse(null);
+    }
+
+    public Player lastPlayedPlayer(List<Player> players) {
+        Player ssss = null;
+        if (players == null || players.isEmpty()) {
+            ssss = lmsPlayers.players.stream()
+                    .filter(player -> !player.connected)
+                    .sorted(Comparator.comparing(Player::getLastPlayTimePlayer,
+                            Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                    .findFirst()
+                    .orElse(null);
+        } else {
+            ssss = players.stream()
+                    .filter(player -> !player.connected)
+                    .sorted(Comparator.comparing(Player::getLastPlayTimePlayer,
+                            Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                    .findFirst()
+                    .orElse(null);
+        }
+        if (ssss != null) log.info("LAST PLAYED " + ssss.name + " " + ssss.lastPlayTimePlayer);
+        else log.info("LAST PLAYED NULL ERROR");
+        return ssss;
+
     }
 
     public List<Player> playingPlayers(String exceptName, boolean exceptSeparated) {
         log.info(" ------- ПРОВЕРЯТЬ ЧТО СОСТОЯНИЕ ПЛЕЕРОВ ОБНОВЛЕНО !!! -----");
+
+        this.checkUpdated();
+
 //        lmsPlayers.fastUpdateServer(); // тут надо потому что иногда вызывается после unsync all
         List<Player> playingPlayers = this.players.stream()
                 .filter(p -> !exceptSeparated || !p.separate) // исключить отдельные
@@ -283,6 +338,8 @@ public class LmsPlayers {
 
     public void turnOffMusicAll() { // для Таскер только
         log.info("\nSTOP ALL");
+
+        lmsPlayers.checkUpdated(); // TODO DEBUG
         this.players.parallelStream()
                 .filter(player -> player.connected)
                 .peek(player -> log.info(player.name))
@@ -347,6 +404,7 @@ public class LmsPlayers {
     public void afterAll() {
         log.info("AFTER ALL");
 // сохранить состояние плееров - время и путь
+        lmsPlayers.checkUpdated(); // TODO DEBUG
         this.players.stream().filter(player -> player.connected).forEach(player -> player.saveLastTimePath());
 // запрос на обновление виджетов таскера
 //        this.autoremoteRequest();
@@ -358,7 +416,7 @@ public class LmsPlayers {
 
     }
 
-    public void logPlayersNames(){
+    public void logPlayersNames() {
         log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(player -> player.name).collect(Collectors.toList()));
     }
 
