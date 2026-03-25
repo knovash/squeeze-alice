@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
-import static org.knovash.squeezealice.Main.rooms;
 import static org.knovash.squeezealice.web.PageIndex.pageOuter;
 
 @Log4j2
@@ -47,6 +46,13 @@ public class PagePlayers {
     public static final String lms_ip_value = "lms_ip_value";
     public static final String lms_port_value = "lms_port_value";
 
+
+    public static final String volumio_save = "volumio_save";
+    public static final String volumio_on = "volumio_on";
+    public static final String volumio_off = "volumio_off";
+    public static final String volumio_ip_value = "volumio_ip_value";
+    public static final String volumio_port_value = "volumio_port_value";
+
     public static final String statusbar_refresh = "statusbar_refresh";
 
     public static Context action(Context context) {
@@ -63,8 +69,8 @@ public class PagePlayers {
         if (lmsPlayers.autoRemoteUrls.size() == 0) autoremoteShow = "";
         else autoremoteShow = lmsPlayers.autoRemoteUrls.get(0);
 
-        Yandex.getRoomsAndDevices();
-        log.info("YANDEX MUSIC ROOMS LIST: " + Yandex.yandexMusicDevListRooms);
+        Yandex.devicesGetFromYandexInfo();
+        log.info("YANDEX MUSIC ROOMS LIST: " + Yandex.roomsWithDevice);
 
         String autoRemoteUrls = "";
         if (lmsPlayers.autoRemoteUrls != null) autoRemoteUrls = lmsPlayers.autoRemoteUrls.stream()
@@ -177,10 +183,12 @@ public class PagePlayers {
 
     public static String playerSettings(Player p) {
         String inYaState = " Yandex <span style='color: red;'>" + "отключен" + "</span>";
-        if (Yandex.yandexMusicDevListRooms != null && Yandex.yandexMusicDevListRooms.contains(p.room)) {
+        if (Yandex.roomsWithDevice != null && Yandex.roomsWithDevice.contains(p.room)) {
             inYaState = " Yandex <span style='color: green;'>" + "подключен" + "</span>";
         }
         String inLmsState = "LMS <span style='color: red;'>" + "отключен" + "</span>";
+
+        lmsPlayers.checkUpdated(); // TODO DEBUG
         if (p.connected) inLmsState = "LMS <span style='color: green;'>" + "подключен" + "</span>";
         String roomState = "<span style='color: red;'>" + "комната" + "</span>";
         if (p.room != null) roomState = "<span style='color: green;'>" + "комната" + "</span>";
@@ -193,7 +201,7 @@ public class PagePlayers {
 
                         "<select name='" + player_room_value + "' required>" +
                         "<option value='" + p.room + "' " + p.room + ">" + p.room + "</option>" +
-                        rooms.stream()
+                        Yandex.rooms.stream()
                                 .filter(r -> !r.equals(p.room))
                                 .map(r -> {
                                     String decodedRoom = java.net.URLDecoder.decode(r, StandardCharsets.UTF_8);
@@ -227,7 +235,6 @@ public class PagePlayers {
                         "<br>" +
 //                        " <b>title:</b>" + p.requestTitle() + // PagePlayers
                         "  <b>lastTime:</b>" + p.lastPlayTimePlayer +
-                        "   <b>lastChannel:</b>" + p.lastChannelPlayer +
                         "   <b>lastPath:</b>" + p.lastPathPlayer +
 //                        "   <b>currentTrackInPlaylist:</b>" + p.playerStatus.result.remoteMeta.title +
 

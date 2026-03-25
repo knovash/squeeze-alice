@@ -3,13 +3,10 @@ package org.knovash.squeezealice.utils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.knovash.squeezealice.LmsPlayers;
 import org.knovash.squeezealice.Main;
-import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.voice.SwitchVoiceCommand;
+import org.knovash.squeezealice.yandex.Yandex;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -17,9 +14,6 @@ import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -175,20 +169,40 @@ public class Utils {
     }
 
 
-    public static void readAliceIdInRooms() {
-        log.debug("READ rooms.json");
-        idRooms = JsonUtils.jsonFileToMap(config.fileRooms, String.class, String.class);
-        if (idRooms == null) {
-            idRooms = new HashMap<>();
+    public static void readRoomsAndAliceIds() {
+        log.debug("READ " +config.fileRoomsAndAliceIds);
+        roomsAndAliceIds = JsonUtils.jsonFileToMap(config.fileRoomsAndAliceIds, String.class, String.class);
+        if (roomsAndAliceIds == null) {
+            roomsAndAliceIds = new HashMap<>();
             log.info("READ NO ROOMS");
             return;
         }
-        log.info("READ rooms.json: " + Main.idRooms);
+        log.info("READ: " + Main.roomsAndAliceIds);
+    }
+
+    public static void writeRoomsAndAliceIds(){
+        JsonUtils.mapToJsonFile(roomsAndAliceIds, config.fileRoomsAndAliceIds);
+    }
+
+    public static void readRoomsAndPlayers() {
+        log.debug("READ " + config.fileRoomsAndPlayers);
+        roomsAndPlayers = JsonUtils.jsonFileToMap(config.fileRoomsAndPlayers, String.class, String.class);
+        if (roomsAndPlayers == null) {
+            roomsAndPlayers = new HashMap<>();
+            log.info("READ NO ROOMS AND PLAYERS");
+            return;
+        }
+        log.info("READ: " + Main.roomsAndPlayers);
+    }
+
+    public static void writeRoomsAndPlayers(){
+        log.info("WRITE ROOMS AND PLAYERS: " + roomsAndPlayers);
+        JsonUtils.mapToJsonFile(roomsAndPlayers, config.fileRoomsAndPlayers);
     }
 
     public static String getCorrectRoomName(String approxRoomName) {
         log.info("GET CORRECT ROOM NAME BY: " + approxRoomName);
-        String correctRoom = Levenstein.search(approxRoomName, rooms);
+        String correctRoom = Levenstein.search(approxRoomName, Yandex.rooms);
         if (correctRoom == null) {
             log.info("ERROR ROOM NOT EXISTS IN YANDEX SMART HOME " + approxRoomName);
             return null;

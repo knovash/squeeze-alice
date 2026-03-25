@@ -34,18 +34,43 @@ public class ProviderQuery {
         ResponseYandex responseYandex = new ResponseYandex();
         responseYandex.request_id = xRequestId;
 
-        lmsPlayers.fastUpdateServer(); // providerQueryRun TODO тут апдейт нужен только для обновления списка подключенных плееров
+        lmsPlayers.updatePlayers(); // providerQueryRun TODO тут апдейт нужен только для обновления списка подключенных плееров
 
-        List<Device> jsonDevices = new ArrayList<>();
-        try {
-// лист девайсов для обновления их свойств
-            jsonDevices = bodyPojo.devices.stream()
-//                    .peek(d -> log.info("---DEVICE ID: " + d.id))
-                    .map(d -> smartHome.deviceById(d.id))
-// обратиться к каждому девайсу и обновить его свойства
-                    .map(d -> updateDeviceCapabilities(d)).collect(Collectors.toList());
-        }
-        catch (Exception e){log.info("ERROR: " + e);}
+
+        List<Device> jsonDevices = bodyPojo.devices.stream()
+                .map(requestDevice -> {
+                    Device device = smartHome.deviceByExternalId(requestDevice.id);
+                    device = updateDeviceCapabilities(device);
+                    Device minimal = new Device();
+                    minimal.id = requestDevice.id; // ID из запроса!
+                    minimal.capabilities = device.capabilities;
+                    minimal.properties = device.properties;
+                    minimal.error_code = device.error_code;
+                    minimal.error_message = device.error_message;
+                    // Обнуляем лишние поля (или настройте сериализацию на игнорирование null)
+                    minimal.type = null;
+                    minimal.name = null;
+                    minimal.room = null;
+                    minimal.aliases = null;
+                    minimal.external_id = null;
+                    minimal.skill_id = null;
+                    minimal.household_id = null;
+                    minimal.groups = null;
+                    minimal.action_result = null;
+                    return minimal;
+                })
+                .collect(Collectors.toList());
+
+//        List<Device> jsonDevices = new ArrayList<>();
+//        try {
+//// лист девайсов для обновления их свойств
+//            jsonDevices = bodyPojo.devices.stream()
+////                    .peek(d -> log.info("---DEVICE ID: " + d.id))
+//                    .map(d -> smartHome.deviceByExternalId(d.id))
+//// обратиться к каждому девайсу и обновить его свойства
+//                    .map(d -> updateDeviceCapabilities(d)).collect(Collectors.toList());
+//        }
+//        catch (Exception e){log.info("ERROR: " + e);}
 
         responseYandex.payload = new Payload();
         responseYandex.payload.devices = jsonDevices;
@@ -56,15 +81,17 @@ public class ProviderQuery {
 
 //        log.info(json);
         context.bodyResponse = json;
+        log.info("JSON " + json);
         context.code = 200;
         log.info("RETURN CONTEXT");
         return context;
     }
 
     private static Device updateDeviceCapabilities(Device device) {
-        log.info("DEVICE UPDATE " + device.room + " " + device.id);
+        log.info("DEVICE UPDATE " + device.room + " " + device.external_id);
 // взять плеер по id устройства в умном доме
-        player = lmsPlayers.playerByDeviceId(device.id);
+        player = lmsPlayers.playerByRoom(device.room);
+        log.info("PLAYER: " + player);
 
 // https://yandex.ru/dev/dialogs/smart-home/doc/ru/concepts/response-codes#codes-api
 // требование яндекс при модерации навыка, показывать устройство недоступно
@@ -99,25 +126,20 @@ public class ProviderQuery {
         if (capability.state == null) {
             capability.state = new State();
             capability.state.instance = capability.parameters.instance;
-            capability.state.value = null;
             capability.state.relative = false;
             capability.state.action_result = new ActionResult();
-            capability.state.action_result.error_code = "";
-            capability.state.action_result.error_message = "";
             capability.state.action_result.status = "DONE";
+//            capability.state.value = null;
+//            capability.state.action_result.error_code = null;
+//            capability.state.action_result.error_message = null;
         }
 
-//        log.info("UPDATE CAPABILITY : " + capability.parameters.instance);
-//        Boolean power = false;
         switch (capability.parameters.instance) {
             case ("volume"):
-//                capability.state.value = player.volumeGet();
-                capability.state.value = player.volume;
+                capability.state.value = player.volumeGet();
                 log.info("UPDATE CAPABILITY : " + capability.parameters.instance + " VALUE: " + capability.state.value + " PLAYER: " + player.name);
                 break;
             case ("on"):
-//                if (player.mode().equals("play")) power = true;
-//                capability.state.value = String.valueOf(power);
                 capability.state.value = String.valueOf(player.playing);
                 log.info("UPDATE CAPABILITY : " + capability.parameters.instance + " VALUE: " + capability.state.value + " PLAYER: " + player.name);
                 break;
@@ -125,10 +147,6 @@ public class ProviderQuery {
                 capability.state.value = "1";
                 log.info("UPDATE CAPABILITY : " + capability.parameters.instance + " VALUE: " + capability.state.value + " PLAYER: " + player.name);
                 break;
-//            case ("pause"):
-//                if (player.mode().equals("play")) power = true;
-//                capability.state.value = String.valueOf(power);
-//                break;
             default:
                 log.info("ERROR CAPABILITY NOT FOUND");
                 break;

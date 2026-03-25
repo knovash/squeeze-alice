@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,14 +71,16 @@ public class Levenstein {
     public static String getNearestElementInListWord(String value, List<String> list) {
 //        log.info("SEARCH: '" + value + "' IN: " + list);
         filalDistance = 100;
-        list.stream().forEach(name -> Levenstein.getDistanceWordAndWord(value, name));
+        list.stream()
+                .filter(Objects::nonNull)
+                .forEach(name -> Levenstein.getDistanceWordAndWord(value, name));
         if (filalDistance > 2) finalElement = null;
 //        log.info("RESULT: " + finalElement + " DISTANCE: " + filalDistance);
         return finalElement;
     }
 
     public static String search(String text, List<String> list) {
-        log.info("SEARCH TEXT: " + text + " IN: " + list);
+//        log.info("SEARCH TEXT: " + text + " IN: " + list);
 
         List<String> words = Stream.of(text.split(" "))
                 .filter(w -> w != "")
@@ -104,7 +107,7 @@ public class Levenstein {
         return result;
     }
 
-//    mission control & Mission Control: Celebrating NASA and Space Explorers everywhere.
+    //    mission control & Mission Control: Celebrating NASA and Space Explorers everywhere.
     public static String searchShortInLong(String shortName, String longName) {
         log.info(">>>> " + shortName + " IN " + longName);
         String result = null;

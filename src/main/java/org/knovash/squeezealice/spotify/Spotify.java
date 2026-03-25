@@ -157,9 +157,11 @@ public class Spotify {
 
     // Для обратной совместимости
     public static String currentlyPlaying() {
+        Spotify.currentlyPlaying  = null;
         CurrentlyPlaying cp = getCurrentlyPlaying();
         if (cp == null) return "ERROR";
         log.info("Spotify is playing: {}", cp.is_playing);
+        Spotify.currentlyPlaying  = cp;
         return JsonUtils.pojoToJson(cp);
     }
 
@@ -312,7 +314,7 @@ public class Spotify {
         }
 
         player
-                .ifExpiredAndNotPlayingUnsyncWakeSet(null)
+                .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null)
                 .playPath(playingUri)
                 .waitFor(1000)
                 .pause();
@@ -333,7 +335,7 @@ public class Spotify {
         }
 
         player.playTrackNumber(String.valueOf(trackIndex));
-        player.syncAllOtherPlayingToThis();
+        player.syncOtherPlayingNotInGroupToThis();
 
         Utils.sleep(5);
         pause();

@@ -4,12 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.Player;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 @Data
@@ -34,16 +31,5 @@ public class Device {
 
     //    public YandexInfo.QuasarInfo quasar_info;
 
-    public String playerName() {
-        Player player = lmsPlayers.playerByDeviceId(this.id);
-        String playerName = null;
-        if (player != null) playerName = player.name;
-        return playerName;
-    }
-
-    public Player player() {
-        Player player = lmsPlayers.playerByDeviceId(this.id);
-        return player;
-    }
 
 }

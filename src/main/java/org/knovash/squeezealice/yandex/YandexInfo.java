@@ -1,5 +1,6 @@
 package org.knovash.squeezealice.yandex;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,10 +27,10 @@ public class YandexInfo {
 
     public static class Device {
 
-        public String id;
-        public String name;
-        public String room;
         public String type;
+        public String name;
+        public String id;
+        public String room;
         public List<Capability> capabilities;
         public List<Property> properties;
         public List<String> aliases;

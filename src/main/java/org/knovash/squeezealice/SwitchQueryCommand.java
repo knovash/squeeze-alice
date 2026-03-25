@@ -22,19 +22,25 @@ public class SwitchQueryCommand {
         String room = queryParams.get("room");
         String value = queryParams.get("value");
         String response = "null";
-        log.info("PLAYER: " + playerName + " ROOM: " + room + " ACTION: " + action + " VALUE: " + value);
+        log.info("QUERY PARAMS: " + playerName + " ROOM: " + room + " ACTION: " + action + " VALUE: " + value);
 
         Player player = null;
         if (playerName == null && room != null) player = lmsPlayers.playerByNearestRoom(room);
         if (playerName != null && playerName.equals("btremote")) playerName = lmsPlayers.btPlayerName;
         if (playerName != null) player = lmsPlayers.playerByNearestName(playerName);
 
+        if (playerName != null && player == null) {
+            log.info("TRY GET PLAYER IF PLAYER NAME IS ROOM");
+            player = lmsPlayers.playerByNearestRoom(playerName);
+        }
+
         log.info("PLAYER: " + player);
 
-        lmsPlayers.fastUpdateServer(); // обновить перед всеми командами с пульта или планшета /cmd
+        lmsPlayers.updatePlayers(); // обновить перед всеми командами с пульта или планшета /cmd
 
         // Управление с пульта или виджетов таскер через http запрос
         // Респонс для отображения действия на телевизоре или планшете
+
 
         switch (action) {
             // ========== Основные операции управления плеером ==========
@@ -51,58 +57,71 @@ public class SwitchQueryCommand {
                 response = player.name + " - play volume " + value;
                 break;
             case "channel":
+                Tasker.ready = "no";
                 ActionsAsync.turnOnChannel(player, value);
                 response = player.name + " - play channel " + value;
                 break;
             case "play":
             case "turn_on_music":
+                Tasker.ready = "no";
                 ActionsAsync.turnOnMusic(player);
                 response = player.name + " - play";
                 break;
             case "play_pause":
             case "toggle_music":
+                Tasker.ready = "no";
                 ActionsAsync.toggleMusic(player);
                 response = player.name + " - toggle music";
                 break;
             case "stop_all":
+                Tasker.ready = "no";
                 ActionsAsync.stopAll();
                 response = "stop all";
                 break;
             case "next":
+                Tasker.ready = "no";
                 ActionsAsync.nextChannelOrTrack(player);
                 response = player.name + " - next";
                 break;
             case "prev":
+                Tasker.ready = "no";
                 ActionsAsync.prevChannelOrTrack(player);
                 response = player.name + " - prev";
                 break;
             case "next_track":
+                Tasker.ready = "no";
                 ActionsAsync.nextTrack(player);
                 response = player.name + " - next track";
                 break;
             case "prev_track":
+                Tasker.ready = "no";
                 ActionsAsync.prevTrack(player);
                 response = player.name + " - prev track";
                 break;
             case "next_channel":
+                Tasker.ready = "no";
                 ActionsAsync.ctrlNextChannel(player);
                 response = player.name + " - next channel";
                 break;
             case "prev_channel":
+                Tasker.ready = "no";
                 ActionsAsync.prevChannel(player);
                 response = player.name + " - prev channel";
                 break;
             case "switch_here":
+                Tasker.ready = "no";
                 ActionsAsync.switchHere(player);
                 response = player.name + " - switch here";
                 break;
 
             // ========== Дополнительные опции (режимы, избранное) ==========
             case "separate_on":
+                Tasker.ready = "no";
                 ActionsAsync.separateOn(player);
                 response = player.name + " - separate on";
                 break;
             case "separate_off":
+                Tasker.ready = "no";
                 ActionsAsync.separateOff(player);
                 response = player.name + " - separate off";
                 break;
@@ -129,10 +148,16 @@ public class SwitchQueryCommand {
             case "get_refresh_json": // Таскер для виджетов иконок плееров
                 response = Tasker.forTaskerWidgetsRefreshJson(player, value);
                 break;
+            case "get_playlist": // Таскер для плейлиста
+                response = Tasker.forTaskerPlaylist(player, 100);
+                break;
+            case "ready": // Таскер ответ когда можно делать апдейт после завершения действий плееров
+                response = Tasker.ready();
+                break;
 
             // ========== Утилитные действия (обновление, внешние сервисы) ==========
             case "update_players":
-                lmsPlayers.fastUpdateServer(); // ручное обновление
+                lmsPlayers.updatePlayers(); // ручное обновление
                 response = "update players";
                 break;
             case "spotify_me":

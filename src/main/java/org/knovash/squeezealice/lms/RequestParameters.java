@@ -40,7 +40,7 @@ public class RequestParameters {
     }
 
     public static RequestToLms favorites(String player, String value) {
-        return RequestToLms.create(player, new String[]{"favorites", "items", value, "want_url:0"});
+        return RequestToLms.create(player, new String[]{"favorites", "items", "0", "100"});
     }
 
     public static RequestToLms favoritesAdd(String player, String url, String title) {

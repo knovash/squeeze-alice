@@ -2,6 +2,7 @@ package org.knovash.squeezealice.web;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
+import org.knovash.squeezealice.Hive;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.spotify.SpotifyUserParser;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
-import static org.knovash.squeezealice.yandex.Yandex.yandexMusicDevCounter;
+import static org.knovash.squeezealice.yandex.Yandex.devicesSize;
 
 @Log4j2
 public class PageIndex {
@@ -40,21 +41,23 @@ public class PageIndex {
     public static void refresh(HashMap<String, String> parameters) {
         log.info("REFRESH");
         if (!lmsServerOnline) lmsPlayers.searchForLmsIp();
-        lmsPlayers.fastUpdateServer(); // refresh
-        Yandex.getRoomsAndDevices();
+        lmsPlayers.updatePlayers(); // refresh
+        Yandex.devicesGetFromYandexInfo();
     }
 
     public static String page() {
 
 
-        Yandex.getRoomsAndDevices();
-        Utils.readAliceIdInRooms();
+        Yandex.devicesGetFromYandexInfo();
+        Utils.readRoomsAndAliceIds();
+
 
         String pageInner = statusBar() +
                 "<p><a href=\\html\\manual " +
                 "target=\"_blank\" rel=\"noopener noreferrer\"" +
                 ">Инструкция</a></p>" +
                 "<p><a href=\\lms>Настройка LMS</a></p>" +
+                "<p><a href=\\volumio_settings>Настройка Volumio</a></p>" +
                 "<p><a href=\\players>Настройка плееров</a></p>" +
 
                 "<p><a href=\\auth " +
@@ -118,7 +121,7 @@ public class PageIndex {
 
 
         // колонки Алиса
-        List<String> aliceInRoomsList = idRooms.entrySet().stream().map(rooms -> {
+        List<String> aliceInRoomsList = roomsAndAliceIds.entrySet().stream().map(rooms -> {
             try {
                 return URLDecoder.decode(rooms.getValue(), "UTF-8");
             } catch (UnsupportedEncodingException e) {
@@ -131,20 +134,20 @@ public class PageIndex {
         }
 
 // комнаты
-        msgRoomsYandex = "Комнаты Умного дома " + rooms;
-        if (rooms.size() == 0)
+        msgRoomsYandex = "Комнаты Умного дома " + Yandex.rooms;
+        if (Yandex.rooms.size() == 0)
             msgRoomsYandex = "Комнаты Умного дома не найдены ";
 
 //        Устройства Музыка
-        if (SmartHome.devices.size() == 0 && rooms.size() == 0)
+        if (SmartHome.devices.size() == 0 && Yandex.rooms.size() == 0)
             msgMusicDevices = "Устройства Музыка не найдены ";
 
         List<String> listMusic = SmartHome.devices.stream()
-                .filter(d -> lmsPlayers.playerNameByDeviceId(d.id) != null)
-                .map(d -> lmsPlayers.playerNameByDeviceId(d.id) + " в " + d.room)
+                .filter(d -> lmsPlayers.playerByRoom(d.external_id) != null)
+                .map(d -> lmsPlayers.playerByRoom(d.external_id) + " в " + d.room)
                 .collect(Collectors.toList());
 
-        if (listMusic.size() == 0 && rooms.size() > 0)
+        if (listMusic.size() == 0 && Yandex.rooms.size() > 0)
             msgMusicDevices = "Устройства Музыка не найдены " + "<a href=\\players>выбрать комнаты</a>";
 
         if (listMusic.size() > 0)
@@ -158,9 +161,9 @@ public class PageIndex {
 //        if (yandexMusicDevCounter < SmartHome.devices.size())
 //            newDevices = " Есть <b>новые</b> устройства Музыка. Обновите список устройств в приложении УДЯ";
 
-        msgDevices = "Умный дом подключено: " + yandexMusicDevCounter;
-        if (SmartHome.devices.size() > yandexMusicDevCounter)
-            PageIndex.msgDevices = "Умный дом подключено " + yandexMusicDevCounter + " Есть <b>новые</b> устройства Музыка! Обновите список устройств в приложении Умный дом с Алисой";
+        msgDevices = "Умный дом подключено: " + devicesSize;
+        if (SmartHome.devices.size() > devicesSize)
+            PageIndex.msgDevices = "Умный дом подключено " + devicesSize + " Есть <b>новые</b> устройства Музыка! Обновите список устройств в приложении Умный дом с Алисой";
 
 
 // Yandex user name
@@ -179,6 +182,10 @@ public class PageIndex {
             msgSpotifyUser = "Пользователь Spotify: " +
                     "<a href=\\auth_spotify " + "target=\"_blank\" rel=\"noopener noreferrer\"" + ">Авторизация в Spotify</a>";
 
+        String hiveStatus = "";
+        if (hive.mqttClient.isConnected()) hiveStatus = "Hive mqtt <span style='color: green;'>" + "подключен" + "</span>";
+        else hiveStatus ="Hive mqtt <span style='color: red;'>" + "отключен" + "</span>" +" проверьте "+ config.hiveBroker;
+
         String bar = "<fieldset>" +
                 "<legend><b>" + "Информация" + "</b></legend>" +
 
@@ -194,6 +201,7 @@ public class PageIndex {
 
                 msgSpotifyUser + "<br>" +
 //                "Пользователь Spotify: " + config.spotifyName +
+                hiveStatus + "<br>" +
 
                 "<form method='POST' action='/form'>" +
                 "<input name='action' type='hidden'  value='statusbar_refresh'>" +

@@ -77,6 +77,26 @@ public class Requests {
         return status;
     }
 
+    public static String postToLmsForStatusNoLog(String json) {
+//        log.info("REQUEST TO LMS: " + json);
+        String uri = "http://" + config.lmsIp + ":" + config.lmsPort + "/jsonrpc.js/";
+//        log.info(uri + " " + json);
+        String status = null;
+        try {
+            status = Request.Post(uri).bodyString(json, ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8))
+                    .connectTimeout(1000)
+                    .socketTimeout(1000)
+                    .execute()
+                    .returnResponse()
+                    .getStatusLine()
+                    .toString();
+        } catch (IOException e) {
+            log.info("REQUEST ERROR " + e + "\n" + json);
+            return null;
+        }
+        return status;
+    }
+
     //  все запросы плеера для получения информации из Response response.result._artist
 
     public static String postToLmsForJsonBody(String json) {
