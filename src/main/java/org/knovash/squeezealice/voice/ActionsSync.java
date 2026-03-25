@@ -12,6 +12,7 @@ import org.knovash.squeezealice.yandex.Yandex;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
@@ -38,9 +39,67 @@ public class ActionsSync {
                 .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null)
                 .playPath(link)
                 .syncOtherPlayingNotInGroupToThis();
-        lmsPlayers.afterAll();
+        lmsPlayers.afterAsync();
         return "включаю " + target;
     }
+
+    public static String spotifyPlayAlbum(String command, Player player) {
+        log.info("SPOTIFY PLAY ALBUM");
+        String target = command.replaceAll(".*включи\\S*\\s", "")
+                .replaceAll("альбом", "")
+                .replaceAll("\"", "")
+                .replaceAll("\\s\\s", " ");
+        log.info("TARGET: " + target);
+        ActionsSync.answer = "Пытаюсь найти и включить альбом " + target;
+        String link = Spotify.getLinkAlbum(target);
+        log.info("LINK: " + link);
+        if (link == null) {
+            ActionsSync.answer = "Не удалось найти альбом " + target;
+        } else {
+            player.playPath(link);
+            ActionsSync.answer = "Включаю альбом " + target;
+        }
+        return ActionsSync.answer;
+    }
+
+    public static String spotifyPlayTrack(String command, Player player) {
+        log.info("SPOTIFY PLAY TRACK");
+        String target = command.replaceAll(".*включи\\S*\\s", "")
+                .replaceAll("трэк", "")
+                .replaceAll("\"", "")
+                .replaceAll("\\s\\s", " ");
+        log.info("TARGET: " + target);
+        ActionsSync.answer = "Пытаюсь найти и включить трек " + target;
+        String link = Spotify.getLinkTrack(target);
+        log.info("LINK: " + link);
+        if (link == null) {
+            ActionsSync.answer = "Не удалось найти трек " + target;
+        } else {
+            player.playPath(link);
+            ActionsSync.answer = "Включаю трек " + target;
+        }
+        return ActionsSync.answer;
+    }
+
+    public static String spotifyPlayPlaylist(String command, Player player) {
+        log.info("SPOTIFY PLAY PLAYLIST");
+        String target = command.replaceAll(".*включи\\S*\\s", "")
+                .replaceAll("плэйлист", "")
+                .replaceAll("\"", "")
+                .replaceAll("\\s\\s", " ");
+        log.info("TARGET: " + target);
+        ActionsSync.answer = "Пытаюсь найти и включить плейлист " + target;
+        String link = Spotify.getLinkPlaylist(target);
+        log.info("LINK: " + link);
+        if (link == null) {
+            ActionsSync.answer = "Не удалось найти плейлист " + target;
+        } else {
+            player.playPath(link);
+            ActionsSync.answer = "Включаю плейлист " + target;
+        }
+        return ActionsSync.answer;
+    }
+
 
     // =========================================================================
     // ПЕРЕКЛЮЧЕНИЕ МУЗЫКИ (синхронное)
@@ -54,9 +113,11 @@ public class ActionsSync {
         log.info("Spotify check if playing");
         if (spotifyPlaying) {
             log.info("Spotify is playing. Transferring to player: {}", player.name);
+            ActionsSync.answer = "Переключаю spotify на " + player.name;
             Spotify.transfer(player);
         } else {
             log.info("Spotify is not playing. Syncing to playing player and stopping others.");
+            ActionsSync.answer = "Переключаю музыку на " + player.name;
             player.syncToPlayingOrPlayLast();
             player.stopOther();
         }
@@ -142,9 +203,10 @@ public class ActionsSync {
         log.info("SELECT ROOM: " + room);
         selectRoomByCorrectRoom(room, aliceId);
         log.info("SELECT PLAYER: " + player);
+        ActionsSync.answer = "это комната " + room + " с колонкой " + player;
         Player playerNew = selectPlayerInRoom(player, room, false);
         if (playerNew != null) playerNew.turnOnMusic(null);
-        return "это комната " + room + " с колонкой " + player;
+        return ActionsSync.answer;
     }
 
     public static String selectRoomByCommand(String command, String aliceId) {
@@ -162,11 +224,12 @@ public class ActionsSync {
         selectRoomByCorrectRoom(target, aliceId);
 
         log.info("SELECT ROOM OK");
-        String whithPlayerName = "";
         Player player = lmsPlayers.playerByRoom(room);
-        if (player != null) whithPlayerName = ". с колонкой " + player.name;
-        else whithPlayerName = ". колонка в комнате еще не выбрана ";
-        return "это комната " + room + whithPlayerName;
+        if (player != null) ActionsSync.answer = "это комната " + room + " с колонкой " + player.name;
+        else
+            ActionsSync.answer = "колонка в комнате еще не выбрана";
+
+        return ActionsSync.answer;
     }
 
     public static void selectRoomByCorrectRoom(String target, String aliceId) {
@@ -189,6 +252,7 @@ public class ActionsSync {
             answer = "в медиасервере нет колонки " + name;
             return;
         }
+
 
         selectPlayerInRoom(target, room, start);
 
@@ -239,8 +303,10 @@ public class ActionsSync {
             } else { // замена плеера в комнате
                 playerNew.room = roomName;
                 playerNow.room = null;
-                playerNow.unsync().pause();
+//                playerNow.unsync().pause();
                 if (playerNow.playing) start = true; // если текущий плеер играл то новый тоже включить
+
+
                 log.info("CHANGE PLAYER " + playerNow.name + " TO " + playerNew.name + " IN ROOM " + roomName);
                 answer = "в комнате " + roomName + " изменена колонка " + playerNow.name + " на " + playerName;
             }
@@ -260,10 +326,14 @@ public class ActionsSync {
             log.info("TURN ON NEW PLAYER " + playerNew.name);
             playerNew.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null);
             if (!playerNew.playing)
+                if (playerNow.isPlaying())                playerNew.syncTo(playerNow.name);
+            else
                 playerNew.syncToPlayingOrPlayLast();
 
             answer = answer + ". включаю";
         }
+
+        playerNow.unsync().pause();
         return playerNew;
     }
 

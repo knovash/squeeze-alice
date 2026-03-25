@@ -11,10 +11,8 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.voice.ActionsSync;
-import org.knovash.squeezealice.volumio.VolumioPlayer;
 
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -178,22 +176,36 @@ public class LmsPlayers {
     public Player lastPlayedPlayer(List<Player> players) {
         Player ssss = null;
         if (players == null || players.isEmpty()) {
+            log.info(">> list empty. run lmsPlayers.players.stream()");
             ssss = lmsPlayers.players.stream()
                     .filter(player -> !player.connected)
                     .sorted(Comparator.comparing(Player::getLastPlayTimePlayer,
                             Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                    .peek(player -> log.info(player.name + " " + player.lastPlayTimePlayer))
                     .findFirst()
                     .orElse(null);
+
+            if (ssss != null) log.info("LAST PLAYED " + ssss.name + " " + ssss.lastPlayTimePlayer);
+            else {
+                ssss = lmsPlayers.players.get(0);
+                log.info("LAST PLAYED NULL ERROR " + ssss);
+            }
         } else {
+            log.info("LIST " + players.size());
             ssss = players.stream()
                     .filter(player -> !player.connected)
                     .sorted(Comparator.comparing(Player::getLastPlayTimePlayer,
                             Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                    .peek(player -> log.info(player.name + " " + player.lastPlayTimePlayer))
                     .findFirst()
                     .orElse(null);
+
+            if (ssss != null) log.info("LAST PLAYED " + ssss.name + " " + ssss.lastPlayTimePlayer);
+            else {
+                ssss = players.get(0);
+                log.info("LAST PLAYED NULL ERROR " + ssss);
+            }
         }
-        if (ssss != null) log.info("LAST PLAYED " + ssss.name + " " + ssss.lastPlayTimePlayer);
-        else log.info("LAST PLAYED NULL ERROR");
         return ssss;
 
     }
@@ -369,7 +381,7 @@ public class LmsPlayers {
 
     public List<List<String>> syncgroups() {
         Response response = Requests.postToLmsForResponse(RequestParameters.syncgroups().toString());
-//        this.players.forEach(p -> p.sync = false);
+        this.players.forEach(p -> p.sync = false); // очистка состояний синхронизации всех плееров
         if (response == null) return null;
         if (response.result.syncgroups_loop == null) return null;
 //        log.info("SYNCGROUPS LOOP: " + response.result.syncgroups_loop);
@@ -379,6 +391,7 @@ public class LmsPlayers {
                 .collect(Collectors.toList());
         List<Object> result = new ArrayList<>();
         syncMemberNames.forEach(collection -> result.addAll(collection));
+        syncMemberNames.forEach(group -> group.forEach(name -> lmsPlayers.playerByName(name).sync=true));
         log.info("SYNCGROUPS: " + syncMemberNames);
         return syncMemberNames;
     }
@@ -401,10 +414,10 @@ public class LmsPlayers {
         }
     }
 
-    public void afterAll() {
-        log.info("AFTER ALL");
+    public void afterAsync() {
 // сохранить состояние плееров - время и путь
-        lmsPlayers.checkUpdated(); // TODO DEBUG
+//        lmsPlayers.checkUpdated(); // TODO DEBUG
+        log.info("SAVE PLAYERS LAST TIME AND PATH");
         this.players.stream().filter(player -> player.connected).forEach(player -> player.saveLastTimePath());
 // запрос на обновление виджетов таскера
 //        this.autoremoteRequest();

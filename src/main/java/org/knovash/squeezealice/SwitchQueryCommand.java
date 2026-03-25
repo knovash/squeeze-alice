@@ -22,14 +22,19 @@ public class SwitchQueryCommand {
         String room = queryParams.get("room");
         String value = queryParams.get("value");
         String response = "null";
-        log.info("PLAYER: " + playerName + " ROOM: " + room + " ACTION: " + action + " VALUE: " + value);
+        log.info("QUERY PARAMS: " + playerName + " ROOM: " + room + " ACTION: " + action + " VALUE: " + value);
 
         Player player = null;
         if (playerName == null && room != null) player = lmsPlayers.playerByNearestRoom(room);
         if (playerName != null && playerName.equals("btremote")) playerName = lmsPlayers.btPlayerName;
         if (playerName != null) player = lmsPlayers.playerByNearestName(playerName);
 
-        log.info("------- PLAYER: " + player);
+        if (playerName != null && player == null) {
+            log.info("TRY GET PLAYER IF PLAYER NAME IS ROOM");
+            player = lmsPlayers.playerByNearestRoom(playerName);
+        }
+
+        log.info("PLAYER: " + player);
 
         lmsPlayers.updatePlayers(); // обновить перед всеми командами с пульта или планшета /cmd
 
@@ -143,8 +148,11 @@ public class SwitchQueryCommand {
             case "get_refresh_json": // Таскер для виджетов иконок плееров
                 response = Tasker.forTaskerWidgetsRefreshJson(player, value);
                 break;
+            case "get_playlist": // Таскер для плейлиста
+                response = Tasker.forTaskerPlaylist(player, 100);
+                break;
             case "ready": // Таскер ответ когда можно делать апдейт после завершения действий плееров
-                response = Tasker.ready;
+                response = Tasker.ready();
                 break;
 
             // ========== Утилитные действия (обновление, внешние сервисы) ==========

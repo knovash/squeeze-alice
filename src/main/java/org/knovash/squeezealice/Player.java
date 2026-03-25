@@ -9,6 +9,7 @@ import org.knovash.squeezealice.lms.RequestParameters;
 import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.lms.ServerStatus;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.voice.ActionsSync;
 
 import java.time.LocalTime;
 import java.util.*;
@@ -438,8 +439,13 @@ public class Player {
 
     public Player toggleMusic() {
         log.info("PLAYER: " + this.name + " TOGGLE MUSIC");
-        if (this.playing) this.turnOffMusic();
-        else this.turnOnMusic(null);
+        if (this.playing) {
+            this.turnOffMusic();
+            ActionsSync.answer = "Выключаю музыку";
+        } else {
+            this.turnOnMusic(null);
+            ActionsSync.answer = "Включаю музыку";
+        }
         return this;
     }
 
@@ -537,14 +543,14 @@ public class Player {
     }
 
     public Player ctrlNextChannelOrTrack() {
-        log.info("PLAYLIST TRACKS: " + this.playerStatus.result.playlist_tracks);
+        log.info("ctrlNextChannelOrTrack");
         if (this.requestPlaylistTracks() < 2) this.ctrlNextChannel();
         else this.ctrlNextTrack();
         return this;
     }
 
     public Player ctrlPrevChannelOrTrack() {
-        log.info("PLAYLIST TRACKS: " + this.playerStatus.result.playlist_tracks);
+        log.info("ctrlPrevChannelOrTrack");
         if (this.requestPlaylistTracks() < 2) this.ctrlPrevChannel();
         else this.ctrlPrevTrack();
         return this;
@@ -807,17 +813,26 @@ public class Player {
         log.info("SEPARATE OFF ALL. SYNC ALL PLAYING TO HERE");
         this.separateFlagFalse(); // сбросить флаг отделен у этото плеера
         if (!this.playing) { // если плеер не играл - подключить к играющему
+
+            ActionsSync.answer = "Подключаю " + this.name;
             this.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null)
                     .unsync()
                     .syncToPlayingOrPlayLast(); // если плеер не играл и нет играющего - включить последнее игравшее
         }
         lmsPlayers.players.forEach(player -> player.separateFlagFalse()); // сбросить у всех флаг что отделен
 // подключить к нему остальные играющие
-        lmsPlayers.playingPlayers(this.name, false) // найти все играющие включая отделенные
-                .stream().filter(Objects::nonNull)
-                .forEach(player -> player
-                        .unsync()
-                        .syncTo(this.name));
+        List<Player> playingPlayers = lmsPlayers.playingPlayers(this.name, false); // найти все играющие включая отделенные
+        List<String> playingPlayersNames = playingPlayers.stream()
+                .filter(Objects::nonNull)
+                .map(player -> player.name).collect(Collectors.toList());
+        if (playingPlayers != null && !playingPlayers.isEmpty()) {
+            ActionsSync.answer = "Подключаю " + playingPlayersNames + " к " + this.name;
+            playingPlayers.stream()
+                    .filter(Objects::nonNull)
+                    .forEach(player -> player
+                            .unsync()
+                            .syncTo(this.name));
+        }
         return this;
     }
 
