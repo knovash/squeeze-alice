@@ -483,15 +483,15 @@ public class Player {
         if (channel == null || channel.equals(0)) return this;
 
         log.info("CHANNEL: " + channel);
-        if (channel.contains("-") || channel.contains("+")) {
-            id = channelGetRelative(channel);
-        } else {
-            id = Integer.parseInt(channel) - 1; // id начинается с 0
-        }
+
+        if (channel.contains("-")) id = channelGetRelative(channel) -1 - 1;
+        if (channel.contains("+")) id = channelGetRelative(channel) -1 + 1;
+        if (!(channel.contains("-") || channel.contains("+"))) id = Integer.parseInt(channel) - 1; // id начинается с 0
+
         log.info("CHANNEL PLAY: " + id);
         this.lastChannelPlayer = id; // сохранить последний канал этого плеера
         Player.lastChannelCommon = id; // сохранить последний канал для всех плееров
-        Requests.postToLmsForStatus(RequestParameters.playFavoritesId(this.name, id).toString());
+        Requests.postToLmsForStatus(RequestParameters.playFavoritesId(this.name, id).toString()); // id начинается с 0
         return this;
     }
 

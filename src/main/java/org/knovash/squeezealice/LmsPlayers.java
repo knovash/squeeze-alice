@@ -29,6 +29,7 @@ public class LmsPlayers {
 
     public List<Player> players = new ArrayList<>();
     public String btPlayerName = "HomePod";
+    public String btPlayerAliceId;
     public int delayUpdate = 5; // MINUTES
     public int delayExpire = 10; // MINUTES
     public boolean lastThis = true;
@@ -157,7 +158,7 @@ public class LmsPlayers {
 
     public Player playerByNearestRoom(String room) {
         if (room == null) return null;
-        room = Utils.getCorrectRoomName(room);
+        room = Utils.roomNameByNearest(room);
         return this.playerByRoom(room);
     }
 
@@ -178,7 +179,7 @@ public class LmsPlayers {
         if (players == null || players.isEmpty()) {
             log.info(">> list empty. run lmsPlayers.players.stream()");
             ssss = lmsPlayers.players.stream()
-                    .filter(player -> !player.connected)
+                    .filter(player -> player.connected)
                     .sorted(Comparator.comparing(Player::getLastPlayTimePlayer,
                             Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                     .peek(player -> log.info(player.name + " " + player.lastPlayTimePlayer))
@@ -193,10 +194,11 @@ public class LmsPlayers {
         } else {
             log.info("LIST " + players.size());
             ssss = players.stream()
-                    .filter(player -> !player.connected)
+                    .peek(player -> log.info(player.name + " " + player.lastPlayTimePlayer))
+                    .filter(player -> player.connected)
                     .sorted(Comparator.comparing(Player::getLastPlayTimePlayer,
                             Comparator.nullsLast(Comparator.naturalOrder())).reversed())
-                    .peek(player -> log.info(player.name + " " + player.lastPlayTimePlayer))
+                    .peek(player -> log.info("FILTERED: "+player.name + " " + player.lastPlayTimePlayer))
                     .findFirst()
                     .orElse(null);
 

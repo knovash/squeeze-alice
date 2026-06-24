@@ -9,10 +9,13 @@ import org.knovash.squeezealice.utils.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.yandex.Yandex;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.io.IOException;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
@@ -169,6 +172,19 @@ public class ActionsSync {
         return answer;
     }
 
+    public static String sayMyName(Player player) {
+        log.info("SAY MY NAME");
+        String textFromFile;
+        try {
+            textFromFile = Files.readString(Paths.get("/root/say.txt"));
+        } catch (IOException e) {
+            log.error("Не удалось прочитать /say.txt: " + e.getMessage());
+            textFromFile = "[текст из файла недоступен]";
+        }
+        String answer = "на " + lmsPlayers.btPlayerName + " включаю " + textFromFile;
+        return answer;
+    }
+
     // =========================================================================
     // ИЗБРАННОЕ (синхронное)
     // =========================================================================
@@ -191,7 +207,7 @@ public class ActionsSync {
                 .replaceAll(".*комната", "")
                 .replaceAll("с колонкой.*", "")
                 .replaceAll("\\s", "");
-        String correctRoom = Utils.getCorrectRoomName(targetRoom);
+        String correctRoom = Utils.roomNameByNearest(targetRoom);
         if (correctRoom == null) return "нет такой комнаты";
         String room = correctRoom;
         String player = command
@@ -215,7 +231,7 @@ public class ActionsSync {
                 .replaceAll(".*комната\\S*\\s", "")
                 .replaceAll("\"", "")
                 .replaceAll("\\s\\s", " ");
-        target = Utils.getCorrectRoomName(target);
+        target = Utils.roomNameByNearest(target);
         log.info("TARGET: " + target);
         if (target == null) return "нет такой комнаты";
         String room = target;
@@ -306,7 +322,9 @@ public class ActionsSync {
 //                playerNow.unsync().pause();
                 if (playerNow.playing) start = true; // если текущий плеер играл то новый тоже включить
 
-
+                // если пульт был подключен к заменяемой колонке то пульт переключить к новой
+                if (playerNow.name.equals(lmsPlayers.btPlayerName)) lmsPlayers.btPlayerName = playerName;
+                
                 log.info("CHANGE PLAYER " + playerNow.name + " TO " + playerNew.name + " IN ROOM " + roomName);
                 answer = "в комнате " + roomName + " изменена колонка " + playerNow.name + " на " + playerName;
             }
@@ -326,9 +344,9 @@ public class ActionsSync {
             log.info("TURN ON NEW PLAYER " + playerNew.name);
             playerNew.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null);
             if (!playerNew.playing)
-                if (playerNow.isPlaying())                playerNew.syncTo(playerNow.name);
-            else
-                playerNew.syncToPlayingOrPlayLast();
+                if (playerNow.isPlaying()) playerNew.syncTo(playerNow.name);
+                else
+                    playerNew.syncToPlayingOrPlayLast();
 
             answer = answer + ". включаю";
         }
@@ -353,39 +371,71 @@ public class ActionsSync {
     // =========================================================================
 
     public static String connectBtRemote(String command, Player player) {
-        String answer;
+//        String answer;
         log.info("CONNECT BT REMOTE");
         log.info("COMMAND: " + command);
-        command = command.replaceAll(".*пульт", "");
+        command = command
+                .replaceAll("включи", "")
+                .replaceAll("подключи", "")
+                .replaceAll("пульт ", "")
+                .replaceAll(" к ", "")
+                .replaceAll(" в ", "")
+                .replaceAll(" на ", "");
+//                .replaceAll(" ", "");
+        command = command.trim();
         log.info("COMMAND: _" + command + "_");
         String playerName = null;
 
-        lmsPlayers.checkUpdated(); // TODO DEBUG
-        if (!command.equals("\\s*") && !command.equals("")) {
-            List<String> pll = lmsPlayers.players.stream()
-                    .filter(p -> p.connected)
-                    .map(p -> p.name)
-                    .collect(Collectors.toList());
-            playerName = Levenstein.search(command, pll);
-            log.info("PLAYER NAME: " + playerName);
-            if (playerName != null) player = lmsPlayers.playerByName(playerName);
-            if (player == null) return "плеер не найден " + command;
+        String room = Utils.roomNameByNearest(command);
+        Player playerNew = null;
+        if (room == null) playerNew = lmsPlayers.playerByNearestName(command);
 
-            String roomName = Levenstein.search(command, Yandex.rooms);
-            log.info("ROOM NAME: " + roomName);
-            if (roomName != null) player = lmsPlayers.playerByRoom(roomName);
-            if (player == null) return "плеер не найден " + command;
+        if (playerNew != null) {
+            player = playerNew;
         }
+
+        log.info("ROOM: " + room);
+        if (room != null) { // если в команде было название комнаты то подключить пульт к плееру в комнате из команды
+
+            log.info("PLAYER BY PLAYERNAME: " + player);
+            if (player == null) player = lmsPlayers.playerByNearestRoom(command);
+            if (player == null) {
+                answer = "плеер не найден";
+                return answer;
+            }
+        }
+        // если в команде небыло комнаты то подключить пульт в этой комнате
+
         lmsPlayers.btPlayerName = player.name;
+        lmsPlayers.btPlayerAliceId = "";
+        log.info("BT PLAYER NAME: " + lmsPlayers.btPlayerName);
         lmsPlayers.write();
         answer = "пульт подключен к " + player.name;
         return answer;
     }
 
     public static String whereBtRemote() {
-        String answer;
         log.info("WHERE BT REMOTE");
         answer = "пульт подключен к " + lmsPlayers.btPlayerName;
         return answer;
     }
+
+    public static String volumeLimitSet(Player player, String command) {
+        log.info(">>> PLAYER: " + player);
+        log.info(">>> COMMAND: " + command);
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\d+");
+        java.util.regex.Matcher matcher = pattern.matcher(command);
+        Integer volume = null;
+        if (matcher.find()) volume = Integer.parseInt(matcher.group());
+        log.info(">>> LIMIT: " + volume);
+        if (volume != null && volume > 20 && volume < 100) {
+            player.volume_high = volume;
+            answer = player.name + ", ограничение громкости " + volume;
+        } else
+            answer = player.name + ", ошибка ограничения громкости. число должно быть от 20 до 100";
+
+        return answer;
+    }
+
+
 }

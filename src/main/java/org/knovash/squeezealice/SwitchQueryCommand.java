@@ -3,8 +3,10 @@ package org.knovash.squeezealice;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.voice.ActionsAsync;
+import org.knovash.squeezealice.voice.SwitchVoiceCommand;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
 
@@ -60,6 +62,18 @@ public class SwitchQueryCommand {
                 Tasker.ready = "no";
                 ActionsAsync.turnOnChannel(player, value);
                 response = player.name + " - play channel " + value;
+                break;
+            case "voice":
+                Tasker.ready = "no";
+                log.info("VOICE " + value);
+                log.info(Main.roomsAndPlayers);
+                String roomBt = Main.roomsAndPlayers.get(lmsPlayers.btPlayerName); // получить комнату по имени плеера
+                log.info("BT ROOM: " + roomBt);
+                log.info(Main.roomsAndAliceIds);
+                String id = getAliceIdByRoom(roomBt); // получить id по комнате
+                log.info("BT ID: " + id);
+                SwitchVoiceCommand.processCommand(id,"включи "+value);
+                response = "VOICE: " + value;
                 break;
             case "play":
             case "turn_on_music":
@@ -179,5 +193,15 @@ public class SwitchQueryCommand {
         }
         context.bodyResponse = response;
         return context;
+    }
+
+
+    public static String getAliceIdByRoom(String room) {
+        for (Map.Entry<String, String> entry : Main.roomsAndAliceIds.entrySet()) {
+            if (entry.getValue().equals(room)) {
+                return entry.getKey(); // возвращаем id (хэш)
+            }
+        }
+        return null; // комната не найдена
     }
 }

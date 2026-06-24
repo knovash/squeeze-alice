@@ -78,6 +78,10 @@ public class SwitchVoiceCommand {
         try {
             if (cmd.contains("что играет"))
                 return ActionsSync.whatsPlaying(player);
+            if (cmd.contains("произнеси название"))
+                return ActionsSync.sayMyName(player);
+            if (cmd.contains("лимит"))
+                return ActionsSync.volumeLimitSet(player, command);
             if (cmd.contains("какая громкость"))
                 return ActionsSync.whatsVolume(player);
             if (cmd.matches("(включи )?(канал|избранное) .*"))
@@ -104,7 +108,8 @@ public class SwitchVoiceCommand {
                 ActionsAsync.nextChannelOrTrack(player);
                 return "включаю следующий";
             }
-            if (cmd.matches("подключи пульт (к|в|на).*"))
+
+            if (cmd.matches("^(?:подключи пульт(?: (?:к|в|на).*)?|включи пульт)$"))
                 return ActionsAsync.connectBtRemote(command, player);
             if (cmd.contains("где пульт"))
                 return ActionsAsync.whereBtRemote();
