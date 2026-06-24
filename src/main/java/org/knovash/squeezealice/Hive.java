@@ -6,6 +6,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.knovash.squeezealice.yandex.YandexJwtUtils;
 import org.json.JSONObject;
 
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -17,7 +18,17 @@ import static org.knovash.squeezealice.Main.*;
 @Log4j2
 public class Hive implements MqttCallbackExtended {
 
-    private static final String CLIENT_ID = "squeeze-alice-client2";
+//    private static final String CLIENT_ID = "squeeze-alice-client2";
+    private static final String CLIENT_ID;
+
+    static {
+        try {
+            CLIENT_ID = "squeeze-alice-" + System.getProperty("user.name") + "-" +
+                    java.net.InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public MqttClient mqttClient;
     private final String hiveBroker = config.hiveBroker;

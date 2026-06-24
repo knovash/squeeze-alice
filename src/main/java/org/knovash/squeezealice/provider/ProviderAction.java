@@ -265,10 +265,10 @@ public class ProviderAction {
                     .forEach(p -> p.ifExpiredAndNotPlayingUnsyncWakeSetVolume(p.capVolume)); // неиграющие разбудить
             notPlaying.forEach(p -> p.syncTo(masterName)); // неиграющие подключить к играющим
         } else { // Нет играющих среди переданных устройств
+            Player master = lmsPlayers.lastPlayedPlayer(players);
             notPlaying.parallelStream()
                     .filter(Objects::nonNull)
                     .forEach(p -> p.ifExpiredAndNotPlayingUnsyncWakeSetVolume(p.capVolume)); // неиграющие разбудить
-            Player master = lmsPlayers.lastPlayedPlayer(players);
 
             master.syncToPlayingOrPlayLast(); // попытка подключиться к уже играющему. неподключать если он отделен и неподключать к отделенным если игращего нет включить последнее игравшее
             notPlaying.stream()

@@ -70,7 +70,7 @@ public class ActionsAsync {
             channel = channel.replaceAll(":.*", "");
             player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null).playChannel(String.valueOf(index));
             lmsPlayers.afterAsync();
-            ActionsSync.answer = "Включаю канал " + channel;
+            ActionsSync.answer = "Включаю канал " + index + ", " + channel;
         });
         Utils.sleep(1000);
         return ActionsSync.answer;
@@ -369,8 +369,7 @@ public class ActionsAsync {
         ActionsSync.answer = "Пытаюсь подключить пульт";
         CompletableFuture.runAsync(() -> {
             ActionsSync.connectBtRemote(command, player);
-            lmsPlayers.afterAsync();
-            ActionsSync.answer = "Подключаю пульт";
+//            lmsPlayers.afterAsync();
         });
         Utils.sleep(1000);
         return ActionsSync.answer;

@@ -200,7 +200,7 @@ public class Utils {
         JsonUtils.mapToJsonFile(roomsAndPlayers, config.fileRoomsAndPlayers);
     }
 
-    public static String getCorrectRoomName(String approxRoomName) {
+    public static String roomNameByNearest(String approxRoomName) {
         log.info("GET CORRECT ROOM NAME BY: " + approxRoomName);
         String correctRoom = Levenstein.search(approxRoomName, Yandex.rooms);
         if (correctRoom == null) {
