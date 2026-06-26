@@ -18,7 +18,8 @@ public class HandlerAll implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        log.info("----- RECEIVED HTTP REQUEST -----");
+        log.info(Main.line);
+        log.info(Main.start);
         Context context = Context.contextCreate(httpExchange);
         log.debug("CLIENT ID IN QUERY: " + context.queryMap.get("client_id"));
         context = HandlerAll.switchPath(context);
@@ -31,7 +32,8 @@ public class HandlerAll implements HttpHandler {
         try (OutputStream outputStream = httpExchange.getResponseBody()) {
             outputStream.write(responseBytes);
         }
-        log.info("--- FINISH ---");
+        log.info(Main.finish);
+        log.info(Main.line);
     }
 
     public static Context switchPath(Context context) {
@@ -68,7 +70,10 @@ public class HandlerAll implements HttpHandler {
                 break;
             case "/v1.0/user/devices":
                 context = ProviderUserDevices.providerUserDevicesRun(context);
+                log.info("YANDEX RECIEVED USER DEVICES -------------");
+                log.info("TRY TO GET BACK DEVICES FROM YANDEX BY SHEDULER !!!!!!!!!! -----------");
                 SchedulerYandexGetNewDevice.requestYandexForDevices(10, 5); // в течении минуты пытаться получить сохраненные в яндесе девайсы
+                log.info("SHCEDULLER FINISHED !!!!!!!!!!!");
 
                 break;
             case "/v1.0/user/devices/query":

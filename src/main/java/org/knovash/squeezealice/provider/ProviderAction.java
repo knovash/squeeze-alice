@@ -40,7 +40,9 @@ public class ProviderAction {
         log.info("BODY: " + body);
 
         // к полученым девайсам яндекса по id приделать комнаты от локальных девайсов
-        responseYandex.payload.devices.forEach(device -> device.room = smartHome.deviceByExternalId(device.id).room);
+        responseYandex.payload.devices.stream()
+                .filter(device -> smartHome.deviceByExternalId(device.id) != null)
+                .forEach(device -> device.room = smartHome.deviceByExternalId(device.id).room);
 
 // посмотреть полученные девайсы и их капабилити
         log.info("DEVICES: " + responseYandex.payload.devices.stream().map(device1 -> device1.room).collect(Collectors.toList()));

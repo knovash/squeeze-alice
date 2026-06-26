@@ -2,6 +2,7 @@ package org.knovash.squeezealice.provider;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
+import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.provider.response.Payload;
@@ -30,6 +31,7 @@ public class ProviderUserDevices {
 //    GET https://api.iot.yandex.net/v1.0/devices/{device_id}   https://yandex.ru/dev/dialogs/smart-home/doc/ru/concepts/platform-device-info
 
     public static Context providerUserDevicesRun(Context context) {
+        log.info(Main.line);
         String xRequestId = context.requestHeaders.getFirst("X-request-id");
         log.info("XREQUESTID: " + xRequestId);
         log.info("LOCAL DEVICES " + SmartHome.devices.size());
@@ -64,6 +66,8 @@ public class ProviderUserDevices {
 
         context.bodyResponse = json;
         context.code = 200;
+        log.info(Main.finish);
+        log.info(Main.line);
         return context;
     }
 }

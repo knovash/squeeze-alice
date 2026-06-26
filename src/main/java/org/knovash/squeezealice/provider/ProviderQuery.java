@@ -40,7 +40,22 @@ public class ProviderQuery {
         List<Device> jsonDevices = bodyPojo.devices.stream()
                 .map(requestDevice -> {
                     Device device = smartHome.deviceByExternalId(requestDevice.id);
-                    device = updateDeviceCapabilities(device);
+//                    из-за того, что запрос от Яндекса приходит до завершения синхронизации.
+//                    Код не обрабатывает корректно случай отсутствия устройства: после вывода предупреждения
+//                    он не прерывает обработку и не возвращает устройство с ошибкой, а продолжает использовать null.
+                    if (device == null) {
+                        log.warn("Device not found for externalId: {}", requestDevice.id);
+                        // возвращаем устройство с ошибкой
+                        Device errorDevice = new Device();
+                        errorDevice.id = requestDevice.id;
+                        errorDevice.error_code = "DEVICE_UNREACHABLE";
+                        errorDevice.error_message = "Устройство не найдено";
+
+                        errorDevice.capabilities = new ArrayList<>(); // ИСПРАВЛЕНИЕ
+                        return errorDevice;
+                    } else {
+                        device = updateDeviceCapabilities(device);
+                    }
                     Device minimal = new Device();
                     minimal.id = requestDevice.id; // ID из запроса!
                     minimal.capabilities = device.capabilities;

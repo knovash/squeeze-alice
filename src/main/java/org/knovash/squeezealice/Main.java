@@ -1,7 +1,6 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.utils.SchedulerPlayersUpdate;
 import org.knovash.squeezealice.utils.SchedulerSpotifyRefreshToken;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.yandex.Yandex;
@@ -25,8 +24,12 @@ public class Main {
     public static ZoneId zoneId = ZoneId.of("Europe/Minsk");
     public static Config config = new Config();
     public static Boolean lmsServerOnline;
-    public static String yandexToken = "";
+//    public static String yandexToken = ""; // TODO удалить нигде не используется
     public static Hive hive;
+
+    public static String start = "STARTED >>>";
+    public static String finish = "FINISHED >>>";
+    public static String line = "------------------------------------------------------------------------";
 
     public static void main(String[] args) {
         log.info("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
@@ -40,17 +43,16 @@ public class Main {
         Utils.readRoomsAndAliceIds(); // соответствие комнат и id колонок Алиса
         Utils.readRoomsAndPlayers(); // соответствие комнат и плееров // TODO используется пока только для сохранения. использовать при первом запуске сервиса
 
-        lmsPlayers.read();
+        lmsPlayers.read(); // прочитать ранее сохраненные плееры LMS и их настройки
         lmsPlayers.updatePlayers(); // получить список плееров из LMS и создать плееры в сервисе
-        lmsPlayers.write();
         lmsPlayers.logPlayersNames();
 
-//        Volumio.createPlayer();
 
-        log.info("YANDEX DEVICES: " + SmartHome.devices.stream().filter(Objects::nonNull).map(device -> device.room).collect(Collectors.toList()));
+        log.info("YANDEX DEVICES saved local: " + SmartHome.devices.stream().filter(Objects::nonNull).map(device -> device.room).collect(Collectors.toList()));
         List<YandexUtils.MusicDevice> yandexInfoDevices = Yandex.devicesGetFromYandexInfo(); // получить устройства "Музыка" которые уже есть в Яндексе
+        log.info("YANDEX get yandexInfoDevices: " + yandexInfoDevices);
         Yandex.createDevicesFromYandexDevices(yandexInfoDevices); // создать устройства "Музыка" в сервисе для Яндекса
-        log.info("YANDEX DEVICES: " + SmartHome.devices.stream().filter(Objects::nonNull).map(device -> device.room).collect(Collectors.toList()));
+        log.info("YANDEX DEVICES saved local: " + SmartHome.devices.stream().filter(Objects::nonNull).map(device -> device.room).collect(Collectors.toList()));
 
 
         Server.start();
@@ -58,6 +60,7 @@ public class Main {
         hive.start();
         hive.subscribeByYandex();
         log.info("VERSION 2025.03.05");
+        log.info(Main.line);
 
         SchedulerSpotifyRefreshToken.startPeriodicRefresh(60, 5); // Spotify периодическое обновление токена
 

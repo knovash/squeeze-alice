@@ -289,9 +289,8 @@ public class ActionsSync {
         } else log.info("DEVICE ROOM: " + device.room + " ID: " + device.id);
 
         log.info("SEARCH NEW PLAYER: " + playerName);
-        log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(player -> player.name + ":" + player.getClass().getName()).collect(Collectors.toList()));
+        log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(player -> player.name).collect(Collectors.toList()));
         Player playerNew = lmsPlayers.playerByName(playerName); // поиск нового плеера по имени плеера для комнаты и проверка что доступен
-        log.info("PLAYER NEW: " + playerNew.getClass().getName());
         log.info("PLAYER NEW: " + playerNew);
         lmsPlayers.checkUpdated(); // TODO DEBUG
         if (!Boolean.TRUE.equals(playerNew.connected)) { // если плеер недоступен остановить выбор плеера
@@ -324,7 +323,7 @@ public class ActionsSync {
 
                 // если пульт был подключен к заменяемой колонке то пульт переключить к новой
                 if (playerNow.name.equals(lmsPlayers.btPlayerName)) lmsPlayers.btPlayerName = playerName;
-                
+
                 log.info("CHANGE PLAYER " + playerNow.name + " TO " + playerNew.name + " IN ROOM " + roomName);
                 answer = "в комнате " + roomName + " изменена колонка " + playerNow.name + " на " + playerName;
             }
@@ -336,7 +335,7 @@ public class ActionsSync {
             lmsPlayers.write();
 
             log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(p -> p.name).collect(Collectors.toList()));
-            log.info("YANDEX DEVICES: " + SmartHome.devices.stream().filter(Objects::nonNull).map(d -> d.room).collect(Collectors.toList()));
+            log.info("YANDEX DEVICES: " + SmartHome.devices.stream().filter(Objects::nonNull).map(d -> d.room + " " + d.name + " ext:" + d.external_id + " id:" + d.id).collect(Collectors.toList()));
 
         }
 
@@ -349,9 +348,12 @@ public class ActionsSync {
                     playerNew.syncToPlayingOrPlayLast();
 
             answer = answer + ". включаю";
-        }
+        } else log.info("NOT START PLAY (flag start false)");
 
-        playerNow.unsync().pause();
+        if (playerNow != null) {
+            log.info("STOP PREVIOUS PLAYER IN ROOM " + playerNow.name);
+            playerNow.unsync().pause();
+        }
         return playerNew;
     }
 

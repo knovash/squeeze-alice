@@ -35,8 +35,9 @@ public class Yandex {
     public static Map<String, String> idsAndRooms = new HashMap<>();
 
     public static List<YandexUtils.MusicDevice> devicesGetFromYandexInfo() {
+        log.info("START");
         if (config.yandexToken == null || config.yandexToken.equals("")) {
-            log.info("FAILED TO GET DEVICES FROM YANDEX. USER NOT LOGGED IN");
+            log.info("CANCELED TO GET DEVICES FROM YANDEX. USER NOT LOGGED IN YANDEX");
             return null;
         }
         log.debug("GET ROOMS FROM YANDEX");
@@ -48,6 +49,7 @@ public class Yandex {
                     .setHeader("Authorization", "OAuth " + bearer)
                     .execute();
             json = response.returnContent().asString();
+//            log.info("JSON " + json);
         } catch (IOException e) {
             log.info("YANDEX GET INFO ERROR");
             return null;
@@ -70,12 +72,17 @@ public class Yandex {
     }
 
     public static void createDevicesFromYandexDevices(List<YandexUtils.MusicDevice> yandexMusicDevices) {
-        if (yandexMusicDevices == null) {
+        log.info("START");
+        if (config.yandexToken == null || config.yandexToken.equals("")) {
+            log.info("CANCELED TO CREATE DEVICES FROM YANDEX. USER NOT LOGGED IN YANDEX");
+            return;
+        }
+        if (yandexMusicDevices == null || yandexMusicDevices.isEmpty()) {
             log.info("FAILED TO CREATE DEVICES. NO DEVICES FROM YANDEX");
             return;
         }
-
         log.info("CREATE DEVICES FROM YANDEX");
+//    если плееры ранее были созданы в УДЯ и получены то создать их локально в сервисе
         yandexMusicDevices.forEach(device -> smartHome.create("", device));
         smartHome.write();
     }

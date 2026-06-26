@@ -18,7 +18,7 @@ import static org.knovash.squeezealice.Main.*;
 @Log4j2
 public class Hive implements MqttCallbackExtended {
 
-//    private static final String CLIENT_ID = "squeeze-alice-client2";
+    //    private static final String CLIENT_ID = "squeeze-alice-client2";
     private static final String CLIENT_ID;
 
     static {
@@ -96,7 +96,7 @@ public class Hive implements MqttCallbackExtended {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) {
-        handleDeviceAndPublish(topic, message);
+        handleMessageAndPublishMessage(topic, message);
     }
 
     @Override
@@ -106,11 +106,11 @@ public class Hive implements MqttCallbackExtended {
 
     public void subscribeByYandex() {
         if (config.yandexUid == null || config.yandexUid.isEmpty()) {
-            log.info("SUBSCRIBE BY YANDEX FAIL: uid is null or empty");
+            log.info("HIVE SUBSCRIBE BY YANDEX UID CANCELED: uid is null or empty, not loged in Yandex");
             return;
         }
         String topic = topicRecieveDevice + config.yandexUid;
-        log.info("SUBSCRIBE BY YANDEX: {}", topic);
+        log.info("HIVE SUBSCRIBE BY YANDEX UID " + config.yandexUid + " TO TOPIC:" + topic);
         subscribe(topic);
     }
 
@@ -159,17 +159,20 @@ public class Hive implements MqttCallbackExtended {
     }
 
     public String publishAndWaitForResponse(String topic, Context context, Integer timeout, String action, String correlationId, String text) {
+        log.info(Main.line);
+        log.info("HIVE YANDEX AUTH START >>>");
         if (!isConnected()) {
             log.warn("SKIPPED PUBLISH-AND-WAIT - MQTT NOT CONNECTED");
             return "MQTT_NOT_CONNECTED";
         }
-
         log.info("MQTT PUBLISH TO TOPIC: {} AND WAIT FOR RESPONSE", topic);
         if (context == null) context = new Context();
         if (correlationId == null) correlationId = UUID.randomUUID().toString();
-
         String callbackTopic = "callback" + correlationId;
-        subscribe(callbackTopic);
+        log.info("HIVE SUBSCRIBE CALLBACK TOPIC FOR YANDEX AUTH " + callbackTopic);
+        subscribe(callbackTopic); // подписка на калбэк топик в который придет яндекс токен и ожидание выполнения авторизации в браузере
+        log.info("HIVE WAIT FOR YANDEX AUTH IN BROWSER... 30sec");
+        log.info(Main.line);
 
         String responseBody = "";
         try {
@@ -201,12 +204,17 @@ public class Hive implements MqttCallbackExtended {
         } catch (MqttException e) {
             log.error("PUBLISH-AND-WAIT ERROR: {}", e.getMessage());
         } finally {
+            log.info("HIVE UNSUBSCRIBE CALLBACK TOPIC FOR YANDEX AUTH " + callbackTopic);
             unsubscribe(callbackTopic);
         }
+        log.info("HIVE YANDEX AUTH FINISHED <<<");
+        log.info(Main.line);
+        log.info(Main.line);
         return responseBody;
     }
 
-    private void handleDeviceAndPublish(String topicReceived, MqttMessage message) {
+    private void handleMessageAndPublishMessage(String topicReceived, MqttMessage message) {
+        log.info(line);
         log.info("RECEIVED MESSAGE FROM TOPIC: " + topicReceived);
         String payload = new String(message.getPayload());
         Map<String, String> params = Parser.run(payload);
@@ -241,7 +249,14 @@ public class Hive implements MqttCallbackExtended {
         }
 
         Context context = Context.fromJson(contextJson);
+        log.info("HIVE PUSH CONTEXT TO HTTP HANDLER >>>>");
+
+
         context = HandlerAll.switchPath(context);
+
+
+        log.info("HIVE RECIEVED CONTEXT FROM HTTP HANDLER <<<");
+        log.info("HIVE PUBLISH CONTEXT TO TOPIC: " + topicPublish);
 
         String responsePayload = "correlationId=" + corrId + "&" +
                 "userTopicId=" + topicReceived + "&" +
@@ -254,10 +269,13 @@ public class Hive implements MqttCallbackExtended {
         } catch (MqttException e) {
             log.error("PUBLISH ERROR: {}", e.getMessage(), e);
         }
+
+        log.info(finish);
+        log.info(line);
     }
 
     public void takeYandexTokenFromMessage(Map<String, String> params) {
-        log.info("RECEIVED YANDEX TOKEN");
+        log.info("RECEIVED MESSAGE WHITH YANDEX TOKEN");
         String token = params.get("token");
         if (token == null) {
             log.error("No token in message");
@@ -270,26 +288,24 @@ public class Hive implements MqttCallbackExtended {
             return;
         }
 
-        Main.yandexToken = token;
+//        Main.yandexToken = token; // TODO удалить нигде не используется
+        log.info("YANDEX TOKEN SAVED TO CONFIG");
         config.yandexToken = token;
         String currentUid = config.yandexUid;
         String newUid = YandexJwtUtils.getValueByTokenAndKey(token, "uid");
         String yandexName = YandexJwtUtils.getValueByTokenAndKey(token, "display_name");
 
         if (!newUid.equals(currentUid)) {
+            log.info("HIVE RESUBSCRIBE WHITH NEW YANDEX UID TO TOPIC: " + topicRecieveDevice + newUid);
             unsubscribe(topicRecieveDevice + currentUid);
             subscribe(topicRecieveDevice + newUid);
             config.yandexUid = newUid;
             config.yandexName = yandexName;
             config.write();
-
-//            lmsPlayers.checkRooms();
-            lmsPlayers.write();
         }
 
-        log.info("YANDEX UID UPDATED: {}", newUid);
         responseManager.completeResponse(corrId, "OK");
-        log.info("Future completed for correlationId: {}", corrId);
+        log.info("HIVE TAKE YANDEX TOKEN FINISHED. Future completed for correlationId: {}", corrId);
     }
 
     public void takeSpotifyTokenFromMessage(Map<String, String> params) {
@@ -377,6 +393,7 @@ public class Hive implements MqttCallbackExtended {
     }
 
     private class ResponseManager {
+
         private final ConcurrentMap<String, CompletableFuture<String>> responses = new ConcurrentHashMap<>();
 
         public CompletableFuture<String> waitForResponse(String correlationId) {

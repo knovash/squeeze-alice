@@ -82,27 +82,14 @@ public class Tasker {
         List<String> playlist = player.playerStatus.result.playlist_loop.stream()
                 .map(item -> (item.playlist_index + 1) + ". " + item.title)
                 .collect(Collectors.toList());
-        playlist.replaceAll(t -> t.replaceAll(",", " ")); // удалить из названий символы , потому что в таскере , разделитель строк
-        Integer index = Integer.parseInt(player.playerStatus.result.playlist_cur_index);
-        log.info("PLAYLIST CURRENT INDEX: " + index);
-        playlist.set(index, ">" + playlist.get(index)); // Заменяем элемент по конкретному индексу
-        playlist = Utils.linesFromList(playlist, index, lines); // показывать только часть плейлиста вокруг играющего
-        String result = String.join(", ", playlist);
-        log.info("PLAYLIST: " + playlist);
-        widgetPlaylist = result;
-        return result;
-    }
-
-    public static String forTaskerPlaylistFull(Player player) {
-        log.info("CREATE PLAYLIST FOR TASKER. ACTIVE PLAYER: " + player);
-        player.requestPlaylistTracks();
-        List<String> playlist = player.playerStatus.result.playlist_loop.stream()
-                .map(item -> (item.playlist_index + 1) + ". " + item.title)
-                .collect(Collectors.toList());
-        playlist.replaceAll(t -> t.replaceAll(",", " ")); // удалить из названий символы , потому что в таскере , разделитель строк
-        Integer index = Integer.parseInt(player.playerStatus.result.playlist_cur_index);
-        log.info("PLAYLIST CURRENT INDEX: " + index);
-        playlist.set(index, ">" + playlist.get(index)); // Заменяем элемент по конкретному индексу
+        if (playlist.size() > 1) {
+            playlist.replaceAll(t -> t.replaceAll(",", " ")); // удалить из названий символы , потому что в таскере , разделитель строк
+            Integer index = Integer.parseInt(player.playerStatus.result.playlist_cur_index);
+            log.info("PLAYLIST CURRENT INDEX: " + index);
+            playlist.set(index, ">" + playlist.get(index)); // Заменяем элемент по конкретному индексу
+            playlist = Utils.linesFromList(playlist, index, lines); // показывать только часть плейлиста вокруг играющего
+        }
+        else { playlist.replaceAll(t -> t.replaceAll("1.", ""));}
         String result = String.join(", ", playlist);
         log.info("PLAYLIST: " + playlist);
         widgetPlaylist = result;

@@ -23,7 +23,9 @@ public class LocalAuthServerYandex {
 
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            log.info("START AuthHandler");
+
+            log.info(Main.line);
+            log.info(Main.start);
 
             String displayName = "";
             String token;
@@ -45,14 +47,19 @@ public class LocalAuthServerYandex {
             exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
             exchange.sendResponseHeaders(200, htmlResponse.getBytes().length);
             try (OutputStream os = exchange.getResponseBody()) {
-                log.info("TRY");
                 os.write(htmlResponse.getBytes());
             }
 
             log.info("PUBLISH REQUEST FOR TOKEN");
             Context context = new Context();
 
+//            отправка в очередь и ожидание ответа
             hive.publishAndWaitForResponse("from_local_request", context, 30, "token", sessionId);
+
+
+            log.info(Main.finish);
+            log.info(Main.line);
+            log.info(Main.line);
         }
     }
 }

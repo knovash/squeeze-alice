@@ -43,6 +43,7 @@ public class SmartHome {
      * @param yandexDevice   данные устройства из Яндекса (при синхронизации)
      */
     public void create(String deviceRoomName, YandexUtils.MusicDevice yandexDevice) {
+        log.info(Main.line);
         if (devices == null) devices = new ArrayList<>();
 //        log.info(">>> ROOM NAME: " + deviceRoomName);
 //        log.info(">>> DEVICE YANDEX: " + yandexDevice.roomName + " " + yandexDevice.id);
@@ -87,6 +88,7 @@ public class SmartHome {
             }
         }
 //        smartHome.write();
+        log.info(Main.line);
     }
 
     private Device createNewDevice(String roomName, String deviceId, String deviceExternalId, String deviceName) {
@@ -138,6 +140,7 @@ public class SmartHome {
         onOff.parameters.instance = "on";
         // onOff.state = null; // необязательно
         device.capabilities.add(onOff);
+        log.info("DEVICE CREATED OK");
         return device;
     }
 

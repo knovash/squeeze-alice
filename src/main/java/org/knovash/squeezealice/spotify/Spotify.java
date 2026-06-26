@@ -25,9 +25,9 @@ public class Spotify {
     // ------- МЕТОД, КОТОРЫЙ НЕ ИЗМЕНЯТЬ (me) -------
 
     public static String me() {
-        log.info("SPOTIFY INFO ME");
+        log.info("SPOTIFY INFO START");
         if (config.spotifyToken == null || config.spotifyToken.isEmpty()) {
-            log.info("NO SPOTIFY TOKEN");
+            log.info("SPOTIFY NOT LOGGED IN");
             return null;
         }
         String uri = "https://api.spotify.com/v1/me";

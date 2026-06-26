@@ -198,7 +198,7 @@ public class LmsPlayers {
                     .filter(player -> player.connected)
                     .sorted(Comparator.comparing(Player::getLastPlayTimePlayer,
                             Comparator.nullsLast(Comparator.naturalOrder())).reversed())
-                    .peek(player -> log.info("FILTERED: "+player.name + " " + player.lastPlayTimePlayer))
+                    .peek(player -> log.info("FILTERED: " + player.name + " " + player.lastPlayTimePlayer))
                     .findFirst()
                     .orElse(null);
 
@@ -238,32 +238,40 @@ public class LmsPlayers {
     }
 
     public String playerSave(HashMap<String, String> parameters) {
-        log.info("PLAYER SAVE PARAMETERS: " + parameters);
+        log.info(line);
+
         String playerName = parameters.getOrDefault(player_name_value, "null");
         String roomName = parameters.getOrDefault(player_room_value, "null");
         String delay = parameters.getOrDefault(player_delay_value, "null");
         String volumeMax = parameters.getOrDefault(player_volume_max_value, "null");
         String schedule = parameters.getOrDefault(player_schedule_value, "null");
-        log.info("name: " + playerName);
-        log.info("room: " + roomName);
-        log.info("delay: " + delay);
-        log.info("volumeMax: " + volumeMax);
-        log.info("schedule: " + schedule);
+//        log.info("name: " + playerName);
+//        log.info("room: " + roomName);
+//        log.info("delay: " + delay);
+//        log.info("volumeMax: " + volumeMax);
+//        log.info("schedule: " + schedule);
 
 
         if (playerName.equals("null") || roomName.equals("null") || delay.equals("null") || schedule.equals("null")) {
             log.info("ERROR PARAMETER NULL");
             return "NULL";
         }
-        Player player = this.playerByName(playerName);
+        Player player = this.playerByName(playerName); // берем плеер из найденных в лмс и апдейтим его настройки
         player.delay = Integer.valueOf(delay);
         player.volume_high = Integer.valueOf(volumeMax);
         player.schedule = Utils.stringSplitToIntMap2(schedule, ",", ":");
+        log.info("PLAYER UPDATE PARAMETERS: " + parameters);
 //        SwitchVoiceCommand.room = roomName;
-        Player playerNew = ActionsSync.selectPlayerInRoom(playerName, roomName, false); // playerSave
-        log.info("SELECT PLAYER NEW: " + playerNew);
+//        Player playerNew =
+
+        log.info("PLAYER SET ROOM START>>>>>>");
+        ActionsSync.selectPlayerInRoom(playerName, roomName, false); // playerSave
+        log.info("PLAYER SET ROOM FINISHED <<<<");
+
+//        log.info("SELECT PLAYER NEW: " + playerNew);
         write();
         log.info("FINISH PLAYER SAVE");
+        log.info(line);
         return "OK";
     }
 
@@ -393,7 +401,7 @@ public class LmsPlayers {
                 .collect(Collectors.toList());
         List<Object> result = new ArrayList<>();
         syncMemberNames.forEach(collection -> result.addAll(collection));
-        syncMemberNames.forEach(group -> group.forEach(name -> lmsPlayers.playerByName(name).sync=true));
+        syncMemberNames.forEach(group -> group.forEach(name -> lmsPlayers.playerByName(name).sync = true));
         log.info("SYNCGROUPS: " + syncMemberNames);
         return syncMemberNames;
     }
