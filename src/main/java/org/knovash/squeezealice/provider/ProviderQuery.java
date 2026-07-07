@@ -2,6 +2,7 @@ package org.knovash.squeezealice.provider;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
+import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.*;
@@ -11,8 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.knovash.squeezealice.Main.lmsPlayers;
-import static org.knovash.squeezealice.Main.smartHome;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 public class ProviderQuery {
@@ -20,10 +20,11 @@ public class ProviderQuery {
     private static Player player;
 
     public static Context providerQueryRun(Context context) {
+        log.info(start);
         String body = context.body;
         List<String> xRequestIdList = context.requestHeaders.get("X-request-id");
         String xRequestId = xRequestIdList.get(0);
-        log.info("XREQUESTID: " + xRequestId);
+//        log.info("XREQUESTID: " + xRequestId);
         log.info("BODY: " + body);
 
         Payload bodyPojo = JsonUtils.jsonToPojo(body, Payload.class);
@@ -39,7 +40,8 @@ public class ProviderQuery {
 
         List<Device> jsonDevices = bodyPojo.devices.stream()
                 .map(requestDevice -> {
-                    Device device = smartHome.deviceByExternalId(requestDevice.id);
+//                    Device device = smartHome.deviceByExternalId(requestDevice.id);
+                    Device device = smartHome.deviceById(requestDevice.id);
 //                    из-за того, что запрос от Яндекса приходит до завершения синхронизации.
 //                    Код не обрабатывает корректно случай отсутствия устройства: после вывода предупреждения
 //                    он не прерывает обработку и не возвращает устройство с ошибкой, а продолжает использовать null.
@@ -54,6 +56,8 @@ public class ProviderQuery {
                         errorDevice.capabilities = new ArrayList<>(); // ИСПРАВЛЕНИЕ
                         return errorDevice;
                     } else {
+                        log.info("UPDATE DIVECE CAPABILITIES " + device.name + " "+device.type);
+//                        обратиться к каждому девайсу и обновить его свойства
                         device = updateDeviceCapabilities(device);
                     }
                     Device minimal = new Device();
@@ -76,34 +80,33 @@ public class ProviderQuery {
                 })
                 .collect(Collectors.toList());
 
-//        List<Device> jsonDevices = new ArrayList<>();
-//        try {
-//// лист девайсов для обновления их свойств
-//            jsonDevices = bodyPojo.devices.stream()
-////                    .peek(d -> log.info("---DEVICE ID: " + d.id))
-//                    .map(d -> smartHome.deviceByExternalId(d.id))
-//// обратиться к каждому девайсу и обновить его свойства
-//                    .map(d -> updateDeviceCapabilities(d)).collect(Collectors.toList());
-//        }
-//        catch (Exception e){log.info("ERROR: " + e);}
-
         responseYandex.payload = new Payload();
         responseYandex.payload.devices = jsonDevices;
 
 // объект ответа преобразовать в json ответа
         json = JsonUtils.pojoToJson(responseYandex);
         json = json.replaceAll("(\"value\" :) \"([0-9a-z]+)\"", "$1 $2");
-
-//        log.info(json);
         context.bodyResponse = json;
-        log.info("JSON " + json);
+//        log.info("JSON " + json);
         context.code = 200;
-        log.info("RETURN CONTEXT");
+        log.info(finish);
         return context;
     }
 
     private static Device updateDeviceCapabilities(Device device) {
-        log.info("DEVICE UPDATE " + device.room + " " + device.external_id);
+
+        if (!device.type.equals("devices.types.media_device.receiver")) {
+            log.info("DEVICE OTHER START");
+
+            Capability capability = device.capabilities.stream()
+                    .filter(c -> c.parameters.instance.equals("on"))
+                    .findFirst().get();
+            capability.state.value = String.valueOf(true);
+            log.info("DEVICE OTHER: " + device);
+            return device;
+        }
+
+        log.info("DEVICE UPDATE " + device.room + " " + device.id);
 // взять плеер по id устройства в умном доме
         player = lmsPlayers.playerByRoom(device.room);
         log.info("PLAYER: " + player);
@@ -136,8 +139,6 @@ public class ProviderQuery {
     }
 
     private static void changeCapability(Capability capability) {
-//        log.info("CAPABILITY UPDATE");
-//        providerUserDevicesRun при Поиске новых устройств state = null
         if (capability.state == null) {
             capability.state = new State();
             capability.state.instance = capability.parameters.instance;
@@ -168,23 +169,3 @@ public class ProviderQuery {
         }
     }
 }
-
-
-// пример ответа
-//        json = "{\n" +
-//                "  \"request_id\": \"" + xRequestId + "\",\n" +
-//                "  \"payload\": {\n" +
-//                "    \"devices\": [\n" +
-//                "      {\n" +
-//                "        \"id\": \"" + id + "\",\n" +
-//                "        \"name\": \"музыка\",\n" +
-//                "        \"room\": \"Душ\",\n" +
-//                "        \"type\": \"devices.types.media_device.receiver\",\n" +
-//                "        \"capabilities\": [],\n" +
-//                "        \"properties\": [],\n" +
-//                "        \"error_code\": \"DEVICE_UNREACHABLE\",\n" +
-//                "        \"error_message\": \"Устройство потеряно\"\n" +
-//                "      }\n" +
-//                "    ]\n" +
-//                "  }\n" +
-//                "}";

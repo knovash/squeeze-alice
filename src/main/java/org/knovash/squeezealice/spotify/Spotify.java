@@ -21,6 +21,7 @@ public class Spotify {
     public static PlayerState playerState = new PlayerState();
     public static CurrentlyPlaying currentlyPlaying = new CurrentlyPlaying();
     public static Boolean active = false;
+    public static String nameForSay;
 
     // ------- МЕТОД, КОТОРЫЙ НЕ ИЗМЕНЯТЬ (me) -------
 
@@ -54,6 +55,7 @@ public class Spotify {
             }
             String uri = spotifyArtists.artists.items.get(0).uri;
             log.info("ARTIST URI: " + uri + " name: " + spotifyArtists.artists.items.get(0).name);
+            Spotify.nameForSay = spotifyArtists.artists.items.get(0).name;
             return uri;
         } catch (Exception e) {
             log.error("Encoding error", e);

@@ -63,6 +63,7 @@ public class Utils {
                 }
             }
         }
+        Main.myIp = myip;
         log.info("MY IP: " + myip);
         return myip;
     }

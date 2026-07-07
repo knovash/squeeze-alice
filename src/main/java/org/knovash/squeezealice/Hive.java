@@ -3,10 +3,12 @@ package org.knovash.squeezealice;
 import lombok.extern.log4j.Log4j2;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.knovash.squeezealice.utils.LogExecution;
 import org.knovash.squeezealice.yandex.YandexJwtUtils;
 import org.json.JSONObject;
 
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -109,12 +111,10 @@ public class Hive implements MqttCallbackExtended {
             log.info("HIVE SUBSCRIBE BY YANDEX UID CANCELED: uid is null or empty, not loged in Yandex");
             return;
         }
-        String topic = topicRecieveDevice + config.yandexUid;
-        log.info("HIVE SUBSCRIBE BY YANDEX UID " + config.yandexUid + " TO TOPIC:" + topic);
-        subscribe(topic);
+        subscribe(topicRecieveDevice + config.yandexUid);
     }
 
-    public void subscribe(String topic) {
+    private void subscribe(String topic) {
         log.info("SUBSCRIBE TO TOPIC: {}", topic);
         activeSubscriptions.add(topic);
 
@@ -148,7 +148,7 @@ public class Hive implements MqttCallbackExtended {
         }
         log.info("PUBLISH TO TOPIC: {}", topic);
         try {
-            mqttClient.publish(topic, new MqttMessage(message.getBytes()));
+            mqttClient.publish(topic, new MqttMessage(message.getBytes(StandardCharsets.UTF_8)));
         } catch (MqttException e) {
             log.error("PUBLISH ERROR: {}", e.getMessage());
         }
@@ -182,8 +182,8 @@ public class Hive implements MqttCallbackExtended {
                     "text=" + (text != null ? text : "") + "&" +
                     "context=" + context.toJson();
 
-//            log.info("PAYLOAD: {}", payload);
-            mqttClient.publish(topic, new MqttMessage(payload.getBytes()));
+            log.info("PAYLOAD: {}", payload);
+            mqttClient.publish(topic, new MqttMessage(payload.getBytes(StandardCharsets.UTF_8)));
 
             CompletableFuture<String> future = responseManager.waitForResponse(correlationId);
             try {
@@ -214,9 +214,9 @@ public class Hive implements MqttCallbackExtended {
     }
 
     private void handleMessageAndPublishMessage(String topicReceived, MqttMessage message) {
-        log.info(line);
+        log.info(start);
         log.info("RECEIVED MESSAGE FROM TOPIC: " + topicReceived);
-        String payload = new String(message.getPayload());
+        String payload = new String(message.getPayload(), StandardCharsets.UTF_8);
         Map<String, String> params = Parser.run(payload);
 
         // Специальные действия по токенам
@@ -249,29 +249,21 @@ public class Hive implements MqttCallbackExtended {
         }
 
         Context context = Context.fromJson(contextJson);
-        log.info("HIVE PUSH CONTEXT TO HTTP HANDLER >>>>");
-
-
         context = HandlerAll.switchPath(context);
-
-
-        log.info("HIVE RECIEVED CONTEXT FROM HTTP HANDLER <<<");
-        log.info("HIVE PUBLISH CONTEXT TO TOPIC: " + topicPublish);
 
         String responsePayload = "correlationId=" + corrId + "&" +
                 "userTopicId=" + topicReceived + "&" +
                 "context=" + context.toJson();
 
         try {
-            log.info("PUBLISHING RESPONSE TO TOPIC: {} WITH CORRELATION {}", topicPublish, corrId);
-            mqttClient.publish(topicPublish, new MqttMessage(responsePayload.getBytes()));
-            log.info("RESPONSE PUBLISHED SUCCESSFULLY");
+            log.info("HIVE PUBLISHING RESPONSE TO TOPIC: {} WITH CORRELATION {}", topicPublish, corrId);
+            mqttClient.publish(topicPublish, new MqttMessage(responsePayload.getBytes(StandardCharsets.UTF_8)));
+//            log.info("RESPONSE PUBLISHED SUCCESSFULLY");
         } catch (MqttException e) {
             log.error("PUBLISH ERROR: {}", e.getMessage(), e);
         }
 
         log.info(finish);
-        log.info(line);
     }
 
     public void takeYandexTokenFromMessage(Map<String, String> params) {
@@ -288,7 +280,6 @@ public class Hive implements MqttCallbackExtended {
             return;
         }
 
-//        Main.yandexToken = token; // TODO удалить нигде не используется
         log.info("YANDEX TOKEN SAVED TO CONFIG");
         config.yandexToken = token;
         String currentUid = config.yandexUid;

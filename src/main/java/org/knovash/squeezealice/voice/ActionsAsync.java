@@ -20,7 +20,7 @@ public class ActionsAsync {
     // =========================================================================
 
     public static String turnOnMusic(Player player) {
-        log.info("TURN ON MUSIC");
+        log.info("TURN ON MUSIC " + player.name);
         ActionsSync.answer = "Пытаюсь включить музыку";
         CompletableFuture.runAsync(() -> {
             player.turnOnMusic(null);
@@ -35,6 +35,11 @@ public class ActionsAsync {
         log.info("TURN ON CHANNEL");
         ActionsSync.answer = "Пытаюсь включить канал";
         CompletableFuture.runAsync(() -> {
+
+            int vv = Integer.parseInt(value) - 1;
+            String channelName = player.favorites().get(Integer.parseInt(String.valueOf(vv)));
+            player.say("включаю канал " + value + " " + channelName, false);
+
             player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null).playChannel(value);
             lmsPlayers.afterAsync();
             ActionsSync.answer = "Включаю канал " + value;
@@ -93,6 +98,8 @@ public class ActionsAsync {
         CompletableFuture.runAsync(() -> {
             lmsPlayers.turnOffMusicAll();
             lmsPlayers.afterAsync();
+
+            log.info("STOP ALL FINISH");
             ActionsSync.answer = "Выключаю всё";
         });
         Utils.sleep(1000);
@@ -273,7 +280,7 @@ public class ActionsAsync {
         log.info("PLAY ARTIST");
         ActionsSync.answer = "Пытаюсь включить spotify";
         CompletableFuture.runAsync(() -> {
-            ActionsSync.spotifyPlayArtist(command, player);
+            ActionsSync.spotifyPlayArtist(command, player, false);
             lmsPlayers.afterAsync();
             ActionsSync.answer = "Включаю spotify";
         });

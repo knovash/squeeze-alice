@@ -39,22 +39,6 @@ public class Context {
     public String query;
     public HashMap<String, String> queryMap;
 
-    // Для тестов
-    public static Context contextCreate(String path, String headersJson, String body, String query) {
-        Headers headers = HeadersParser.parseHeaders(headersJson);
-        String xRequestId = headers.getFirst("X-request-id");
-        HashMap<String, String> queryMap = (HashMap<String, String>) Parser.run(query);
-        Context context = new Context();
-        context.body = body;
-        context.requestHeaders = headers;
-        context.responseHeaders = new Headers();
-        context.path = path;
-        context.xRequestId = xRequestId;
-        context.query = query;
-        context.queryMap = queryMap;
-        return context;
-    }
-
     public static Context contextCreate(HttpExchange httpExchange) {
         String method = httpExchange.getRequestMethod();
         String path = httpExchange.getRequestURI().getPath();
@@ -74,7 +58,7 @@ public class Context {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        log.debug("BODY: " + body);
+        if (body != null && !body.isEmpty()) log.info("BODY: " + body);
 
         String query = httpExchange.getRequestURI().getQuery();
         HashMap<String, String> queryMap = (HashMap<String, String>) Parser.run(query);

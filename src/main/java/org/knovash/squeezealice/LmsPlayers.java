@@ -36,6 +36,7 @@ public class LmsPlayers {
     public static ServerStatus serverStatus = new ServerStatus();
     public List<String> autoRemoteUrls = new ArrayList<>();
     public Boolean toggleWake = true; // TODO еще не используется
+    public Boolean toggleVoice = true; // TODO еще не используется
     public Map<Integer, Integer> scheduleAll = new HashMap<>(Map.of(
             0, 10,
             7, 15,
@@ -152,6 +153,16 @@ public class LmsPlayers {
         return this.players.stream()
                 .filter(Objects::nonNull)
                 .filter(p -> room.equals(p.room))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public String roomByPlayerName(String playerName) {
+        if (playerName == null) return null;
+        return this.players.stream()
+                .filter(Objects::nonNull)
+                .filter(p -> playerName.equals(p.name))
+                .map(p -> p.room)
                 .findFirst()
                 .orElse(null);
     }
@@ -288,7 +299,8 @@ public class LmsPlayers {
 
         log.info("PLAYER REMOVE: " + player);
         this.players.remove(player);
-        if (id != null) smartHome.devices.remove(smartHome.deviceByExternalId(id));
+//        if (id != null) smartHome.devices.remove(smartHome.deviceByExternalId(id));
+        if (id != null) smartHome.devices.remove(smartHome.deviceById(id));
 //        Device device = SmartHome.getDeviceById(id);
         write();
         return "OK";
@@ -306,6 +318,14 @@ public class LmsPlayers {
         log.info("TMP: =========== " + tmp);
         if (tmp == null) return;
         toggleWake = Boolean.valueOf(tmp);
+        write();
+    }
+
+    public void toggleVoiceSave(HashMap<String, String> parameters) {
+        String tmp = parameters.get(toggle_voice_value);
+        log.info("TMP: =========== " + tmp);
+        if (tmp == null) return;
+        toggleVoice = Boolean.valueOf(tmp);
         write();
     }
 
@@ -397,7 +417,8 @@ public class LmsPlayers {
 //        log.info("SYNCGROUPS LOOP: " + response.result.syncgroups_loop);
         List<List<String>> syncMemberNames = response.result.syncgroups_loop.stream()
                 .map(syncgroupsLoop -> syncgroupsLoop.sync_member_names)
-                .map(s -> List.of(s.split(",")))
+//                .map(s -> List.of(s.split(",")))
+                .map(s -> new ArrayList<>(Arrays.asList(s.split(",")))) // ← теперь изменяемые
                 .collect(Collectors.toList());
         List<Object> result = new ArrayList<>();
         syncMemberNames.forEach(collection -> result.addAll(collection));
@@ -442,5 +463,52 @@ public class LmsPlayers {
     public void logPlayersNames() {
         log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(player -> player.name).collect(Collectors.toList()));
     }
+
+    public LmsPlayers syncAll() {
+        lmsPlayers.players.forEach(p -> p.syncTo(this.players.get(0).name));
+        return lmsPlayers;
+    }
+
+    public LmsPlayers stopAll() {
+        log.info("ALL PLAYERS STOP");
+        lmsPlayers.players.parallelStream().forEach(p -> p.pause());
+        return lmsPlayers;
+    }
+
+    public LmsPlayers unsyncAll() {
+        log.info("ALL PLAYERS UNSYNC");
+        lmsPlayers.players.parallelStream().forEach(p -> p.unsync());
+        return lmsPlayers;
+    }
+
+    public LmsPlayers wakeUpAll() {
+        log.info("ALL PLAYERS WAKEUP");
+        lmsPlayers.players.parallelStream().forEach(p -> p.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null));
+        return lmsPlayers;
+    }
+
+    public LmsPlayers itsAlive() {
+        itsAlive(null);
+        return lmsPlayers;
+    }
+
+    public LmsPlayers itsAlive(String playerOrRoom) {
+        log.info("IT'S ALIVE! " + playerOrRoom);
+        if ("all".equals(playerOrRoom)) {
+
+            lmsPlayers.stopAll().wakeUpAll().syncAll();
+            lmsPlayers.players.get(0).sound("beep_long", true);
+            lmsPlayers.unsyncAll();
+
+//            lmsPlayers.players.parallelStream().forEach(p -> p.sound("beep_long", false));
+        }
+        Player player;
+        player = lmsPlayers.playerByNearestRoom(playerOrRoom);
+        if (player == null) player = lmsPlayers.playerByName(playerOrRoom);
+        if (player != null) player.sound("beep_long", false);
+        else lmsPlayers.players.parallelStream().forEach(p -> p.sound("beep_long", false));
+        return lmsPlayers;
+    }
+
 
 }

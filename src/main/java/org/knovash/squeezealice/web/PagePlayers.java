@@ -32,6 +32,8 @@ public class PagePlayers {
 
     public static final String toggle_wake_save = "toggle_wake_save";
     public static final String toggle_wake_value = "toggle_wake_value";
+    public static final String toggle_voice_value = "toggle_voice_value";
+    public static final String toggle_voice_save = "toggle_voice_save";
 
     public static final String player_save = "player_save";
     public static final String player_remove = "player_remove";
@@ -132,6 +134,16 @@ public class PagePlayers {
                             "<option value='false' " + (!lmsPlayers.toggleWake ? "selected" : "") + ">выкл</option>" +
                             "</select>" +
                             "<input type='hidden' name='action' value='" + toggle_wake_save + "'>" +
+                            "<button type='submit'>Сохранить</button>" +
+                            "</form>" +
+
+                            "<form method='POST' action='/form'>" +
+                            "<label>Говорить уведомления</label><br>" +
+                            "<select name='" + toggle_voice_value.toString() + "' required>" +
+                            "<option value='true' " + (lmsPlayers.toggleVoice ? "selected" : "") + ">вкл</option>" +
+                            "<option value='false' " + (!lmsPlayers.toggleVoice ? "selected" : "") + ">выкл</option>" +
+                            "</select>" +
+                            "<input type='hidden' name='action' value='" + toggle_voice_save + "'>" +
                             "<button type='submit'>Сохранить</button>" +
                             "</form>" +
 

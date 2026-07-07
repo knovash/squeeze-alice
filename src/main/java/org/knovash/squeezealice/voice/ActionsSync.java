@@ -7,7 +7,6 @@ import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.utils.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
-import org.knovash.squeezealice.yandex.Yandex;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -29,15 +28,21 @@ public class ActionsSync {
     // СПОТИФАЙ (синхронные версии)
     // =========================================================================
 
-    public static String spotifyPlayArtist(String command, Player player) {
+    public static String spotifyPlayArtist(String command, Player player, Boolean say) {
         String target = command
                 .replaceAll(".*включи\\S*\\s", "")
+                .replaceAll(".*Включи\\S*\\s", "")
                 .replaceAll("\"", "")
                 .replaceAll("\\s\\s", " ");
         log.info("\nGET LINK BY ARTIST: " + target);
         String link = Spotify.getLinkArtist(target);
         log.info("\nPLAY LINK: " + link);
-        if (link == null) return "настройте спотифай";
+
+        if (link == null) {
+            player.say("ошибка Spotify", true);
+            return "настройте спотифай";
+        }
+        if (say) player.say("включаю " + Spotify.nameForSay, false); // если от алисы то не говорить в лмс
         player
                 .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null)
                 .playPath(link)
@@ -131,7 +136,7 @@ public class ActionsSync {
     // ИНФОРМАЦИЯ О ПЛЕЕРЕ
     // =========================================================================
 
-    public static String whatsPlaying(Player player) {
+    public static String whatsPlaying(Player player, Boolean sayAtPlayer) {
         String answer = "";
         log.info("WHATS PLAYING ON " + player.name);
         if (player == null) return "плеер не найден";
@@ -152,11 +157,15 @@ public class ActionsSync {
         String answerPlayingSeparate = "";
         if (playingPlayersNamesNotInCurrentGrop.size() != 0)
             answerPlayingSeparate = ", отдельно играет " + String.join(", ", playingPlayersNamesNotInCurrentGrop);
+
+        String atPlayer = "";
+        if (sayAtPlayer) atPlayer = "на " + player.name;
+
         if (player.mode.equals("play")) {
-            answer = "сейчас на " + player.name + " играет " + separate + title + " громкость " + player.volume;
+            answer = "сейчас " + atPlayer + " играет " + separate + title + ", громкость " + player.volume;
         }
         if (!player.mode.equals("play")) {
-            answer = "сейчас на " + player.name + " не играет " + separate + title;
+            answer = "сейчас " + atPlayer + " не играет " + separate + title;
         }
         answer = answer + answerOtherInGroup + answerPlayingSeparate;
         log.info("ANSWER: " + answer);
@@ -182,6 +191,13 @@ public class ActionsSync {
             textFromFile = "[текст из файла недоступен]";
         }
         String answer = "на " + lmsPlayers.btPlayerName + " включаю " + textFromFile;
+        return answer;
+    }
+
+
+    public static String sayMyText() {
+        log.info("SAY MY TEXT: " + sayText);
+        String answer = sayText;
         return answer;
     }
 
@@ -284,8 +300,9 @@ public class ActionsSync {
 //        log.info("GET DEVICE: ROOM:" + device.room + " EXTID " + device.external_id);
         if (device == null) { // если девайса с такой комнатой еще нет то создать девайс. надо будет подключить его в яндексе
             log.info("CREATE NEW DEVICE FOR YANDEX IN ROOM: " + roomName + " PLAYER: " + playerName);
+
             smartHome.create(roomName, null); // TODO добавить проверку что девайс создался
-            smartHome.write();
+
         } else log.info("DEVICE ROOM: " + device.room + " ID: " + device.id);
 
         log.info("SEARCH NEW PLAYER: " + playerName);
@@ -306,7 +323,6 @@ public class ActionsSync {
             answer = "колонка " + playerName + " уже была подключена в комнате " + roomName;
             roomsAndPlayers.put(playerNew.name, playerNew.room); // сохранить файл соответствия плееров в комнатах
             Utils.writeRoomsAndPlayers();
-            smartHome.write();
             lmsPlayers.write();
             return playerNow;
         } else {
@@ -331,7 +347,6 @@ public class ActionsSync {
             roomsAndPlayers.put(playerNew.name, playerNew.room); // сохранить файл соответствия плееров в комнатах
             Utils.writeRoomsAndPlayers();
 
-            smartHome.write();
             lmsPlayers.write();
 
             log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(p -> p.name).collect(Collectors.toList()));
@@ -414,6 +429,31 @@ public class ActionsSync {
         lmsPlayers.write();
         answer = "пульт подключен к " + player.name;
         return answer;
+    }
+
+    public static void connectBtRemoteToPlayer(Player player) {
+        lmsPlayers.btPlayerName = player.name;
+
+        log.info("BT PLAYER NAME: " + lmsPlayers.btPlayerName);
+        lmsPlayers.write();
+    }
+
+    public static String remoteSwitch() {
+        lmsPlayers.wakeUpAll();
+        String remoteNow = lmsPlayers.btPlayerName;
+        Player playerNow = lmsPlayers.playerByName(remoteNow);
+        int indexNow = lmsPlayers.players.indexOf(playerNow);
+        int indexNew = indexNow + 1;
+        int size = lmsPlayers.players.size();
+        if (indexNow == size - 1) indexNew = 0;
+        Player playerNew = lmsPlayers.players.get(indexNew);
+        lmsPlayers.btPlayerName = playerNew.name;
+        log.info("BT PLAYER SWITCH TO: " + lmsPlayers.btPlayerName);
+        if ("play".equals(playerNew.mode)) { // если этот плеер играет
+            playerNew.pause().play();
+        } else playerNew.sound("beep_long", true);
+        lmsPlayers.write();
+        return lmsPlayers.btPlayerName;
     }
 
     public static String whereBtRemote() {

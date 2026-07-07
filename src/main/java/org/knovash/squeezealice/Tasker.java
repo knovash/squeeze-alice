@@ -78,7 +78,12 @@ public class Tasker {
 
     public static String forTaskerPlaylist(Player player, Integer lines) {
         log.info("CREATE PLAYLIST FOR TASKER. ACTIVE PLAYER: " + player);
-        player.requestPlaylistTracks();
+        int tracks = player.requestPlaylistTracks();
+        if(tracks == 0){
+            log.info("PLAYLIST EMPTY");
+            widgetPlaylist = "empty";
+            return "empty";
+        }
         List<String> playlist = player.playerStatus.result.playlist_loop.stream()
                 .map(item -> (item.playlist_index + 1) + ". " + item.title)
                 .collect(Collectors.toList());

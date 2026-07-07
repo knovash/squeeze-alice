@@ -68,6 +68,10 @@ public class HandlerForm implements HttpHandler {
                     lmsPlayers.toggleWakeSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
+                case toggle_voice_save:
+                    lmsPlayers.toggleVoiceSave((HashMap<String, String>) bodyMap);
+                    context.bodyResponse = PagePlayers.page();
+                    break;
                 case autoremote_save:
                     lmsPlayers.autoremoteSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
@@ -86,7 +90,6 @@ public class HandlerForm implements HttpHandler {
                     break;
                 case player_save:
                     lmsPlayers.playerSave((HashMap<String, String>) bodyMap);
-                    log.info("OK ----------------------");
                     context.setRedirect("/players");
                     break;
                 case player_remove:
