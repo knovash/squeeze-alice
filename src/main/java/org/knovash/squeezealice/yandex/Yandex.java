@@ -35,8 +35,9 @@ public class Yandex {
     public static Map<String, String> idsAndRooms = new HashMap<>();
 
     public static List<YandexUtils.MusicDevice> devicesGetFromYandexInfo() {
+        log.info(start);
         if (config.yandexToken == null || config.yandexToken.equals("")) {
-            log.info("FAILED TO GET DEVICES FROM YANDEX. USER NOT LOGGED IN");
+            log.info("CANCELED TO GET DEVICES FROM YANDEX. USER NOT LOGGED IN YANDEX");
             return null;
         }
         log.debug("GET ROOMS FROM YANDEX");
@@ -48,6 +49,7 @@ public class Yandex {
                     .setHeader("Authorization", "OAuth " + bearer)
                     .execute();
             json = response.returnContent().asString();
+//            log.info("JSON " + json);
         } catch (IOException e) {
             log.info("YANDEX GET INFO ERROR");
             return null;
@@ -62,22 +64,28 @@ public class Yandex {
         devicesSize = musicDevices.size();
         roomsWithDevice = yandexInfo.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
-                .filter(device -> device.name.equals("музыка"))
+                .filter(device -> device.name.equals(music)) //"музыка"
                 .map(device -> roomNameByRoomId(device.room))
                 .collect(Collectors.toList());
         PageIndex.msgDevices = "УДЯ подключено " + devicesSize + " устройств Музыка в комнатах " + roomsWithDevice;
+        log.info(finish);
         return musicDevices;
     }
 
     public static void createDevicesFromYandexDevices(List<YandexUtils.MusicDevice> yandexMusicDevices) {
-        if (yandexMusicDevices == null) {
+        log.info(start);
+        if (config.yandexToken == null || config.yandexToken.equals("")) {
+            log.info("CANCELED TO CREATE DEVICES FROM YANDEX. USER NOT LOGGED IN YANDEX");
+            return;
+        }
+        if (yandexMusicDevices == null || yandexMusicDevices.isEmpty()) {
             log.info("FAILED TO CREATE DEVICES. NO DEVICES FROM YANDEX");
             return;
         }
-
         log.info("CREATE DEVICES FROM YANDEX");
+//    если плееры ранее были созданы в УДЯ и получены то создать их локально в сервисе
         yandexMusicDevices.forEach(device -> smartHome.create("", device));
-        smartHome.write();
+        log.info(finish);
     }
 
     public static String roomNameByRoomId(String id) {
@@ -188,6 +196,32 @@ public class Yandex {
                 }
             }
         });
+    }
+
+
+    public static void sayMyText(String text) {
+        if (true) return; // TODO заглушка
+        log.info("RUN SCENARIO");
+        Main.sayText = text;
+        HttpResponse response = null;
+//        String scenarioId = "72295103-5976-4a4a-9e93-299666c14859";
+        String scenarioId = config.scenarioId;
+//        String iotToken = "y0__xDzxbXDARi79i4g1Kq52BLBrH5AiuK_6jAmQvamADVB964geA";
+        String iotToken = config.yandexToken;
+        String url = "https://api.iot.yandex.net/v1.0/scenarios/" + scenarioId + "/actions";
+        try {
+            response = Request.Post(url)
+                    //                        .setHeader("Authorization", "OAuth " + "y0__xDzxbXDARij9xMgof3dqBNVNLZJ5TUBmwMndUdpOq_rMn5GQw")
+                    .setHeader("Authorization", "Bearer " + iotToken)
+//                    .setHeader("Authorization", "Bearer " + config.yandextSkillTokenDeveloper)
+                    .setHeader("Content-Type", "application/json")
+                    .bodyString("{}", ContentType.APPLICATION_JSON)
+                    .execute()
+                    .returnResponse();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        log.info(response.getStatusLine());
     }
 
 

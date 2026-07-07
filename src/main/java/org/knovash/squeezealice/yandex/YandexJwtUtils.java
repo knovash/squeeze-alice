@@ -21,15 +21,12 @@ public class YandexJwtUtils {
 //    https://yandex.ru/dev/id/doc/ru/user-information
 
     public static String getJwtByOauth(String oauthToken) {
-        log.info("START GET JWT TOKEN BY OAUTH TOKEN: " + oauthToken);
         String url = "https://login.yandex.ru/info?format=jwt";
-
         HttpURLConnection connection = null;
         try {
             // Создаем соединение
             URL apiUrl = new URL(url);
             connection = (HttpURLConnection) apiUrl.openConnection();
-
             // Устанавливаем метод и заголовки
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Authorization", "OAuth " + oauthToken);
@@ -49,10 +46,9 @@ public class YandexJwtUtils {
                 }
                 in.close();
 
-                log.info("JWT TOKEN FINISH");
                 return response.toString();
             } else {
-                log.info("ERROR");
+                log.info("ERROR JWT TOKEN");
                 return "ERROR";
 //                throw new Exception("HTTP error code: " + responseCode);
             }
@@ -70,7 +66,6 @@ public class YandexJwtUtils {
     }
 
     public static String parseYandexJwtForKey(String jwtToken, String key) {
-        log.info("START PARSE JWT FOR KEY: " + key);
         // Разбиваем JWT на части
         String[] parts = jwtToken.split("\\.");
         if (parts.length != 3) {
@@ -89,18 +84,17 @@ public class YandexJwtUtils {
 //            throw new RuntimeException(e);
         }
 
-        for (Map.Entry<String, Object> entry : claims.entrySet()) {
-            System.out.printf("%-15s: %s%n", entry.getKey(), entry.getValue());
-        }
+//        for (Map.Entry<String, Object> entry : claims.entrySet()) {
+//            System.out.printf("%-15s: %s%n", entry.getKey(), entry.getValue());
+//        }
 
         Map.Entry<String, Object> set = claims.entrySet().stream()
-//                .peek(c -> log.info(c))
                 .filter(c -> c.getKey().equals(key))
                 .findFirst()
                 .orElse(null);
         if (set == null) return null;
         String result = String.valueOf(set.getValue());
-        log.info("KEY: "+key+ " VALUE:"+result);
+//        log.info("KEY: "+key+ " VALUE:"+result);
         return result;
     }
 

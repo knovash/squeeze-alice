@@ -6,6 +6,7 @@ import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.*;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.utils.LogExecution;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -16,6 +17,7 @@ import static org.knovash.squeezealice.Main.*;
 @Log4j2
 public class ProviderAction {
 
+    @LogExecution
     public static Context providerActionRun(Context context) {
         if (config.lmsIp == null) errorContext("LMS NULL", null);
         String body = context.body;
@@ -40,25 +42,36 @@ public class ProviderAction {
         log.info("BODY: " + body);
 
         // к полученым девайсам яндекса по id приделать комнаты от локальных девайсов
-        responseYandex.payload.devices.forEach(device -> device.room = smartHome.deviceByExternalId(device.id).room);
+        responseYandex.payload.devices.stream()
+                .filter(device -> smartHome.deviceById(device.id) != null)
+                .forEach(device -> device.room = smartHome.deviceById(device.id).room);
 
 // посмотреть полученные девайсы и их капабилити
         log.info("DEVICES: " + responseYandex.payload.devices.stream().map(device1 -> device1.room).collect(Collectors.toList()));
         responseYandex.payload.devices.forEach(d -> d.capabilities
-                .forEach(c -> log.info("DEVICE: " + d.room +
+                .forEach(c -> log.info("DEVICE: " + d.type + " " + d.room +
                         " CAPABILITI: " + c.state.instance + " = " + c.state.value + " RELATIVE: " + c.state.relative)));
+
 
         lmsPlayers.updatePlayers(); // для капабилитей надо знать состояние коннектед если не подключен будет DEVICE_UNREACHABLE
 
         // обновить для всех девайсов все капабилити
         responseYandex.payload.devices.parallelStream().forEach(d -> setDeviceCapabilities(d)); // если устройство недоступно то статус DEVICE_UNREACHABLE
 
+        List<Device> devicesOther = responseYandex.payload.devices.stream()
+//                .peek(device -> log.info("-----   " + device.type))
+                .filter(device -> !device.type.equals("devices.types.media_device.receiver"))
+//                .peek(device -> log.info("FILTERED " + device.type))
+                .collect(Collectors.toList());
+//        log.info("DEVICES OTHER " + devicesOther);
+
 
         List<Device> devicesForAsync = responseYandex.payload.devices.stream()
+                .filter(device -> device.type.equals("devices.types.media_device.receiver"))
                 .filter(device -> device.action_result == null || !"DEVICE_UNREACHABLE".equals(device.action_result.error_code))
                 .collect(Collectors.toList());
 
-        log.info("DEVICES FOR ASYNC: " + devicesForAsync.stream().map(device -> device.room).collect(Collectors.toList()));
+        log.info("DEVICES FOR ASYNC ACTIONS: " + devicesForAsync.stream().map(device -> device.room).collect(Collectors.toList()));
 // для работы с девайсами отфильтровать недоступные
         devicesForAsync.removeIf(device -> device != null && device.action_result != null && "DEVICE_UNREACHABLE".equals(device.action_result.error_code));
 // асинхронное выполнение действий с устройствами. ответ в Алису уже отправлен
@@ -83,7 +96,14 @@ public class ProviderAction {
 
     // если плеер не получен или недоступен - вернуть device с кодом ошибки
 // если нажать на кнопку увтройства вкл/выкл если ошибка - ответить Устройство неотвечает
+    @LogExecution
     private static Device setDeviceCapabilities(Device device) {
+
+        if (!device.type.equals("devices.types.media_device.receiver")) {
+            log.info("DEVICE TYPE NOT RECIEVER !!! " + device.type);
+            return null;
+        }
+
         Player player = lmsPlayers.playerByRoom(device.room);
         String status;
         String errorCode;
@@ -106,11 +126,11 @@ public class ProviderAction {
         device.action_result.error_message = errorMessage;
         return device;
     }
-
-    public static void runMultipleDevicesCapabilities(List<Device> devices) {
-//        log.info(devices);
+    @LogExecution
+    private static void runMultipleDevicesCapabilities(List<Device> devices) {
+        log.info(start);
         if (devices == null || devices.isEmpty()) return;
-        log.info(">>> DEVICES SIZE: " + devices.size());
+        log.info("DEVICES SIZE: " + devices.size());
         // Итоговые группы
         List<Device> groupForOff = new ArrayList<>();           // устройства с on=false (выключение)
         List<Device> groupForOn = new ArrayList<>();            // устройства с on=true и без channel (включение)
@@ -202,45 +222,37 @@ public class ProviderAction {
         runGroupForDifferentChannel(groupForDifferentChannel);
         runGroupsForSameChannels(groupsForSameChannels);
 
+        log.info(finish);
     }
 
     // отсоединить, остановить (если не играет ничего неделать)
-    public static void runGroupForOff(List<Device> devices) {
+    private static void runGroupForOff(List<Device> devices) {
+        log.info(start);
         if (devices == null || devices.isEmpty()) return;
-        log.info("START runGroupForOff");
-
         log.info("SIZE GPOUP: " + devices.size());
-
-        log.info("SIZE ALL: " + SmartHome.devices.size());
-
-
-//        if (devices.size() == SmartHome.devices.size())
         if (devices.size() > 1) { // если пришла команда выключить все комнаты то выключить вообще все плееры в лмс
             log.info("STOP ALL LMS PLAYERS");
             lmsPlayers.players.forEach(player -> player.turnOffMusic());
             return;
         }
-
         devices.stream()
                 .map(device -> playerWithCapabilities(device))
                 .filter(Objects::nonNull)
                 .forEach(player -> player.turnOffMusic());
-        log.info("FINISH runGroupForOff");
+        log.info(finish);
     }
 
     // отсоединить, разбудить, установить громкость, соединить в группу подключить к играющему или включить последнее ( TODO если играет ?)
 //    выбрать устройства которые  уже играют - соединить их в группу
 //    выбрать устройства которые  еще не играют - отсодинить, разбудить, соединить с устройством в группе играющих
 //    если группы играющих нет включить последнее
-    public static void runGroupForOn(List<Device> devices) {
+    private static void runGroupForOn(List<Device> devices) {
+        log.info(start);
         if (devices == null || devices.isEmpty()) return;
-        log.info("START runGroupForOn");
-
         List<Player> players = devices.stream()
                 .map(device -> playerWithCapabilities(device))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-
         // Разделяем устройства на играющие и неиграющие
         List<Player> playing = players.stream()
                 .filter(p -> p.playing)
@@ -275,24 +287,24 @@ public class ProviderAction {
                     .filter(Objects::nonNull)
                     .forEach(p -> p.syncTo(master.name)); // все остальные неиграющие подключить к первому включенному
         }
-        log.info("FINISH runGroupForOn (play last)");
+        log.info(finish);
     }
 
     // изменить громкость (если не играет ничего неделать)
-    public static void runGroupForVolume(List<Device> devices) {
+    private static void runGroupForVolume(List<Device> devices) {
+        log.info(start);
         if (devices == null || devices.isEmpty()) return;
-        log.info("START runGroupForVolume");
         devices
                 .parallelStream() // TODO
                 .map(ProviderAction::playerWithCapabilities)
                 .filter(Objects::nonNull)
                 .forEach(player -> player.volumeSetLimited(player.capVolume));
-        log.info("FINISH runGroupForVolume");
+        log.info(finish);
     }
 
-    public static void runGroupForDifferentChannel(List<Device> devices) {
+    private static void runGroupForDifferentChannel(List<Device> devices) {
+        log.info(start);
         if (devices == null || devices.isEmpty()) return;
-        log.info("START runGroupForDifferentChannel");
         Integer size = devices.size();
         List<Player> players = devices.stream().map(ProviderAction::playerWithCapabilities).collect(Collectors.toList());
 
@@ -312,13 +324,14 @@ public class ProviderAction {
                             .playChannel(player.capChannel));
         }
 
-        log.info("FINISH runGroupForDifferentChannel");
+
+        log.info(finish);
     }
 
     // отсоединить, разбудить, установить громкость, соединить в группу, включить общий канал
-    public static void runGroupForSameChannels(List<Device> devices) {
+    private static void runGroupForSameChannels(List<Device> devices) {
+        log.info(start);
         if (devices == null || devices.isEmpty()) return;
-        log.info("START runGroupForSameChannels");
         List<Player> players = devices.stream().map(ProviderAction::playerWithCapabilities).collect(Collectors.toList());
         Player master = lmsPlayers.lastPlayedPlayer(players);
         players
@@ -330,10 +343,10 @@ public class ProviderAction {
                         .syncTo(master.name)
                 );
         master.playChannel(master.capChannel);
-        log.info("FINISH runGroupForSameChannels");
+        log.info(finish);
     }
 
-    public static void runGroupsForSameChannels(List<List<Device>> groups) {
+    private static void runGroupsForSameChannels(List<List<Device>> groups) {
         if (groups == null || groups.isEmpty()) return;
         groups
                 .parallelStream() // TODO
@@ -341,7 +354,7 @@ public class ProviderAction {
                 .forEach(ProviderAction::runGroupForSameChannels);
     }
 
-    public static Player playerWithCapabilities(Device device) {
+    private static Player playerWithCapabilities(Device device) {
         String volume = null;
         Boolean volumeRelative = null;
         String channel = null;
@@ -360,7 +373,6 @@ public class ProviderAction {
         }
         Player player = lmsPlayers.playerByRoom(device.room); // устройство в умном доме имеет фиксированный id = "HomePod". При смене колонки в комнате этот deviceId присваивается новому плееру (JBL black), но сам идентификатор остаётся прежним.
         if (player == null) return null;
-
         if (Boolean.TRUE.equals(channelRelative) && channel != null && !channel.contains("-")) channel = "+" + channel;
         if (Boolean.TRUE.equals(volumeRelative) && volume != null && !volume.contains("-")) volume = "+" + volume;
         log.info(player.name + " p:" + on + " c:" + channel + " v:" + volume + " " + player.getClass().getName());
@@ -370,7 +382,7 @@ public class ProviderAction {
         return player;
     }
 
-    public static void logDevices(String description, List<Device> devices) {
+    private static void logDevices(String description, List<Device> devices) {
         List<String> info = devices.parallelStream().map(d -> {
             Capability volumeCap = null;
             Capability channelCap = null;
@@ -398,7 +410,7 @@ public class ProviderAction {
         log.info(description + " " + info);
     }
 
-    public static Context errorContext(String errorMessage, String xRequestId) {
+    private static Context errorContext(String errorMessage, String xRequestId) {
         log.info("ERROR: " + errorMessage);
         Context context = new Context();
         context.bodyResponse = "{\"request_id\":\"" + xRequestId + "\",\"payload\":{\"devices\":[]}}";

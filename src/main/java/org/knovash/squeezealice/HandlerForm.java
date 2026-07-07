@@ -21,7 +21,8 @@ public class HandlerForm implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        log.info("----- RECEIVED HTTP REQUEST -----");
+        log.info(Main.line);
+        log.info("HANDLE FORM START >>>");
         Context context = Context.contextCreate(httpExchange);
 
 //        log.info("PROCESS CONTEXT");
@@ -43,7 +44,8 @@ public class HandlerForm implements HttpHandler {
 
 //        log.info("SEND RESPONSE context");
         sendResponse(httpExchange, context);
-//        log.info("HANDLER FINISH <<<<<<<<<<<<<<<");
+        log.info("HANDLE FORM FINISH <<<");
+        log.info(Main.line);
     }
 
     private void processContext(Context context) {
@@ -64,6 +66,10 @@ public class HandlerForm implements HttpHandler {
                     break;
                 case toggle_wake_save:
                     lmsPlayers.toggleWakeSave((HashMap<String, String>) bodyMap);
+                    context.bodyResponse = PagePlayers.page();
+                    break;
+                case toggle_voice_save:
+                    lmsPlayers.toggleVoiceSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
                 case autoremote_save:

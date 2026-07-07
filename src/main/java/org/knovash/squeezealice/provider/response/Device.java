@@ -1,5 +1,6 @@
 package org.knovash.squeezealice.provider.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,7 @@ public class Device {
     public List<Capability> capabilities = new ArrayList<>();
     public List<Property> properties = new ArrayList<>();
     public List<String> aliases = new ArrayList<>();
+    @JsonIgnore
     public String external_id; // TODO удалить
     public String skill_id;
     public String household_id;

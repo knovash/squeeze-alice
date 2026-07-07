@@ -8,12 +8,13 @@ import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.utils.JsonUtils;
 
-import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 public class SwitchVoiceCommand {
 
     public static Context processContext(Context context) {
+        log.info(start);
         String body = context.body;
         context.code = 200;
         String command = JsonUtils.jsonGetValue(body, "command");
@@ -22,31 +23,42 @@ public class SwitchVoiceCommand {
             return context;
         }
         String aliceId = JsonUtils.jsonGetValue(body, "application_id");
-        String answer = processCommand(aliceId, command);
+        String room = Main.roomsAndAliceIds.get(aliceId);
+        log.info("ROOM BY aliceId: " + room);
+        String answer = processCommand(aliceId, room, command);
         log.info("ANSWER: {}", answer);
         context.bodyResponse = answer;
+        log.info(finish);
         return context;
     }
 
-    public static String processCommand(String aliceId, String command) {
-        String cmd = command.trim().toLowerCase();
+    public static String processCommand(String aliceId, String room, String command) {
+        log.info(start);
+
+        log.info("COMMAND: " + command);
+        command = command.trim().toLowerCase();
         log.info("COMMAND: " + command);
 
+
+        if (command.contains("произнеси название"))
+//                return ActionsSync.sayMyName(player);
+            return ActionsSync.sayMyText();
+
         // Базовые команды без зависимостей
-        if (cmd.isEmpty())
+        if (command.isEmpty())
             return "Я умею управлять плеерами подключенными в Lyrion Music Server. \n" +
                     "Скажите Алисе:\n" +
                     ", включи или выключи музыку \n" +
                     ", музыку громче или тише \n" +
                     ", переключи канал";
-        if (cmd.contains("помощь") || cmd.contains("помоги") || cmd.contains("подскажи"))
+        if (command.contains("помощь") || command.contains("помоги") || command.contains("подскажи"))
             return "У вас локально должен быть установлен Lyrion Music Server и приложение навыка";
-        if (cmd.contains("что ты умеешь") || cmd.contains("что ты можешь"))
+        if (command.contains("что ты умеешь") || command.contains("что ты можешь"))
             return "Я умею управлять плеерами подключенными в Lyrion Music Server";
 
         // Команды привязки комнаты (не требуют наличия комнаты в idRooms)
-        if (cmd.startsWith("это комната")) {
-            if (cmd.contains("с колонкой")) {
+        if (command.startsWith("это комната")) {
+            if (command.contains("с колонкой")) {
                 return ActionsAsync.selectRoomWithSpeaker(command, aliceId);
             } else {
                 return ActionsAsync.selectRoomByCommand(command, aliceId);
@@ -55,14 +67,14 @@ public class SwitchVoiceCommand {
 
         // Получаем комнату по идентификатору сессии
         lmsPlayers.updatePlayers();
-        String room = Main.roomsAndAliceIds.get(aliceId);
+//        String room = Main.roomsAndAliceIds.get(aliceId);
         if (room == null)
             return "скажите навыку, это комната и название комнаты";
 
         // Команды выбора колонки (требуют комнату, но не плеер)
-        if (cmd.matches("выбери колонку.*"))
+        if (command.matches("выбери колонку.*"))
             return ActionsAsync.selectPlayerByCommand(command, room);
-        if (cmd.matches("включи колонку.*"))
+        if (command.matches("включи колонку.*"))
             return ActionsAsync.runPlayerByCommand(command, room);
 
         // Ищем устройство в комнате и соответствующий плеер
@@ -71,55 +83,54 @@ public class SwitchVoiceCommand {
             return "устройство в умном доме не найдено, скажите навыку, выбери колонку, и название колонки";
 
         Player player = lmsPlayers.playerByRoom(device.room);
+        log.info("PLAYER: " + player.name);
         if (player == null)
             return "колонка в комнате не выбрана, скажите навыку, выбери колонку, и название колонки";
 
         // Обработка всех команд, требующих плеер (обернуто в try-catch для устойчивости)
         try {
-            if (cmd.contains("что играет"))
-                return ActionsSync.whatsPlaying(player);
-            if (cmd.contains("произнеси название"))
-                return ActionsSync.sayMyName(player);
-            if (cmd.contains("лимит"))
+            if (command.contains("что играет"))
+                return ActionsSync.whatsPlaying(player, true);
+            if (command.contains("лимит"))
                 return ActionsSync.volumeLimitSet(player, command);
-            if (cmd.contains("какая громкость"))
+            if (command.contains("какая громкость"))
                 return ActionsSync.whatsVolume(player);
-            if (cmd.matches("(включи )?(канал|избранное) .*"))
+            if (command.matches("(включи )?(канал|избранное) .*"))
                 return ActionsAsync.channelPlayByName(command, player);
-            if (cmd.matches("добавь( в)? избранное"))
+            if (command.matches("добавь( в)? избранное"))
                 return ActionsAsync.channelAdd(player);
-            if (cmd.matches("переключи.*сюда"))
+            if (command.matches("переключи.*сюда"))
                 return ActionsAsync.switchHere(player);
-            if (cmd.matches("(включи )?отдельно"))
+            if (command.matches("(включи )?отдельно"))
                 return ActionsAsync.separateOn(player);
-            if (cmd.matches("(включи )?вместе"))
+            if (command.matches("(включи )?вместе"))
                 return ActionsAsync.separateOff(player);
-            if (cmd.matches("(включи )?только тут"))
+            if (command.matches("(включи )?только тут"))
                 return ActionsAsync.onlyHere(player);
-            if (cmd.matches("(включи )?(рандом|шафл|shuffle|random)"))
+            if (command.matches("(включи )?(рандом|шафл|shuffle|random)"))
                 return ActionsAsync.shuffleOn(player);
-            if (cmd.matches("(выключи )?(рандом|шафл|shuffle|random)"))
+            if (command.matches("(выключи )?(рандом|шафл|shuffle|random)"))
                 return ActionsAsync.shuffleOff(player);
-            if (cmd.matches("(включи )?(повтор)"))
+            if (command.matches("(включи )?(повтор)"))
                 return ActionsAsync.repeatOn(player);
-            if (cmd.matches("(выключи )?(повтор)"))
+            if (command.matches("(выключи )?(повтор)"))
                 return ActionsAsync.repeatOff(player);
-            if (cmd.matches("(включи )?(дальше|следующий)")) {
+            if (command.matches("(включи )?(дальше|следующий)")) {
                 ActionsAsync.nextChannelOrTrack(player);
                 return "включаю следующий";
             }
 
-            if (cmd.matches("^(?:подключи пульт(?: (?:к|в|на).*)?|включи пульт)$"))
+            if (command.matches("^(?:подключи пульт(?: (?:к|в|на).*)?|включи пульт)$"))
                 return ActionsAsync.connectBtRemote(command, player);
-            if (cmd.contains("где пульт"))
+            if (command.contains("где пульт"))
                 return ActionsAsync.whereBtRemote();
-            if (cmd.startsWith("включи альбом"))
+            if (command.startsWith("включи альбом"))
                 return ActionsAsync.playAlbum(player, command);
-            if (cmd.startsWith("включи трек"))
+            if (command.startsWith("включи трек"))
                 return ActionsAsync.playTrack(player, command);
-            if (cmd.startsWith("включи плейлист"))
+            if (command.startsWith("включи плейлист"))
                 return ActionsAsync.playPlaylist(player, command);
-            if (cmd.startsWith("включи"))
+            if (command.startsWith("включи"))
                 return ActionsAsync.playArtist(player, command);
         } catch (Exception e) {
             log.error("Ошибка при обработке команды '{}': {}", command, e.getMessage(), e);

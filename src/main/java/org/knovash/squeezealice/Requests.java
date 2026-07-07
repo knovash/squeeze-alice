@@ -9,6 +9,7 @@ import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 import static org.knovash.squeezealice.Main.config;
@@ -48,13 +49,30 @@ public class Requests {
             return null;
         }
         if (content != null) {
-            response = JsonUtils.jsonToPojo(content.asString(StandardCharsets.UTF_8), Response.class);
+
+            // TODO fix UTF
+//            response = JsonUtils.jsonToPojo(content.asString(StandardCharsets.UTF_8), Response.class);
+
+            byte[] bytes = content.asBytes();
+            String utf8String = new String(bytes, StandardCharsets.UTF_8);
+            if (utf8String.contains("\uFFFD")) {
+                try {
+                    utf8String = new String(bytes, "Windows-1251");
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            response = JsonUtils.jsonToPojo(utf8String, Response.class);
+
         } else {
             log.info("ERROR RESPONSE IS EMPTY");
             return null;
         }
 
         return response;
+
+
+
     }
 
     public static String postToLmsForStatus(String json) {
@@ -114,7 +132,21 @@ public class Requests {
             log.debug("ERROR " + e);
             return null;
         }
-        return content.asString(StandardCharsets.UTF_8);
+
+        // TODO fix UTF
+//        return content.asString(StandardCharsets.UTF_8);
+        byte[] bytes = content.asBytes();
+// Пробуем прочитать как UTF-8
+        String utf8String = new String(bytes, StandardCharsets.UTF_8);
+// Если строка содержит знак замены (�) – пробуем CP1251
+        if (utf8String.contains("\uFFFD")) {
+            try {
+                utf8String = new String(bytes, "Windows-1251");
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return utf8String;
     }
 }
 

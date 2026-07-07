@@ -1,9 +1,16 @@
 package org.knovash.squeezealice.lms;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class RequestParameters {
 
     public static RequestToLms count() {
         return RequestToLms.create("", new String[]{"player", "count", "?"});
+    }
+
+    public static RequestToLms searchSpotifyArtist(String artistName) {
+        return RequestToLms.create("", new String[]{"search", "artist:" + artistName, "20", "score"});
     }
 
     public static RequestToLms name(String index) {
@@ -39,6 +46,14 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"playlist", "play", url});
     }
 
+    public static RequestToLms playFile(String player, String file) {
+        return RequestToLms.create(player, new String[]{"playlist", "play", file});
+    }
+
+    public static RequestToLms playlistClear(String player, String file) {
+        return RequestToLms.create(player, new String[]{"playlist", "clear"});
+    }
+
     public static RequestToLms favorites(String player, String value) {
         return RequestToLms.create(player, new String[]{"favorites", "items", "0", "100"});
     }
@@ -63,6 +78,38 @@ public class RequestParameters {
     public static RequestToLms playlistname(String player) {
         return RequestToLms.create(player, new String[]{"playlist", "name", "?"});
     }
+
+    public static RequestToLms playlistClear(String player) {
+        return RequestToLms.create(player, new String[]{"playlist", "clear"});
+    }
+
+    //--------------------
+    public static RequestToLms playlistSave(String player, String playlistName) {
+        return RequestToLms.create(player, new String[]{"playlist", "save", playlistName});
+//        return RequestToLms.create(player, new String[]{"playlist", "save", player + "_restore"});
+    }
+
+    public static RequestToLms playlistRestore(String player, String playlistName) {
+        return RequestToLms.create(player, new String[]{"playlist", "load", playlistName});
+//        return RequestToLms.create(player, new String[]{"playlist", "load", player + "_restore"});
+    }
+
+    public static RequestToLms playlistRename(String player, String nameOld, String nameNew) {
+        return RequestToLms.create(player, new String[]{"playlist", "rename", nameOld, nameNew});
+    }
+
+    public static RequestToLms playlistIndexSet(String player, String index) {
+        return RequestToLms.create(player, new String[]{"playlist", "index", index});
+    }
+
+    public static RequestToLms playlistTimeSet(String player, String time) {
+        return RequestToLms.create(player, new String[]{"time", time});
+    }
+
+    public static RequestToLms playlistModeSet(String player) {
+        return RequestToLms.create(player, new String[]{"playlist", "clear"});
+    }
+
 
     public static RequestToLms playlisturl(String player) {
         return RequestToLms.create(player, new String[]{"playlist", "url", "?"});
@@ -116,6 +163,14 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"playlist", "jump", "+1"});
     }
 
+
+    public static RequestToLms forward(String player) {
+        return RequestToLms.create(player, new String[]{"time", "+" + 20});
+    }
+
+    public static RequestToLms rewind(String player) {
+        return RequestToLms.create(player, new String[]{"time", "-" + 20});
+    }
 
     public static RequestToLms track(String player, String track) {
         return RequestToLms.create(player, new String[]{"playlist", "jump", track});

@@ -1,0 +1,8 @@
+<aspectj>
+    <weaver>
+        <include within="org.knovash.squeezealice..*"/>
+    </weaver>
+    <aspects>
+        <aspect name="org.knovash.squeezealice.utils.LoggingAspect"/>
+    </aspects>
+</aspectj>

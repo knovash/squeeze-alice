@@ -3,15 +3,13 @@ package org.knovash.squeezealice;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.response.*;
-import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.yandex.YandexUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.knovash.squeezealice.Main.config;
-import static org.knovash.squeezealice.Main.smartHome;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 @Data
@@ -28,6 +26,14 @@ public class SmartHome {
                 .orElse(null);
     }
 
+    public Device deviceById(String deviceId) { // приходит от яндекса EXT ID
+//        log.info(">>> DEVICE ID " + deviceId);
+        return devices.stream()
+                .filter(d -> d.id != null && d.id.equals(deviceId))
+                .findFirst()
+                .orElse(null);
+    }
+
     public static Device deviceByRoom(String room) {
         if (room == null) return null;
         return devices.stream()
@@ -36,64 +42,42 @@ public class SmartHome {
                 .orElse(null);
     }
 
-    /**
-     * Создаёт или обновляет устройство.
-     *
-     * @param deviceRoomName название комнаты (для голосовой команды)
-     * @param yandexDevice   данные устройства из Яндекса (при синхронизации)
-     */
-    public void create(String deviceRoomName, YandexUtils.MusicDevice yandexDevice) {
+    public void create(String deviceByRoomName, YandexUtils.MusicDevice deviceFromYandex) {
         if (devices == null) devices = new ArrayList<>();
-//        log.info(">>> ROOM NAME: " + deviceRoomName);
-//        log.info(">>> DEVICE YANDEX: " + yandexDevice.roomName + " " + yandexDevice.id);
+
+        if (deviceFromYandex != null)
 
         // Случай 1: синхронизация с Яндексом
-        if (yandexDevice != null) {
-            String deviceId = yandexDevice.id;
-            String deviceExternalId = yandexDevice.externalId;
-            String roomId = yandexDevice.roomId;
-            String room = yandexDevice.roomName;
-            String name = yandexDevice.name;
+        {
+            Device deviceExists = SmartHome.devices.stream()
+                    .filter(device -> device.id.equals(deviceFromYandex.id))
+                    .findFirst().orElse(null);
+            if (deviceExists != null) return;
+            log.info("CREATE DEVICE FROM YANDEX " + deviceFromYandex.roomName + " id: " + deviceFromYandex.id);
+            createNewDeviceMusic(deviceFromYandex.roomName, deviceFromYandex.externalId, deviceFromYandex.name);
+//    ВАЖНО !!! external_id от Яндекс сохранять в id устройства Музыка !!!
 
-            // 1. проверить что в локальных девайсах devices нет девайса полученого от яндекса. если есть то создавать не надо а только обновить
-            if (devices.stream().noneMatch(d ->
-                    (deviceId != null && deviceId.equals(d.id))
-                            || (deviceExternalId != null && deviceExternalId.equals(d.external_id))
-                            || (room != null && room.equals(d.room))
-            )) {
-//          нет в локальных. надо создать новый девайс из полученого от яндекса
-                Device device = createNewDevice(room, deviceId, deviceExternalId, name);
-                devices.add(device);
-                log.info("CREATED NEW DEVICE FROM YANDEX DEVICE. ROOM: {} ID: {} EXT_ID: {}", device.room, device.id, device.external_id);
-            } else {
-                log.info("DEVICE EXISTS. SKIP CREATE FROM YANDEX DEVICE");
-            }
-        } else {
-            // создание 1. глосом 2. веб. используя имя комнаты. если девай еще небыл создан и его нет в локальных девайсах по имени комнаты тогда создавать ненадо
-            if (devices.stream().noneMatch(d -> (deviceRoomName != null && deviceRoomName.equalsIgnoreCase(d.room)))) {
-                log.info("DEVICE NOT EXISTS. CREATE NEW DEVICE FROM PLAYER ROOM NAME: " + deviceRoomName);
-                //    Объект devices
-//    id        String              Идентификатор устройства. Должен быть уникален среди всех устройств производителя.
-//    name      String              Название устройства.
-//    room      String              Название помещения, в котором расположено устройство.
-//    external_id
-                String id = String.valueOf(UUID.randomUUID());
-                String extid = String.valueOf(UUID.randomUUID());
-                Device device = createNewDevice(deviceRoomName, id, extid, "музыка");
-                devices.add(device);
-                log.info("CREATED NEW DEVICE BY VOICE OR WEB. ROOM: {} ID: {} EXT_ID: {}", device.room, device.id, device.external_id);
+
+        } else
+//
+        // создание 1. глосом 2. веб. используя имя комнаты. если девай еще небыл создан и его нет в локальных девайсах по имени комнаты тогда создавать ненадо
+        {
+            if (devices.stream().noneMatch(d -> (deviceByRoomName != null && deviceByRoomName.equalsIgnoreCase(d.room)))) {
+                log.info("DEVICE NOT EXISTS. CREATE NEW DEVICE FROM PLAYER ROOM NAME: " + deviceByRoomName);
+                createNewDeviceMusic(deviceByRoomName, null, "музыка");
+
             } else {
                 log.info("DEVICE EXISTS. SKIP CREATE BY VOICE OR WEB");
             }
         }
-//        smartHome.write();
     }
 
-    private Device createNewDevice(String roomName, String deviceId, String deviceExternalId, String deviceName) {
+    private Device createNewDeviceMusic(String roomName, String deviceId, String deviceName) {
+        if (deviceId == null) deviceId = String.valueOf(UUID.randomUUID());
         Device device = new Device();
         device.room = roomName;
         device.id = deviceId;
-        device.external_id = deviceExternalId;
+//        device.external_id = deviceExternalId;
         device.name = deviceName;
         // Capability volume
         Capability volume = new Capability();
@@ -138,17 +122,27 @@ public class SmartHome {
         onOff.parameters.instance = "on";
         // onOff.state = null; // необязательно
         device.capabilities.add(onOff);
+
+        devices.add(device);
         return device;
     }
 
-    public void write() {
-//        log.info("WRITE: {}", config.fileDevices);
-//        JsonUtils.pojoToJsonFile(devices, config.fileDevices);
+    public Device createNewDeviceSwitch(String roomName, String deviceName) {
+        Device device = new Device();
+        device.room = roomName;
+        device.id = String.valueOf(UUID.randomUUID());
+        device.name = deviceName;
+        device.type = "devices.types.switch";
+        // Базовая способность вкл/выкл
+        Capability onOff = new Capability();
+        onOff.type = "devices.capabilities.on_off";
+        onOff.retrievable = true;   // возможность запрашивать состояние
+        onOff.reportable = true;    // отправлять уведомления об изменении
+        // onOff.parameters.instance = "on"; // для on_off это значение по умолчанию
+        device.capabilities.add(onOff);
+        log.info("SWITCH DEVICE CREATED OK");
+        devices.add(device);
+        return device;
     }
 
-    public void read() {
-//        devices = JsonUtils.jsonFileToList(config.fileDevices, Device.class);
-//        if (devices == null) devices = new ArrayList<>();
-//        log.info("DEVICES FROM devices.json: {}", devices.size());
-    }
 }

@@ -5,9 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.knovash.squeezealice.Requests;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static org.knovash.squeezealice.lms.RequestParameters.*;
 
 @Data
 @NoArgsConstructor

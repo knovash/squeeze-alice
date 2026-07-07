@@ -7,14 +7,10 @@ import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.lms.PlayerStatus;
 import org.knovash.squeezealice.lms.ServerStatus;
-import org.knovash.squeezealice.volumio.VolumioStateResponse;
-import org.knovash.squeezealice.volumio.RequestsVolumio;
-import org.knovash.squeezealice.volumio.VolumioCommands;
 
 import java.util.*;
 
 import static org.knovash.squeezealice.Main.config;
-import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
 @Data
@@ -76,7 +72,7 @@ public class VolumioPlayer extends Player {
     // Получение статуса
     // -------------------------------------------------------------------------
     @Override
-    public void status() {
+    public PlayerStatus.Result status() {
         String url = VolumioCommands.getState(baseUrl);
         String json = RequestsVolumio.get(url);
 
@@ -94,6 +90,7 @@ public class VolumioPlayer extends Player {
         } catch (Exception e) {
             log.error("Failed to parse state response from {}: {}", baseUrl, e.getMessage());
         }
+        return null;
     }
 
     // -------------------------------------------------------------------------
@@ -299,7 +296,7 @@ public class VolumioPlayer extends Player {
     public VolumioPlayer turnOnMusic(String volume) {
         log.info("TURN ON MUSIC: {}", name);
         this.play();
-        if (volume != null) this.volume(volume);
+        if (volume != null) this.volumeSet(volume);
         return this;
     }
 
@@ -322,7 +319,7 @@ public class VolumioPlayer extends Player {
     // Управление громкостью
     // -------------------------------------------------------------------------
     @Override
-    public VolumioPlayer volume(String value) {
+    public VolumioPlayer volumeSet(String value) {
         log.info("SET VOLUME {} to {}", value, name);
         try {
             int vol = Integer.parseInt(value);
@@ -350,7 +347,7 @@ public class VolumioPlayer extends Player {
         log.info("VOLUMIO VOLUME LIMITED {}", value);
         if (value.contains("-")) volumeDown();
         else if (value.contains("+")) volumeUp();
-        else volume(value);
+        else volumeSet(value);
         return this;
     }
 
@@ -450,7 +447,7 @@ public class VolumioPlayer extends Player {
     @Override
     public VolumioPlayer ifExpiredAndNotPlayingUnsyncWakeSetVolume(String volume) {
         // Всегда просто устанавливаем громкость
-        this.volume(volume);
+        this.volumeSet(volume);
         return this;
     }
 

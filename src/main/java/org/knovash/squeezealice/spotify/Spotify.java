@@ -21,13 +21,14 @@ public class Spotify {
     public static PlayerState playerState = new PlayerState();
     public static CurrentlyPlaying currentlyPlaying = new CurrentlyPlaying();
     public static Boolean active = false;
+    public static String nameForSay;
 
     // ------- МЕТОД, КОТОРЫЙ НЕ ИЗМЕНЯТЬ (me) -------
 
     public static String me() {
-        log.info("SPOTIFY INFO ME");
+        log.info("SPOTIFY INFO START");
         if (config.spotifyToken == null || config.spotifyToken.isEmpty()) {
-            log.info("NO SPOTIFY TOKEN");
+            log.info("SPOTIFY NOT LOGGED IN");
             return null;
         }
         String uri = "https://api.spotify.com/v1/me";
@@ -54,6 +55,7 @@ public class Spotify {
             }
             String uri = spotifyArtists.artists.items.get(0).uri;
             log.info("ARTIST URI: " + uri + " name: " + spotifyArtists.artists.items.get(0).name);
+            Spotify.nameForSay = spotifyArtists.artists.items.get(0).name;
             return uri;
         } catch (Exception e) {
             log.error("Encoding error", e);
