@@ -142,7 +142,7 @@ public class LmsPlayers {
         List<String> players = this.players.stream().map(p -> p.name).collect(Collectors.toList());
         player = Utils.convertCyrilic(player);
         String correctPlayerName = Levenstein.getNearestElementInListWord(player, players);
-        if (correctPlayerName == null) log.info("ERROR PLAYER NOT EXISTS IN LMS ");
+        if (correctPlayerName == null) log.info("ERROR PLAYER " + player + " NOT EXISTS IN LMS ");
         log.info("CORRECT PLAYER: " + player + " -> " + correctPlayerName);
         Player correctPlayer = this.playerByName(correctPlayerName);
         return correctPlayer;
@@ -508,6 +508,22 @@ public class LmsPlayers {
         if (player != null) player.sound("beep_long", false);
         else lmsPlayers.players.parallelStream().forEach(p -> p.sound("beep_long", false));
         return lmsPlayers;
+    }
+
+    public Player playerByPlayerNameOrRoomName(String playerName, String roomName) {
+        log.info("PLAYER: " + playerName + " ROOM: " + roomName);
+        Player player = null;
+        if ("btremote".equals(playerName)) player = lmsPlayers.playerByNearestName(lmsPlayers.btPlayerName);
+        if (player != null) return player;
+        player = lmsPlayers.playerByNearestName(playerName);
+        if (player != null) return player;
+        player = lmsPlayers.playerByNearestRoom(playerName);
+        if (player != null) return player;
+        player = lmsPlayers.playerByNearestRoom(roomName);
+        if (player != null) return player;
+        player = lmsPlayers.playerByNearestName(roomName);
+        if (player != null) return player;
+        return null;
     }
 
 

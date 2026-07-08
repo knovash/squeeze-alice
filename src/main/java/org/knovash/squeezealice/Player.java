@@ -214,6 +214,7 @@ public class Player {
 
         if (title != null && title.contains("music/sounds")) title = null; // если играл звук
 
+        if (title != null && title.contains("_restore")) title = null; // если играл звук
         if (title == null) {
             title = "unknown";
         }
@@ -334,6 +335,12 @@ public class Player {
         return this;
     }
 
+    public Player stop() {
+        log.info("PLAYER: " + this.name + " STOP");
+        Requests.postToLmsForStatus(RequestParameters.stop(this.name).toString());
+        return this;
+    }
+
     public Player togglePlayPause() {
         log.info("PLAYER: " + this.name + " PLAY/PAUSE");
         Requests.postToLmsForStatus(RequestParameters.togglePlayPause(this.name).toString());
@@ -380,7 +387,7 @@ public class Player {
     }
 
     public Player playlistRename(String nameOld, String nameNew) {
-        log.info("PLAYER: " + this.name + " playlistRename " + nameOld + " to " +nameNew);
+        log.info("PLAYER: " + this.name + " playlistRename " + nameOld + " to " + nameNew);
         Requests.postToLmsForStatus(RequestParameters.playlistRename("", nameOld, nameNew).toString());
         return this;
     }
@@ -1002,7 +1009,9 @@ public class Player {
     public void savePlaylistScript() {
         log.info(start);
         String currentPlaylistName = this.requestPlaylistName();
+        if (currentPlaylistName == null) currentPlaylistName = this.name + "_restore";
         log.info("CURRENT PLAYLIST NAME: " + currentPlaylistName);
+
         PlayerStatus.Result result = this.statusFast(); // получить статус плеера {"id":1,"method":"slim.request","params":["Имя_плеера",["status","0","200"]]}
         if (result == null) {
             this.savedPlaylistOk = false;
@@ -1037,18 +1046,27 @@ public class Player {
             this.syncTo(this.savedGroup.get(0));
 
             log.info("RENAME PLAYLIST TO: " + this.savedPlaylistName);
-            this.playlistRename(this.name+"_restore", this.savedPlaylistName);
+            this.playlistRename(this.name + "_restore", this.savedPlaylistName);
             log.info("RENAME OK");
             log.info(finish);
             return; // если был в группе то вернуть в группу и всё
         }
+
+        log.info("SAVED MODE: " + this.savedPlaylistMode);
+
         this.playlistRestore(this.savedPlaylistName); // Загрузить плейлист: ["playlist", "load", "temp_restore"]
         this.playlistIndexSet(this.savedPlaylistIndex); //  Установить индекс: ["playlist", "index", сохранённый_индекс]
-        this.playlistTimeSet(this.savedPlaylistTime); //  Установить время: ["time", сохранённое_время]
-        if ("play".equals(this.savedPlaylistMode)) this.play();
-        else this.pause();// Восстановить режим:
+        if ("play".equals(this.savedPlaylistMode)) { // Восстановить режим:
+            log.info("RESTORE PLAY MODE");
+            this.playlistTimeSet(this.savedPlaylistTime); //  Установить время: ["time", сохранённое_время]
+            this.play();
+        } else
+            this.stop().waitSeconds(1).stop();
+
         log.info(finish);
     }
+
+
 
     public Map<String, List<String>> playingPlayersNameGroups(Boolean exceptSeparated) {
         log.info("SEARCH FOR PLAYERS PLAYING IN CURRENT GROUP AND OTHER GROUP");
@@ -1089,8 +1107,8 @@ public class Player {
     @Override
     public String toString() {
         return String.format(
+                "NAME:%-15s " +
                 "ROOM:%-10s" +
-                        "NAME:%-15s " +
                         "CONNECTED:%-5b " +
                         "SEPARATED:%-5b " +
                         "SYNC:%-5b " +
