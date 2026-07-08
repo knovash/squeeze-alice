@@ -29,6 +29,10 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"pause", "1"});
     }
 
+    public static RequestToLms stop(String player) {
+        return RequestToLms.create(player, new String[]{"stop"});
+    }
+
     public static RequestToLms togglePlayPause(String player) {
         return RequestToLms.create(player, new String[]{"pause"});
     }

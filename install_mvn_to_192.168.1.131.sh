@@ -1,58 +1,24 @@
 #!/usr/bin/env bash
 # sudo chmod +x *.sh
-BGreen='\033[1;32m'
-NC='\033[0m' # No Color
-
+CURRENT_PATH="$(dirname "$0")"
+source "$CURRENT_PATH/common.sh"
 file_name=$(basename "$0" .sh)
-remote="${file_name##*_}" 
-echo -e "${BGreen}SSH${NC}"
+default_remote="${file_name##*_}"
+read_ssh_params "$default_remote"
+#----------------------------------------------------------
 
-# Запрашиваем ip (значение по умолчанию — из имени файла)
-echo -e "Enter SSH ip. ${BGreen}Press Enter for [$remote]${NC}"
-read -p "" remote_input
-remote="${remote_input:-$remote}"
-
-# Запрашиваем пользователя
-echo -e "Enter SSH username. ${BGreen}Press Enter for [root]:${NC} "
-read -p "" username
-username="${username:-root}"
-
-# Запрашиваем пароль
-echo -e "Enter SSH password. ${BGreen}Press Enter for [12345]:${NC} "
-read -p "" password
-password="${password:-12345}"
-
-echo "$remote $username $password"
-
-
-#------------------------------------------------------------
-
-#!/usr/bin/env bash
-# sudo chmod +x *.sh
-#BGreen='\033[1;32m'
-#NC='\033[0m' # No Color
-#
-#file_name=$(basename "$0" .sh)
-#remote="${file_name##*_}" 
-#echo -e ${BGreen}"INSTALL TO IP: $remote"${NC}
-#
-# Запрашиваем пользователя
-#read -p "Enter SSH username. Press Enter for root: " username
-#read -p "Введите SSH пользователя. Нажмите Enter если root: " username
-#username=${username:-root}
-# Запрашиваем пароль
-#read -p "Enter SSH password. Press Enter for 12345: " password
-#read -p "Введите SSH пароль. Нажмите Enter если 12345: " password
-#password=${password:-12345}
-#echo $username" "$password
-#------------------------------------------------------------
 
 echo -e ${BGreen}"MVN PACKAGE"${NC}
 rm -r target
 mvn package
 
+
+# остановить сервис
+sshpass -p "$password" ssh $username@$remote sudo systemctl stop squeeze-alice.service
+
 # создать папку на ремоут
 echo -e ${BGreen}"CREATE DIR /opt/squeeze-alice-1.0"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "rm -r /opt/squeeze-alice-1.0"
 sshpass -p "$password" ssh "$username@$remote" "mkdir -p /opt/squeeze-alice-1.0"
 
 # копирование приложения на ремоут
@@ -91,5 +57,5 @@ sleep 5
 echo -e ${BGreen}"\nLOG"${NC}
 sshpass -p "$password" ssh $username@$remote tail -f /opt/squeeze-alice-1.0/data/log.txt
 
-sleep 120
+sleep 60
 #$SHELL

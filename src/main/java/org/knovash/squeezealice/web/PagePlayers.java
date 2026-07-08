@@ -246,8 +246,8 @@ public class PagePlayers {
 
                         "<br>" +
 //                        " <b>title:</b>" + p.requestTitle() + // PagePlayers
-                        "  <b>lastTime:</b>" + p.lastPlayTimePlayer +
-                        "   <b>lastPath:</b>" + p.lastPathPlayer +
+                        "  last play time:" + p.lastPlayTimePlayer +
+//                        "   <b>lastPath:</b>" + p.lastPathPlayer +
 //                        "   <b>currentTrackInPlaylist:</b>" + p.playerStatus.result.remoteMeta.title +
 
                         "</fieldset>" +

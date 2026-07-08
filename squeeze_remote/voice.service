@@ -1,0 +1,16 @@
+[Unit]
+Description=Voice Assistant
+After=multi-user.target sound.target
+Requires=sound.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/btremote
+Environment="PATH=/opt/voice_env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Restart=always
+RestartSec=5
+ExecStart=python3 /opt/btremote/voice.py
+
+[Install]
+WantedBy=multi-user.target

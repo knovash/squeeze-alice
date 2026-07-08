@@ -82,7 +82,7 @@ public class ActionsAsync {
     }
 
     public static String toggleMusic(Player player) {
-        log.info("TOGGLE MUSIC");
+        log.info("TOGGLE MUSIC PLAYER: " + player);
         ActionsSync.answer = "Пытаюсь переключить воспроизведение на " + player.name;
         CompletableFuture.runAsync(() -> {
             player.toggleMusic();

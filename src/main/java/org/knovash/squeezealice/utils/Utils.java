@@ -142,7 +142,7 @@ public class Utils {
     }
 
     public static void sleep(int msec) {
-        log.info("SLEEP: " +msec);
+        log.info("SLEEP: " + msec);
         try {
             Thread.sleep(msec);
         } catch (InterruptedException e) {
@@ -171,7 +171,7 @@ public class Utils {
 
 
     public static void readRoomsAndAliceIds() {
-        log.debug("READ " +config.fileRoomsAndAliceIds);
+        log.debug("READ " + config.fileRoomsAndAliceIds);
         roomsAndAliceIds = JsonUtils.jsonFileToMap(config.fileRoomsAndAliceIds, String.class, String.class);
         if (roomsAndAliceIds == null) {
             roomsAndAliceIds = new HashMap<>();
@@ -181,7 +181,7 @@ public class Utils {
         log.info("READ: " + Main.roomsAndAliceIds);
     }
 
-    public static void writeRoomsAndAliceIds(){
+    public static void writeRoomsAndAliceIds() {
         JsonUtils.mapToJsonFile(roomsAndAliceIds, config.fileRoomsAndAliceIds);
     }
 
@@ -196,7 +196,7 @@ public class Utils {
         log.info("READ: " + Main.roomsAndPlayers);
     }
 
-    public static void writeRoomsAndPlayers(){
+    public static void writeRoomsAndPlayers() {
         log.info("WRITE ROOMS AND PLAYERS: " + roomsAndPlayers);
         JsonUtils.mapToJsonFile(roomsAndPlayers, config.fileRoomsAndPlayers);
     }
@@ -205,7 +205,7 @@ public class Utils {
         log.info("GET CORRECT ROOM NAME BY: " + approxRoomName);
         String correctRoom = Levenstein.search(approxRoomName, Yandex.rooms);
         if (correctRoom == null) {
-            log.info("ERROR ROOM NOT EXISTS IN YANDEX SMART HOME " + approxRoomName);
+            log.info("ERROR ROOM " + approxRoomName + " NOT EXISTS IN YANDEX SMART HOME " + approxRoomName);
             return null;
         }
         log.info("CORRECT ROOM: " + approxRoomName + " -> " + correctRoom);
@@ -217,7 +217,7 @@ public class Utils {
         List<String> players = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
         player = Utils.convertCyrilic(player);
         String correctPlayer = Levenstein.getNearestElementInListWord(player, players);
-        if (correctPlayer == null) log.info("ERROR PLAYER NOT EXISTS IN LMS ");
+        if (correctPlayer == null) log.info("ERROR PLAYER " + player + " NOT EXISTS IN LMS ");
         log.info("CORRECT PLAYER: " + player + " -> " + correctPlayer);
         return correctPlayer;
     }

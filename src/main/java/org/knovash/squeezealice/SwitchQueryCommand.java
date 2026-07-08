@@ -16,6 +16,9 @@ public class SwitchQueryCommand {
 
     public static Context action(Context context) {
         log.info(start);
+        String aliceIdRoom = null;
+        Player player = null;
+//        -----------------------
         HashMap<String, String> queryParams = context.queryMap;
         context.bodyResponse = "BAD REQUEST NO ACTION IN QUERY";
         if (!queryParams.containsKey("action")) return context;
@@ -33,31 +36,57 @@ public class SwitchQueryCommand {
             value = value.toLowerCase();
             value = value.replace("+", " ");
         }
-
-        Player player = null;
-        String aliceIdRoom = null;
-        if ("btremote".equals(playerName)) player = lmsPlayers.playerByNearestName(lmsPlayers.btPlayerName);
-        else {
-            if (lmsPlayers.roomByPlayerName(playerName) != null) room = lmsPlayers.roomByPlayerName(playerName);
-            if (lmsPlayers.playerByRoom(playerName) != null) playerName = lmsPlayers.playerByRoom(playerName).name;
-            aliceIdRoom = getAliceIdByRoom(room); // получить id по комнате
-            player = lmsPlayers.playerByNearestRoom(room);
-        }
-//        log.info("PLAYER: " + playerName + " ROOM: " + room + " ROOM ID: " + aliceIdRoom);
-
+// -------------------------------------
         if (!"signal".equals(action)) lmsPlayers.updatePlayers();
         // обновить перед всеми командами с пульта или планшета /cmd
+//        ----------------------------
+        player = lmsPlayers.playerByPlayerNameOrRoomName(playerName,room);
+        if (room == null && player != null) room = player.room;
+        log.info("PLAYER: " + player);
+//        if (room != null) aliceIdRoom = getAliceIdByRoom(room); // получить id по комнате
+        log.info("ROOM: " + room);
+//        log.info("ALICE ID: " + aliceIdRoom);
+        log.info("COMMAND TO PLAYER: " + player);
+//        -----------------------------------------------
 
-        // Управление с пульта или виджетов таскер через http запрос
-        // Респонс для отображения действия на телевизоре или планшете
 
-        if (player == null) {
-            player = lmsPlayers.players.get(0); // TODO
-            log.info("--- !!! WARNING !!! --- PLAYER null --- SET PLAYER " + player);
+        switch (action) { // БЕЗ ПЛЕЕРА
+            case "stop_all":
+                Tasker.ready = "no";
+                ActionsAsync.stopAll();
+                response = "stop all";
+                break;
+            case "remote_switch":
+                String name = ActionsSync.remoteSwitch();
+                response = "Remote switch to: " + name;
+                break;
+            case "ready": // Таскер ответ когда можно делать апдейт после завершения действий плееров
+                response = Tasker.ready();
+                break;
+            case "update_players":
+                lmsPlayers.updatePlayers(); // ручное обновление
+                response = "update players";
+                break;
+            case "spotify_me":
+                Spotify.me();
+                response = "spotify_me";
+                break;
+            case "say":
+                ActionsSync.sayMyText();
+                response = "say";
+                break;
+            default:
+                log.info("ACTION 1 NOT FOUND: " + action);
+//                response = "ACTION NOT FOUND: " + action;
+                break;
         }
 
+//        -----------------
 
-        switch (action) {
+
+
+if (response.equals("null") && player != null)
+        switch (action) { // ТОЛЬКО С ПЛЕЕРОМ
             // ========== Основные операции управления плеером ==========
             case "volume_dn":
 //                player.volume("-3");
@@ -82,10 +111,7 @@ public class SwitchQueryCommand {
             case "voice": // через бт голосовой пульт
                 Tasker.ready = "no";
                 log.info("VOICE " + value);
-                log.info("ROOM ID" + aliceIdRoom);
-//                player.say("включаю спотифай");
                 ActionsSync.spotifyPlayArtist(value, player, true);
-//                SwitchVoiceCommand.processCommand(aliceIdRoom, room, value);
                 response = "VOICE: " + value;
                 break;
             case "play":
@@ -100,14 +126,7 @@ public class SwitchQueryCommand {
                 ActionsAsync.toggleMusic(player);
                 response = player.name + " - toggle music";
                 break;
-            case "stop_all":
-                Tasker.ready = "no";
-                log.info("STOP ALL START");
-                ActionsAsync.stopAll();
-                log.info("STOP ALL AFTER");
 
-                response = "stop all";
-                break;
             case "next":
                 Tasker.ready = "no";
                 ActionsAsync.nextChannelOrTrack(player);
@@ -183,10 +202,6 @@ public class SwitchQueryCommand {
                 ActionsSync.connectBtRemoteToPlayer(player);
                 response = player.name + " - favorites add";
                 break;
-            case "remote_switch":
-                String name = ActionsSync.remoteSwitch();
-                response = "Remote switch to: " + name;
-                break;
 
             // ========== Информационные запросы ==========
             case "speak":
@@ -217,33 +232,6 @@ public class SwitchQueryCommand {
                 break;
             case "get_playlist": // Таскер для плейлиста
                 response = Tasker.forTaskerPlaylist(player, 100);
-                break;
-            case "ready": // Таскер ответ когда можно делать апдейт после завершения действий плееров
-                response = Tasker.ready();
-                break;
-
-            // ========== Утилитные действия (обновление, внешние сервисы) ==========
-            case "update_players":
-                lmsPlayers.updatePlayers(); // ручное обновление
-                response = "update players";
-                break;
-            case "spotify_me":
-                Spotify.me();
-                response = "spotify_me";
-                break;
-            case "say_request":
-                Yandex.sayMyText(value);
-                response = "say";
-                break;
-            case "say":
-                ActionsSync.sayMyText();
-                response = "say";
-                break;
-            case "test":
-                lmsPlayers.playerByNearestName("HomePod3").savePlaylistScript();
-
-
-                response = "test";
                 break;
 
             // ========== Неизвестная команда ==========
