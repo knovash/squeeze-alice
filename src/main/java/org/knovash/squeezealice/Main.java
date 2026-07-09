@@ -34,7 +34,7 @@ public class Main {
     public static String myIp = "";
 
     public static void main(String[] args) {
-        log.info("VERSION 2026.07.06");
+        log.info("VERSION 2026.07.09");
         log.info("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
         System.setProperty("userApp.root", System.getProperty("user.home"));
         log.info("OS: " + System.getProperty("os.name") + ", user.home: " + System.getProperty("user.home") + " userApp.root: " + System.getProperty("userApp.root"));

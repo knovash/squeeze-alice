@@ -7,6 +7,9 @@ default_remote="${file_name##*_}"
 read_ssh_params "$default_remote"
 #----------------------------------------------------------
 
+echo "COPY TO REMOTE"
+echo "WAIT..."
+
 # BT REMOTE
 sshpass -p "$password" scp btremote.py config.conf btremote.service install_service_btremote.sh "$username@$remote:/root/"
 
@@ -15,6 +18,15 @@ sshpass -p "$password" scp voice.py voice.conf voice.service install_service_voi
 
 
 sshpass -p "$password" scp first_run.sh install.sh log.sh "$username@$remote:/root/"
+
+echo "COPY TO REMOTE FINISHED"
+echo "CONNECT TO REMOTE"
+echo "RUN sh install.sh for all services"
+echo "RUN sh install_service_btremote.sh for only bt remote"
+echo "RUN sh install_service_voice.sh for only voice search"
+echo "RUN sh log.sh for log"
+# CONNECT
+sshpass -p "$password" ssh "$username@$remote"
 
 echo "OK"
 sleep 10

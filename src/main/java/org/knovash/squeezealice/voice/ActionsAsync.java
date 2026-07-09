@@ -38,7 +38,8 @@ public class ActionsAsync {
 
             int vv = Integer.parseInt(value) - 1;
             String channelName = player.favorites().get(Integer.parseInt(String.valueOf(vv)));
-            player.say("включаю канал " + value + " " + channelName, false);
+
+            player.say("включаю канал " + value + " " + channelName,  player.sync); // если плеер был в группе то делать востановление группы
 
             player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null).playChannel(value);
             lmsPlayers.afterAsync();
@@ -256,6 +257,17 @@ public class ActionsAsync {
             player.onlyHere();
             lmsPlayers.afterAsync();
             ActionsSync.answer = "Включаю музыку только на " + player.name;
+        });
+        Utils.sleep(1000);
+        return ActionsSync.answer;
+    }
+
+    public static String remoteSwitch() {
+        log.info("REMOTE SWITCH");
+        ActionsSync.answer = "Переключаю пульт";
+        CompletableFuture.runAsync(() -> {
+            String btname = ActionsSync.remoteSwitch();
+            ActionsSync.answer = "Пульт переключен на " + btname;
         });
         Utils.sleep(1000);
         return ActionsSync.answer;
