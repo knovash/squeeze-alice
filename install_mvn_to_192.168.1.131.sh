@@ -16,9 +16,12 @@ mvn package
 # остановить сервис
 sshpass -p "$password" ssh $username@$remote sudo systemctl stop squeeze-alice.service
 
+# ЧИСТАЯ УСТАНОВКА !!! закоментировать чтоб сохранялись настройки
+echo -e ${BGreen}"CLEAR INSTALL !!! REMOVE DIR /opt/squeeze-alice-1.0"${NC}
+sshpass -p "$password" ssh "$username@$remote" "rm -r /opt/squeeze-alice-1.0"
+
 # создать папку на ремоут
 echo -e ${BGreen}"CREATE DIR /opt/squeeze-alice-1.0"${NC}
-#sshpass -p "$password" ssh "$username@$remote" "rm -r /opt/squeeze-alice-1.0"
 sshpass -p "$password" ssh "$username@$remote" "mkdir -p /opt/squeeze-alice-1.0"
 
 # копирование приложения на ремоут

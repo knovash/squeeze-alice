@@ -440,17 +440,14 @@ public class ActionsSync {
     public static String remoteSwitch() {
         lmsPlayers.wakeUpAll();
         log.info("ALL WAKE UP FINISHED ----------------");
-
         // Получаем текущего плеера по имени
         String remoteNow = lmsPlayers.btPlayerName;
         Player playerNow = lmsPlayers.playerByName(remoteNow);
         int size = lmsPlayers.players.size();
-
         if (size == 0) {
             log.warn("No players available");
             return null;
         }
-
         // Если текущий плеер не найден, берём первого подключённого (или null)
         if (playerNow == null) {
             for (Player p : lmsPlayers.players) {
@@ -492,11 +489,13 @@ public class ActionsSync {
         lmsPlayers.btPlayerName = playerNew.name;
         log.info("BT PLAYER SWITCH TO: " + lmsPlayers.btPlayerName);
 
-        if ("play".equals(playerNew.mode)) {
-            playerNew.pause().play();
-        } else {
-            playerNew.sound("beep_long", true);
-        }
+        playerNew.say("пульт подключен к " + playerNew.name, true);
+
+//        if ("play".equals(playerNew.mode)) {
+//            playerNew.pause().play();
+//        } else {
+//            playerNew.sound("beep_long", true);
+//        }
 
         lmsPlayers.write();
         return lmsPlayers.btPlayerName;

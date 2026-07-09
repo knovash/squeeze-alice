@@ -38,15 +38,9 @@ public class Main {
         log.info("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
         System.setProperty("userApp.root", System.getProperty("user.home"));
         log.info("OS: " + System.getProperty("os.name") + ", user.home: " + System.getProperty("user.home") + " userApp.root: " + System.getProperty("userApp.root"));
-
-//        config.readConfigProperties();
-//        config.readConfigJson();
         config.load();
-//        config.write();
-
-//        setInfo("http://localhost:8080");
-        setInfo(config.domain);
-
+        config.write();
+        setInfo(config.domain); // откуда получить информацию о ключах
         Utils.getMyIpAddres();
         lmsPlayers.searchForLmsIp();
         Utils.readRoomsAndAliceIds(); // соответствие комнат и id колонок Алиса
@@ -68,8 +62,8 @@ public class Main {
 //        lmsPlayers.playerByNearestName("HomePod3").say("сервер запущен",false);
 
 //        ШЕДУЛЛЕРЫ
-//        SchedulerSpotifyRefreshToken.startPeriodicRefresh(60, 5); // Spotify периодическое обновление токена
-//        SchedulerPlayersUpdate.startPeriodicUpdate2(1); // Yandex периодическая отправка состояния плееров
+        SchedulerSpotifyRefreshToken.startPeriodicRefresh(60, 5); // Spotify периодическое обновление токена
+        SchedulerPlayersUpdate.startPeriodicUpdate2(1); // Yandex периодическая отправка состояния плееров
 
 //        smartHome.createNewDeviceSwitch("Серверная","Сервер"); // TODO выключатель сервера в удя
         log.info(Main.line);
