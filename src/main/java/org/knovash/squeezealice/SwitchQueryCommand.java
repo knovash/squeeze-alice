@@ -57,7 +57,8 @@ public class SwitchQueryCommand {
                 response = "stop all";
                 break;
             case "remote_switch":
-                String name = ActionsSync.remoteSwitch();
+//                String name = ActionsSync.remoteSwitch();
+                String name = ActionsAsync.remoteSwitch();
                 response = "Remote switch to: " + name;
                 break;
             case "ready": // Таскер ответ когда можно делать апдейт после завершения действий плееров
@@ -85,7 +86,7 @@ public class SwitchQueryCommand {
 
 
 
-if (response.equals("null") && player != null)
+if (response.equals("null") && player != null && player.connected)
         switch (action) { // ТОЛЬКО С ПЛЕЕРОМ
             // ========== Основные операции управления плеером ==========
             case "volume_dn":

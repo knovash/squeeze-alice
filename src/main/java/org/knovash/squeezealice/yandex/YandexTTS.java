@@ -34,7 +34,7 @@ public class YandexTTS {
 
         player.saveLastTime();
         player.waitSeconds(1); // минимальная длина звука, потом опрос
-        waitForPlaybackCompletion(player, 25); // опрос дождаться конца уведомления
+        waitForPlaybackCompletion(player, 40); // опрос дождаться конца уведомления
         player.volumeSet(player.savedPlaylistVolume); // установить громкость до уведомления
         if (!restoreTry) return;
         player.restorePlaylistScript(); // востановить плейлист до уведомления

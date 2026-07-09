@@ -437,24 +437,89 @@ public class ActionsSync {
         log.info("BT PLAYER NAME: " + lmsPlayers.btPlayerName);
         lmsPlayers.write();
     }
-
     public static String remoteSwitch() {
         lmsPlayers.wakeUpAll();
+        log.info("ALL WAKE UP FINISHED ----------------");
+
+        // Получаем текущего плеера по имени
         String remoteNow = lmsPlayers.btPlayerName;
         Player playerNow = lmsPlayers.playerByName(remoteNow);
-        int indexNow = lmsPlayers.players.indexOf(playerNow);
-        int indexNew = indexNow + 1;
         int size = lmsPlayers.players.size();
-        if (indexNow == size - 1) indexNew = 0;
-        Player playerNew = lmsPlayers.players.get(indexNew);
+
+        if (size == 0) {
+            log.warn("No players available");
+            return null;
+        }
+
+        // Если текущий плеер не найден, берём первого подключённого (или null)
+        if (playerNow == null) {
+            for (Player p : lmsPlayers.players) {
+                if (p.connected) {
+                    playerNow = p;
+                    break;
+                }
+            }
+            if (playerNow == null) {
+                log.warn("No connected player found");
+                return null;
+            }
+            // Если нашли, обновляем индекс
+        }
+        int indexNow = lmsPlayers.players.indexOf(playerNow);
+        int startIndex = indexNow;
+        int indexNew = (indexNow + 1) % size; // следующий по кругу
+        Player playerNew = null;
+        // Циклически ищем подключённый плеер, начиная со следующего
+        while (indexNew != startIndex) {
+            Player candidate = lmsPlayers.players.get(indexNew);
+            if (candidate.connected) {
+                playerNew = candidate;
+                break;
+            }
+            indexNew = (indexNew + 1) % size;
+        }
+        // Если не нашли подключённый (все отключены), пытаемся оставить текущий, если он подключён
+        if (playerNew == null) {
+            if (playerNow.connected) {
+                playerNew = playerNow;
+            } else {
+                log.warn("No connected players found");
+                return null;
+            }
+        }
+
+        // Переключаемся на найденный плеер
         lmsPlayers.btPlayerName = playerNew.name;
         log.info("BT PLAYER SWITCH TO: " + lmsPlayers.btPlayerName);
-        if ("play".equals(playerNew.mode)) { // если этот плеер играет
+
+        if ("play".equals(playerNew.mode)) {
             playerNew.pause().play();
-        } else playerNew.sound("beep_long", true);
+        } else {
+            playerNew.sound("beep_long", true);
+        }
+
         lmsPlayers.write();
         return lmsPlayers.btPlayerName;
     }
+//    public static String remoteSwitch() {
+//        lmsPlayers.wakeUpAll();
+//        String remoteNow = lmsPlayers.btPlayerName;
+//        Player playerNow = lmsPlayers.playerByName(remoteNow);
+//        int indexNow = lmsPlayers.players.indexOf(playerNow);
+//        int indexNew = indexNow + 1;
+//        int size = lmsPlayers.players.size();
+//        if (indexNow == size - 1) indexNew = 0;
+//        Player playerNew = lmsPlayers.players.get(indexNew);
+//        if(!playerNew.connected){indexNew = indexNew+1} // и далее повторить пока плееер не найдется подклченный playerNew.connected
+//
+//        lmsPlayers.btPlayerName = playerNew.name;
+//        log.info("BT PLAYER SWITCH TO: " + lmsPlayers.btPlayerName);
+//        if ("play".equals(playerNew.mode)) { // если этот плеер играет
+//            playerNew.pause().play();
+//        } else playerNew.sound("beep_long", true);
+//        lmsPlayers.write();
+//        return lmsPlayers.btPlayerName;
+//    }
 
     public static String whereBtRemote() {
         log.info("WHERE BT REMOTE");

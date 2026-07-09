@@ -195,7 +195,7 @@ def record_and_recognize():
         logger.info("❓ Ничего не распознано")
         send_custom_request(
             action="speak",
-            player="Гостиная",
+            player="btremote",
             value="текст не распознан"
         )
 

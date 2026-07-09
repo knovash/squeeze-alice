@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static org.knovash.squeezealice.Main.config;
 import static org.knovash.squeezealice.Main.lmsPlayers;
 
 @Log4j2
@@ -79,7 +80,7 @@ public class Tasker {
     public static String forTaskerPlaylist(Player player, Integer lines) {
         log.info("CREATE PLAYLIST FOR TASKER. ACTIVE PLAYER: " + player);
         int tracks = player.requestPlaylistTracks();
-        if(tracks == 0){
+        if (tracks == 0) {
             log.info("PLAYLIST EMPTY");
             widgetPlaylist = "empty";
             return "empty";
@@ -93,8 +94,9 @@ public class Tasker {
             log.info("PLAYLIST CURRENT INDEX: " + index);
             playlist.set(index, ">" + playlist.get(index)); // Заменяем элемент по конкретному индексу
             playlist = Utils.linesFromList(playlist, index, lines); // показывать только часть плейлиста вокруг играющего
+        } else {
+            playlist.replaceAll(t -> t.replaceAll("1.", ""));
         }
-        else { playlist.replaceAll(t -> t.replaceAll("1.", ""));}
         String result = String.join(", ", playlist);
         log.info("PLAYLIST: " + playlist);
         widgetPlaylist = result;
@@ -106,10 +108,14 @@ public class Tasker {
         lmsPlayers.checkUpdated(); // TODO DEBUG
 
         Function<Player, String> formatter = p -> {
+            String remote = "";
+            if (p.name.equals(lmsPlayers.btPlayerName)) {
+                remote = " - R";
+            }
             String name = (p.room != null) ? p.room + " - " + p.name : p.name;
             String vol = (p.volume != null) ? p.volume : "-";
             if (!p.connected) return name + " - offline";
-            return name + " - " + vol + " - " + p.title;
+            return name + remote + " - " + vol + " - " + p.title;
         };
 
         Comparator<Player> byTitle = Comparator.comparing(player -> player.title, Comparator.nullsLast(Comparator.naturalOrder()));

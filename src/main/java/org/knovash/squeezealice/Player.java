@@ -715,6 +715,7 @@ public class Player {
     }
 
     public Player ifExpiredAndNotPlayingUnsyncWakeSetVolume(String volume) {
+        if(!this.connected) return this;
 // если не играет и время просрочено - unsync, wake, set volume
         if (!this.playing && this.checkLastPlayTimeExpired()
         ) {
@@ -735,30 +736,29 @@ public class Player {
     }
 
     private Player wakeAndSetVolume(String volume) {
+        log.info("WAKE SKIP -------------------");
         log.info("WAKE START PLAYER: " + this.name + " WAIT: " + this.delay + " VOLUME: " + volume);
-//        this.saveLastPathThis();
         if (volume == null) volume = String.valueOf(this.valueVolumeByTime());
         if (delay == null) delay = 10;
 //        SAVE PLAYLIST
-        this.savePlaylistScript(); // сохранить плейлист
-
-        this.playSilence(); // воспроизвести файл тихий шум чтоб разбудить колонку
-
-        for (int i = 0; i < delay; i++) {
-            this.volumeNoLog("+1");
-            this.volumeNoLog("-1");
-            this.volumeNoLog(volume);
-            log.info("count " + i + " PLAYER: " + this.name);
-            this.waitSeconds(1);
-        }
+//        this.savePlaylistScript(); // сохранить плейлист
+//        this.playSilence(); // воспроизвести файл тихий шум чтоб разбудить колонку
+//        for (int i = 0; i < delay; i++) {
+//            this.volumeNoLog("+1");
+//            this.volumeNoLog("-1");
+//            this.volumeNoLog(volume);
+//            log.info("count " + i + " PLAYER: " + this.name);
+//            this.waitSeconds(1);
+//        }
         this.volumeNoLog("+1");
         this.volumeNoLog("-1");
         this.volumeSet(volume);
-        this.pause();
 
-        this.restorePlaylistScript(); // восстановить плейлист
+//        this.pause();
+//        this.restorePlaylistScript(); // восстановить плейлист
+//        this.saveLastTime();
 
-        this.saveLastTime();
+
         log.info("WAKE FINISH");
         return this;
     }
