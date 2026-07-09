@@ -57,7 +57,6 @@ public class SwitchQueryCommand {
                 response = "stop all";
                 break;
             case "remote_switch":
-//                String name = ActionsSync.remoteSwitch();
                 String name = ActionsAsync.remoteSwitch();
                 response = "Remote switch to: " + name;
                 break;

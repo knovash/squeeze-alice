@@ -22,23 +22,23 @@ import static org.knovash.squeezealice.Main.*;
 @AllArgsConstructor
 public class Player {
 
-    //  постоянные плеера
+    // постоянные плеера
     public String mac;
     public String name;
     public String room;
-    //  переменные настройки плеера
+    // переменные настройки плеера
     public Integer volume_step;
     public Integer volume_low;
     public Integer volume_high;
     public Integer delay;
     public Map<Integer, Integer> schedule;
-    //  длительные свойства
+    // длительные свойства
     public String lastPathPlayer;
     public String lastPlayTimePlayer;
     public int lastChannelPlayer = 0;
     public static int lastChannelCommon;
     public static String lastPathCommon;
-    //  свойства плеера в моменте
+    // свойства плеера в моменте
     public PlayerStatus playerStatus; // результат запроса статуса плеера
     public boolean playing;
     public String mode; // play stop offline
@@ -50,8 +50,7 @@ public class Player {
     public String capVolume;
     public String capChannel;
     public String capOn;
-//    public boolean result;
-
+    // сохранные параметры восстановления плейлиста
     public String savedPlaylistIndex;
     public double savedPlaylistTime;
     public String savedPlaylistMode;
@@ -65,8 +64,8 @@ public class Player {
         this.room = null;
         this.volume_step = 5;
         this.volume_low = 1;
-        this.volume_high = 50;
-        this.delay = 10;
+        this.volume_high = 70;
+        this.delay = 8;
         this.schedule = new HashMap<>(Map.of(
                 0, 10,
                 7, 15,
@@ -89,24 +88,6 @@ public class Player {
         lastPlayTimePlayer = null;
     }
 
-
-//    public static void updatePlayer(ServerStatus.PlayersLoop p) {
-//        Player player = lmsPlayers.playerByName(p.name);
-//        if (player == null) {
-//            player = new Player(p.name);
-//            log.info("ADD NEW PLAYER: " + player.name + " ROOM: " + player.room + " " + player.getClass().getName());
-//            lmsPlayers.players.add(player);
-//        }
-//        player.connected = false;
-//        player.mode = "stop";
-//        player.playing = false;
-//        if (p.isplaying == 1) {
-//            player.mode = "play";
-//            player.playing = true;
-//        }
-//        if (p.connected == 1) player.connected = true;
-//    }
-
     public void update(ServerStatus.PlayersLoop p) {
         this.connected = false;
         this.mode = "stop";
@@ -115,7 +96,6 @@ public class Player {
             this.mode = "play";
             this.playing = true;
             this.saveLastTime();
-
         }
         if (p.connected == 1) this.connected = true;
     }
@@ -128,7 +108,6 @@ public class Player {
         this.volume = null;
         this.title = null;
     }
-
 
     public PlayerStatus.Result status() { // неиспользуется
         log.debug("REQUEST STATUS " + name);
@@ -149,7 +128,7 @@ public class Player {
         return result;
     }
 
-    public PlayerStatus.Result statusFast() { // неиспользуется
+    public PlayerStatus.Result statusFast() {
         log.debug("REQUEST STATUS FAST" + name);
         String json = Requests.postToLmsForJsonBody(RequestParameters.status(name, 0).toString());
         if (json == null) return null;
@@ -157,13 +136,6 @@ public class Player {
         playerStatus = JsonUtils.jsonToPojo(json, PlayerStatus.class);
         if (playerStatus == null || playerStatus.result == null) return null;
         PlayerStatus.Result result = playerStatus.result;
-//        connected = (result.player_connected == 1);
-//        volume = String.valueOf(result.mixer_volume);
-//        playing = "play".equals(result.mode);
-//        mode = playing ? "play" : "stop";
-//        sync = (result.sync_slaves != null || result.sync_master != null);
-//        if (sync) separate = false;
-//        log.info(this);
         return result;
     }
 
@@ -176,22 +148,17 @@ public class Player {
         log.info("artistName: " + artistName);
         log.info("albumName: " + albumName);
         log.info("trackname: " + trackName);
-
-
         String title = null;
-
         String requestPlaylistName = requestPlaylistName();
         if (requestPlaylistName != null) {
             title = titleCrop(requestPlaylistName);
             if (title != null && title.contains("://")) title = null;
             if (title != null && title.contains("_restore")) title = null;
         }
-
         if (title == null) {
             String artist = null;
             String album = null;
             String track = null;
-
             artist = artistName();
             log.info("artistName: " + artist);
             if (artist == null) {
@@ -202,7 +169,6 @@ public class Player {
                     log.info("trackname: " + track);
                 }
             }
-
             if (artist != null && track != null) {
                 title = titleCrop(artist) + ", " + titleCrop(track);
             } else if (artist != null) {
@@ -213,11 +179,8 @@ public class Player {
         }
 
         if (title != null && title.contains("music/sounds")) title = null; // если играл звук
-
         if (title != null && title.contains("_restore")) title = null; // если играл звук
-        if (title == null) {
-            title = "unknown";
-        }
+        if (title == null) title = "unknown";
 
         log.info("TITLE: {}", title);
         this.title = title;
@@ -260,7 +223,6 @@ public class Player {
         if (jsonResponse == null) return null;
         jsonResponse = JsonUtils.fixQuote(jsonResponse); // исправление " в названии
         Response response = JsonUtils.jsonToPojo(jsonResponse, Response.class);
-//        Response response = Requests.postToLmsForResponse(RequestParameters.albumname(this.name).toString());
         if (response == null) return null;
         return response.result._album;
     }
@@ -275,9 +237,7 @@ public class Player {
         Response response = Requests.postToLmsForResponse(RequestParameters.artistname(this.name).toString());
         if (response == null) return null;
         return response.result._artist;
-
     }
-
 
 // LMS получение данных ------------------------------------------------------------------------------------------------
 
@@ -304,7 +264,6 @@ public class Player {
         log.info("PLAYER: " + this.name + " MODE: " + response.result._mode + " PLAYING: " + this.playing); // playing
         return this.playing; // playing()
     }
-
 
     public List<String> favorites() {
         Response response = Requests.postToLmsForResponse(RequestParameters.favorites("", "0").toString());
@@ -403,18 +362,6 @@ public class Player {
         Requests.postToLmsForStatus(RequestParameters.playlistTimeSet(this.name, String.valueOf(time)).toString());
         return this;
     }
-
-//    public Player playlistModeSet(String mode) {
-//        log.info("MODE: " + mode);
-//        if ("play".equals(mode)) {
-//            this.play();
-//        } else if ("pause".equals(mode)) {
-//            this.pause();
-//        } else if ("stop".equals(mode)) {
-//            this.pause(); // реализуйте stop, если нужен
-//        }
-//        return this;
-//    }
 
     public Player ctrlPrevTrack() {
         log.info("PLAYER: " + this.name + " NEXT TRACK");
@@ -529,15 +476,12 @@ public class Player {
         this.ifExpiredAndNotPlayingUnsyncWakeSetVolume(volume); // если не играет разбудить и установить громкость
         if (!this.playing) this.unsync(); // если не играет отключить от группы если вдруг был подключен
         this.syncToPlayingOrPlayLast(); // попытка подключиться к уже играющему. неподключать если он отделен и неподключать к отделенным если игращего нет включить последнее игравшее
-
-//        this.say("выключаю");
         return this;
     }
 
     public Player turnOffMusic() {
         log.info("PLAYER: " + this.name + " TURN OFF MUSIC");
         this.unsync().pause();
-//        this.say("выключаю");
         return this;
     }
 
@@ -545,10 +489,8 @@ public class Player {
         log.info("PLAYER: " + this.name + " TOGGLE MUSIC");
         if (this.playing) {
             this.turnOffMusic();
-//            this.say("Выключаю музыку");
             ActionsSync.answer = "Выключаю музыку";
         } else {
-//            this.say("Включаю музыку");
             this.turnOnMusic(null);
             ActionsSync.answer = "Включаю музыку";
         }
@@ -578,7 +520,7 @@ public class Player {
 
     public Player volumeSetLimited(String value) {
         Integer currentVolume = Integer.valueOf(this.volumeGet()); // получить громкость сейчас запросом в lms
-//        Integer currentVolume = Integer.valueOf(this.volume); // взять громкость из данных после обновления
+//      Integer currentVolume = Integer.valueOf(this.volume); // взять громкость из данных после обновления
         Integer newVolume = 0;
         if (value.contains("-")) newVolume = currentVolume - Integer.parseInt(value.replace("-", ""));
         if (value.contains("+")) newVolume = currentVolume + Integer.parseInt(value.replace("+", ""));
@@ -597,13 +539,10 @@ public class Player {
     public Player playChannel(String channel) {
         int id = 1;
         if (channel == null || channel.equals(0)) return this;
-
         log.info("CHANNEL: " + channel);
-
         if (channel.contains("-")) id = channelGetRelative(channel) - 1 - 1;
         if (channel.contains("+")) id = channelGetRelative(channel) - 1 + 1;
         if (!(channel.contains("-") || channel.contains("+"))) id = Integer.parseInt(channel) - 1; // id начинается с 0
-
         log.info("CHANNEL PLAY: " + id);
         this.lastChannelPlayer = id; // сохранить последний канал этого плеера
         Player.lastChannelCommon = id; // сохранить последний канал для всех плееров
@@ -715,7 +654,7 @@ public class Player {
     }
 
     public Player ifExpiredAndNotPlayingUnsyncWakeSetVolume(String volume) {
-        if(!this.connected) return this;
+        if (!this.connected) return this;
 // если не играет и время просрочено - unsync, wake, set volume
         if (!this.playing && this.checkLastPlayTimeExpired()
         ) {
@@ -741,23 +680,22 @@ public class Player {
         if (volume == null) volume = String.valueOf(this.valueVolumeByTime());
         if (delay == null) delay = 10;
 //        SAVE PLAYLIST
-//        this.savePlaylistScript(); // сохранить плейлист
-//        this.playSilence(); // воспроизвести файл тихий шум чтоб разбудить колонку
-//        for (int i = 0; i < delay; i++) {
-//            this.volumeNoLog("+1");
-//            this.volumeNoLog("-1");
-//            this.volumeNoLog(volume);
-//            log.info("count " + i + " PLAYER: " + this.name);
-//            this.waitSeconds(1);
-//        }
+        this.savePlaylistScript(); // сохранить плейлист
+        this.playSilence(); // воспроизвести файл тихий шум чтоб разбудить колонку
+        for (int i = 0; i < delay; i++) {
+            this.volumeNoLog("+1");
+            this.volumeNoLog("-1");
+            this.volumeNoLog(volume);
+            log.info("count " + i + " PLAYER: " + this.name);
+            this.waitSeconds(1);
+        }
         this.volumeNoLog("+1");
         this.volumeNoLog("-1");
         this.volumeSet(volume);
 
-//        this.pause();
-//        this.restorePlaylistScript(); // восстановить плейлист
-//        this.saveLastTime();
-
+        this.pause();
+        this.restorePlaylistScript(); // восстановить плейлист
+        this.saveLastTime();
 
         log.info("WAKE FINISH");
         return this;
@@ -790,21 +728,18 @@ public class Player {
         log.info("LAST THIS PRIORITY: " + lmsPlayers.lastThis);
 
 // если у этого плеера есть путь и он не тишина - играть
-//        if (thisPath != null && !thisPath.equals(config.silence) && !thisPath.equals("") && !thisPath.contains("speech.mp3"))
         if (pathIsOk(thisPath)) {
             log.info("PUSH PLAY BUTTON: " + thisPath);
             this.play();
             return this;
         }
 // если у этого плеера нет пути играть последний сохраненый этого
-//        if (thisLastPath != null && !thisLastPath.equals(config.silence) && !thisLastPath.equals("") && lmsPlayers.lastThis && !thisPath.contains("speech.mp3"))
         if (pathIsOk(thisLastPath)) {
             log.info("PLAY THIS LAST PATH: " + thisLastPath);
             this.playPath(thisLastPath);
             return this;
         }
 // если у этого плеера нет пути и нет последнего этого то играть последний сохраненный общий
-//        if (commonLastPath != null && !commonLastPath.equals(config.silence) && !thisPath.contains("speech.mp3") && !commonLastPath.equals(""))
         if (pathIsOk(commonLastPath)) {
             log.info("PLAY COMMON LAST PATH: " + commonLastPath);
             this.playPath(commonLastPath);
@@ -818,8 +753,6 @@ public class Player {
 
 
     public Boolean pathIsOk(String path) {
-//        if (thisLastPath != null && !thisLastPath.equals(config.silence) && !thisLastPath.equals("") && lmsPlayers.lastThis && !thisPath.contains("speech.mp3"))
-//        if (thisPath != null && !thisPath.equals(config.silence) && !thisPath.equals("") && !thisPath.contains("speech.mp3"))
         return (path != null &&
                 !path.equals(config.silence) &&
                 !path.contains("speech.mp3") &&
@@ -1066,8 +999,6 @@ public class Player {
         log.info(finish);
     }
 
-
-
     public Map<String, List<String>> playingPlayersNameGroups(Boolean exceptSeparated) {
         log.info("SEARCH FOR PLAYERS PLAYING IN CURRENT GROUP AND OTHER GROUP");
         // Получить имена играющих плееров
@@ -1108,7 +1039,7 @@ public class Player {
     public String toString() {
         return String.format(
                 "NAME:%-15s " +
-                "ROOM:%-10s" +
+                        "ROOM:%-10s" +
                         "CONNECTED:%-5b " +
                         "SEPARATED:%-5b " +
                         "SYNC:%-5b " +

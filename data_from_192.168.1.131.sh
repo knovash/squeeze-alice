@@ -27,8 +27,10 @@ echo $remote" "$username" "$password
 #------------------------------------------------------------
 
 # data from remote
+timestamp=$(date +%Y%m%d_%H%M%S)
 mkdir -p data
-sshpass -p "$password" rsync -avh --progress $username@$remote:/opt/squeeze-alice-1.0/data/* data/
+mkdir -p "data/data-$timestamp"
+sshpass -p "$password" rsync -avh --progress $username@$remote:/opt/squeeze-alice-1.0/data/* data/data-$timestamp/
 
 echo "OK"
 sleep 10
