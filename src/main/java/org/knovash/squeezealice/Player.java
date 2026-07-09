@@ -458,13 +458,13 @@ public class Player {
         return this;
     }
 
-    public Player say(String text, Boolean restore) {
-        YandexTTS.playerSay(this, text, false, restore);
+    public Player say(String text, Boolean restore, Boolean restoreSync) {
+        YandexTTS.playerSay(this, text, false, restore, restoreSync);
         return this;
     }
 
-    public Player sound(String file, Boolean restore) {
-        YandexTTS.playerSay(this, file, true, restore);
+    public Player sound(String file, Boolean restore, Boolean restoreSync) {
+        YandexTTS.playerSay(this, file, true, restore, restoreSync);
         return this;
     }
 
@@ -498,7 +498,7 @@ public class Player {
     }
 
     public Player volumeSet(String value) {
-        log.info("PLAYER: " + this.name + " VOLUME: " + value);
+//        log.info("PLAYER: " + this.name + " VOLUME: " + value);
         Requests.postToLmsForStatus(RequestParameters.volume(this.name, value).toString());
         return this;
     }
@@ -683,18 +683,18 @@ public class Player {
         this.savePlaylistScript(); // сохранить плейлист
         this.playSilence(); // воспроизвести файл тихий шум чтоб разбудить колонку
         for (int i = 0; i < delay; i++) {
-            this.volumeNoLog("+1");
-            this.volumeNoLog("-1");
-            this.volumeNoLog(volume);
+            this.volumeSet("+1");
+            this.volumeSet("-1");
+            this.volumeSet(volume);
             log.info("count " + i + " PLAYER: " + this.name);
             this.waitSeconds(1);
         }
-        this.volumeNoLog("+1");
-        this.volumeNoLog("-1");
+        this.volumeSet("+1");
+        this.volumeSet("-1");
         this.volumeSet(volume);
 
         this.pause();
-        this.restorePlaylistScript(); // восстановить плейлист
+        this.restorePlaylistScript(false); // восстановить плейлист
         this.saveLastTime();
 
         log.info("WAKE FINISH");
@@ -796,6 +796,15 @@ public class Player {
         }
         return this;
     }
+    public Player waitMilSeconds(Integer delay) {
+        log.info("wait " + delay + " second");
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return this;
+    }
 
     public Player waitFor(int msec) {
         log.info("WAIT " + msec + " START");
@@ -812,7 +821,7 @@ public class Player {
 // сохранить последнее время
         this.lastPlayTimePlayer = LocalTime.now(zoneId).truncatedTo(MINUTES).toString();
         log.info(this.name + " LAST TIME: " + this.lastPlayTimePlayer + " LAST PATH: " + this.lastPathPlayer);
-//        lmsPlayers.write();
+        lmsPlayers.write();
         return this;
     }
 
@@ -971,10 +980,10 @@ public class Player {
         log.info(finish);
     }
 
-    public void restorePlaylistScript() {
+    public void restorePlaylistScript(Boolean restoreSync) {
         log.info(start);
         if (!this.savedPlaylistOk) return;
-        if (this.savedGroup != null && !this.savedGroup.isEmpty()) {
+        if (this.savedGroup != null && !this.savedGroup.isEmpty() && restoreSync) {
             log.info("SYNC TO: " + this.savedGroup);
             this.syncTo(this.savedGroup.get(0));
 

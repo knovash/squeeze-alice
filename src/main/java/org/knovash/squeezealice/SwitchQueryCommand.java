@@ -154,7 +154,7 @@ if (response.equals("null") && player != null && player.connected)
                 break;
             case "prev_channel":
                 Tasker.ready = "no";
-                player.say("предыдущий канал", false);
+                player.say("предыдущий канал", false, true);
                 ActionsAsync.prevChannel(player);
                 response = player.name + " - prev channel";
                 break;
@@ -170,7 +170,7 @@ if (response.equals("null") && player != null && player.connected)
                 break;
             case "switch_here":
                 Tasker.ready = "no";
-                player.say("преключаю музыку на " + player.name, false);
+                player.say("преключаю музыку на " + player.name, false, true);
                 ActionsAsync.switchHere(player);
                 response = player.name + " - switch here";
                 break;
@@ -205,20 +205,20 @@ if (response.equals("null") && player != null && player.connected)
 
             // ========== Информационные запросы ==========
             case "speak":
-                player.say(value, true);
+                player.say(value, true, true);
                 break;
             case "signal":
-                player.sound(value, false);
+                player.sound(value, false, true);
                 break;
 
-            case "its_alive":
-                lmsPlayers.itsAlive();
-                break;
+//            case "its_alive":
+//                lmsPlayers.itsAlive();
+//                break;
 
             case "wats_playing":
                 String watsPlaying = ActionsSync.whatsPlaying(player, false);
                 log.info("WATS PLAYING: " + watsPlaying);
-                player.say(watsPlaying, true);
+                player.say(watsPlaying, true, true);
                 break;
             case "title":
                 response = player.title();

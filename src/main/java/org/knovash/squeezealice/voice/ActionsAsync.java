@@ -39,7 +39,7 @@ public class ActionsAsync {
             int vv = Integer.parseInt(value) - 1;
             String channelName = player.favorites().get(Integer.parseInt(String.valueOf(vv)));
 
-            player.say("включаю канал " + value + " " + channelName,  player.sync); // если плеер был в группе то делать востановление группы
+            player.say("включаю канал " + value + " " + channelName,  player.sync, player.sync); // если плеер был в группе то делать востановление группы
 
             player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null).playChannel(value);
             lmsPlayers.afterAsync();

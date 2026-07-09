@@ -487,28 +487,28 @@ public class LmsPlayers {
         return lmsPlayers;
     }
 
-    public LmsPlayers itsAlive() {
-        itsAlive(null);
-        return lmsPlayers;
-    }
+//    public LmsPlayers itsAlive() {
+//        itsAlive(null);
+//        return lmsPlayers;
+//    }
 
-    public LmsPlayers itsAlive(String playerOrRoom) {
-        log.info("IT'S ALIVE! " + playerOrRoom);
-        if ("all".equals(playerOrRoom)) {
-
-            lmsPlayers.stopAll().wakeUpAll().syncAll();
-            lmsPlayers.players.get(0).sound("beep_long", true);
-            lmsPlayers.unsyncAll();
-
-//            lmsPlayers.players.parallelStream().forEach(p -> p.sound("beep_long", false));
-        }
-        Player player;
-        player = lmsPlayers.playerByNearestRoom(playerOrRoom);
-        if (player == null) player = lmsPlayers.playerByName(playerOrRoom);
-        if (player != null) player.sound("beep_long", false);
-        else lmsPlayers.players.parallelStream().forEach(p -> p.sound("beep_long", false));
-        return lmsPlayers;
-    }
+//    public LmsPlayers itsAlive(String playerOrRoom) {
+//        log.info("IT'S ALIVE! " + playerOrRoom);
+//        if ("all".equals(playerOrRoom)) {
+//
+//            lmsPlayers.stopAll().wakeUpAll().syncAll();
+//            lmsPlayers.players.get(0).sound("beep_long", true, true);
+//            lmsPlayers.unsyncAll();
+//
+////            lmsPlayers.players.parallelStream().forEach(p -> p.sound("beep_long", false));
+//        }
+//        Player player;
+//        player = lmsPlayers.playerByNearestRoom(playerOrRoom);
+//        if (player == null) player = lmsPlayers.playerByName(playerOrRoom);
+//        if (player != null) player.sound("beep_long", false, true);
+//        else lmsPlayers.players.parallelStream().forEach(p -> p.sound("beep_long", false, true));
+//        return lmsPlayers;
+//    }
 
     public Player playerByPlayerNameOrRoomName(String playerName, String roomName) {
         log.info("PLAYER: " + playerName + " ROOM: " + roomName);

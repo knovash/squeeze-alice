@@ -58,6 +58,8 @@ public class Main {
         hive.start();
         hive.subscribeByYandex();
 
+
+        lmsPlayers.wakeUpAll();
 //        lmsPlayers.itsAlive(); // уведомления во все колоник при запуске
 //        lmsPlayers.playerByNearestName("HomePod3").say("сервер запущен",false);
 

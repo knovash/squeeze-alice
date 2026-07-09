@@ -15,17 +15,22 @@ import static org.knovash.squeezealice.Main.lmsPlayers;
 @Log4j2
 public class YandexTTS {
 
-    public static void playerSay(Player player, String text, Boolean file, Boolean restoreTry) {
+    public static void playerSay(Player player, String text, Boolean file, Boolean restoreTry, Boolean restoreSync) {
         if (player == null) return;
         log.info("PLAYER: " + player.name + " RESTORE: " + restoreTry + " TEXT: " + text + " FILE: " + file + " TOGGLE: " + lmsPlayers.toggleVoice);
         if (!lmsPlayers.toggleVoice) return;
         player.savePlaylistScript(); // сохранить плейлист перед уведомлением
-        int volumeNotification = player.valueVolumeByTime() + 10; // громкость уведомления
+        int volumeByTime = player.valueVolumeByTime();
+        log.info("VOLUME BY TIME GET: " + volumeByTime);
+        int volumeNotification = volumeByTime + 10; // громкость уведомления
         if (volumeNotification > 50) volumeNotification = 50;
         player.unsync();
         player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null); // разбудить плеер если неиграет
         player.pause();
+        player.waitMilSeconds(300);
+        log.info("VOLUME FOR NOTIFICATION SET " + volumeByTime + "+10 = " + volumeNotification);
         player.volumeSet(String.valueOf(volumeNotification)); // установить громкость уведомления
+        player.waitMilSeconds(800);
 
         if (file)
             player.playFile("http://" + Main.myIp + ":8010/music/sounds/" + text + ".mp3");// воспроизвести файл звук
@@ -37,7 +42,7 @@ public class YandexTTS {
         waitForPlaybackCompletion(player, 40); // опрос дождаться конца уведомления
         player.volumeSet(player.savedPlaylistVolume); // установить громкость до уведомления
         if (!restoreTry) return;
-        player.restorePlaylistScript(); // востановить плейлист до уведомления
+        player.restorePlaylistScript(restoreSync); // востановить плейлист до уведомления
     }
 
     public static String textToVoiceFile(String text) {
