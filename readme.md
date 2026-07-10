@@ -68,7 +68,9 @@
 
 ### Доступ к управлению всеми плеерами прямо с рабочего стола не заходя в приложение
 
-`tasker/squeeze-tasker.prj.xml`
+`tasker/squeeze-tasker.prj.xml`  
+[https://taskernet.com Project - Lyrion Music Server Widgets](https://taskernet.com/?user=AS35m8l41V5ZEnau2L8l%2Feyup%2F3dACIp9knWIQaItDG9k2AY77ZyUTy5Vq2Zvd0TdHMDzA%3D%3D)
+
 - виджеты для всех команд управления
 - голосовой поиск в Spotify
     - включи <исполнитель>
