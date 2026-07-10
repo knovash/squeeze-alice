@@ -37,10 +37,10 @@ echo -e ${BGreen}"DELETE LOG /opt/squeeze-alice-1.0/data/log.txt"${NC}
 sshpass -p "$password" ssh "$username@$remote" "rm /opt/squeeze-alice-1.0/data/log.txt"
 
 # проверка файлов
-echo -e ${BGreen}"\n/opt/squeeze-alice-1.0/"${NC}
-sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/"
-echo -e ${BGreen}"/lib/systemd/system/"${NC}
-sshpass -p "$password" ssh "$username@$remote" "ls /lib/systemd/system/sq*.service"
+#echo -e ${BGreen}"\n/opt/squeeze-alice-1.0/"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "ls /opt/squeeze-alice-1.0/"
+#echo -e ${BGreen}"/lib/systemd/system/"${NC}
+#sshpass -p "$password" ssh "$username@$remote" "ls /lib/systemd/system/sq*.service"
 
 # запуск сервиса
 echo -e ${BGreen}"\nSYSTEMCTL enable, daemon-reload, restart squeeze-alice.service"${NC}

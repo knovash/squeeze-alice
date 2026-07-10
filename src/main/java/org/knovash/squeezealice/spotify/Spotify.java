@@ -81,6 +81,7 @@ public class Spotify {
             log.info("ARTIST: " + spotifySearchTrack.tracks.items.get(0).artists.get(0).name);
             log.info("TRACK: " + spotifySearchTrack.tracks.items.get(0).name);
             log.info("URI: " + link);
+            Spotify.nameForSay = spotifySearchTrack.tracks.items.get(0).artists.get(0).name + ", " + spotifySearchTrack.tracks.items.get(0).name;
             return link;
         } catch (Exception e) {
             log.error("Encoding error", e);
@@ -106,6 +107,7 @@ public class Spotify {
             log.info("ARTIST: " + spotifySearchAlbum.albums.items.get(0).artists.get(0).name);
             log.info("ALBUM: " + spotifySearchAlbum.albums.items.get(0).name);
             log.info("URI: " + link);
+            Spotify.nameForSay = spotifySearchAlbum.albums.items.get(0).artists.get(0).name + ", " +  spotifySearchAlbum.albums.items.get(0).name;
             return link;
         } catch (Exception e) {
             log.error("Encoding error", e);
@@ -159,11 +161,11 @@ public class Spotify {
 
     // Для обратной совместимости
     public static String currentlyPlaying() {
-        Spotify.currentlyPlaying  = null;
+        Spotify.currentlyPlaying = null;
         CurrentlyPlaying cp = getCurrentlyPlaying();
         if (cp == null) return "ERROR";
         log.info("Spotify is playing: {}", cp.is_playing);
-        Spotify.currentlyPlaying  = cp;
+        Spotify.currentlyPlaying = cp;
         return JsonUtils.pojoToJson(cp);
     }
 

@@ -57,6 +57,8 @@ public class Config {
     public String fileDevices = "data/devices.json";
     public String fileLmsPlayers = "data/lms_players.json";
 
+    public int volumeVoicePlus = 20;
+
     public void load() {
         ResourceBundle bundle = ResourceBundle.getBundle("config");
         this.port = Integer.parseInt(bundle.getString("port"));
@@ -75,6 +77,7 @@ public class Config {
         this.fileRoomsAndPlayers = bundle.getString("fileRoomsAndPlayers");
         this.fileDevices = bundle.getString("fileDevices");
         this.fileLmsPlayers = bundle.getString("fileLmsPlayers");
+        this.volumeVoicePlus = Integer.parseInt(bundle.getString("volumeVoicePlus"));
 
         Config jsonConfig = JsonUtils.jsonFileToPojo(CONFIG_JSON_PATH, Config.class);
         if (jsonConfig != null) {

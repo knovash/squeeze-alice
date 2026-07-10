@@ -22,7 +22,7 @@ public class YandexTTS {
         player.savePlaylistScript(); // сохранить плейлист перед уведомлением
         int volumeByTime = player.valueVolumeByTime();
         log.info("VOLUME BY TIME GET: " + volumeByTime);
-        int volumeNotification = volumeByTime + 10; // громкость уведомления
+        int volumeNotification = volumeByTime +config.volumeVoicePlus; // громкость уведомления
         if (volumeNotification > 50) volumeNotification = 50;
         player.unsync();
         player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null); // разбудить плеер если неиграет

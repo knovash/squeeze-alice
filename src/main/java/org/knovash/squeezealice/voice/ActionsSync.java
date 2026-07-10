@@ -51,7 +51,7 @@ public class ActionsSync {
         return "включаю " + target;
     }
 
-    public static String spotifyPlayAlbum(String command, Player player) {
+    public static String spotifyPlayAlbum(String command, Player player, Boolean say) {
         log.info("SPOTIFY PLAY ALBUM");
         String target = command.replaceAll(".*включи\\S*\\s", "")
                 .replaceAll("альбом", "")
@@ -64,13 +64,14 @@ public class ActionsSync {
         if (link == null) {
             ActionsSync.answer = "Не удалось найти альбом " + target;
         } else {
+            if (say) player.say("включаю " + Spotify.nameForSay, false, true); // если от алисы то не говорить в лмс
             player.playPath(link);
             ActionsSync.answer = "Включаю альбом " + target;
         }
         return ActionsSync.answer;
     }
 
-    public static String spotifyPlayTrack(String command, Player player) {
+    public static String spotifyPlayTrack(String command, Player player, Boolean say) {
         log.info("SPOTIFY PLAY TRACK");
         String target = command.replaceAll(".*включи\\S*\\s", "")
                 .replaceAll("трэк", "")
@@ -83,6 +84,7 @@ public class ActionsSync {
         if (link == null) {
             ActionsSync.answer = "Не удалось найти трек " + target;
         } else {
+            if (say) player.say("включаю " + Spotify.nameForSay, false, true); // если от алисы то не говорить в лмс
             player.playPath(link);
             ActionsSync.answer = "Включаю трек " + target;
         }
@@ -440,15 +442,26 @@ public class ActionsSync {
 
     public static String remoteSwitch() {
         log.info("REMOTE SWITCH NEXT");
+        log.info("SIZE: " + lmsPlayers.players.size()+ " BT NOW: " + lmsPlayers.btPlayerName);
         if (lmsPlayers.players == null || lmsPlayers.players.size() < 2) return "";
         lmsPlayers.wakeUpAll();
-        log.info("ALL WAKE UP FINISHED ----------------");
+        log.info("ALL WAKE UP FINISHED");
         Player playerNow = lmsPlayers.playerByName(lmsPlayers.btPlayerName);
+        log.info("PLAYER NOW: " + playerNow);
+        if (playerNow == null) {
+            lmsPlayers.btPlayerName = lmsPlayers.players.get(0).name;
+            log.info("BT PLAYER SWITCH TO: " + lmsPlayers.btPlayerName);
+            return lmsPlayers.btPlayerName;
+        }
         List<Player> playersConnected = lmsPlayers.players.stream().filter(p -> p.connected).collect(Collectors.toList());
+
+        log.info("SIZE: " + playersConnected.size()+ " BT NOW: " + lmsPlayers.btPlayerName);
         int indexNext = playersConnected.indexOf(playerNow) + 1;
+        if (indexNext > playersConnected.size() - 1) indexNext = 0;
         Player playerNext = playersConnected.get(indexNext);
         lmsPlayers.btPlayerName = playerNext.name;
         lmsPlayers.write();
+        log.info("SIZE: " + lmsPlayers.players.size() + " PLAYER NOW: " + playerNow.name + " INDEX NEXT: " + indexNext);
         log.info("BT PLAYER SWITCH TO: " + lmsPlayers.btPlayerName);
         playerNext.say("пульт подключен к " + playerNext.name, true, true);
         return lmsPlayers.btPlayerName;

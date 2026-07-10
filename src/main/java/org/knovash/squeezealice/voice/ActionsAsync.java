@@ -304,7 +304,7 @@ public class ActionsAsync {
         log.info("PLAY ALBUM");
         ActionsSync.answer = "Пытаюсь включить альбом";
         CompletableFuture.runAsync(() -> {
-            spotifyPlayAlbum(command, player);
+            spotifyPlayAlbum(command, player,false);
             lmsPlayers.afterAsync();
         });
         Utils.sleep(1000);
@@ -315,7 +315,7 @@ public class ActionsAsync {
         log.info("PLAY TRACK");
         ActionsSync.answer = "Пытаюсь включить трек";
         CompletableFuture.runAsync(() -> {
-            spotifyPlayTrack(command, player);
+            spotifyPlayTrack(command, player, false);
             lmsPlayers.afterAsync();
         });
         Utils.sleep(1000);

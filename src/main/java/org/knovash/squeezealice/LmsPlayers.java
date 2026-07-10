@@ -127,6 +127,7 @@ public class LmsPlayers {
     }
 
     public Player playerByName(String name) {
+        if (name == null) return null;
         Player player;
         if (name == null || this == null || this.players == null) return null;
         player = this.players.stream()
