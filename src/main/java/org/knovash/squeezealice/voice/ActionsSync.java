@@ -179,7 +179,7 @@ public class ActionsSync {
         log.info("VOLUME");
         String volume = player.volumeGet();
         if (volume == null) return "медиасервер не отвечает";
-        answer = "сейчас на " + player.name + " громкость " + volume;
+        answer = "сейчас на " + player.name + " громкость " + volume + ", ограничение "+player.volume_high;
         return answer;
     }
 
