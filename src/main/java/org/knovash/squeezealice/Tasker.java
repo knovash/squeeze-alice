@@ -10,8 +10,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.knovash.squeezealice.Main.config;
-import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 public class Tasker {
@@ -28,20 +27,22 @@ public class Tasker {
     public static String ready;
 
     public static String forTaskerWidgetsRefreshJson(Player player, String lines) {
-        log.info("REQUEST PLAYERS VOLUME AND TITLE. START");
-        log.info("PLAYER " + player);
-//        lmsPlayers.updatePlayers(); // пред обновлением виджетов таскера
-        lmsPlayers.checkUpdated(); // TODO DEBUG
-        lmsPlayers.players.stream().filter(p -> p.connected).forEach(p -> {
-            p.volumeGet(); // получить для каждого плеера громкость
-            p.title(); // получить для каждого плеера титул
-        });
-        log.info("REQUEST PLAYERS VOLUME AND TITLE. FINISH");
+        log.info(start);
+        if (player == null) return null;
+        log.info("TASKER SELECTED PLAYER " + player);
+        log.info("CLEAR PLAYERS STATUS");
+        lmsPlayers.players.forEach(p -> p.statusClear()); // TODO  public void statusClear() {
+        log.info("UPDATE PLAYERS STATUS"); // TODO  public void resetPlayerStatus() {
+        lmsPlayers.players.forEach(p -> p.status()); // статус каждого плеера потому что надо громкость каждого, сервер статус не дает громкость
         nowPlaying = player.title; // для виджета одной иконкой для телефона где неработает плагин
         nowPlayingTv = player.name + " - " + player.volume + " - " + player.mode + " - " + player.title; // для виджета одной иконкой для телефона где неработает плагин
 
+        log.info("FOR TASKER PLAYLIST");
         forTaskerPlaylist(player, Integer.valueOf(lines)); // для виджета плейлиста
+        lmsPlayers.players.forEach(p -> p.title()); // обновить титулы всех плееров
+        log.info("FOR TASKER PLAYERS LIST");
         forTaskerPlayersList(); // для виджета списка плееров name-volume-mode-title
+        log.info("FOR TASKER ICONS");
         forTaskerWidgetsIcons(); // для виджетов иконок плееров
 
         String responseJson = "{\n" +
@@ -53,33 +54,25 @@ public class Tasker {
                 "  \"SYNCS\": \"" + widgetsSyncs + "\",\n" +
                 "  \"SEPARATES\": \"" + widgetsSeparates + "\",\n" +
                 "  \"NOWPLAYING\": \"" + nowPlaying + "\",\n" +
-                "  \"NOWPLAYINGTV\": \"" + nowPlayingTv + "\",\n" + // незабыть запятую
+                "  \"NOWPLAYINGTV\": \"" + nowPlayingTv + "\",\n" +
                 "  \"CURRENTPLAYER\": \"" + player.name + "\"\n" +
                 "}";
         log.info(responseJson);
+        log.info(finish);
         return responseJson;
     }
 
     public static String playerNameByWidgetName(String value) {
-        log.info("GET PLAYER BY WIDGET: " + value);
-        String playerName = null;
-        String roomName = null;
-
-        Player player = lmsPlayers.playerByNearestName(value);
-        if (player == null) player = lmsPlayers.playerByNearestRoom(value);
-        if (player == null) return null;
-
-        roomName = player.room;
-        playerName = player.name;
-
-        log.info("ROOM: " + roomName + " PLAYER: " + player.name);
-        String result = roomName + "," + playerName;
-        return result;
+        String name = null;
+        Player player = lmsPlayers.playerByPlayerNameOrRoomName(value, value);
+        if (player != null) name = player.name;
+        return name;
     }
 
     public static String forTaskerPlaylist(Player player, Integer lines) {
+        log.info(start);
         log.info("CREATE PLAYLIST FOR TASKER. ACTIVE PLAYER: " + player);
-        int tracks = player.requestPlaylistTracks();
+        int tracks = player.playlistTracksCurrentCount();
         if (tracks == 0) {
             log.info("PLAYLIST EMPTY");
             widgetPlaylist = "empty";
@@ -100,13 +93,12 @@ public class Tasker {
         String result = String.join(", ", playlist);
         log.info("PLAYLIST: " + playlist);
         widgetPlaylist = result;
+        log.info(finish);
         return result;
     }
 
     public static String forTaskerPlayersList() {
-        log.info("CREATE PLAYERS LIST FOR TASKER");
-        lmsPlayers.checkUpdated(); // TODO DEBUG
-
+        log.info(start);
         Function<Player, String> formatter = p -> {
             String remote = "";
             if (p.name.equals(lmsPlayers.btPlayerName)) {
@@ -138,11 +130,12 @@ public class Tasker {
         log.info("Not playing: " + notPlaying);
         widgetPlayersPlay = playing;
         widgetPlayersStop = notPlaying;
+        log.info(finish);
         return playing + ";" + notPlaying;
     }
 
     public static void forTaskerWidgetsIcons() {
-        log.info("CREATE ICONS DATA FOR TASKER");
+        log.info(start);
         lmsPlayers.syncgroups();
         List<String> iconsNames = new ArrayList<>(Yandex.rooms);
         iconsNames.addAll(lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList()));
@@ -160,6 +153,7 @@ public class Tasker {
         widgetsModes = String.join(",", modes);
         widgetsSyncs = String.join(",", syncs);
         widgetsSeparates = String.join(",", separates);
+        log.info(finish);
     }
 
     public static String ready() {

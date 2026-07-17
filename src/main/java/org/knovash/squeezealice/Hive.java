@@ -3,7 +3,8 @@ package org.knovash.squeezealice;
 import lombok.extern.log4j.Log4j2;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.knovash.squeezealice.utils.LogExecution;
+import org.knovash.squeezealice.server.HandlerAll;
+import org.knovash.squeezealice.utils.Parser;
 import org.knovash.squeezealice.yandex.YandexJwtUtils;
 import org.json.JSONObject;
 
@@ -217,7 +218,7 @@ public class Hive implements MqttCallbackExtended {
         log.info(start);
         log.info("RECEIVED MESSAGE FROM TOPIC: " + topicReceived);
         String payload = new String(message.getPayload(), StandardCharsets.UTF_8);
-        Map<String, String> params = Parser.run(payload);
+        Map<String, String> params = Parser.bodyToMap(payload);
 
         // Специальные действия по токенам
         switch (params.getOrDefault("action", "")) {

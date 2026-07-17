@@ -1,44 +1,47 @@
 package org.knovash.squeezealice.utils;
 
 import lombok.extern.log4j.Log4j2;
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
 import org.knovash.squeezealice.Main;
+import org.knovash.squeezealice.http.HttpClientWrapper;
+import org.knovash.squeezealice.http.HttpResponseResult;
+import org.knovash.squeezealice.utils.levenstein.Levenstein;
 import org.knovash.squeezealice.yandex.Yandex;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
-import static org.knovash.squeezealice.Requests.headToUriForHttpResponse;
 
 @Log4j2
 public class Utils {
 
-    public static Map<String, String> altNames;
-
     public static boolean checkIpIsLms(String ip) {
-        String uri = "http://" + ip + ":" + config.lmsPort;
-        HttpResponse response = headToUriForHttpResponse(uri);
-        if (response == null) return false;
-        Header[] server = response.getHeaders("Server");
-        if (server == null) return false;
-        String header = server[0].toString();
-        log.info("IP: " + ip + " HEADER: " + header);
-        if (header.contains("Logitech Media Server") || header.contains("Lyrion Music Server")) return true;
+        log.info("CHECK IP: " + ip);
+        String uri = "http://" + ip + ":9000";
+        try {
+            HttpClientWrapper httpClient = new HttpClientWrapper();
+            HttpResponseResult result = httpClient.doHead(uri, null);
+            if (result.isSuccess()) {
+                for (org.apache.http.Header header : result.getHeaders()) {
+                    if ("Server".equalsIgnoreCase(header.getName()) &&
+                            header.getValue().contains("Lyrion Music Server")) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("IP check failed for {}: {}", ip, e.getMessage());
+        }
         return false;
     }
 
-    public static String getMyIpAddres() {
+    public static String getMyIpAddress() {
         String myip = null;
         Enumeration<NetworkInterface> interfaces = null;
         try {
@@ -69,13 +72,7 @@ public class Utils {
     }
 
 
-    public static boolean isCyrillic(String text) {
-        Pattern cyril = Pattern.compile("[а-ябА-Я\\s]*");
-        Matcher matchCyril = cyril.matcher(text);
-        Boolean result = matchCyril.matches();
-//        log.info(text + " " + result);
-        return result;
-    }
+
 
     public static String ping(Integer index) {
         String lmsip = "192.168.1.52";
@@ -85,27 +82,27 @@ public class Utils {
         return null;
     }
 
-    public static String checkIp(String fullIp, Integer index) {
-        if (index > 124) return null;
-        InetAddress inetAddress = null;
-        try {
-            inetAddress = InetAddress.getByName(fullIp);
-        } catch (UnknownHostException ignored) {
-        }
-        byte[] ip = inetAddress.getAddress();
-        ip[3] = Byte.parseByte(String.valueOf(index));
-        String ipTry = null;
-        try {
-            InetAddress address = InetAddress.getByAddress(ip);
-            ipTry = address.toString().substring(1);
-            if (address.isReachable(1000) && checkIpIsLms(ipTry)) {
-                log.info("LMS IP OK: " + ipTry);
-                return ipTry;
-            }
-        } catch (Exception ignored) {
-        }
-        return null;
-    }
+//    public static String checkIp(String fullIp, Integer index) {
+//        if (index > 124) return null;
+//        InetAddress inetAddress = null;
+//        try {
+//            inetAddress = InetAddress.getByName(fullIp);
+//        } catch (UnknownHostException ignored) {
+//        }
+//        byte[] ip = inetAddress.getAddress();
+//        ip[3] = Byte.parseByte(String.valueOf(index));
+//        String ipTry = null;
+//        try {
+//            InetAddress address = InetAddress.getByAddress(ip);
+//            ipTry = address.toString().substring(1);
+//            if (address.isReachable(1000) && checkIpIsLms(ipTry)) {
+//                log.info("LMS IP OK: " + ipTry);
+//                return ipTry;
+//            }
+//        } catch (Exception ignored) {
+//        }
+//        return null;
+//    }
 
     public static Map<Integer, Integer> stringSplitToIntMap(String text, String split1, String split2) {
         return Arrays.stream(text.split(split1))
@@ -152,7 +149,7 @@ public class Utils {
     }
 
     //    https://stackoverflow.com/questions/10893313/how-to-convert-cyrillic-letters-to-english-latin-in-java-string
-    public static String convertCyrilic(String message) {
+    public static String convertCyrilicToLatin(String message) {
         String result = message.replace("дж", "j")
                 .replace("у", "oo");
         char[] abcCyr = {' ', 'а', 'б', 'в', 'г', 'д', 'ѓ', 'е', 'ж', 'з', 'ѕ', 'и', 'ј', 'к', 'л', 'љ', 'м', 'н', 'њ', 'о', 'п', 'р', 'с', 'т', 'ќ', 'у', 'ф', 'х', 'ц', 'ч', 'џ', 'ш', 'э', 'ю', 'я', 'А', 'Б', 'В', 'Г', 'Д', 'Ѓ', 'Е', 'Ж', 'З', 'Ѕ', 'И', 'Ј', 'К', 'Л', 'Љ', 'М', 'Н', 'Њ', 'О', 'П', 'Р', 'С', 'Т', 'Ќ', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Џ', 'Ш', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '/', '-'};
@@ -202,20 +199,20 @@ public class Utils {
     }
 
     public static String roomNameByNearest(String approxRoomName) {
-        log.info("GET CORRECT ROOM NAME BY: " + approxRoomName);
-        String correctRoom = Levenstein.search(approxRoomName, Yandex.rooms);
+//        log.info("GET CORRECT ROOM NAME BY: " + approxRoomName);
+        String correctRoom = Levenstein.searchTextInList(approxRoomName, Yandex.rooms);
         if (correctRoom == null) {
-            log.info("ERROR ROOM " + approxRoomName + " NOT EXISTS IN YANDEX SMART HOME " + approxRoomName);
+//            log.info("ERROR ROOM " + approxRoomName + " NOT EXISTS IN YANDEX SMART HOME " + approxRoomName);
             return null;
         }
-        log.info("CORRECT ROOM: " + approxRoomName + " -> " + correctRoom);
+//        log.info("CORRECT ROOM: " + approxRoomName + " -> " + correctRoom);
         return correctRoom;
     }
 
     public static String getCorrectPlayerName(String player) {
         log.info("START: " + player);
         List<String> players = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
-        player = Utils.convertCyrilic(player);
+        player = Utils.convertCyrilicToLatin(player);
         String correctPlayer = Levenstein.getNearestElementInListWord(player, players);
         if (correctPlayer == null) log.info("ERROR PLAYER " + player + " NOT EXISTS IN LMS ");
         log.info("CORRECT PLAYER: " + player + " -> " + correctPlayer);

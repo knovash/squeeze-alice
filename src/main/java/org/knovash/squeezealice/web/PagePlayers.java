@@ -29,6 +29,10 @@ public class PagePlayers {
     public static final String last_this_save = "last_this_save";
     public static final String last_this_value = "last_this_value";
 
+    //    volume_amp_lms
+    public static final String volume_amp_lms = "volume_amp_lms";
+    public static final String volume_amp_ffs = "volume_amp_ffs";
+
 
     public static final String toggle_wake_save = "toggle_wake_save";
     public static final String toggle_wake_value = "toggle_wake_value";
@@ -103,7 +107,7 @@ public class PagePlayers {
                             "<input name='action' type='hidden'  value='" + delay_expire_save + "'>" +
                             "<button type='submit'>Сохранить</button>" +
                             "</form>" +
-                            "<br>" +
+//                            "<br>" +
 
 //                            "<form method='POST' action='/form'>" +
 //                            "<label>Синхронизация альтернативная (" + lmsPlayers.syncAlt + ") если di.fm работает нормально, должно быть false</label><br>" +
@@ -115,6 +119,29 @@ public class PagePlayers {
 //                            "<button type='submit'>Сохранить</button>" +
 //                            "</form>" +
 //                            "<br>" +
+
+////                            увеличивать громкость уведомлений в LMS
+                            "<form method='POST' action='/form'>" +
+                            "<label>Увеличивать громкость уведомлений в LMS</label><br>" +
+                            "<select name='" + volume_amp_lms + "' required>" +
+                            "<option value='true' " + (lmsPlayers.volumeAmpLms ? "selected" : "") + ">вкл</option>" +
+                            "<option value='false' " + (!lmsPlayers.volumeAmpLms ? "selected" : "") + ">выкл</option>" +
+                            "</select>" +
+                            "<input type='hidden' name='action' value='last_this_save'>" +
+                            "<button type='submit'>Сохранить</button>" +
+                            "</form>" +
+
+////                            увеличивать громкость уведомлений в FFS
+                            "<form method='POST' action='/form'>" +
+                            "<label>Увеличивать громкость уведомлений в FFS</label><br>" +
+                            "<select name='" + volume_amp_ffs + "' required>" +
+                            "<option value='true' " + (lmsPlayers.volumeAmpFfs ? "selected" : "") + ">вкл</option>" +
+                            "<option value='false' " + (!lmsPlayers.volumeAmpFfs ? "selected" : "") + ">выкл</option>" +
+                            "</select>" +
+                            "<input type='hidden' name='action' value='last_this_save'>" +
+                            "<button type='submit'>Сохранить</button>" +
+                            "</form>" +
+
 
                             "<form method='POST' action='/form'>" +
                             "<label>Включать последнее игравшее на этой колонке (" + lmsPlayers.lastThis + ") иначе с последней игравшей колонки</label><br>" +
@@ -148,43 +175,23 @@ public class PagePlayers {
                             "</form>" +
 
 //                            обновление виджетов Tasker на планшете
-                            "<br>" +
-                            "<fieldset>" +
-                            "<legend>Tasker refresh</legend>" +
-                            autoRemoteUrls +
-                            "<form method='POST' action='/form'>" +
-                            "<label>Tasker AutoRemote URL для обновления виджета на Android устройстве</label><br>" +
-                            "<input " +
-                            "required='required'" +
-                            "type='url'" +
-                            "name='" + autoremote_value + "'" +
-                            "placeholder='https://autoremotejoaomgcd.appspot.com/sendmessage...'" +
-                            "value='" + "autoremotejoaomgcd" + "'>" +
-                            "<input name='action' type='hidden'  value='" + autoremote_save + "'>" +
-                            "<button type='submit'>Сохранить</button>" +
-                            "</form>" +
-                            "Проверить настройки Autoremote. Батарея: использование в фоне без ограничений. Передача данных: в фоне не ограничена."+
-                            "</fieldset>" +
-
-
-//    время громкость для всех
-                            "<br>" +
-                            "<fieldset>" +
-                            "<legend>Время громкость установить для всех</legend>" +
-
-                            "<form method='POST' action='/form'>" +
-                            "<label>Время громкость</label><br>" +
-                            "<input " +
-                            "required='required'" +
-                            "type='text'" +
-                            "name='" + players_all_schedule_value + "' " +
-                            "placeholder='0:10,9:20,20:15,22:10,7:15'" +
-                            "value='" + Utils.mapToString(lmsPlayers.scheduleAll) + "'> время:громкость - пресеты громкости по интервалам времени" + "<br>" +
-                            "<input type='hidden' name='" + player_name_value + "' value='" + "ffff" + "'>" +
-                            "<button type='submit'>Сохранить для всех</button>" +
-                            "</form>" +
-                            "<br>" +
-                            "</fieldset>" +
+//                            "<br>" +
+//                            "<fieldset>" +
+//                            "<legend>Tasker refresh</legend>" +
+//                            autoRemoteUrls +
+//                            "<form method='POST' action='/form'>" +
+//                            "<label>Tasker AutoRemote URL для обновления виджета на Android устройстве</label><br>" +
+//                            "<input " +
+//                            "required='required'" +
+//                            "type='url'" +
+//                            "name='" + autoremote_value + "'" +
+//                            "placeholder='https://autoremotejoaomgcd.appspot.com/sendmessage...'" +
+//                            "value='" + "autoremotejoaomgcd" + "'>" +
+//                            "<input name='action' type='hidden'  value='" + autoremote_save + "'>" +
+//                            "<button type='submit'>Сохранить</button>" +
+//                            "</form>" +
+//                            "Проверить настройки Autoremote. Батарея: использование в фоне без ограничений. Передача данных: в фоне не ограничена."+
+//                            "</fieldset>" +
 
 
                             "";

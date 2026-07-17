@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.utils.Parser;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -61,7 +62,7 @@ public class Context {
         if (body != null && !body.isEmpty()) log.info("BODY: " + body);
 
         String query = httpExchange.getRequestURI().getQuery();
-        HashMap<String, String> queryMap = (HashMap<String, String>) Parser.run(query);
+        HashMap<String, String> queryMap = (HashMap<String, String>) Parser.bodyToMap(query);
         log.info("QUERY: " + query);
 
         Context context = new Context();

@@ -12,7 +12,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 public class Spotify {
@@ -41,7 +41,7 @@ public class Spotify {
     // ------- МЕТОДЫ ПОИСКА (НЕ ИЗМЕНЕНЫ) -------
 
     public static String getLinkArtist(String target) {
-        log.info("ARTIST: " + target);
+//        log.info("ARTIST: " + target);
         try {
             String encodedQuery = URLEncoder.encode(target, StandardCharsets.UTF_8);
             String url = "https://api.spotify.com/v1/search?q=" + encodedQuery + "&type=artist&limit=3&market=ES";
@@ -54,7 +54,7 @@ public class Spotify {
                 return null;
             }
             String uri = spotifyArtists.artists.items.get(0).uri;
-            log.info("ARTIST URI: " + uri + " name: " + spotifyArtists.artists.items.get(0).name);
+//            log.info("ARTIST URI: " + uri + " name: " + spotifyArtists.artists.items.get(0).name);
             Spotify.nameForSay = spotifyArtists.artists.items.get(0).name;
             return uri;
         } catch (Exception e) {
@@ -64,7 +64,7 @@ public class Spotify {
     }
 
     public static String getLinkTrack(String target) {
-        log.info("TRACK: " + target);
+//        log.info("TRACK: " + target);
         try {
             String encodedQuery = URLEncoder.encode(target, StandardCharsets.UTF_8);
             String url = "https://api.spotify.com/v1/search?q=" + encodedQuery + "&type=track&limit=5&market=ES";
@@ -76,11 +76,11 @@ public class Spotify {
                 log.warn("No tracks found for: " + target);
                 return null;
             }
-            spotifySearchTrack.tracks.items.forEach(it -> log.info("TRACK: " + it.artists.get(0).name + " - " + it.name));
+//            spotifySearchTrack.tracks.items.forEach(it -> log.info("TRACK: " + it.artists.get(0).name + " - " + it.name));
             String link = spotifySearchTrack.tracks.items.get(0).uri;
-            log.info("ARTIST: " + spotifySearchTrack.tracks.items.get(0).artists.get(0).name);
-            log.info("TRACK: " + spotifySearchTrack.tracks.items.get(0).name);
-            log.info("URI: " + link);
+//            log.info("ARTIST: " + spotifySearchTrack.tracks.items.get(0).artists.get(0).name);
+//            log.info("TRACK: " + spotifySearchTrack.tracks.items.get(0).name);
+//            log.info("URI: " + link);
             Spotify.nameForSay = spotifySearchTrack.tracks.items.get(0).artists.get(0).name + ", " + spotifySearchTrack.tracks.items.get(0).name;
             return link;
         } catch (Exception e) {
@@ -90,7 +90,7 @@ public class Spotify {
     }
 
     public static String getLinkAlbum(String target) {
-        log.info("ALBUM TARGET: " + target);
+//        log.info("ALBUM TARGET: " + target);
         try {
             String encodedQuery = URLEncoder.encode(target, StandardCharsets.UTF_8);
             String url = "https://api.spotify.com/v1/search?q=" + encodedQuery + "&type=album&limit=5&market=ES";
@@ -102,11 +102,11 @@ public class Spotify {
                 log.warn("No albums found for: " + target);
                 return null;
             }
-            spotifySearchAlbum.albums.items.forEach(it -> log.info("ALBUM: " + it.artists.get(0).name + " - " + it.name));
+//            spotifySearchAlbum.albums.items.forEach(it -> log.info("ALBUM: " + it.artists.get(0).name + " - " + it.name));
             String link = spotifySearchAlbum.albums.items.get(0).uri;
-            log.info("ARTIST: " + spotifySearchAlbum.albums.items.get(0).artists.get(0).name);
-            log.info("ALBUM: " + spotifySearchAlbum.albums.items.get(0).name);
-            log.info("URI: " + link);
+//            log.info("ARTIST: " + spotifySearchAlbum.albums.items.get(0).artists.get(0).name);
+//            log.info("ALBUM: " + spotifySearchAlbum.albums.items.get(0).name);
+//            log.info("URI: " + link);
             Spotify.nameForSay = spotifySearchAlbum.albums.items.get(0).artists.get(0).name + ", " +  spotifySearchAlbum.albums.items.get(0).name;
             return link;
         } catch (Exception e) {
@@ -116,7 +116,7 @@ public class Spotify {
     }
 
     public static String getLinkPlaylist(String target) {
-        log.info("PLAYLIST TARGET: " + target);
+//        log.info("PLAYLIST TARGET: " + target);
         try {
             String encodedQuery = URLEncoder.encode(target, StandardCharsets.UTF_8);
             // Исправлен тип на playlist
@@ -130,12 +130,12 @@ public class Spotify {
                 log.warn("No playlists found for: " + target);
                 return null;
             }
-            spotifySearchPlaylist.playlists.items.forEach(it ->
-                    log.info("PLAYLIST: " + it.owner.display_name + " - " + it.name));
+//            spotifySearchPlaylist.playlists.items.forEach(it ->
+//                    log.info("PLAYLIST: " + it.owner.display_name + " - " + it.name));
             String link = spotifySearchPlaylist.playlists.items.get(0).uri;
-            log.info("OWNER: " + spotifySearchPlaylist.playlists.items.get(0).owner.display_name);
-            log.info("PLAYLIST: " + spotifySearchPlaylist.playlists.items.get(0).name);
-            log.info("URI: " + link);
+//            log.info("OWNER: " + spotifySearchPlaylist.playlists.items.get(0).owner.display_name);
+//            log.info("PLAYLIST: " + spotifySearchPlaylist.playlists.items.get(0).name);
+//            log.info("URI: " + link);
             return link;
         } catch (Exception e) {
             log.error("Encoding error", e);
@@ -143,39 +143,40 @@ public class Spotify {
         }
     }
 
-    // ------- ОПТИМИЗИРОВАННЫЕ МЕТОДЫ -------
-
-    /**
-     * Получить информацию о текущем треке.
-     *
-     * @return объект CurrentlyPlaying или null
-     */
     public static CurrentlyPlaying getCurrentlyPlaying() {
+        log.info(start);
         String json = SpotifyRequests.requestGet("https://api.spotify.com/v1/me/player/currently-playing");
+       log.info("SPOTIFY RESPONSE PLAYING: " + json);
         if (json == null) return null;
         json = json.replace("\\\"", "");
         CurrentlyPlaying cp = JsonUtils.jsonToPojo(json, CurrentlyPlaying.class);
         currentlyPlaying = cp; // для совместимости
+        log.info(finish);
         return cp;
     }
 
     // Для обратной совместимости
     public static String currentlyPlaying() {
+        log.info(start);
+        log.info("CHECK SPOTIFY IS PLAYING...");
         Spotify.currentlyPlaying = null;
         CurrentlyPlaying cp = getCurrentlyPlaying();
         if (cp == null) return "ERROR";
         log.info("Spotify is playing: {}", cp.is_playing);
         Spotify.currentlyPlaying = cp;
+        log.info(finish);
         return JsonUtils.pojoToJson(cp);
     }
 
     public static String currentlyPlayingDetails() {
+        log.info(start);
         CurrentlyPlaying cp = getCurrentlyPlaying();
         if (cp == null || cp.item == null) return "Nothing playing";
         String albumName = cp.item.album.name;
         String artistName = cp.item.artists.get(0).name;
         String artistType = cp.item.artists.get(0).type;
         String playingType = cp.currently_playing_type;
+        log.info(finish);
         return albumName + " - " + artistName + " - " + artistType + " - " + playingType;
     }
 
@@ -294,13 +295,18 @@ public class Spotify {
         return name;
     }
 
+
     // Трансфер на Squeezebox
-    public static boolean transfer(Player player) {
+    public static boolean transferSpotifyToLms(Player player) {
         log.info("Starting transfer to player {}", player.name);
 
         CurrentlyPlaying playing = getCurrentlyPlaying();
-        if (playing == null || !playing.is_playing) {
-            log.info("Spotify is not playing, transfer aborted");
+        if (playing == null) {
+            log.warn("Spotify currently playing is null – nothing is playing or API error. Transfer aborted.");
+            return false;
+        }
+        if (!playing.is_playing) {
+            log.info("Spotify is paused/stopped (is_playing=false). Transfer aborted.");
             return false;
         }
 
@@ -319,12 +325,12 @@ public class Spotify {
 
         player
                 .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null)
-                .playPath(playingUri)
-                .waitFor(1000)
+                .playPathSpotify(playingUri)
+                .waitFor(500)
                 .pause();
 
         if (playing.context != null && "playlist".equals(playing.context.type)) {
-            player.waitFor(3000);
+            player.waitFor(500);
             if (player.playerStatus != null && player.playerStatus.result != null
                     && player.playerStatus.result.playlist_loop != null) {
                 String targetTitle = playing.item.name;
@@ -347,4 +353,64 @@ public class Spotify {
         log.info("Transfer completed");
         return true;
     }
+
+
+    //
+    //// Трансфер на Squeezebox
+    //public static boolean transfer(Player player) {
+    //    log.info("Starting transfer to player {}", player.name);
+    //
+    //    CurrentlyPlaying playing = getCurrentlyPlaying();
+    //    if (playing == null) {
+    //        log.warn("Spotify currently playing is null – nothing is playing or API error. Transfer aborted.");
+    //        return false;
+    //    }
+    //    if (!playing.is_playing) {
+    //        log.info("Spotify is paused/stopped (is_playing=false). Transfer aborted.");
+    //        return false;
+    //    }
+    //
+    //    String playingUri;
+    //    int trackIndex;
+    //
+    //    if (playing.context == null) {
+    //        playingUri = playing.item.uri;
+    //        trackIndex = 0;
+    //        log.info("Single track: {}", playing.item.name);
+    //    } else {
+    //        playingUri = playing.context.uri;
+    //        trackIndex = playing.item.track_number - 1;
+    //        log.info("Context: {} ({})", playing.context.type, playing.context.uri);
+    //    }
+    //
+    //    player
+    //            .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null)
+    //            .playPath(playingUri)
+    //            .waitFor(500)
+    //            .pause();
+    //
+    //    if (playing.context != null && "playlist".equals(playing.context.type)) {
+    //        player.waitFor(500);
+    //        if (player.playerStatus != null && player.playerStatus.result != null
+    //                && player.playerStatus.result.playlist_loop != null) {
+    //            String targetTitle = playing.item.name;
+    //            Optional<PlaylistLoop> match = player.playerStatus.result.playlist_loop.stream()
+    //                    .filter(pl -> targetTitle.equals(pl.title))
+    //                    .findFirst();
+    //            if (match.isPresent()) {
+    //                trackIndex = match.get().playlist_index;
+    //                log.info("Found track in playlist at index {}", trackIndex);
+    //            }
+    //        }
+    //    }
+    //
+    //    player.playTrackNumber(String.valueOf(trackIndex));
+    //    player.syncOtherPlayingNotInGroupToThis();
+    //
+    //    Utils.sleep(5);
+    //    pause();
+    //
+    //    log.info("Transfer completed");
+    //    return true;
+    //}
 }

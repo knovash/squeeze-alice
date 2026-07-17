@@ -1,8 +1,5 @@
 package org.knovash.squeezealice.lms;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class RequestParameters {
 
     public static RequestToLms count() {
@@ -87,6 +84,14 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"playlist", "clear"});
     }
 
+    public static RequestToLms playlistsGetAll() {
+        return RequestToLms.create("", new String[]{"playlists", "0", "50"});
+    }
+
+    public static RequestToLms playlistDelete(String name) {
+        return RequestToLms.create("", new String[]{"playlist", "delete", name});
+    }
+
     //--------------------
     public static RequestToLms playlistSave(String player, String playlistName) {
         return RequestToLms.create(player, new String[]{"playlist", "save", playlistName});
@@ -119,6 +124,15 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"playlist", "url", "?"});
     }
 
+
+    public static RequestToLms playlistTracks(String player, String playlistId, int first, int last) {
+        return RequestToLms.create(player, new String[]{"playlists", "tracks", String.valueOf(first), String.valueOf(last), "playlist_id:"+playlistId});
+    }
+
+    public static RequestToLms playlistTracksCurrent(String player, int first, int last) {
+        return RequestToLms.create(player, new String[]{"playlist", "tracks", String.valueOf(first), String.valueOf(last)});
+    }
+
     public static RequestToLms albumname(String player) {
         return RequestToLms.create(player, new String[]{"playlist", "album", "?"});
     }
@@ -126,6 +140,10 @@ public class RequestParameters {
     public static RequestToLms trackname(String player) {
         return RequestToLms.create(player, new String[]{"playlist", "title", "?"});
     }
+
+//    public static RequestToLms trackname(String player) {
+//        return RequestToLms.create(player, new String[]{"title", "?"});
+//    }
 
     public static RequestToLms artistname(String player) {
         return RequestToLms.create(player, new String[]{"artist", "?"});
@@ -185,13 +203,13 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"playlist", "tracks", "?"});
     }
 
-    public static RequestToLms serverstatusname() {
+    public static RequestToLms statusServer() {
 //        {"id": 1, "method": "slim.request", "params":["HomePod2", ["status", "1", "1"]]}
 //        "player count": 5,
         return RequestToLms.create("", new String[]{"serverstatus", "name"});
     }
 
-    public static RequestToLms status(String player, Integer tracks) {
+    public static RequestToLms statusPlayer(String player, Integer tracks) {
 //        {"id": 1, "method": "slim.request", "params":["HomePod2", ["status", "1", "1"]]}
         return RequestToLms.create(player, new String[]{"status", "0", String.valueOf(tracks)});
     }

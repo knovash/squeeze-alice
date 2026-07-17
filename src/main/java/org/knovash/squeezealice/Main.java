@@ -1,6 +1,7 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.server.Server;
 import org.knovash.squeezealice.utils.*;
 import org.knovash.squeezealice.yandex.Yandex;
 import org.knovash.squeezealice.yandex.YandexUtils;
@@ -11,7 +12,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
-import static org.knovash.squeezealice.utils.InfoClient.fetchInfo;
 import static org.knovash.squeezealice.utils.InfoClient.setInfo;
 
 @Log4j2
@@ -41,7 +41,7 @@ public class Main {
         config.load();
         config.write();
         setInfo(config.domain); // откуда получить информацию о ключах
-        Utils.getMyIpAddres();
+        Utils.getMyIpAddress();
         lmsPlayers.searchForLmsIp();
         Utils.readRoomsAndAliceIds(); // соответствие комнат и id колонок Алиса
         Utils.readRoomsAndPlayers(); // соответствие комнат и плееров // TODO используется пока только для сохранения. использовать при первом запуске сервиса
@@ -59,13 +59,13 @@ public class Main {
         hive.subscribeByYandex();
 
 
-        lmsPlayers.wakeUpAll();
+//        lmsPlayers.wakeUpAll();
 //        lmsPlayers.itsAlive(); // уведомления во все колоник при запуске
 //        lmsPlayers.playerByNearestName("HomePod3").say("сервер запущен",false);
 
 //        ШЕДУЛЛЕРЫ
-        SchedulerSpotifyRefreshToken.startPeriodicRefresh(60, 5); // Spotify периодическое обновление токена
-        SchedulerPlayersUpdate.startPeriodicUpdate2(1); // Yandex периодическая отправка состояния плееров
+//        SchedulerSpotifyRefreshToken.startPeriodicRefresh(30, 5); // Spotify периодическое обновление токена 60min
+//        SchedulerPlayersUpdate.startPeriodicUpdate2(5); // Yandex периодическая отправка состояния плееров
 
 //        smartHome.createNewDeviceSwitch("Серверная","Сервер"); // TODO выключатель сервера в удя
         log.info(Main.line);
