@@ -64,8 +64,8 @@ public class Main {
 //        lmsPlayers.playerByNearestName("HomePod3").say("сервер запущен",false);
 
 //        ШЕДУЛЛЕРЫ
-//        SchedulerSpotifyRefreshToken.startPeriodicRefresh(30, 5); // Spotify периодическое обновление токена 60min
-//        SchedulerPlayersUpdate.startPeriodicUpdate2(5); // Yandex периодическая отправка состояния плееров
+        SchedulerSpotifyRefreshToken.startPeriodicRefresh(30, 5); // Spotify периодическое обновление токена 60min
+        SchedulerPlayersUpdate.startPeriodicUpdate2(5); // Yandex периодическая отправка состояния плееров
 
 //        smartHome.createNewDeviceSwitch("Серверная","Сервер"); // TODO выключатель сервера в удя
         log.info(Main.line);
