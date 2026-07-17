@@ -2,17 +2,12 @@ package org.knovash.squeezealice.yandex;
 
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
-import org.apache.http.entity.ContentType;
-import org.apache.http.util.EntityUtils;
 import org.knovash.squeezealice.Main;
+import org.knovash.squeezealice.http.HttpClientWrapper;
+import org.knovash.squeezealice.http.HttpResponseResult;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.web.PageIndex;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -23,6 +18,7 @@ import static org.knovash.squeezealice.Main.*;
 @Data
 public class Yandex {
 
+    private static final HttpClientWrapper httpClient = new HttpClientWrapper();
 
     public static Yandex yandex = new Yandex();
     public static YandexInfo yandexInfo = new YandexInfo();
@@ -45,13 +41,16 @@ public class Yandex {
         String bearer = config.yandexToken;
         try {
             log.info("https://api.iot.yandex.net/v1.0/user/info");
-            Response response = Request.Get("https://api.iot.yandex.net/v1.0/user/info")
-                    .setHeader("Authorization", "OAuth " + bearer)
-                    .execute();
-            json = response.returnContent().asString();
-//            log.info("JSON " + json);
-        } catch (IOException e) {
-            log.info("YANDEX GET INFO ERROR");
+            Map<String, String> headers = new HashMap<>();
+            headers.put("Authorization", "OAuth " + bearer);
+            HttpResponseResult result = httpClient.doGet("https://api.iot.yandex.net/v1.0/user/info", headers);
+            if (!result.isSuccess()) {
+                log.error("Yandex API error: " + result.getStatusCode());
+                return null;
+            }
+            json = result.getBody();
+        } catch (Exception e) {
+            log.info("YANDEX GET INFO ERROR", e);
             return null;
         }
         yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
@@ -60,11 +59,10 @@ public class Yandex {
 
         List<YandexUtils.MusicDevice> musicDevices = YandexUtils.extractMusicDevices(yandexInfo);
 
-// для отображения на вебинтерфейсе
         devicesSize = musicDevices.size();
         roomsWithDevice = yandexInfo.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
-                .filter(device -> device.name.equals(music)) //"музыка"
+                .filter(device -> device.name.equals(music))
                 .map(device -> roomNameByRoomId(device.room))
                 .collect(Collectors.toList());
         PageIndex.msgDevices = "УДЯ подключено " + devicesSize + " устройств Музыка в комнатах " + roomsWithDevice;
@@ -83,7 +81,6 @@ public class Yandex {
             return;
         }
         log.info("CREATE DEVICES FROM YANDEX");
-//    если плееры ранее были созданы в УДЯ и получены то создать их локально в сервисе
         yandexMusicDevices.forEach(device -> smartHome.create("", device));
         log.info(finish);
     }
@@ -93,18 +90,15 @@ public class Yandex {
     }
 
     public static String deviceIdbyRoomName(String roomName) {
-//        log.info("ROOM NAME: " + roomName);
         String roomId = yandexInfo.rooms.stream()
                 .filter(r -> r.name.equals(roomName))
                 .findFirst().get().id;
-//        log.info("ROOM ID: " + roomId);
         String deviceId = yandexInfo.devices.stream()
                 .filter(d -> d.name.equals("музыка"))
                 .filter(d -> d.room.equals(roomId))
                 .map(d -> d.external_id)
                 .findFirst()
                 .orElse(null);
-//        log.info("DEVICE ID: " + deviceId);
         return deviceId;
     }
 
@@ -117,16 +111,8 @@ public class Yandex {
     }
 
     public static void sendDeviceState(String room, String type, String instance, String capState, String status) {
-//        Уведомление об изменении состояний устройств
-//        https://yandex.ru/dev/dialogs/smart-home/doc/ru/reference-alerts/post-skill_id-callback-state
-
-
         log.debug(String.format(
-                "ID:%-15s" +
-                        "PLAYER:%-15s " +
-                        "INSTANCE:%-7s " +
-                        "TYPE:%-7s " +
-                        "STATE: ",
+                "ID:%-15s PLAYER:%-15s INSTANCE:%-7s TYPE:%-7s STATE: ",
                 lmsPlayers.playerByRoom(room).name,
                 instance,
                 type,
@@ -134,7 +120,6 @@ public class Yandex {
         ));
 
         CompletableFuture.runAsync(() -> {
-            HttpResponse response = null;
             try {
                 String url = "https://dialogs.yandex.net/api/v1/skills/" + config.skillId + "/callback/state";
                 Map<String, Object> deviceMap = new HashMap<>();
@@ -161,68 +146,39 @@ public class Yandex {
                 requestBody.put("ts", System.currentTimeMillis() / 1000.0);
                 requestBody.put("payload", payload);
                 String jsonBody = JsonUtils.pojoToJson(requestBody);
-//                log.info("Request body: " + jsonBody);
-                // Отправляем запрос и получаем ответ
                 log.info("POST " + url);
-                response = Request.Post(url)
-//                        .setHeader("Authorization", "OAuth " + "y0__xDzxbXDARij9xMgof3dqBNVNLZJ5TUBmwMndUdpOq_rMn5GQw")
-                        .setHeader("Authorization", "OAuth " + config.yandextSkillTokenDeveloper)
-                        .setHeader("Content-Type", "application/json")
-                        .bodyString(jsonBody, ContentType.APPLICATION_JSON)
-                        .execute()
-                        .returnResponse();
-//Тип токена: OAuth-токен разработчика навыка.
-//Как получить: Через консоль разработчика Яндекс.Диалогов: Навык → Настройки → Авторизация для HTTP-запросов → Скопировать OAuth-токен.
-//Не требует программирования – токен статичен для навыка.
-//Назначение: Управление состоянием навыка Алисы (отправка событий, состояние сессии).
-//Срок жизни: Бессрочный (но можно перегенерировать вручную).
-
-// ответ сервера
-                int statusCode = response.getStatusLine().getStatusCode();
-                String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-                if (statusCode != 202) {
-                    log.info("ERROR: Response status: " + statusCode + " Response body: " + responseBody);
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Authorization", "OAuth " + config.yandextSkillTokenDeveloper);
+                headers.put("Content-Type", "application/json");
+                HttpResponseResult result = httpClient.doPost(url, jsonBody, headers);
+                if (!result.isSuccess()) {
+                    log.info("ERROR: Response status: " + result.getStatusCode() + " Response body: " + result.getBody());
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.error("Error updating device state: " + e.getMessage(), e);
-            } finally {
-                // Закрываем ресурсы ответа
-                if (response != null && response.getEntity() != null) {
-                    try {
-                        EntityUtils.consume(response.getEntity());
-                    } catch (IOException e) {
-                        log.warn("Error closing response entity", e);
-                    }
-                }
             }
         });
     }
-
 
     public static void sayMyText(String text) {
         if (true) return; // TODO заглушка
         log.info("RUN SCENARIO");
         Main.sayText = text;
-        HttpResponse response = null;
-//        String scenarioId = "72295103-5976-4a4a-9e93-299666c14859";
         String scenarioId = config.scenarioId;
-//        String iotToken = "y0__xDzxbXDARi79i4g1Kq52BLBrH5AiuK_6jAmQvamADVB964geA";
         String iotToken = config.yandexToken;
         String url = "https://api.iot.yandex.net/v1.0/scenarios/" + scenarioId + "/actions";
         try {
-            response = Request.Post(url)
-                    //                        .setHeader("Authorization", "OAuth " + "y0__xDzxbXDARij9xMgof3dqBNVNLZJ5TUBmwMndUdpOq_rMn5GQw")
-                    .setHeader("Authorization", "Bearer " + iotToken)
-//                    .setHeader("Authorization", "Bearer " + config.yandextSkillTokenDeveloper)
-                    .setHeader("Content-Type", "application/json")
-                    .bodyString("{}", ContentType.APPLICATION_JSON)
-                    .execute()
-                    .returnResponse();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            Map<String, String> headers = new HashMap<>();
+            headers.put("Authorization", "Bearer " + iotToken);
+            headers.put("Content-Type", "application/json");
+            HttpResponseResult result = httpClient.doPost(url, "{}", headers);
+            if (!result.isSuccess()) {
+                log.error("Scenario action failed: " + result.getStatusCode());
+            } else {
+                log.info("Scenario action success");
+            }
+        } catch (Exception e) {
+            log.error("Scenario action error", e);
         }
-        log.info(response.getStatusLine());
     }
-
-
 }

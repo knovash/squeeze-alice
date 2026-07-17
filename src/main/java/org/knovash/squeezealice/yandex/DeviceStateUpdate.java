@@ -3,14 +3,10 @@ package org.knovash.squeezealice.yandex;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.ContentType;
-import org.apache.http.util.EntityUtils;
+import org.knovash.squeezealice.http.HttpClientWrapper;
+import org.knovash.squeezealice.http.HttpResponseResult;
 import org.knovash.squeezealice.utils.JsonUtils;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +26,6 @@ public class DeviceStateUpdate {
     private Object value;      // Boolean для on_off, Integer для volume
 
     public static void sendBatchStateUpdates(List<DeviceStateUpdate> updates) {
-//        log.info("START");
-//        log.info(updates);
         if (updates == null || updates.isEmpty()) {
             return;
         }
@@ -76,28 +70,24 @@ public class DeviceStateUpdate {
 
         String jsonBody = JsonUtils.pojoToJson(requestBody);
 
+        // Асинхронная отправка через новый HTTP-клиент
         CompletableFuture.runAsync(() -> {
             try {
                 String url = "https://dialogs.yandex.net/api/v1/skills/" + config.skillId + "/callback/state";
                 log.info("POST " + url);
-                HttpResponse response = Request.Post(url)
-                        .setHeader("Authorization", "OAuth " + config.yandextSkillTokenDeveloper)
-                        .setHeader("Content-Type", "application/json")
-                        .bodyString(jsonBody, ContentType.APPLICATION_JSON)
-                        .execute()
-                        .returnResponse();
 
-                int statusCode = response.getStatusLine().getStatusCode();
-                log.info("STATUS CODE: " + statusCode);
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Authorization", "OAuth " + config.yandextSkillTokenDeveloper);
+                headers.put("Content-Type", "application/json");
 
-                String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+                HttpClientWrapper httpClient = new HttpClientWrapper();
+                HttpResponseResult result = httpClient.doPost(url, jsonBody, headers);
 
-//                log.info("RESPONSE: " + responseBody);
-//                if (statusCode != 202) {
-//                    String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-//                    log.error("Batch update failed. Status: {} Body: {}", statusCode, responseBody);
-//                }
-            } catch (IOException e) {
+                log.info("STATUS CODE: " + result.getStatusCode());
+                if (!result.isSuccess()) {
+                    log.error("Batch update failed. Status: {} Body: {}", result.getStatusCode(), result.getBody());
+                }
+            } catch (Exception e) {
                 log.error("Error sending batch state update", e);
             }
         });

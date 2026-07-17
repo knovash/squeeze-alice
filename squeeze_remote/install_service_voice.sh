@@ -7,7 +7,7 @@ systemctl stop voice.service 2>/dev/null
 sudo mkdir -p /opt/btremote
 
 sudo cp voice.py /opt/btremote/
-sudo cp voice.conf /opt/btremote/
+#sudo cp voice.conf /opt/btremote/
 sudo cp voice.service /lib/systemd/system/
 sudo chmod u+x /opt/btremote/voice.py
 

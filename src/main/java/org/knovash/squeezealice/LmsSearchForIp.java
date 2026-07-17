@@ -19,16 +19,24 @@ public class LmsSearchForIp {
     public static String findServerIp() {
 
 //        проверить ip из конфига
+//        checkIp(ip, config.lmsPort, foundIp)
+//        log.info("CHECK LMS IP FROM CONFIG: " + config.lmsIp + " " + config.lmsPort);
+//        if (Utils.checkIpIsLms(config.lmsIp)) return config.lmsIp;
+//        else {
+//            log.info("LMS NOT FOUND AT IP FROM CONFIG: " + config.lmsIp + " " + config.lmsPort);
+//        }
+
         log.info("CHECK LMS IP FROM CONFIG: " + config.lmsIp + " " + config.lmsPort);
-        if (Utils.checkIpIsLms(config.lmsIp)) return config.lmsIp;
+        if (isLmsServer(config.lmsIp, Integer.parseInt(config.lmsPort))) return config.lmsIp;
         else {
             log.info("LMS NOT FOUND AT IP FROM CONFIG: " + config.lmsIp + " " + config.lmsPort);
         }
 
 //        проверить ip этого компа
-        String myip = Utils.getMyIpAddres();
+        String myip = Utils.getMyIpAddress();
         log.info("CHECK LMS IP FROM THIS HOST: " + myip + " " + config.lmsPort);
-        if (Utils.checkIpIsLms(myip)) return myip;
+//        if (Utils.checkIpIsLms(myip)) return myip;
+        if (isLmsServer(myip, 9000)) return myip;
         else {
             log.info("LMS NOT FOUND AT IP FROM THIS HOST: " + myip + " " + config.lmsPort);
         }
@@ -87,4 +95,28 @@ public class LmsSearchForIp {
             // Игнорируем ошибки подключения
         }
     }
+
+    public static boolean isLmsServer(String ip, int port) {
+        log.info("CHECK IS LMS IP: " + ip + ":" + port);
+        try {
+            URL url = new URL("http://" + ip + ":" + port);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("HEAD");
+            conn.setConnectTimeout(1000);
+            conn.setReadTimeout(1000);
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode == 200 || responseCode == 302) {
+                String serverHeader = conn.getHeaderField("Server");
+                if (serverHeader != null && serverHeader.contains("Lyrion Music Server")) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            // Игнорируем любые ошибки подключения
+        }
+        return false;
+    }
+
+
 }

@@ -6,127 +6,162 @@ import json
 import requests
 import logging
 from logging.handlers import RotatingFileHandler
+import os
 
-# Настройка логирования
+# ---------- ЛОГИРОВАНИЕ ----------
 log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 log_file = 'log.log'
-
 file_handler = RotatingFileHandler(log_file, maxBytes=10*1024*1024, backupCount=3)
 file_handler.setFormatter(log_formatter)
 file_handler.setLevel(logging.INFO)
-
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(log_formatter)
 console_handler.setLevel(logging.INFO)
-
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-# Загрузка конфигурации
+# ---------- ЗАГРУЗКА КОНФИГУРАЦИИ ----------
 try:
-    logger.info('Opening config.conf')
+    logger.info('📂 Открываем config.conf')
     with open('config.conf', 'r') as json_file:
         settings = json.load(json_file)
-    logger.info('Config loaded successfully')
+    logger.info('✅ Конфиг загружен')
 except Exception as e:
-    logger.error('Failed to load config.conf: %s', e)
+    logger.error('❌ Не удалось загрузить config.conf: %s', e)
     sys.exit(1)
 
-# Проверка наличия обязательных полей
+# Проверка обязательных полей
 required_top = ['btdevice', 'server', 'actions']
 for key in required_top:
     if key not in settings:
-        logger.error('Missing required key in config: %s', key)
+        logger.error('❌ В конфиге отсутствует ключ: %s', key)
         sys.exit(1)
 
-BTDEV = settings['btdevice']
 TUNNEL_URL = settings['server'].rstrip('/')
 
-# Построение карты действий из списка actions
+# Построение карты действий
 KEY_ACTION_MAP = {}
 for idx, action in enumerate(settings['actions']):
-    # Проверка наличия обязательных полей в каждом действии
     if not all(k in action for k in ('code', 'description', 'command')):
-        logger.error('Action #%d is missing one of required fields (code, description, command)', idx)
+        logger.error('❌ Действие #%d не содержит обязательных полей', idx)
         sys.exit(1)
 
-    # Получение и преобразование кода
     code_val = action['code']
     if isinstance(code_val, str) and code_val.startswith('KEY_'):
         try:
             code = ecodes.KEY[code_val]
         except KeyError:
-            logger.error('Unknown key name: %s', code_val)
+            logger.error('❌ Неизвестное имя ключа: %s', code_val)
             sys.exit(1)
     else:
         try:
             code = int(code_val)
         except (ValueError, TypeError):
-            logger.error('Invalid code value for action #%d: %s', idx, code_val)
+            logger.error('❌ Некорректный код для действия #%d: %s', idx, code_val)
             sys.exit(1)
 
     description = action['description']
     command = action['command']
 
-    # Если команда пустая — пропускаем эту кнопку
     if not command:
-        logger.debug('Skipping action for code %d (empty command)', code)
+        logger.debug('⏩ Пропускаем кнопку %s (команда пустая)', description)
         continue
 
     if code in KEY_ACTION_MAP:
-        logger.warning('Duplicate code %d in actions, overwriting', code)
+        logger.warning('⚠️ Дублирующийся код %d, перезаписываем', code)
     KEY_ACTION_MAP[code] = (description, command)
 
-logger.info('Loaded %d actions', len(KEY_ACTION_MAP))
+logger.info('✅ Загружено %d действий', len(KEY_ACTION_MAP))
 
+# ---------- ПАРАМЕТРЫ ПОИСКА УСТРОЙСТВА ----------
+# Имя устройства из секции voice (как в voice.py)
+DEVICE_NAME = settings.get('voice', {}).get('device_name', 'HAOBO Technology USB Composite Device Keyboard')
+# Запасной путь из конфига
+BTDEV_FALLBACK = settings.get('btdevice')  # может быть None или строка
+VENDOR = 0x4842   # HAOBO
+PRODUCT = 0x0001
+
+# ---------- ФУНКЦИЯ ПОИСКА (общая) ----------
+def find_device(name_substring, vendor=None, product=None):
+    """Возвращает путь (str) к первому подходящему устройству или None."""
+    devices = [InputDevice(path) for path in evdev.list_devices()]
+    for dev in devices:
+        if name_substring in dev.name:
+            return dev.path
+    if vendor is not None and product is not None:
+        for dev in devices:
+            if dev.info.vendor == vendor and dev.info.product == product:
+                return dev.path
+    return None
+
+# ---------- ОТПРАВКА ЗАПРОСОВ ----------
 def send_request(action_name, query):
-    """Выполнить GET-запрос к серверу с заданным параметром."""
+    """Отправка GET-запроса к серверу."""
     logger.info(action_name)
     try:
         url = f"{TUNNEL_URL}/{query.lstrip('/')}"
-        logger.info("REQUEST %s", url)
+        logger.info("📤 REQUEST %s", url)
         r = requests.get(url, timeout=5)
         r.raise_for_status()
-        logger.info("RESPONSE %s %s", r.status_code, r.text)
+        logger.info("📥 RESPONSE %s %s", r.status_code, r.text)
     except Exception as e:
-        logger.error('Request error: %s', e)
+        logger.error('⚠️ Ошибка запроса: %s', e)
 
-def getkey():
-    logger.info('getkey started')
-    remote = InputDevice(BTDEV)
-    logger.info(remote)
+# ---------- ОБРАБОТКА СОБЫТИЙ ----------
+def getkey(remote):
+    """Бесконечный цикл чтения событий с устройства."""
+    logger.info('🎯 Начинаем слушать кнопки')
     for event in remote.read_loop():
         if event.type == ecodes.EV_KEY and event.value == 1:
             key_name = ecodes.KEY.get(event.code, f'UNKNOWN_{event.code}')
-            logger.info('Key pressed: %s (%d)', key_name, event.code)
+            logger.info('🔘 Нажата кнопка: %s (%d)', key_name, event.code)
             if event.code in KEY_ACTION_MAP:
                 action_name, query = KEY_ACTION_MAP[event.code]
                 send_request(action_name, query)
 
+# ---------- ОСНОВНОЙ ЦИКЛ С ПЕРЕПОДКЛЮЧЕНИЕМ ----------
 def main():
+    logger.info("🚀 Запуск btremote.py с автоматическим переподключением")
     # Отправка alive при старте
-    try:
-        send_request("its_alive", "cmd?action=its_alive")
-    except Exception as e:
-        logger.error("its_alive request failed: %s", e)
+    send_request("its_alive", "cmd?action=its_alive")
+
+    fixed_path = BTDEV_FALLBACK if BTDEV_FALLBACK and os.path.exists(BTDEV_FALLBACK) else None
+    if fixed_path:
+        logger.info(f"📌 Используем запасной путь: {fixed_path}")
+    else:
+        logger.info("🔍 Запасной путь не задан или недоступен, будем искать по имени")
+
     while True:
-        logger.info('Trying to open device: %s', BTDEV)
+        dev_path = None
+        if fixed_path:
+            dev_path = fixed_path
+        else:
+            dev_path = find_device(DEVICE_NAME, VENDOR, PRODUCT)
+            if dev_path is None:
+                logger.error("❌ Устройство не найдено, повтор через 5 секунд")
+                time.sleep(5)
+                continue
+            logger.info(f"✅ Найдено устройство: {dev_path}")
+
         try:
-            remote = InputDevice(BTDEV)
-            logger.info('Device opened: %s', remote)
-            getkey()
-        except OSError as err:
-            logger.error("OS error: %s", err)
-            logger.error('Device not available, retrying in 5 seconds...')
+            remote = InputDevice(dev_path)
+            logger.info(f"🔌 Устройство открыто: {remote.path} - {remote.name}")
+            getkey(remote)   # этот цикл будет работать, пока устройство доступно
+        except OSError as e:
+            logger.error(f"⚠️ Ошибка при работе с устройством: {e}")
+            if fixed_path:
+                logger.info("🔄 Фиксированный путь перестал работать, переключаемся на автоматический поиск")
+                fixed_path = None
+            time.sleep(5)
         except Exception as e:
-            logger.exception("Unexpected error in main loop")
-        time.sleep(5)
+            logger.exception("💥 Непредвиденная ошибка")
+            time.sleep(5)
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        logger.info("Interrupted by user, exiting.")
+        logger.info("🛑 Остановка пользователем")
         sys.exit(0)

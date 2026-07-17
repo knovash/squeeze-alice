@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InaccessibleObjectException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -178,6 +179,24 @@ public class JsonUtils {
         String result = null;
         result = jsonNode.findValue(valueName).asText();
         return result;
+    }
+
+    public static Map<String, Integer> getPlaylistsMap(String json) {
+        Map<String, Integer> map = new HashMap<>();
+        try {
+            JsonNode root = objectMapper.readTree(json);
+            JsonNode loop = root.path("result").path("playlists_loop");
+            if (loop.isArray()) {
+                for (JsonNode item : loop) {
+                    String name = item.path("playlist").asText();
+                    int id = item.path("id").asInt();
+                    map.put(name, id);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error parsing playlists JSON", e);
+        }
+        return map;
     }
 
     public static void valueToJsonFile(String valueName, String value) {

@@ -2,150 +2,345 @@
 <html>
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-	<title></title>
-	<meta name="generator" content="LibreOffice 7.3.7.2 (Linux)"/>
-	<meta name="created" content="2025-03-22T14:51:36.974114753"/>
-	<meta name="changed" content="2025-04-13T02:05:10.811641055"/>
+	<title>Squeeze‑Alice — интеграция мультирум‑колонок Lyrion Music Server в Умный Дом Яндекс</title>
 	<style type="text/css">
-		@page { size: 210.01mm 297mm; margin-left: 20mm; margin-right: 10mm; margin-top: 10mm; margin-bottom: 10mm }
-		p { line-height: 115%; margin-bottom: 2.47mm; background: transparent; background: transparent }
-		strong { font-weight: bold }
-		a:link { color: #000080; text-decoration: underline }
-		a:visited { color: #800000; text-decoration: underline }
-	</style>
+        @page { size: 210.01mm 297mm; margin-left: 20mm; margin-right: 10mm; margin-top: 10mm; margin-bottom: 10mm }
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 0 20px;
+            background: #fff;
+            color: #222;
+        }
+        h1, h2, h3 { margin-top: 1.5em; }
+        p { line-height: 1.6; }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow: auto;
+            font-family: monospace;
+        }
+        code {
+            font-family: monospace;
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        ul, ol { margin-left: 20px; }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 1em 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .screenshot-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .screenshot-grid img {
+            flex: 1 1 200px;
+            margin: 0;
+        }
+        hr { margin: 2em 0; border: none; border-top: 1px solid #ccc; }
+    </style>
 </head>
-<body lang="en-US" link="#000080" vlink="#800000" dir="ltr"><p align="left">
-<font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><b>Это
-навык Умного дома с Алисой для управления
-плеерами LyrionMediaServer</b></font></font></p>
-<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><b>Установка:</b></font></font></p>
+<body>
+
+<h1>Squeeze‑Alice — интеграция мультирум‑колонок Lyrion Music Server в Умный Дом Яндекс</h1>
+
+<p><img src="/html/device_music.png" alt="Иконка устройства музыка в Умном доме Яндекс" title="Устройство музыка" /></p>
+
+<ul>
+	<li>Голосовое управление LMS плеерами через Алису</li>
+	<li>Включение каналов, соответствующих закладкам в Избранном LMS</li>
+	<li>Использование LMS плееров в сценариях УДЯ</li>
+	<li>Автоматическая синхронизация колонок при включении</li>
+	<li>Выключение всех колонок одной кнопкой или одной командой</li>
+	<li>Установка громкости при включении с задержкой для ожидания выхода плеера из спящего режима</li>
+	<li>Установка громкости при включении колонки в зависимости от времени суток</li>
+	<li>Ограничение максимальной громкости от случайного превышения</li>
+	<li>Управление с телефона через виджеты Tasker и отображение состояния плееров</li>
+	<li>Управление кнопками с пульта</li>
+	<li>Поиск в Spotify и Избранном с голосового пульта (Yandex SST)</li>
+	<li>Передача голосовых и звуковых уведомлений на колонки LMS (Yandex TTS)</li>
+	<li>Репитер пульта для увеличения расстояния</li>
+</ul>
+
+<h2>Голосовое управление устройством УДЯ «музыка»</h2>
+
+<p><strong>«Алиса, включи музыку»</strong> — Включит воспроизведение ⏯️.<br/>
+	Если есть колонка или группа уже играющая, то подключит колонку к играющим.<br/>
+	При включении колонки громкость будет установлена в соответствии с временем суток.<br/>
+	Если плейлист пустой, то включит Избранное 1.</p>
+
+<p><strong>«Алиса, выключи музыку»</strong> — Остановит воспроизведение на колонке в комнате; если колонка была в группе, остальные комнаты продолжат играть.</p>
+
+<p><strong>«Алиса, канал 5»</strong> — Включит из Избранного LMS закладку 5.</p>
+
+<p><strong>«Алиса, переключи канал»</strong> — Включит следующую закладку в Избранном LMS.</p>
+
+<p><strong>«Алиса, музыку громче/тише»</strong> — Изменит громкость плеера в LMS.</p>
+
+<p><strong>«Алиса, музыка громкость 15»</strong> — Установит громкость 15 плеера в LMS.</p>
+
+<p><img src="/html/device_commands.png" alt="Список команд управления музыкой в УДЯ" title="Команды устройства музыка" /></p>
+
+<h2>Управление через голосовой навык Алисы</h2>
+
+<p>«раз два» — имя для активации навыка.</p>
+
+<ul>
+	<li><strong>«Алиса, скажи раз два, включи Kraftwerk»</strong> — Найдёт в Spotify исполнителя Kraftwerk.</li>
+	<li><strong>«Алиса, скажи раз два, включи избранное джаз»</strong> — Найдёт в Избранном LMS закладку, в названии которой есть «джаз».</li>
+	<li><strong>«Алиса, скажи раз два, что играет»</strong> — Алиса ответит название трека и громкость.</li>
+	<li><strong>«Алиса, скажи раз два, какая громкость»</strong> — Алиса ответит текущую громкость и ограничение громкости.</li>
+	<li><strong>«Алиса, скажи раз два, переключи сюда»</strong> — Перенесёт воспроизведение на колонку LMS в этой комнате.</li>
+	<li><strong>«Алиса, скажи раз два, только тут»</strong> — Включит колонку в комнате (если не играла) и выключит все остальные.</li>
+	<li><strong>«Алиса, скажи раз два, добавь в избранное»</strong> — Добавит текущий трек в избранное LMS.</li>
+	<li><strong>«Алиса, скажи раз два, отдельно»</strong> — Заблокирует автосинхронизацию плеера LMS.</li>
+	<li><strong>«Алиса, скажи раз два, вместе»</strong> — Отменит блокировку автосинхронизации плеера LMS.</li>
+</ul>
+
+<p>переключи сюда, также переключает на колонку из Spotify с телефона если сейчас играет.</p>
+
+<h3>Для настройки:</h3>
+
+<ul>
+	<li><strong>«Алиса, скажи раз два, где пульт»</strong> — Алиса ответит, к какой колонке LMS подключён пульт.</li>
+	<li><strong>«Алиса, скажи раз два, подключи пульт»</strong> — Пульт подключится к колонке LMS в комнате.</li>
+	<li><strong>«Алиса, скажи раз два, это комната Гостиная»</strong> — Привяжет колонку Яндекс с Алисой к этой комнате.</li>
+	<li><strong>«Алиса, скажи раз два, выбери колонку homepod»</strong> — Привяжет колонку LMS к этой комнате.</li>
+	<li><strong>«Алиса, скажи раз два, лимит 60»</strong> — Установит ограничение громкости 60 для плеера LMS.</li>
+</ul>
+
+<p>Этот навык пока ещё приватный, но я могу прислать вам ссылку.</p>
+
+<p><img src="/html/skill_link.png" alt="Ссылка на приватный навык Алисы" title="Навык Раз Два" /></p>
+
+<h2>Управление с телефона виджетами Tasker</h2>
+
+<h3>Доступ к управлению всеми плеерами прямо с рабочего стола не заходя в приложение</h3>
+
+<p><code>tasker/squeeze-tasker.prj.xml</code><br/>
+	<a href="https://taskernet.com/?user=AS35m8l41V5ZEnau2L8l%2Feyup%2F3dACIp9knWIQaItDG9k2AY77ZyUTy5Vq2Zvd0TdHMDzA%3D%3D">https://taskernet.com Project - Lyrion Music Server Widgets</a></p>
+
+<ul>
+	<li>виджеты для всех команд управления</li>
+	<li>голосовой поиск в Spotify
+		<ul>
+			<li>включи &lt;исполнитель&gt;</li>
+			<li>включи альбом &lt;исполнитель&gt; &lt;альбом&gt;</li>
+			<li>включи трек &lt;исполнитель&gt; &lt;трек&gt;</li>
+		</ul>
+	</li>
+	<li>виджеты колонок для выбора и отображения сосотояния</li>
+	<li>текстовый виджет состояния всех плееров</li>
+	<li>текстовый виджет плейлиста</li>
+	<li>отправка голосового сообщения на колонку LMS</li>
+</ul>
+
+<div class="screenshot-grid">
+	<img src="/html/tasker_widgets.png" alt="Виджеты Tasker для управления плеерами" title="Виджеты Tasker" />
+	<img src="/html/tasker_favorites.png" alt="Виджет избранного LMS" title="Избранное в Tasker" />
+	<img src="/html/tasker_playlist.png" alt="Виджет текущего плейлиста" title="Плейлист в Tasker" />
+</div>
+
+<h2>Управление с голосового пульта</h2>
+
+<p>Нажать кнопку микрофон 🎤 на пульте.<br/>
+	После сигнала в колонке LMS произнести в пульт запрос, например «включи Kraftwerk».</p>
+
+<ul>
+	<li>включи &lt;исполнитель&gt;</li>
+	<li>включи альбом &lt;исполнитель&gt; &lt;альбом&gt;</li>
+	<li>включи трек &lt;исполнитель&gt; &lt;трек&gt;</li>
+	<li>Звуковой сигнал после записи голоса.</li>
+	<li>Записанный голос распознаётся через Yandex SST.</li>
+	<li>По полученному тексту находится исполнитель в Spotify.</li>
+	<li>Колонка LMS ответит «Включаю Kraftwerk».</li>
+	<li>Включится воспроизведение Kraftwerk на колонке LMS.</li>
+</ul>
+
+<h3>Кнопки для пульта G20pro</h3>
+
+<ul>
+	<li>🎤 — голосовой поиск в Spotify</li>
+	<li>1️⃣ … 9️⃣ — закладки в Избранном LMS</li>
+	<li>➕ — громче</li>
+	<li>➖ — тише</li>
+	<li>⏯️ play/pause — для колонки LMS в этой комнате (остальные продолжат играть)</li>
+	<li>◀️ previous track</li>
+	<li>▶️ next track</li>
+	<li>🔼 previous channel</li>
+	<li>🔽 next channel</li>
+	<li>⏮️ rewind 20s</li>
+	<li>⏭️ forward 20s</li>
+	<li>⏹ stop all — выключить все LMS‑колонки в доме</li>
+	<li><strong>Del</strong> — «что играет» (колонка LMS ответит название и громкость)</li>
+	<li>🏠 «переключи сюда» — музыка переключится на эту колонку, другие выключатся</li>
+	<li><strong>Pg+</strong> — переключить пульт на следующую колонку LMS</li>
+</ul>
+
+<p>переключи сюда, также переключает на колонку из Spotify с телефона если сейчас играет.</p>
+
+<p><img src="/html/g20.png" alt="Внешний вид пульта G20pro" title="Пульт G20pro" /></p>
+
+<p>Настраиваются кнопки в файле <code>config.conf</code> (пример для play/pause):</p>
+
+<pre><code>{"code": 164, "description": "KEY_PLAYPAUSE", "command": "/cmd?player=btremote&amp;action=play_pause"}</code></pre>
+
+<h2>Удлиннитель bt пульта</h2>
+
+<p>Если использовать пульт в комнате далеко от сервера с LMS можно использовать orangePiZero как репитер для пульта, установив на него</p>
+
+<pre><code>squeeze_remote/btremote.py
+squeeze_remote/voice.py</code></pre>
+
+<p><img src="/html/orange.jpg" alt="Orange Pi Zero в качестве репитера" title="Orange Pi Zero" /></p>
+
+<h2>Управление с пульта телевизора</h2>
+
+<p><code>tasker/squeeze-tasker.prj.xml</code><br/>
+	устанавливается на android tv или tv box<br/>
+	для назначения действий на кнопки можно использовать tvQuickActions<br/>
+	Тут уже смотря какой пульт и сколько на нем бесполезных кнопок, например так:</p>
+
+<ul>
+	<li>mute - play/pause</li>
+	<li>mute (doble) - stop all</li>
+	<li>mute (long) - Избранное LMS</li>
+	<li>menu (long) - виртуальный dpad tvquickactions для громкости и переключения треков</li>
+</ul>
+
+<div class="screenshot-grid">
+	<img src="/html/bpr2s.png" alt="Пульт телевизора BPR2S" title="Пульт ТВ" />
+	<img src="/html/tv_favorites.png" alt="Экран избранного на ТВ" title="Избранное на ТВ" />
+	<img src="/html/tv_playlist.png" alt="Экран плейлиста на ТВ" title="Плейлист на ТВ" />
+</div>
+
+<hr/>
+
+<h3>🖥️ Веб‑интерфейс</h3>
+
+<p>Доступен по адресу <code>http://&lt;ip-сервера&gt;:8010</code></p>
+
+<ul>
+	<li>Авторизация в Яндексе и Spotify.</li>
+	<li>Настройка плееров:
+		<ul>
+			<li>Привязка к комнате УДЯ</li>
+			<li>ожидание пробуждения плеера</li>
+			<li>ограничение громкости</li>
+			<li>пресеты громкости по времени</li>
+		</ul>
+	</li>
+</ul>
+
+<p><img src="/html/web_home.png" alt="Главная страница веб-интерфейса" title="Веб-интерфейс — главная" /></p>
+<p><img src="/html/web_players.png" alt="Настройка плееров в веб-интерфейсе" title="Веб-интерфейс — плееры" /></p>
+
+<h2>⚙️ Установка и настройка</h2>
+
+<p>Скачайте последний релиз или клонируйте репозиторий:</p>
+
+<pre><code>git clone https://github.com/knovash/squeeze-alice.git
+cd squeeze-alice
+mvn clean package
+java -jar target/squeeze-alice-1.0.jar</code></pre>
+
+<p>Можно использовать скрипт установки, подставив IP‑адрес на который установить.</p>
+
+<pre><code>./install_mvn_ssh_192.168.1.131.sh</code></pre>
+
+<p>Для windows есть какието bat файлы, но это неточно...</p>
+
+<p>После установки сервис будет доступен по адресу http://&lt;IP-адрес&gt;:8010/.</p>
+
 <ol>
-	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Должен
-	быть запущен Lyrion Media Server <a href="https://lyrion.org/">https://lyrion.org</a></font></font></p>
-	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Скачать
-	</font></font><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">архив</font></font><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">
-	<a href="https://github.com/knovash/squeeze-alice/blob/main/squeeze-alice-local.tar.gz">https://github.com/knovash/squeeze-alice/blob/main/squeeze-alice-local.tar.gz</a></font></font></p>
-	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Запустить
-	скрипт install_ssh_192.168.1.123.sh скопирует файлы
-	и запустит сервис навыка, поменяйте в
-	названии файла на свой ip.</font></font></p>
-	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Открыть
-	http://192.168.1.123:8010/</font></font></p>
-	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Нажать
-	&quot;Авторизация в Яндекс&quot; - подтвердить
-	авторизацию в Яндекс</font></font></p>
-	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Нажать
-	&quot;Настройка плееров&quot; - выбрать
-	комнаты Умного дома для плееров LMS</font></font></p>
-	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Открыть
-	приложение &quot;Дом с Алисой&quot;</font></font></p>
-	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Добавить
-	Устройство умного дома</font></font></p>
-	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Найти
-	производителя &quot;Lyrion Media Server&quot;</font></font></p>
-	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Нажать
-	&quot;Привязать к Яндекс&quot;</font></font></p>
-	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Нажать
-	&quot;Обновить список устройств&quot;</font></font></p>
-	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Показаны
-	устройства &quot;<b>музыка</b>&quot; в комнатах</font></font></p>
-	<li><p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Ура,
-	теперь всё готово!</font></font></p>
+	<li>Если сервис успешно обнаружил LMS то будет список плееров из LMS</li>
+	<li>Авторизуйтесь в Яндекс для соединения с акаунтом умного дома</li>
+	<li>Если авторизация успешна то будет список комнат из УДЯ</li>
+	<li>Перейдите в настройку плееров и выберете соответствующие комнаты</li>
+	<li>В приложении Яндекс «Умный дом»
+		<ul>
+			<li>Добавить &gt; Устройство умного дома</li>
+			<li>Найти производителя Lyrion Music Server</li>
+			<li>Нажать "Привязать к Яндексу"</li>
+			<li>Нажать "Обновить список устройств"</li>
+			<li>Нажать "Ура, теперь всё готово!"</li>
+		</ul>
+	</li>
 </ol>
-<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><b>Удаление:</b></font></font></p>
-<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Запустить
-скрипт uninstall_ssh_192.168.1.123.sh, поменяйте в
-названии файла на свой ip.</font></font></p>
-<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Скрипт
-удалит файлы</font></font></p>
-<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">rm
--r /opt/squeeze-alice-1.0</font></font></p>
-<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">rm
-/lib/systemd/system/squeeze-alice.service</font></font></p>
-<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">Остановит
-сервис навыка</font></font></p>
-<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">systemctl
-disable squeeze-alice.service</font></font></p>
-<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">systemctl
-daemon-reload</font></font></p>
-<p style="line-height: 100%"><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">В
-приложении &quot;Дом с Алисой&quot;</span></font></font><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt">
-</font></font><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">удалите
-производителя и устройства</span></font></font></p>
-<p style="line-height: 100%"><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><br/>
-</font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
-<img src="manual_html_b6f73fc39d4026ab.png" name="Image12" align="bottom" width="672" height="378" border="0"/>
 
-<br/>
-</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">LMS
-запущен</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
-<br/>
-<img src="manual_html_8afba45dd4a58bd3.png" name="Image1" align="bottom" width="672" height="378" border="0"/>
+<p>Этого достаточно для управления плеерами LMS через УДЯ.</p>
 
-<br/>
-</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">Архив
-распакован</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
-<br/>
-<img src="manual_html_2677f4f0b44915d9.png" name="Image13" align="bottom" width="672" height="378" border="0"/>
-<br/>
-</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">Скрипт
-установки запущен</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
-<br/>
-<img src="manual_html_e4c25722f369f54b.png" name="Image2" width="672" height="378" border="0"/>
-<br/>
-</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">Сервис
-навыка запущен</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
-<br/>
-<img src="manual_html_e79bb3099c5dc734.png" name="Image3" align="bottom" width="672" height="378" border="0"/>
-<br/>
-</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">Авторизация
-в Яндекс выполнена</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
-<br/>
-<img src="manual_html_afe88dbad654eafd.png" name="Image14" align="bottom" width="672" height="378" border="0"/>
-<br/>
-</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">Выбор
-комнаты Умного дома для плеера
-LMS</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
-<br/>
-<img src="manual_html_a6103497bc12e8d1.png" name="Image15" align="bottom" width="672" height="378" border="0"/>
-<br/>
-</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">Устройства
-музыка созданы, можно обновить список
-устройств в умном доме</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
-<br/>
-<img src="manual_html_3878353738b930e.png" name="Image16" align="bottom" width="672" height="378" border="0"/>
-<br/>
-</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal">4
-устройства Музыка подключены в Умный
-дом</span></font></font></strong><strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><span style="font-weight: normal"><br/>
-<br/>
-</span></font></font></strong><font face="Liberation Sans, sans-serif"><font size="3" style="font-size: 12pt"><br/>
-<img src="manual_html_ab1461428766705b.png" name="Image4" align="bottom" width="416" height="696" border="0"/>
+<p><img src="/html/1_web_lms_players_ok.png" alt="Сервис запущен, найдены плееры в LMS" title="Шаг 1: найденные плееры" /></p>
+<p><em>1. Сервис запущен, найдены плееры в LMS</em></p>
 
-<img src="manual_html_ac9592e17e88b792.png" name="Image5" align="bottom" width="416" height="696" border="0"/>
+<p><img src="/html/2_web_yandex_auth.png" alt="Авторизация в Яндекс" title="Шаг 2: авторизация в Яндекс" /></p>
+<p><em>2. Авторизация в Яндекс</em></p>
 
-<br/>
-<br/>
-<img src="manual_html_871524d7e3fa5106.png" name="Image6" align="bottom" width="416" height="696" border="0"/>
+<p><img src="/html/3_web_yandex_rooms_ok.png" alt="После авторизации получены комнаты из УДЯ" title="Шаг 3: комнаты из УДЯ" /></p>
+<p><em>3. После авторизации получены комнаты из УДЯ</em></p>
 
-<img src="manual_html_b97e11b34bf64375.png" name="Image10" align="bottom" width="416" height="696" border="0"/>
+<p><img src="/html/4_web_players_no_rooms.png" alt="Плееры, комнаты не выбраны" title="Шаг 4: плееры без комнат" /></p>
+<p><em>4. Плееры, комнаты не выбраны</em></p>
 
-<br/>
-<br/>
-<img src="manual_html_3852945214221813.png" name="Image7" align="bottom" width="416" height="696" border="0"/>
+<p><img src="/html/5_web_players_set_rooms.png" alt="Плееры, комнаты выбраны" title="Шаг 5: плееры с комнатами" /></p>
+<p><em>5. Плееры, комнаты выбраны</em></p>
 
-<img src="manual_html_3267d1360873ebf9.png" name="Image8" align="bottom" width="416" height="696" border="0"/>
+<p><img src="/html/7_udy_add_device.png" alt="УДЯ добавить устройство" title="Шаг 6: добавление устройства" /></p>
+<p><em>6. УДЯ добавить устройство</em></p>
 
-<br/>
-<br/>
-<img src="manual_html_c766d35aba8e1b37.png" name="Image9" align="bottom" width="416" height="696" border="0"/>
+<p><img src="/html/8_udy_search_lyrion.png" alt="Найти Lyrion Music Server" title="Шаг 7: поиск Lyrion" /></p>
+<p><em>7. Найти Lyrion Music Server</em></p>
 
-<img src="manual_html_d2ad6697278a02c6.png" name="Image11" align="bottom" width="416" height="696" border="0"/>
+<p><img src="/html/9_udy_link_to_yandex.png" alt="Привязать к Яндексу" title="Шаг 8: привязка" /></p>
+<p><em>8. Привязать к Яндексу</em></p>
 
-<br/>
-</font></font><br/>
-<br/>
+<p><img src="/html/10_udy_yandex_login.png" alt="Вход в Яндекс" title="Шаг 9: вход в Яндекс" /></p>
+<p><em>9. Вход в Яндекс</em></p>
 
-</p>
+<p><img src="/html/11_udy_yandex_link.png" alt="Подтверждение доступа" title="Шаг 10: подтверждение доступа" /></p>
+<p><em>10. Подтверждение доступа</em></p>
+
+<p><img src="/html/12_udy_devices_all_ok.png" alt="Устройства успешно добавлены!" title="Шаг 11: успех" /></p>
+<p><em>11. Устройства успешно добавлены!</em></p>
+
+<p><img src="/html/13_udy_devices.png" alt="Новые устройства в доме" title="Шаг 12: новые устройства" /></p>
+<p><em>12. Новые устройства в доме</em></p>
+
+<hr/>
+
+<p>Ещё можно добавить:</p>
+
+<ul>
+	<li>Установить на телефон tasker/squeeze-tasker.prj.xml для виджетов управления и отображения плееров</li>
+	<li>Голосовой навык Раз Два для голосового поиска и дополнительных команд</li>
+	<li>Авторизоваться в Spotify для поиска</li>
+	<li>Установить squeeze_remote/btremote.py для управления пультом</li>
+	<li>Установить squeeze_remote/voice.py для голосового поиска с пульта</li>
+</ul>
+
+<p>Баги есть, но я над этим иногда работаю...</p>
+
+<h2>Зачем я это делал?</h2>
+
+<ul>
+	<li>Чтобы не объяснять никому дома как включить музыку на колонки из Lyrion или Spotify и прочего. Просто нажми кнопку на пульте или скажи алисе включи музыку, избранное, альбом...</li>
+	<li>Чтобы не объяснять как управлять синхронизацией колонок, просто включи музыку, выключи музыку, переключи сюда.</li>
+	<li>Когда вы перед телевизором, не нужно искать телефон или думать про голосовые команды. Достаточно нажать кнопку на том же пульте ТВ чтоб выключить музыку в комнате или во всем доме.</li>
+	<li>Просто включить телефон или планшет и сразу увидеть состояние всех плееров не заходя ни в какие приложения, выполнять с экрана действия с колонками в пару кликов.</li>
+	<li>Пульт с реальными кнопками — самый интуитивный интерфейс. На него не нужно смотреть, и кнопки запоминаются на уровне мышечной памяти, это как кнопки в автомобиле, быстро и понятно. Управлять музыкой, не отвлекаясь на экраны, — только пульт и колонки.</li>
+	<li>Каждая фича просто становилась необходимой мне в какойто момент и я ее добавлял.</li>
+	<li>Почему LMS, а не мультирум на Яндекс Станциях? Нет ограничений. В LMS можно подключить любые колонки и множество источников музыки.</li>
+</ul>
+
 </body>
 </html>

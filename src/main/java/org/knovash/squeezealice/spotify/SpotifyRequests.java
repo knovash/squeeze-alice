@@ -1,35 +1,26 @@
 package org.knovash.squeezealice.spotify;
 
 import lombok.extern.log4j.Log4j2;
-import org.apache.http.client.methods.*;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.util.EntityUtils;
+import org.knovash.squeezealice.http.HttpClientWrapper;
+import org.knovash.squeezealice.http.HttpResponseResult;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-import static org.knovash.squeezealice.Main.config;
-import static org.knovash.squeezealice.Main.hive;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 public class SpotifyRequests {
 
-    private static final CloseableHttpClient httpClient = HttpClients.createDefault();
+    private static final HttpClientWrapper httpClient = new HttpClientWrapper();
 
-    /**
-     * Синхронное обновление токена, если он истёк.
-     * Блокирует поток до получения нового токена.
-     */
     private static synchronized void refreshTokenIfExpired() {
-        // Если нет токена вообще — ничего не делаем
+        log.info(start);
         if (config.spotifyToken == null || config.spotifyToken.isEmpty()) {
             log.debug("No access token, cannot refresh");
             return;
         }
-        // Если нет refresh token — тоже не можем обновить
         if (config.spotifyRefreshToken == null || config.spotifyRefreshToken.isEmpty()) {
             log.debug("No refresh token, cannot refresh");
             return;
@@ -42,68 +33,91 @@ public class SpotifyRequests {
                     "token_spotify_refresh", sessionId, config.spotifyRefreshToken);
             log.info("Token refreshed. New expiry: {}", config.spotifyTokenExpiresAt);
         }
+        log.info(finish);
     }
 
-    /**
-     * Универсальный метод выполнения HTTP-запроса к Spotify API.
-     */
-    private static String executeRequest(HttpUriRequest request, boolean expectBody) {
+    private static HttpResponseResult executeRequest(String method, String uri, String body) {
         refreshTokenIfExpired();
-        // Если после refresh токен всё ещё отсутствует, не пытаемся делать запрос
         if (config.spotifyToken == null || config.spotifyToken.isEmpty()) {
-            log.error("No access token, aborting request to {}", request.getURI());
-            return null;
+            log.error("No access token, aborting request to {}", uri);
+            return HttpResponseResult.error("No access token");
         }
-        request.setHeader(new BasicHeader("Authorization", "Bearer " + config.spotifyToken));
+        else log.info("TOKEN OK");
 
-        try (CloseableHttpResponse response = httpClient.execute(request)) {
-            int statusCode = response.getStatusLine().getStatusCode();
-            log.debug("Request to {} returned {}", request.getURI(), statusCode);
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Authorization", "Bearer " + config.spotifyToken);
+        headers.put("Content-Type", "application/json");
 
-            if (statusCode == 204) {
-                return null;
-            }
+        HttpResponseResult result;
 
-            String json = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-
-            if (statusCode == 200) {
-                return json;
-            } else if (statusCode == 401) {
-                log.warn("Received 401, forcing token refresh and retry...");
-                refreshTokenIfExpired();
-                if (config.spotifyToken == null || config.spotifyToken.isEmpty()) {
-                    log.error("Still no access token after refresh, cannot retry");
-                    return null;
-                }
-                request.setHeader("Authorization", "Bearer " + config.spotifyToken);
-                try (CloseableHttpResponse retryResponse = httpClient.execute(request)) {
-                    int retryCode = retryResponse.getStatusLine().getStatusCode();
-                    if (retryCode == 200) {
-                        return EntityUtils.toString(retryResponse.getEntity(), StandardCharsets.UTF_8);
-                    } else {
-                        log.error("Retry failed with code {}", retryCode);
-                        return null;
-                    }
-                }
-            } else {
-                log.error("Request failed with code {}: {}", statusCode, json);
-                return null;
-            }
-        } catch (IOException e) {
-            log.error("HTTP error: {}", e.getMessage(), e);
-            return null;
+        switch (method.toUpperCase()) {
+            case "GET":
+                result = httpClient.doGet(uri, headers);
+                break;
+            case "POST":
+                result = httpClient.doPost(uri, body, headers);
+                break;
+            case "PUT":
+                result = httpClient.doPut(uri, body, headers);
+                break;
+            default:
+                return HttpResponseResult.error("Unsupported method");
         }
+
+        if (result.getStatusCode() == 401) {
+            log.warn("Received 401, forcing token refresh and retry...");
+            refreshTokenIfExpired();
+            if (config.spotifyToken != null && !config.spotifyToken.isEmpty()) {
+                headers.put("Authorization", "Bearer " + config.spotifyToken);
+                switch (method.toUpperCase()) {
+                    case "GET":
+                        result = httpClient.doGet(uri, headers);
+                        break;
+                    case "POST":
+                        result = httpClient.doPost(uri, body, headers);
+                        break;
+                    case "PUT":
+                        result = httpClient.doPut(uri, body, headers);
+                        break;
+                }
+            }
+        }
+        if (result.getStatusCode() == 204) {
+            log.info("204");
+        }
+        log.info("RESULT: " + result.getStatusCode());
+        return result;
     }
 
     public static String requestGet(String uri) {
-        return executeRequest(new HttpGet(uri), true);
+        HttpResponseResult result = executeRequest("GET", uri, null);
+        log.info("RESULT: " + result);
+        if (result.isSuccess()) {
+            log.info("OK");
+            return result.getBody();
+        } else {
+            log.error("GET request failed: {}", result.getStatusCode());
+            return null;
+        }
     }
 
     public static String requestPut(String uri) {
-        return executeRequest(new HttpPut(uri), false);
+        HttpResponseResult result = executeRequest("PUT", uri, null);
+        if (result.isSuccess()) {
+            return result.getBody();
+        } else {
+            log.error("PUT request failed: {}", result.getStatusCode());
+            return null;
+        }
     }
 
     public static String requestPost(String uri) {
-        return executeRequest(new HttpPost(uri), true);
+        HttpResponseResult result = executeRequest("POST", uri, null);
+        if (result.isSuccess()) {
+            return result.getBody();
+        } else {
+            log.error("POST request failed: {}", result.getStatusCode());
+            return null;
+        }
     }
 }

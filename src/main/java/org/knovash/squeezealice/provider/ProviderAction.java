@@ -3,21 +3,27 @@ package org.knovash.squeezealice.provider;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.SmartHome;
-import org.knovash.squeezealice.provider.response.*;
+import org.knovash.squeezealice.provider.response.ActionResult;
+import org.knovash.squeezealice.provider.response.Capability;
+import org.knovash.squeezealice.provider.response.Device;
+import org.knovash.squeezealice.provider.response.ResponseYandex;
 import org.knovash.squeezealice.utils.JsonUtils;
-import org.knovash.squeezealice.utils.LogExecution;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
 
+// НЕ используются классы ActionsSync или ActionsAsync
+// Используются только методы класса Pleer
+
 @Log4j2
 public class ProviderAction {
 
-    @LogExecution
     public static Context providerActionRun(Context context) {
         if (config.lmsIp == null) errorContext("LMS NULL", null);
         String body = context.body;
@@ -96,7 +102,6 @@ public class ProviderAction {
 
     // если плеер не получен или недоступен - вернуть device с кодом ошибки
 // если нажать на кнопку увтройства вкл/выкл если ошибка - ответить Устройство неотвечает
-    @LogExecution
     private static Device setDeviceCapabilities(Device device) {
 
         if (!device.type.equals("devices.types.media_device.receiver")) {
@@ -126,7 +131,7 @@ public class ProviderAction {
         device.action_result.error_message = errorMessage;
         return device;
     }
-    @LogExecution
+
     private static void runMultipleDevicesCapabilities(List<Device> devices) {
         log.info(start);
         if (devices == null || devices.isEmpty()) return;

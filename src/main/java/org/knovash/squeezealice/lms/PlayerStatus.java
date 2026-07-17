@@ -74,6 +74,7 @@ public class PlayerStatus {
         public int remote;
         public String sync_slaves;
         public String sync_master;
+        public int pause;
 
         @Override
         public String toString() {
