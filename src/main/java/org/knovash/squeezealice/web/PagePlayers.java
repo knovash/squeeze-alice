@@ -31,7 +31,7 @@ public class PagePlayers {
 
     //    volume_amp_lms
     public static final String volume_amp_lms = "volume_amp_lms";
-    public static final String volume_amp_ffs = "volume_amp_ffs";
+    public static final String volume_amp_ffmpeg = "volume_amp_ffmpeg";
 
 
     public static final String toggle_wake_save = "toggle_wake_save";
@@ -107,62 +107,53 @@ public class PagePlayers {
                             "<input name='action' type='hidden'  value='" + delay_expire_save + "'>" +
                             "<button type='submit'>Сохранить</button>" +
                             "</form>" +
-//                            "<br>" +
-
-//                            "<form method='POST' action='/form'>" +
-//                            "<label>Синхронизация альтернативная (" + lmsPlayers.syncAlt + ") если di.fm работает нормально, должно быть false</label><br>" +
-//                            "<select name='" + alt_sync_value + "' required>" +
-//                            "<option value='true' " + (lmsPlayers.syncAlt ? "selected" : "") + ">вкл</option>" +
-//                            "<option value='false' " + (!lmsPlayers.syncAlt ? "selected" : "") + ">выкл</option>" +
-//                            "</select>" +
-//                            "<input type='hidden' name='action' value='" + alt_sync_save + "'>" +
-//                            "<button type='submit'>Сохранить</button>" +
-//                            "</form>" +
-//                            "<br>" +
-
-////                            увеличивать громкость уведомлений в LMS
-                            "<form method='POST' action='/form'>" +
-                            "<label>Увеличивать громкость уведомлений в LMS</label><br>" +
-                            "<select name='" + volume_amp_lms + "' required>" +
-                            "<option value='true' " + (lmsPlayers.volumeAmpLms ? "selected" : "") + ">вкл</option>" +
-                            "<option value='false' " + (!lmsPlayers.volumeAmpLms ? "selected" : "") + ">выкл</option>" +
-                            "</select>" +
-                            "<input type='hidden' name='action' value='last_this_save'>" +
-                            "<button type='submit'>Сохранить</button>" +
-                            "</form>" +
-
-////                            увеличивать громкость уведомлений в FFS
-                            "<form method='POST' action='/form'>" +
-                            "<label>Увеличивать громкость уведомлений в FFS</label><br>" +
-                            "<select name='" + volume_amp_ffs + "' required>" +
-                            "<option value='true' " + (lmsPlayers.volumeAmpFfs ? "selected" : "") + ">вкл</option>" +
-                            "<option value='false' " + (!lmsPlayers.volumeAmpFfs ? "selected" : "") + ">выкл</option>" +
-                            "</select>" +
-                            "<input type='hidden' name='action' value='last_this_save'>" +
-                            "<button type='submit'>Сохранить</button>" +
-                            "</form>" +
 
 
-                            "<form method='POST' action='/form'>" +
-                            "<label>Включать последнее игравшее на этой колонке (" + lmsPlayers.lastThis + ") иначе с последней игравшей колонки</label><br>" +
-                            "<select name='" + last_this_value + "' required>" +
-                            "<option value='true' " + (lmsPlayers.lastThis ? "selected" : "") + ">вкл</option>" +
-                            "<option value='false' " + (!lmsPlayers.lastThis ? "selected" : "") + ">выкл</option>" +
-                            "</select>" +
-                            "<input type='hidden' name='action' value='last_this_save'>" +
-                            "<button type='submit'>Сохранить</button>" +
-                            "</form>" +
-
+                            //"<form method='POST' action='/form'>" +
+                            //"<label>Включать последнее игравшее на этой колонке (" + lmsPlayers.lastThis + ") иначе с последней игравшей колонки</label><br>" +
+                            //"<select name='" + last_this_value + "' required>" +
+                            //"<option value='true' " + (lmsPlayers.lastThis ? "selected" : "") + ">вкл</option>" +
+                            //"<option value='false' " + (!lmsPlayers.lastThis ? "selected" : "") + ">выкл</option>" +
+                            //"</select>" +
+                            //"<input type='hidden' name='action' value='last_this_save'>" +
+                            //"<button type='submit'>Сохранить</button>" +
+                            //"</form>" +
 
                             "<form method='POST' action='/form'>" +
                             "<label>Задержка пред включением</label><br>" +
-                            "<select name='" + toggle_wake_value.toString() + "' required>" +
+                            "<select name='" + toggle_wake_value + "' required>" +
                             "<option value='true' " + (lmsPlayers.toggleWake ? "selected" : "") + ">вкл</option>" +
                             "<option value='false' " + (!lmsPlayers.toggleWake ? "selected" : "") + ">выкл</option>" +
                             "</select>" +
                             "<input type='hidden' name='action' value='" + toggle_wake_save + "'>" +
                             "<button type='submit'>Сохранить</button>" +
                             "</form>" +
+
+
+////                            увеличивать громкость уведомлений в FFS
+                            "<form method='POST' action='/form'>" +
+                            "<label>Увеличивать громкость уведомлений в FFmpeg</label><br>" +
+                            "<select name='" + volume_amp_ffmpeg + "' required>" +
+                            "<option value='true' " + (lmsPlayers.volumeAmpFfmpeg ? "selected" : "") + ">вкл</option>" +
+                            "<option value='false' " + (!lmsPlayers.volumeAmpFfmpeg ? "selected" : "") + ">выкл</option>" +
+                            "</select>" +
+                            "<input type='hidden' name='action' value='" + volume_amp_ffmpeg + "'>" +
+                            "<button type='submit'>Сохранить</button>" +
+                            "</form>" +
+
+                            ////                            увеличивать громкость уведомлений в FFS
+                            "<form method='POST' action='/form'>" +
+                            "<label>Увеличивать громкость уведомлений в LMS</label><br>" +
+                            "<select name='" + volume_amp_lms + "' required>" +
+                            "<option value='true' " + (lmsPlayers.volumeAmpLms ? "selected" : "") + ">вкл</option>" +
+                            "<option value='false' " + (!lmsPlayers.volumeAmpLms ? "selected" : "") + ">выкл</option>" +
+                            "</select>" +
+                            "<input type='hidden' name='action' value='" + volume_amp_lms + "'>" +
+                            "<button type='submit'>Сохранить</button>" +
+                            "</form>" +
+
+
+
 
                             "<form method='POST' action='/form'>" +
                             "<label>Говорить уведомления</label><br>" +

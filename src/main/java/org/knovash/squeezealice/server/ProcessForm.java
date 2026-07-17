@@ -60,8 +60,8 @@ public class ProcessForm {
                     lmsPlayers.volumeAmpLmsSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
-                case volume_amp_ffs:
-                    lmsPlayers.volumeAmpFfsSave((HashMap<String, String>) bodyMap);
+                case volume_amp_ffmpeg:
+                    lmsPlayers.volumeAmpFfmpegSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
 

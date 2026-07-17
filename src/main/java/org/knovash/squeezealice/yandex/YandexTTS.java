@@ -1,6 +1,5 @@
 package org.knovash.squeezealice.yandex;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
@@ -31,14 +30,18 @@ public class YandexTTS {
 
             new File(outputFile).setReadable(true, false);
 
-            // Изменение громкости (коэффициент 1.5)
-            double volumeGain = 3; // можно вынести в config
-            try {
-                changeVolume(outputFile, outputFile, volumeGain);
-            } catch (Exception e) {
-                log.error("Не удалось изменить громкость: {}", e.getMessage());
-                // Продолжаем с исходным файлом
-            }
+            log.info("NOTIFICATION AMP FFMPEG " + lmsPlayers.volumeAmpFfmpeg);
+            if (lmsPlayers.volumeAmpFfmpeg) {
+                log.info("VOLUME AMP FFMPEG");
+                // Изменение громкости (коэффициент 1.5)
+                double volumeGain = 3; // можно вынести в config
+                try {
+                    changeVolume(outputFile, outputFile, volumeGain);
+                } catch (Exception e) {
+                    log.error("Не удалось изменить громкость: {}", e.getMessage());
+                    // Продолжаем с исходным файлом
+                }
+            }else log.info("SKIP VOLUME AMP FFMPEG");
 
         } catch (Exception e) {
             log.error("❌ Ошибка при синтезе или сохранении: {}", e.getMessage(), e);

@@ -46,7 +46,7 @@ public class LmsPlayers {
             20, 15,
             22, 5));
     public Boolean volumeAmpLms = false;
-    public Boolean volumeAmpFfs = false;
+    public Boolean volumeAmpFfmpeg = false;
     private String lastUpdateTime;
 
     public void checkUpdated() {
@@ -371,10 +371,11 @@ public class LmsPlayers {
         write();
     }
 
-    public void volumeAmpFfsSave(HashMap<String, String> parameters) {
-        String tmp = parameters.get(volume_amp_lms);
+    public void volumeAmpFfmpegSave(HashMap<String, String> parameters) {
+        String tmp = parameters.get(volume_amp_ffmpeg);
         if (tmp == null) return;
-        volumeAmpFfs = Boolean.parseBoolean(tmp);
+        volumeAmpFfmpeg = Boolean.parseBoolean(tmp);
+        log.info("FFMPEG: " +volumeAmpFfmpeg);
         write();
     }
 
