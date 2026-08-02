@@ -17,7 +17,7 @@ public class Device {
 
     public String type = "devices.types.media_device.receiver";
     public String name = "музыка";
-    public String id; // TODO переименовать в external_id
+    public String id;
     public String room;
     public List<Capability> capabilities = new ArrayList<>();
     public List<Property> properties = new ArrayList<>();
@@ -30,8 +30,4 @@ public class Device {
     public ActionResult action_result;
     public String error_code = null;
     public String error_message = null;
-
-    //    public YandexInfo.QuasarInfo quasar_info;
-
-
 }

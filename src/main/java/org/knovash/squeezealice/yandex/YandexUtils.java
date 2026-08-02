@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.knovash.squeezealice.Main.smartHome;
+
 @Log4j2
 public class YandexUtils {
 
@@ -70,6 +72,47 @@ public class YandexUtils {
                 .collect(Collectors.toList());
 
         yandexDevices = devices;
+        return devices;
+    }
+
+
+    public static List<MusicDevice> extractOtherDevices(YandexInfo yandexInfo) {
+        if (yandexInfo == null || yandexInfo.rooms == null || yandexInfo.devices == null) return List.of();
+
+        Map<String, String> roomNameById = yandexInfo.rooms.stream()
+                .collect(Collectors.toMap(
+                        room -> room.id,
+                        room -> room.name,
+                        (existing, replacement) -> existing
+                ));
+
+        Yandex.idsAndRooms = roomNameById;
+
+        List<MusicDevice> devices = yandexInfo.devices.stream()
+                .filter(device -> device.type != null && device.type.equals("devices.types.other"))
+                //.filter(device -> device.name != null && (
+                //                device.name.equals("Переключи сюда") ||
+                //                        device.name.equals("Дальше") ||
+                //                        device.name.equals("Назад") ||
+                //                        device.name.equals("Отдельно") ||
+                //                        device.name.equals("Вместе") ||
+                //                        device.name.equals("Подключи пульт")
+                //
+                //        )
+                //)
+                .filter(device -> device.name != null)
+                .filter(device -> smartHome.devicesButtons.contains(device.name))
+                .map(device -> new MusicDevice(
+                        device.room,
+                        roomNameById.get(device.room),
+                        device.id,          // сохраняем ID Яндекса
+                        device.external_id,
+                        device.name
+                ))
+                .peek(ff -> log.info("OTHER DEVICE ROOM: {} NAME: {}", ff.roomName, ff.name))
+                .collect(Collectors.toList());
+        //log.info("OTHER DEVICES RECIEVED: " + devices);
+
         return devices;
     }
 

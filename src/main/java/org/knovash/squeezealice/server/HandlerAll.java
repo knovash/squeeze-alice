@@ -16,15 +16,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+import static org.knovash.squeezealice.Main.settings;
+
 @Log4j2
 public class HandlerAll implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-//        log.info(Main.start);
-        // --- НОВАЯ ОБРАБОТКА /music/ ---
         String path = httpExchange.getRequestURI().getPath();
-//        log.info("HANDLE PATH: "+path);
 
         if (path.startsWith("/music/")) {
             serveSoundFile(httpExchange, path); // отдать звукаовой файл
@@ -42,17 +41,17 @@ public class HandlerAll implements HttpHandler {
         try (OutputStream outputStream = httpExchange.getResponseBody()) {
             outputStream.write(responseBytes);
         }
-//        log.info(Main.finish);
     }
 
     public static Context switchPath(Context context) {
         String path = context.path;
-//        log.info("SWITCH CONTEXT PATH: " + path);
         switch (path) {
             case "/":
                 return PageIndex.action(context);
             case "/players":
                 return PagePlayers.action(context);
+            case "/settings":
+                return settings.action(context);
             case "/manual":
                 return PageManual.action(context);
             case "/lms":
@@ -92,7 +91,6 @@ public class HandlerAll implements HttpHandler {
     private static void serveSoundFile(HttpExchange exchange, String path) throws IOException {
         String fileName = path.substring(path.lastIndexOf('/') + 1);
         File file = new File("/home/music/" + fileName);
-//        log.info("SOUND FILE: " + fileName);
         if (!file.exists()) {
             exchange.sendResponseHeaders(404, -1);
             exchange.close();

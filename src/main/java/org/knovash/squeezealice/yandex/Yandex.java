@@ -6,6 +6,7 @@ import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.http.HttpClientWrapper;
 import org.knovash.squeezealice.http.HttpResponseResult;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.web.PageIndex;
 
 import java.util.*;
@@ -26,6 +27,7 @@ public class Yandex {
     public static int devicesMusicCounter;
     public static int devicesSize;
     public static List<String> roomsWithDevice;
+    public static List<YandexUtils.MusicDevice> otherDevices;
 
     public static List<String> rooms = new ArrayList<>();
     public static Map<String, String> idsAndRooms = new HashMap<>();
@@ -59,6 +61,10 @@ public class Yandex {
 
         List<YandexUtils.MusicDevice> musicDevices = YandexUtils.extractMusicDevices(yandexInfo);
 
+        // Получить другие устройства
+        otherDevices = YandexUtils.extractOtherDevices(yandexInfo);
+        //log.info("OTHER: " + otherDevices);
+
         devicesSize = musicDevices.size();
         roomsWithDevice = yandexInfo.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
@@ -82,6 +88,25 @@ public class Yandex {
         }
         log.info("CREATE DEVICES FROM YANDEX");
         yandexMusicDevices.forEach(device -> smartHome.create("", device));
+        lmsPlayers.write();
+        //smartHome.write();
+        log.info(finish);
+    }
+
+    public static void createOtherDevicesFromYandexDevices(List<YandexUtils.MusicDevice> yandexMusicDevices) {
+        log.info(start);
+        if (config.yandexToken == null || config.yandexToken.equals("")) {
+            log.info("CANCELED TO CREATE DEVICES FROM YANDEX. USER NOT LOGGED IN YANDEX");
+            return;
+        }
+        if (yandexMusicDevices == null || yandexMusicDevices.isEmpty()) {
+            log.info("FAILED TO CREATE DEVICES. NO DEVICES FROM YANDEX");
+            return;
+        }
+        log.info("CREATE OTHER DEVICES FROM YANDEX");
+        yandexMusicDevices.forEach(device -> smartHome.createDeviceToggle(device));
+        lmsPlayers.write();
+        //smartHome.write();
         log.info(finish);
     }
 
@@ -160,6 +185,88 @@ public class Yandex {
         });
     }
 
+    /**
+     * Синхронно отправляет состояние устройства в Яндекс.Диалоги.
+     *
+     * @param deviceId  external_id устройства (строка UUID)
+     * @param type      тип capability (например, "on_off")
+     * @param instance  экземпляр (например, "on")
+     * @param capState  значение состояния (true/false, on/off, число и т.д.)
+     * @return true, если запрос успешен (статус 202), иначе false
+     */
+    public static boolean sendDeviceOtherState(String deviceId, String type, String instance, String capState) {
+        log.info("Sending device state: deviceId={}, type={}, instance={}, state={}",
+                deviceId, type, instance, capState);
+
+        Utils.sleep(200);
+        try {
+            String url = "https://dialogs.yandex.net/api/v1/skills/" + config.skillId + "/callback/state";
+
+            // Формируем устройство
+            Map<String, Object> deviceMap = new HashMap<>();
+            deviceMap.put("id", deviceId);
+
+            // Формируем capability
+            Map<String, Object> capabilityMap = new HashMap<>();
+            capabilityMap.put("type", "devices.capabilities." + type);
+
+            // Формируем состояние
+            Map<String, Object> stateMap = new HashMap<>();
+            stateMap.put("instance", instance);
+
+            Object value;
+            if ("volume".equals(instance)) {
+                value = Integer.parseInt(capState);
+            } else if ("on".equals(instance)) {
+                // Для on_off instance всегда "on", значение boolean
+                value = "on".equalsIgnoreCase(capState) || "true".equalsIgnoreCase(capState);
+            } else {
+                // Для остальных (температура, влажность и т.п.) – число или строка
+                try {
+                    value = Double.parseDouble(capState);
+                } catch (NumberFormatException e) {
+                    value = capState;
+                }
+            }
+            stateMap.put("value", value);
+            capabilityMap.put("state", stateMap);
+
+            deviceMap.put("capabilities", Collections.singletonList(capabilityMap));
+
+            // Собираем payload
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("user_id", config.yandexUid);
+            payload.put("devices", Collections.singletonList(deviceMap));
+
+            // Собираем тело запроса
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("ts", System.currentTimeMillis() / 1000.0);
+            requestBody.put("payload", payload);
+
+            String jsonBody = JsonUtils.pojoToJson(requestBody);
+            log.info("POST " + url);
+            log.info("BODY " + jsonBody);
+
+            // Заголовки
+            Map<String, String> headers = new HashMap<>();
+            headers.put("Authorization", "OAuth " + config.yandextSkillTokenDeveloper);
+            headers.put("Content-Type", "application/json");
+
+            // Выполняем запрос (синхронно)
+            HttpResponseResult result = httpClient.doPost(url, jsonBody, headers);
+            if (result.isSuccess()) {
+                log.info("State update successful: {}", result.getBody());
+                return true;
+            } else {
+                log.error("Failed to update state. Status: {}, Body: {}", result.getStatusCode(), result.getBody());
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("Error updating device state: " + e.getMessage(), e);
+            return false;
+        }
+    }
+
     public static void sayMyText(String text) {
         if (true) return; // TODO заглушка
         log.info("RUN SCENARIO");
@@ -180,5 +287,34 @@ public class Yandex {
         } catch (Exception e) {
             log.error("Scenario action error", e);
         }
+    }
+
+    public static List<String> getRoomsWithAliceOrMusic(YandexInfo yandexInfo) {
+        if (yandexInfo == null || yandexInfo.devices == null || yandexInfo.rooms == null) {
+            return Collections.emptyList();
+        }
+        Map<String, YandexInfo.Device> deviceMap = yandexInfo.devices.stream()
+                .collect(Collectors.toMap(d -> d.id, d -> d));
+        List<String> result = new ArrayList<>();
+        for (YandexInfo.Room room : yandexInfo.rooms) {
+            boolean hasTargetDevice = false;
+            for (String deviceId : room.devices) {
+                YandexInfo.Device device = deviceMap.get(deviceId);
+                if (device == null) continue;
+                String type = device.type;
+                String name = device.name;
+                boolean isAliceSpeaker = type != null && type.startsWith("devices.types.smart_speaker.yandex.station");
+                boolean isMusicDevice = (type != null && type.contains("media_device"))
+                        || (name != null && name.equalsIgnoreCase("музыка"));
+                if (isAliceSpeaker || isMusicDevice) {
+                    hasTargetDevice = true;
+                    break;
+                }
+            }
+            if (hasTargetDevice) {
+                result.add(room.name);
+            }
+        }
+        return result;
     }
 }

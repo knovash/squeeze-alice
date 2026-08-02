@@ -2,14 +2,15 @@ package org.knovash.squeezealice.provider;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
-import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.SmartHome;
+import org.knovash.squeezealice.player.ActionsAsync;
+import org.knovash.squeezealice.player.ActionsSync;
 import org.knovash.squeezealice.provider.response.*;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
@@ -31,7 +32,7 @@ public class ProviderQuery {
         String json;
 //   если чтото пошло не так вернуть пустой список устройств
 //            json = "{\"request_id\":\"" + xRequestId + "\",\"payload\":{\"devices\":[]}}";
-        if (SmartHome.devices.size() == 0) log.info("ERROR - no registered LMS players in Alice home");
+        if (smartHome.devices.size() == 0) log.info("ERROR - no registered LMS players in Alice home");
         ResponseYandex responseYandex = new ResponseYandex();
         responseYandex.request_id = xRequestId;
 
@@ -40,7 +41,6 @@ public class ProviderQuery {
 
         List<Device> jsonDevices = bodyPojo.devices.stream()
                 .map(requestDevice -> {
-//                    Device device = smartHome.deviceByExternalId(requestDevice.id);
                     Device device = smartHome.deviceById(requestDevice.id);
 //                    из-за того, что запрос от Яндекса приходит до завершения синхронизации.
 //                    Код не обрабатывает корректно случай отсутствия устройства: после вывода предупреждения
@@ -56,7 +56,7 @@ public class ProviderQuery {
                         errorDevice.capabilities = new ArrayList<>(); // ИСПРАВЛЕНИЕ
                         return errorDevice;
                     } else {
-                        log.info("UPDATE DIVECE CAPABILITIES " + device.name + " "+device.type);
+                        log.info("UPDATE DIVECE CAPABILITIES " + device.name + " " + device.type);
 //                        обратиться к каждому девайсу и обновить его свойства
                         device = updateDeviceCapabilities(device);
                     }
@@ -93,16 +93,66 @@ public class ProviderQuery {
         return context;
     }
 
+    private static void updateOtherDevice(Device device) {
+        log.info("DEVICE OTHER START" + device);
+        Capability capability = device.capabilities.stream()
+                .filter(c -> "devices.capabilities.on_off".equals(c.type))
+                .findFirst()
+                .orElse(null);
+        if (capability == null) {
+            log.warn("No on_off capability found for device {}", device.id);
+            return;
+        }
+        // Инициализируем state, если он null
+        if (capability.state == null) {
+            capability.state = new State();
+            capability.state.instance = "on";
+            capability.state.relative = false;
+            capability.state.action_result = new ActionResult();
+            capability.state.action_result.status = "DONE";
+        }
+        capability.state = new State();
+        capability.state.instance = capability.parameters.instance;
+        capability.state.relative = false;
+        capability.state.action_result = new ActionResult();
+        capability.state.action_result.status = "DONE";
+
+        log.info("DEVICE NAME: " + device.name);
+        log.info("DEVICE ROOM: " + device.room);
+
+        Player player1 = lmsPlayers.playerByRoom(device.room);
+        switch (device.name) {
+            case "Отдельно":
+                log.info("CASE Отдельно " + player1.name + " " + player1.separate);
+                capability.state.value = String.valueOf(player1.separate);
+                break;
+            case "Вместе":
+                log.info("CASE Вместе " + player1.name + " " + !player1.separate);
+                capability.state.value = String.valueOf(!player1.separate);
+                break;
+            default:
+                capability.state.value = "false";
+                break;
+        }
+
+        //if ("Отдельно".equals(device.name)) {
+        //    Player player1 = lmsPlayers.playerByRoom(device.room);
+        //    capability.state.value = String.valueOf(player1.separate);
+        //
+        //} else
+        //    capability.state.value = "false";
+
+        log.info("DEVICE OTHER UPDATED: {}", device);
+        device.error_code = null;
+        device.error_message = null;
+
+    }
+
     private static Device updateDeviceCapabilities(Device device) {
 
+        // если пришел не Музыка девайс
         if (!device.type.equals("devices.types.media_device.receiver")) {
-            log.info("DEVICE OTHER START");
-
-            Capability capability = device.capabilities.stream()
-                    .filter(c -> c.parameters.instance.equals("on"))
-                    .findFirst().get();
-            capability.state.value = String.valueOf(true);
-            log.info("DEVICE OTHER: " + device);
+            updateOtherDevice(device);
             return device;
         }
 

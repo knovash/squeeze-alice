@@ -9,6 +9,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_SCHEDULER_SPOTIFY_REFRESH_TOKEN;
+
 @Log4j2
 public class SchedulerSpotifyRefreshToken {
 
@@ -17,12 +19,13 @@ public class SchedulerSpotifyRefreshToken {
     private static volatile ScheduledFuture<?> scheduledTask;
     private static final AtomicBoolean refreshInProgress = new AtomicBoolean(false);
 
-    private SchedulerSpotifyRefreshToken() {}
+    private SchedulerSpotifyRefreshToken() {
+    }
 
     /**
      * Запускает периодическую проверку и упреждающее обновление токена Spotify.
      *
-     * @param checkIntervalMinutes интервал проверки в минутах
+     * @param checkIntervalMinutes    интервал проверки в минутах
      * @param refreshThresholdMinutes за сколько минут до истечения начинать обновление
      */
     public static void startPeriodicRefresh(int checkIntervalMinutes, int refreshThresholdMinutes) {
@@ -32,6 +35,8 @@ public class SchedulerSpotifyRefreshToken {
         cancelExistingTask();
 
         Runnable refreshTask = () -> {
+            if (!TOGGLE_SCHEDULER_SPOTIFY_REFRESH_TOKEN.value) return;
+
             // Проверяем, не выполняется ли уже обновление
             if (refreshInProgress.get()) {
                 log.debug("Token refresh already in progress, skipping check");

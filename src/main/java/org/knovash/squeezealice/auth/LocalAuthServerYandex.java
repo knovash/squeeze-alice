@@ -1,7 +1,6 @@
 package org.knovash.squeezealice.auth;
 
 import lombok.extern.log4j.Log4j2;
-import org.knovash.squeezealice.auth.LocalAuthBase;
 import org.knovash.squeezealice.yandex.YandexJwtUtils;
 
 import static org.knovash.squeezealice.Main.config;

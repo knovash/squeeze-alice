@@ -11,8 +11,8 @@ import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 public class HandlePathCmd {
-// Комманды /cmd приходят из Таскер или с пульта
 
+// Комманды /cmd приходят из Таскер или с пульта
     public static Context action(Context context) {
         log.info(start);
         HashMap<String, String> queryParams = context.queryMap;
@@ -26,6 +26,8 @@ public class HandlePathCmd {
         String volume = queryParams.get("volume");
         String response = null;
         log.info("QUERY PARAMS: PLAYER: " + playerName + " ROOM: " + room + " ACTION: " + action + " VALUE: " + value + " VOLUME: " + volume);
+
+        if (context.body != null) log.info("BODY: " + context.body);
 
         if (value != null) {
             value = value.toLowerCase();
@@ -49,14 +51,15 @@ public class HandlePathCmd {
         if (UpdateActions.contains(action))
             lmsPlayers.updatePlayers(); // обновить состояние плееров
 
-// выбор действия без плеера
-        response = SwitchNoPlayerCommand.run(action);
+// выбор действия где плеер не требуется
+        response = SwitchNoPlayerCommand.run(action, context.body);
 
         if (response != null) {
             context.bodyResponse = response;
             return context;
         }
 
+// определение плеера по имени плеера или имени комнаты
         Player player = lmsPlayers.playerByPlayerNameOrRoomName(playerName, room);
         log.info("COMMAND TO PLAYER: " + player);
 
@@ -76,5 +79,4 @@ public class HandlePathCmd {
         log.info("");
         return context;
     }
-
 }

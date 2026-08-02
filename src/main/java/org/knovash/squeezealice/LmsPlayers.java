@@ -149,7 +149,7 @@ public class LmsPlayers {
         List<String> players = this.players.stream().map(p -> p.name).collect(Collectors.toList());
         player = Utils.convertCyrilicToLatin(player);
         String correctPlayerName = Levenstein.getNearestElementInListWord(player, players);
-//        if (correctPlayerName == null) log.info("ERROR PLAYER " + player + " NOT EXISTS IN LMS ");
+        if (correctPlayerName == null) log.info("ERROR PLAYER " + player + " NOT EXISTS IN LMS ");
 //        log.info("CORRECT PLAYER: " + player + " -> " + correctPlayerName);
         Player correctPlayer = this.playerByName(correctPlayerName);
         return correctPlayer;
@@ -321,63 +321,63 @@ public class LmsPlayers {
         write();
     }
 
-    public void toggleWakeSave(HashMap<String, String> parameters) {
-        String tmp = parameters.get(toggle_wake_value);
-        log.info("TMP: =========== " + tmp);
-        if (tmp == null) return;
-        toggleWake = Boolean.valueOf(tmp);
-        write();
-    }
-
-    public void toggleVoiceSave(HashMap<String, String> parameters) {
-        String tmp = parameters.get(toggle_voice_value);
-        log.info("TMP: =========== " + tmp);
-        if (tmp == null) return;
-        toggleVoice = Boolean.valueOf(tmp);
-        write();
-    }
-
-    public void autoremoteSave(HashMap<String, String> parameters) {
-        log.info("START " + parameters);
-        String tmp = parameters.get(autoremote_value);
-        log.info("TMP " + tmp);
-        if (tmp == null) return;
-        if (autoRemoteUrls == null) autoRemoteUrls = new ArrayList<>();
-        autoRemoteUrls.add(tmp);
-        write();
-    }
-
-    public void autoremoteRemove(HashMap<String, String> parameters) {
-        log.info("START " + parameters);
-        String tmp = parameters.get(autoremote_value);
-        log.info("TMP " + tmp);
-        if (tmp == null) return;
-        if (autoRemoteUrls == null) autoRemoteUrls = new ArrayList<>();
-        autoRemoteUrls.remove(tmp);
-        write();
-    }
-
-    public void lastThisSave(HashMap<String, String> parameters) {
-        String tmp = parameters.get(last_this_value);
-        if (tmp == null) return;
-        lastThis = Boolean.parseBoolean(tmp);
-        write();
-    }
-
-    public void volumeAmpLmsSave(HashMap<String, String> parameters) {
-        String tmp = parameters.get(volume_amp_lms);
-        if (tmp == null) return;
-        volumeAmpLms = Boolean.parseBoolean(tmp);
-        write();
-    }
-
-    public void volumeAmpFfmpegSave(HashMap<String, String> parameters) {
-        String tmp = parameters.get(volume_amp_ffmpeg);
-        if (tmp == null) return;
-        volumeAmpFfmpeg = Boolean.parseBoolean(tmp);
-        log.info("FFMPEG: " +volumeAmpFfmpeg);
-        write();
-    }
+    //public void toggleWakeSave(HashMap<String, String> parameters) {
+    //    String tmp = parameters.get(toggle_wake_value);
+    //    log.info("TMP: =========== " + tmp);
+    //    if (tmp == null) return;
+    //    toggleWake = Boolean.valueOf(tmp);
+    //    write();
+    //}
+    //
+    //public void toggleVoiceSave(HashMap<String, String> parameters) {
+    //    String tmp = parameters.get(toggle_voice_value);
+    //    log.info("TMP: =========== " + tmp);
+    //    if (tmp == null) return;
+    //    toggleVoice = Boolean.valueOf(tmp);
+    //    write();
+    //}
+    //
+    //public void autoremoteSave(HashMap<String, String> parameters) {
+    //    log.info("START " + parameters);
+    //    String tmp = parameters.get(autoremote_value);
+    //    log.info("TMP " + tmp);
+    //    if (tmp == null) return;
+    //    if (autoRemoteUrls == null) autoRemoteUrls = new ArrayList<>();
+    //    autoRemoteUrls.add(tmp);
+    //    write();
+    //}
+    //
+    //public void autoremoteRemove(HashMap<String, String> parameters) {
+    //    log.info("START " + parameters);
+    //    String tmp = parameters.get(autoremote_value);
+    //    log.info("TMP " + tmp);
+    //    if (tmp == null) return;
+    //    if (autoRemoteUrls == null) autoRemoteUrls = new ArrayList<>();
+    //    autoRemoteUrls.remove(tmp);
+    //    write();
+    //}
+    //
+    //public void lastThisSave(HashMap<String, String> parameters) {
+    //    String tmp = parameters.get(last_this_value);
+    //    if (tmp == null) return;
+    //    lastThis = Boolean.parseBoolean(tmp);
+    //    write();
+    //}
+    //
+    //public void volumeAmpLmsSave(HashMap<String, String> parameters) {
+    //    String tmp = parameters.get(volume_amp_lms);
+    //    if (tmp == null) return;
+    //    volumeAmpLms = Boolean.parseBoolean(tmp);
+    //    write();
+    //}
+    //
+    //public void volumeAmpFfmpegSave(HashMap<String, String> parameters) {
+    //    String tmp = parameters.get(volume_amp_ffmpeg);
+    //    if (tmp == null) return;
+    //    volumeAmpFfmpeg = Boolean.parseBoolean(tmp);
+    //    log.info("FFMPEG: " +volumeAmpFfmpeg);
+    //    write();
+    //}
 
     public void lmsSave(HashMap<String, String> parameters) {
         String tmp1 = parameters.get(lms_ip_value);
@@ -391,15 +391,15 @@ public class LmsPlayers {
         this.updatePlayers(); // после сохранения ip lms обновить плееры
     }
 
-    public void volumioSave(HashMap<String, String> parameters) {
-        log.info("PARAMETERS: " + parameters);
-        String tmp1 = parameters.get(volumio_ip_value);
-        log.info(tmp1);
-        if (tmp1 == null) return;
-        config.volumioIp = tmp1;
-        log.info(config);
-        config.write();
-    }
+    //public void volumioSave(HashMap<String, String> parameters) {
+    //    log.info("PARAMETERS: " + parameters);
+    //    String tmp1 = parameters.get(volumio_ip_value);
+    //    log.info(tmp1);
+    //    if (tmp1 == null) return;
+    //    config.volumioIp = tmp1;
+    //    log.info(config);
+    //    config.write();
+    //}
 
     public void turnOffMusicAll() { // для Таскер только
         log.info("\nSTOP ALL");
@@ -534,7 +534,7 @@ public class LmsPlayers {
     }
 
     public Player playerByPlayerNameOrRoomName(String playerName, String roomName) {
-//        log.info("PLAYER: " + playerName + " ROOM: " + roomName);
+        log.info("PLAYER: " + playerName + " ROOM: " + roomName);
         Player player = null;
         if ("btremote".equals(playerName)) player = lmsPlayers.playerByNearestName(lmsPlayers.btPlayerName);
         if (player != null) return player;

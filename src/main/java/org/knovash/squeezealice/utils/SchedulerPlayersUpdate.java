@@ -12,6 +12,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_SCHEDULER_UPDATE_PLAYERS;
 import static org.knovash.squeezealice.yandex.DeviceStateUpdate.sendBatchStateUpdates;
 
 @Log4j2
@@ -39,6 +40,8 @@ public class SchedulerPlayersUpdate {
         cancelExistingTask();
 
         Runnable updateTask = () -> {
+            if (!TOGGLE_SCHEDULER_UPDATE_PLAYERS.value) return;
+
             try {
                 log.info("Executing players state update");
                 Main.lmsPlayers.updatePlayers();

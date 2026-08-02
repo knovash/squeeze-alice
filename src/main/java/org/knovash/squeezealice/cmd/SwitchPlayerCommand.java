@@ -5,7 +5,6 @@ import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.Tasker;
 import org.knovash.squeezealice.player.ActionsAsync;
 import org.knovash.squeezealice.player.ActionsSync;
-import org.knovash.squeezealice.yandex.YandexTTS;
 
 import static org.knovash.squeezealice.Main.*;
 import static org.knovash.squeezealice.cmd.SwitchRemoteVoiceCommand.remoteVoiceCommandSwithc;
@@ -16,7 +15,7 @@ public class SwitchPlayerCommand {
     public static String run(String action, Player player, String value) {
         log.info(start);
         String response = null;
-        switch (action) { // ТОЛЬКО С ПЛЕЕРОМ
+        switch (action) {
             // ========== Основные операции управления плеером ==========
             case "volume_dn":
 //                player.volume("-3");
@@ -61,12 +60,10 @@ public class SwitchPlayerCommand {
                 response = player.name + " - prev track";
                 break;
             case "next_channel":
-//                player.say("следующий канал", false, true);
                 ActionsAsync.ctrlNextChannel(player);
                 response = player.name + " - next channel";
                 break;
             case "prev_channel":
-//                player.say("предыдущий канал", false, true);
                 ActionsAsync.prevChannel(player);
                 response = player.name + " - prev channel";
                 break;
@@ -81,7 +78,6 @@ public class SwitchPlayerCommand {
                 response = player.name + " - rewind";
                 break;
             case "switch_here":
-//                player.say("преключаю музыку на " + player.name, false, true);
                log.info("RUN SWITCH ------------");
                 ActionsAsync.switchHere(player);
                 response = player.name + " - switch here";
@@ -112,16 +108,18 @@ public class SwitchPlayerCommand {
                 lmsPlayers.btPlayerName = player.name;
                 log.info("BT PLAYER NAME: " + lmsPlayers.btPlayerName);
                 lmsPlayers.write();
-                response = "bt player - " +lmsPlayers.btPlayerName;
+                response = "bt player - " + lmsPlayers.btPlayerName;
                 break;
 
             // ========== Информационные запросы ==========
             case "speak":
-                player.say(value, true, true);
+                String voice = value;
+                ActionsAsync.async(() ->  player.say(voice, true, true));
                 response = "speak";
                 break;
             case "signal":
-                player.signal(value);
+                String signal = value;
+                ActionsAsync.async(() -> player.signal(signal));
                 response = "signal";
                 break;
             case "whats_playing":
@@ -135,6 +133,7 @@ public class SwitchPlayerCommand {
                 break;
             case "get_room_player": // Таскер по названию виджета вернуть комнату и плеер при активации нового виджета
                 response = Tasker.playerNameByWidgetName(value);
+                log.info("RESPONSE: " + response);
                 break;
             case "get_refresh_json": // Таскер для виджетов иконок плееров
                 response = Tasker.forTaskerWidgetsRefreshJson(player, value);

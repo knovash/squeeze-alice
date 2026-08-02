@@ -25,11 +25,10 @@ public class HttpClientWrapper {
         this.httpClient = HttpClientFactory.getHttpClient();
     }
 
-    // ---------- Публичные методы ----------
     public HttpResponseResult doGet(String url, Map<String, String> headers) {
         log.info(start);
         log.info(url);
-        log.info(headers);
+        //log.info(headers);
         return executeRequest(new HttpGet(url), headers);
     }
 
@@ -61,7 +60,6 @@ public class HttpClientWrapper {
         return executeRequest(new HttpDelete(url), headers);
     }
 
-    // ДОБАВЛЕН МЕТОД HEAD
     public HttpResponseResult doHead(String url, Map<String, String> headers) {
         return executeRequest(new HttpHead(url), headers);
     }
@@ -84,7 +82,6 @@ public class HttpClientWrapper {
                 bodyBytes = new byte[0];
             }
 
-            //byte[] bodyBytes = EntityUtils.toByteArray(response.getEntity());
             String bodyString = convertToUtf8(bodyBytes);
 
             log.debug("Response status: {}", statusCode);

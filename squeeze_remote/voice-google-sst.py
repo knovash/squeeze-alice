@@ -8,10 +8,16 @@ import urllib.request
 import urllib.parse
 import tempfile
 import re
-import requests
 import logging
 from logging.handlers import RotatingFileHandler
 import json
+
+# ---------- ПРОВЕРКА НАЛИЧИЯ speech_recognition ----------
+try:
+    import speech_recognition as sr
+except ImportError:
+    print("ОШИБКА: требуется библиотека SpeechRecognition. Установите: pip install SpeechRecognition")
+    sys.exit(1)
 
 # ---------- ЗАГРУЗКА КОНФИГУРАЦИИ ----------
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'config.conf')
@@ -39,8 +45,7 @@ DEVICE_NAME = voice.get('device_name', 'HAOBO Technology USB Composite Device Ke
 RECORD_SECONDS = voice.get('record_seconds', 4)
 ENABLE_START_BEEP = voice.get('enable_start_beep', True)
 START_DELAY = voice.get('start_delay', 1)
-YANDEX_API_KEY = voice.get('yandex_api_key', '')
-YANDEX_FOLDER_ID = voice.get('yandex_folder_id', '')
+# Параметры Yandex больше не нужны, но оставлены для совместимости (игнорируются)
 SIGNAL_PLAYER = voice.get('signal_player', 'btremote')
 SIGNAL_VALUE = voice.get('signal_value', 'beep2')
 
@@ -128,10 +133,11 @@ def send_custom_request(action, player, value):
         logger.error(f"❌ Ошибка отправки запроса: {e}")
 
 def record_and_recognize():
-    """Запись с микрофона и распознавание через Yandex SpeechKit."""
+    """Запись с микрофона и распознавание через Google Speech Recognition."""
     if ENABLE_START_BEEP:
         logger.info("🔔 Сигнал к началу речи...")
         send_signal_request()
+        logger.info(f"Задержка для ожидания звукового сигнала в LMS колонке {START_DELAY} сек")
         time.sleep(START_DELAY)
 
     logger.info("⚡ Запись началась, говорите...")
@@ -148,41 +154,32 @@ def record_and_recognize():
 
     logger.info("🔔 Сигнал окончания записи")
     send_signal_request()
-    time.sleep(0.1)
+    time.sleep(0.9)
 
-    logger.info("⏹️ Запись завершена, распознаю через Yandex SpeechKit...")
+    logger.info("⏹️ Запись завершена, распознаю через Google Speech Recognition...")
     recognized_text = ""
 
     try:
-        with open(tmp_path, 'rb') as f:
-            audio_data = f.read()
-
-        url = "https://stt.api.cloud.yandex.net/speech/v1/stt:recognize"
-        headers = {"Authorization": f"Api-Key {YANDEX_API_KEY}"}
-        params = {"lang": "ru-RU", "format": "lpcm", "sampleRateHertz": 16000}
-        raw_audio = audio_data[44:]  # удаляем WAV-заголовок
-        response = requests.post(url, headers=headers, params=params, data=raw_audio, timeout=10)
-
-        if response.status_code == 200:
-            result = response.json()
-            recognized_text = result.get('result', '').strip()
-        else:
-            logger.error(f"❌ Ошибка SpeechKit: {response.status_code} - {response.text}")
-
+        recognizer = sr.Recognizer()
+        with sr.AudioFile(tmp_path) as source:
+            audio_data = recognizer.record(source)
+        recognized_text = recognizer.recognize_google(audio_data, language="ru-RU")
+        logger.info(f"🔊 Распознанный текст: {recognized_text}")
+        send_speak_request(recognized_text)
+    except sr.UnknownValueError:
+        logger.info("❓ Ничего не распознано")
+        send_custom_request(action="speak", player="btremote", value="текст не распознан")
+    except sr.RequestError as e:
+        logger.error(f"❌ Ошибка при обращении к сервису Google: {e}")
+        send_custom_request(action="speak", player="btremote", value="ошибка распознавания")
     except Exception as e:
-        logger.error(f"❌ Ошибка при вызове Yandex API: {e}")
+        logger.error(f"❌ Непредвиденная ошибка при распознавании: {e}")
+        send_custom_request(action="speak", player="btremote", value="ошибка распознавания")
     finally:
         try:
             os.unlink(tmp_path)
         except:
             pass
-
-    if recognized_text:
-        logger.info(f"🔊 Распознанный текст: {recognized_text}")
-        send_speak_request(recognized_text)
-    else:
-        logger.info("❓ Ничего не распознано")
-        send_custom_request(action="speak", player="btremote", value="текст не распознан")
 
 # ---------- ФУНКЦИЯ ПОИСКА УСТРОЙСТВА (общая) ----------
 def find_device(name_substring, vendor=None, product=None):
@@ -201,7 +198,7 @@ def find_device(name_substring, vendor=None, product=None):
 
 # ---------- ОСНОВНОЙ ЦИКЛ С ПЕРЕПОДКЛЮЧЕНИЕМ ----------
 def main():
-    logger.info("🎤 Запуск voice.py с автоматическим переподключением")
+    logger.info("🎤 Запуск voice.py с автоматическим переподключением (Google Speech Recognition)")
     # Отправка alive при старте
     try:
         send_custom_request("its_alive", "btremote", "voice_started")

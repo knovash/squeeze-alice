@@ -12,9 +12,13 @@ import static org.knovash.squeezealice.Main.*;
 public class SwitchNoPlayerCommand {
 
     public static String run(String action) {
+        return run(action, null);
+    }
+
+    public static String run(String action, String body) {
         log.info(start);
         String response = null;
-        switch (action) { // комманды выполняемые без плеера
+        switch (action) {
             case "stop_all":
                 Tasker.ready = "no";
                 ActionsAsync.stopAll();
@@ -40,6 +44,17 @@ public class SwitchNoPlayerCommand {
                 log.info("ITS ALIVE TO ALL");
 //                lmsPlayers.players.get(0).soundAll("beep_long",false,false);
                 response = "ITS ALIVE TO ALL";
+                break;
+            case "settings_get": // Tasker получает настройки
+                log.info("TASKER SETTINGS GET JSON");
+                settings.saveToFile();
+                response = settings.settingsGet();
+                break;
+            case "settings_post": // Tasker присылает измененные настройки
+                log.info("TASKER SETTINGS POST JSON");
+                log.info("BODY" + body);
+                settings.settingsPost(body);
+                response = "SETTINGS SAVED";
                 break;
             default:
 //                log.info("NO PLAYER COMMAND ACTION NOT FOUND: " + action);

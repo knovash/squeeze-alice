@@ -3,7 +3,6 @@ package org.knovash.squeezealice.http;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.apache.http.Header;
-import org.knovash.squeezealice.utils.JsonUtils;
 
 @Data
 @AllArgsConstructor
@@ -25,12 +24,6 @@ public class HttpResponseResult {
 
     public boolean isSuccess() {
         return statusCode >= 200 && statusCode < 300;
-    }
-
-    // Удобный метод для парсинга JSON-тела (если это текст)
-    public <T> T parseBody(Class<T> clazz) {
-        if (body == null) return null;
-        return JsonUtils.jsonToPojo(body, clazz);
     }
 
     // Метод для создания результата с ошибкой

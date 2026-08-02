@@ -58,7 +58,7 @@ public class Config {
     public String fileLmsPlayers = "data/lms_players.json";
 
     public int volumeVoicePlus = 20;
-    public Integer delay = 5;
+    public Integer delay = 3;
 
     public void load() {
         ResourceBundle bundle = ResourceBundle.getBundle("config");

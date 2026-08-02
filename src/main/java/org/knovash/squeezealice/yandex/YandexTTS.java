@@ -15,11 +15,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.knovash.squeezealice.Main.*;
+import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_VOLUME_AMP_FFMPEG;
+import static org.knovash.squeezealice.web.Settings.KeyValue.VALUE_VOLUME_APM_FFMPEG;
 
 @Log4j2
 public class YandexTTS {
 
     private static final HttpClientWrapper httpClient = new HttpClientWrapper();
+
+    public static double duration;
 
     public static String textToVoiceFile(String text) {
         log.info("TEXT: " + text);
@@ -27,29 +31,43 @@ public class YandexTTS {
         try {
             byte[] audioData = synthesize(text);
             saveToFile(audioData, outputFile);
-
             new File(outputFile).setReadable(true, false);
-
-            log.info("NOTIFICATION AMP FFMPEG " + lmsPlayers.volumeAmpFfmpeg);
-            if (lmsPlayers.volumeAmpFfmpeg) {
-                log.info("VOLUME AMP FFMPEG");
-                // Изменение громкости (коэффициент 1.5)
-                double volumeGain = 3; // можно вынести в config
-                try {
-                    changeVolume(outputFile, outputFile, volumeGain);
-                } catch (Exception e) {
-                    log.error("Не удалось изменить громкость: {}", e.getMessage());
-                    // Продолжаем с исходным файлом
-                }
-            }else log.info("SKIP VOLUME AMP FFMPEG");
-
+            volumeAmp(outputFile);
         } catch (Exception e) {
             log.error("❌ Ошибка при синтезе или сохранении: {}", e.getMessage(), e);
             return null;
         }
+
+        // Определяем длительность сгенерированного файла
+        try {
+            duration = getDuration(outputFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        log.info("********* DURATION "+ duration);
+
         String httpUrl = "http://" + Main.myIp + ":8010/music/speech.mp3";
         log.info("VOICE:" + httpUrl);
         return httpUrl;
+    }
+
+    public static void volumeAmp(String outputFile) {
+        log.info("NOTIFICATION AMP FFMPEG " + TOGGLE_VOLUME_AMP_FFMPEG.value);
+        if (TOGGLE_VOLUME_AMP_FFMPEG.value) {
+            log.info("VOLUME AMP FFMPEG");
+            // Изменение громкости (коэффициент 1.5)
+            double volumeGain = VALUE_VOLUME_APM_FFMPEG.value; // можно вынести в config
+            try {
+                changeVolume(outputFile, outputFile, volumeGain);
+            } catch (Exception e) {
+                log.error("Не удалось изменить громкость: {}", e.getMessage());
+                // Продолжаем с исходным файлом
+            }
+        } else log.info("SKIP VOLUME AMP FFMPEG");
+
     }
 
     public static byte[] synthesize(String text) throws IOException {
@@ -176,5 +194,20 @@ public class YandexTTS {
         }
         out.setReadable(true, false);
         log.info("Громкость изменена: " + inputFile + " -> " + outputFile + " (коэффициент " + gain + ")");
+    }
+
+    public static double getDuration(String filePath) throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder(
+                "ffprobe", "-v", "error", "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1", filePath
+        );
+        Process p = pb.start();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String line = reader.readLine();
+        int exitCode = p.waitFor();
+        if (exitCode != 0 || line == null || line.isEmpty()) {
+            throw new IOException("Не удалось получить длительность файла: " + filePath);
+        }
+        return Double.parseDouble(line.trim());
     }
 }

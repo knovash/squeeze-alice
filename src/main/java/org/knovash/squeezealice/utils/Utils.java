@@ -202,7 +202,7 @@ public class Utils {
 //        log.info("GET CORRECT ROOM NAME BY: " + approxRoomName);
         String correctRoom = Levenstein.searchTextInList(approxRoomName, Yandex.rooms);
         if (correctRoom == null) {
-//            log.info("ERROR ROOM " + approxRoomName + " NOT EXISTS IN YANDEX SMART HOME " + approxRoomName);
+            log.info("ERROR ROOM " + approxRoomName + " NOT EXISTS IN YANDEX SMART HOME " + approxRoomName);
             return null;
         }
 //        log.info("CORRECT ROOM: " + approxRoomName + " -> " + correctRoom);

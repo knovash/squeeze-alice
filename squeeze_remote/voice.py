@@ -132,6 +132,7 @@ def record_and_recognize():
     if ENABLE_START_BEEP:
         logger.info("🔔 Сигнал к началу речи...")
         send_signal_request()
+        logger.info(f"Задержка для ожидания звукового сигнала в LMS колонке {START_DELAY} сек")
         time.sleep(START_DELAY)
 
     logger.info("⚡ Запись началась, говорите...")
@@ -148,7 +149,7 @@ def record_and_recognize():
 
     logger.info("🔔 Сигнал окончания записи")
     send_signal_request()
-    time.sleep(0.1)
+    time.sleep(0.9)
 
     logger.info("⏹️ Запись завершена, распознаю через Yandex SpeechKit...")
     recognized_text = ""

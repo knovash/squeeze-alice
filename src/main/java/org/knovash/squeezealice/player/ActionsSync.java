@@ -2,11 +2,10 @@ package org.knovash.squeezealice.player;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.spotify.Spotify;
-import org.knovash.squeezealice.utils.levenstein.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
+import org.knovash.squeezealice.utils.levenstein.Levenstein;
 
 import java.util.List;
 import java.util.Map;
@@ -103,7 +102,7 @@ public class ActionsSync {
         if (player == null) return "ошибка, плеер не найден";
         player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null);
         log.info("SWITCH TO " + player.name);
-        Spotify.currentlyPlaying(); // TODO ВКЛЮЧИТЬ исправить
+        Spotify.currentlyPlaying();
         boolean spotifyPlaying = Spotify.currentlyPlaying != null && Spotify.currentlyPlaying.is_playing;
         if (spotifyPlaying) {
             log.info("Spotify is playing. Transferring to player: {}", player.name);
@@ -135,7 +134,7 @@ public class ActionsSync {
                 .playPathSpotify(link)
                 .syncOtherPlayingNotInGroupToThis();
         player.waitSeconds(2); // реально надо ждать пока плейлист спотифая запустится и потом сохранять
-        log.info("SAVE PLAYLIST: " + Spotify.nameForSay); // TODO сохранять надо но так неуспевает и сохраняет плейсист с у ведомлением а не то что в споти
+        log.info("SAVE PLAYLIST: " + Spotify.nameForSay);
         player.savePlaylist(Spotify.nameForSay);
         lmsPlayers.afterAsync();
         ActionsSync.answer = "включаю " + Spotify.nameForSay;
@@ -207,7 +206,7 @@ public class ActionsSync {
         command = command.trim();
         log.info("COMMAND: _" + command + "_");
 
-        Player playerByRoom = lmsPlayers.playerByPlayerNameOrRoomName(command, null);
+        Player playerByRoom = lmsPlayers.playerByPlayerNameOrRoomName(command, command);
         if (playerByRoom != null) player = playerByRoom;
 
         lmsPlayers.btPlayerName = player.name;
@@ -230,8 +229,6 @@ public class ActionsSync {
         log.info("REMOTE SWITCH NEXT");
         log.info("SIZE: " + lmsPlayers.players.size() + " BT NOW: " + lmsPlayers.btPlayerName);
         if (lmsPlayers.players == null || lmsPlayers.players.size() < 2) return "";
-        lmsPlayers.wakeUpAll();
-        log.info("ALL WAKE UP FINISHED");
         Player playerNow = lmsPlayers.playerByName(lmsPlayers.btPlayerName);
         log.info("PLAYER NOW: " + playerNow);
         if (playerNow == null) {
@@ -240,7 +237,6 @@ public class ActionsSync {
             return lmsPlayers.btPlayerName;
         }
         List<Player> playersConnected = lmsPlayers.players.stream().filter(p -> p.connected).collect(Collectors.toList());
-
         log.info("SIZE: " + playersConnected.size() + " BT NOW: " + lmsPlayers.btPlayerName);
         int indexNext = playersConnected.indexOf(playerNow) + 1;
         if (indexNext > playersConnected.size() - 1) indexNext = 0;
@@ -398,7 +394,7 @@ public class ActionsSync {
             lmsPlayers.write();
 
             log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(p -> p.name).collect(Collectors.toList()));
-            log.info("YANDEX DEVICES: " + SmartHome.devices.stream().filter(Objects::nonNull).map(d -> d.room + " " + d.name + " ext:" + d.external_id + " id:" + d.id).collect(Collectors.toList()));
+            log.info("YANDEX DEVICES: " + smartHome.devices.stream().filter(Objects::nonNull).map(d -> d.room + " " + d.name + " ext:" + d.external_id + " id:" + d.id).collect(Collectors.toList()));
         }
 
         if (start) {

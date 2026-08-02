@@ -3,7 +3,6 @@ package org.knovash.squeezealice.lms;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.http.HttpClientWrapper;
 import org.knovash.squeezealice.http.HttpResponseResult;
-import org.knovash.squeezealice.lms.Response;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.util.HashMap;

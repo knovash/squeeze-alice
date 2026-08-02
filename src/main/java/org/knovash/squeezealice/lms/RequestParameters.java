@@ -40,7 +40,6 @@ public class RequestParameters {
 
     public static RequestToLms playFavoritesId(String player, Integer id) { // id начинается с 0
         return RequestToLms.create(player, new String[]{"favorites", "playlist", "play", "item_id:" + id});
-
     }
 
     public static RequestToLms play(String player, String url) {
@@ -60,7 +59,6 @@ public class RequestParameters {
     }
 
     public static RequestToLms favoritesAdd(String player, String url, String title) {
-//        {"id":"1","method":"slim.request","params":["",["favorites","add","url:http://prem2.di.fm/chillout_hi?78------7ceab43a2","title:SSSSS"]]}
         return RequestToLms.create(player, new String[]{"favorites", "add", "url:" + url, "title:" + title});
     }
 
@@ -92,15 +90,12 @@ public class RequestParameters {
         return RequestToLms.create("", new String[]{"playlist", "delete", name});
     }
 
-    //--------------------
     public static RequestToLms playlistSave(String player, String playlistName) {
         return RequestToLms.create(player, new String[]{"playlist", "save", playlistName});
-//        return RequestToLms.create(player, new String[]{"playlist", "save", player + "_restore"});
     }
 
     public static RequestToLms playlistRestore(String player, String playlistName) {
         return RequestToLms.create(player, new String[]{"playlist", "load", playlistName});
-//        return RequestToLms.create(player, new String[]{"playlist", "load", player + "_restore"});
     }
 
     public static RequestToLms playlistRename(String player, String nameOld, String nameNew) {
@@ -119,14 +114,12 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"playlist", "clear"});
     }
 
-
     public static RequestToLms playlisturl(String player) {
         return RequestToLms.create(player, new String[]{"playlist", "url", "?"});
     }
 
-
-    public static RequestToLms playlistTracks(String player, String playlistId, int first, int last) {
-        return RequestToLms.create(player, new String[]{"playlists", "tracks", String.valueOf(first), String.valueOf(last), "playlist_id:"+playlistId});
+    public static RequestToLms playlistTracks(String player, Integer playlistId, int first, int last) {
+        return RequestToLms.create(player, new String[]{"playlists", "tracks", String.valueOf(first), String.valueOf(last), "playlist_id:" + playlistId});
     }
 
     public static RequestToLms playlistTracksCurrent(String player, int first, int last) {
@@ -140,10 +133,6 @@ public class RequestParameters {
     public static RequestToLms trackname(String player) {
         return RequestToLms.create(player, new String[]{"playlist", "title", "?"});
     }
-
-//    public static RequestToLms trackname(String player) {
-//        return RequestToLms.create(player, new String[]{"title", "?"});
-//    }
 
     public static RequestToLms artistname(String player) {
         return RequestToLms.create(player, new String[]{"artist", "?"});
@@ -185,7 +174,6 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"playlist", "jump", "+1"});
     }
 
-
     public static RequestToLms forward(String player) {
         return RequestToLms.create(player, new String[]{"time", "+" + 20});
     }
@@ -199,18 +187,14 @@ public class RequestParameters {
     }
 
     public static RequestToLms tracks(String player) {
-//        {"id": 1, "method": "slim.request", "params":["HomePod", ["playlist", "tracks", "?"]]}
         return RequestToLms.create(player, new String[]{"playlist", "tracks", "?"});
     }
 
     public static RequestToLms statusServer() {
-//        {"id": 1, "method": "slim.request", "params":["HomePod2", ["status", "1", "1"]]}
-//        "player count": 5,
         return RequestToLms.create("", new String[]{"serverstatus", "name"});
     }
 
     public static RequestToLms statusPlayer(String player, Integer tracks) {
-//        {"id": 1, "method": "slim.request", "params":["HomePod2", ["status", "1", "1"]]}
         return RequestToLms.create(player, new String[]{"status", "0", String.valueOf(tracks)});
     }
 }

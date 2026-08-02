@@ -45,7 +45,10 @@ public abstract class LocalAuthBase implements HttpHandler {
     }
 
     protected abstract String getDisplayName();
+
     protected abstract String getAuthUrl(String sessionId);
+
     protected abstract String getMqttAction();
+
     protected abstract String getLinkText();
 }

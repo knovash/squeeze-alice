@@ -13,8 +13,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>14</maven.compiler.source>
         <maven.compiler.target>14</maven.compiler.target>
-        <log4j.version>2.20.0</log4j.version>
-        <jackson.version>2.15.2</jackson.version>
+        <log4j.version>2.23.1</log4j.version>
+        <jackson.version>2.17.2</jackson.version>
         <lombok.version>1.18.28</lombok.version>
         <httpclient.version>4.5.13</httpclient.version>
         <maven.test.skip>true</maven.test.skip>
@@ -39,11 +39,6 @@
             <artifactId>httpclient</artifactId>
             <version>${httpclient.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.aspectj</groupId>-->
-<!--            <artifactId>aspectjweaver</artifactId>-->
-<!--            <version>1.9.22</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
@@ -69,13 +64,6 @@
             <artifactId>jackson-annotations</artifactId>
             <version>${jackson.version}</version>
         </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>org.apache.httpcomponents</groupId>-->
-<!--            <artifactId>fluent-hc</artifactId>-->
-<!--            <version>${httpclient.version}</version>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

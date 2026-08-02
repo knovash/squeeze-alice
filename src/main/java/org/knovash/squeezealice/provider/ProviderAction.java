@@ -3,11 +3,14 @@ package org.knovash.squeezealice.provider;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Player;
+import org.knovash.squeezealice.player.ActionsAsync;
+import org.knovash.squeezealice.player.ActionsSync;
 import org.knovash.squeezealice.provider.response.ActionResult;
 import org.knovash.squeezealice.provider.response.Capability;
 import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.provider.response.ResponseYandex;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.yandex.Yandex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +22,7 @@ import java.util.stream.Collectors;
 import static org.knovash.squeezealice.Main.*;
 
 // НЕ используются классы ActionsSync или ActionsAsync
-// Используются только методы класса Pleer
+// Используются только методы класса Player
 
 @Log4j2
 public class ProviderAction {
@@ -45,7 +48,17 @@ public class ProviderAction {
         responseYandex.request_id = xRequestId;
 
 //      ПРИХОДИТ DEVICE EXTERNAL ID !!!
-        log.info("BODY: " + body);
+//        log.info("BODY: " + body);
+
+        // если устройство не Музыка - Девайс кнопка действия
+        for (Device device : responseYandex.payload.devices) {
+            log.info("DEVICE from yandex id: " + device.id);
+            Device deviceLocal = smartHome.deviceById(device.id);
+            log.info("DEVICE LOCAL: " + deviceLocal.room + " " + deviceLocal.name);
+            if (deviceLocal != null && "devices.types.other".equals(deviceLocal.type))
+                return RunOtherDevice(responseYandex, device, deviceLocal);
+        }
+
 
         // к полученым девайсам яндекса по id приделать комнаты от локальных девайсов
         responseYandex.payload.devices.stream()
@@ -63,14 +76,6 @@ public class ProviderAction {
 
         // обновить для всех девайсов все капабилити
         responseYandex.payload.devices.parallelStream().forEach(d -> setDeviceCapabilities(d)); // если устройство недоступно то статус DEVICE_UNREACHABLE
-
-        List<Device> devicesOther = responseYandex.payload.devices.stream()
-//                .peek(device -> log.info("-----   " + device.type))
-                .filter(device -> !device.type.equals("devices.types.media_device.receiver"))
-//                .peek(device -> log.info("FILTERED " + device.type))
-                .collect(Collectors.toList());
-//        log.info("DEVICES OTHER " + devicesOther);
-
 
         List<Device> devicesForAsync = responseYandex.payload.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
@@ -98,6 +103,103 @@ public class ProviderAction {
         context.bodyResponse = JsonUtils.pojoToJson(responseYandex);
         context.code = 200;
         return context;
+    }
+
+    private static Context RunOtherDevice(ResponseYandex responseYandex, Device device, Device localDevice) {
+        log.info(start);
+        lmsPlayers.updatePlayers();
+        // Установить комнату для устройства, если она известна
+
+        device.room = localDevice.room;
+        log.info("OTHER DEVICE ROOM: " + localDevice.room + " DEVICE NAME: " + localDevice.name);
+        Player player = lmsPlayers.playerByRoom(localDevice.room);
+        log.info("PLAYER: " + player);
+
+        if (player != null) {
+            switch (localDevice.name) {
+                case "Переключи сюда":
+                    ActionsAsync.switchHere(player);
+                    setResultDoneAndState(device, false);
+                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice.id, "on_off", "on", "false"));
+                    break;
+                case "Что играет":
+                    CompletableFuture.runAsync(() -> {
+                        String watsPlaying = ActionsSync.whatsPlaying(player, false);
+                        log.info("WHATS PLAYING: " + watsPlaying);
+                        player.say(watsPlaying, true, true);
+                    });
+                    setResultDoneAndState(device, false);
+                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice.id, "on_off", "on", "false"));
+                    break;
+                case "Где пульт":
+                    CompletableFuture.runAsync(() -> {
+                        player.say("пульт подключен к " + lmsPlayers.btPlayerName, true, true);
+                    });
+                    setResultDoneAndState(device, false);
+                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice.id, "on_off", "on", "false"));
+                    break;
+                case "Дальше":
+                    ActionsAsync.nextTrack(player);
+                    setResultDoneAndState(device, false);
+                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice.id, "on_off", "on", "false"));
+                    break;
+                case "Назад":
+                    ActionsAsync.prevTrack(player);
+                    setResultDoneAndState(device, false);
+                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice.id, "on_off", "on", "false"));
+                    break;
+                case "Отдельно":
+                case "Вместе":
+                    boolean state = player.separate;
+                    log.info("SEPARATE NOW: " + state);
+
+                    if (state) ActionsAsync.separateOff(player); // включить вместе
+                    else ActionsAsync.separateOn(player); // включить отдельно
+                    setResultDoneAndState(device, !state);
+
+                    Device separeteOn = smartHome.deviceByName("Отдельно", localDevice.room);
+                    Device separeteOff = smartHome.deviceByName("Вместе", localDevice.room);
+
+                    CompletableFuture.runAsync(() -> {
+                        Yandex.sendDeviceOtherState(separeteOn.id, "on_off", "on", String.valueOf(!state)); // Отдельно
+                    });
+                    CompletableFuture.runAsync(() -> {
+                        Yandex.sendDeviceOtherState(separeteOff.id, "on_off", "on", String.valueOf(state)); // Вместе
+                    });
+                    break;
+                case "Подключи пульт":
+                    log.info("CASE Подключи пульт");
+                    lmsPlayers.btPlayerName = player.name;
+                    setResultDoneAndState(device, false);
+                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice.id, "on_off", "on", "false"));
+                    break;
+                default:
+                    log.info("COMMAND NOT FOUND: " + localDevice.name);
+                    break;
+            }
+        }
+
+
+        Context context = new Context();
+        context.bodyResponse = JsonUtils.pojoToJson(responseYandex);
+        context.code = 200;
+        log.info(finish);
+        return context;
+    }
+
+    private static void setResultDoneAndState(Device device, boolean state) {
+        // Установить результат выполнения для этого устройства
+        device.action_result = new ActionResult();
+        device.action_result.status = "DONE";
+        device.action_result.error_code = null;
+        device.action_result.error_message = null;
+
+        device.capabilities.stream()
+                .filter(cap -> cap.state != null && "on".equals(cap.state.instance))
+                .forEach(cap -> {
+                    cap.state.value = String.valueOf(state);
+                    cap.state.relative = false;
+                });
     }
 
     // если плеер не получен или недоступен - вернуть device с кодом ошибки
@@ -378,9 +480,10 @@ public class ProviderAction {
         }
         Player player = lmsPlayers.playerByRoom(device.room); // устройство в умном доме имеет фиксированный id = "HomePod". При смене колонки в комнате этот deviceId присваивается новому плееру (JBL black), но сам идентификатор остаётся прежним.
         if (player == null) return null;
-        if (Boolean.TRUE.equals(channelRelative) && channel != null && !channel.contains("-")) channel = "+" + channel;
+        if (Boolean.TRUE.equals(channelRelative) && channel != null && !channel.contains("-"))
+            channel = "+" + channel;
         if (Boolean.TRUE.equals(volumeRelative) && volume != null && !volume.contains("-")) volume = "+" + volume;
-        log.info(player.name + " p:" + on + " c:" + channel + " v:" + volume + " " + player.getClass().getName());
+        log.info(player.name + " power:" + on + " channel:" + channel + " volume:" + volume);
         player.capVolume = volume;
         player.capChannel = channel;
         player.capOn = on;
@@ -410,7 +513,7 @@ public class ProviderAction {
             String channel = channelCap != null ? channelCap.state.value : null;
             Boolean channelRelative = channelCap != null ? channelCap.state.relative : null;
             String on = onCap != null ? onCap.state.value : null;
-            return d.room + " p:" + on + " c:" + channel + "|" + channelRelative + " v:" + volume + "|" + volumeRelative;
+            return d.room + " power:" + on + " channel:" + channel + "|" + channelRelative + " volume:" + volume + "|" + volumeRelative;
         }).collect(Collectors.toList());
         log.info(description + " " + info);
     }

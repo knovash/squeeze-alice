@@ -7,7 +7,6 @@ import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.yandex.Yandex;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
@@ -19,25 +18,25 @@ public class PagePlayers {
     public static final String alt_sync_save = "alt_sync_save";
     public static final String alt_sync_value = "alt_sync_value";
 
-    public static final String autoremote_save = "autoremote_save";
-    public static final String autoremote_remove = "autoremote_remove";
-    public static final String autoremote_value = "autoremote_value";
+    //public static final String autoremote_save = "autoremote_save";
+    //public static final String autoremote_remove = "autoremote_remove";
+    //public static final String autoremote_value = "autoremote_value";
 
     public static final String delay_expire_save = "delay_expire_save";
     public static final String delay_expire_value = "delay_expire_value";
 
-    public static final String last_this_save = "last_this_save";
-    public static final String last_this_value = "last_this_value";
+    //public static final String last_this_save = "last_this_save";
+    //public static final String last_this_value = "last_this_value";
 
     //    volume_amp_lms
-    public static final String volume_amp_lms = "volume_amp_lms";
-    public static final String volume_amp_ffmpeg = "volume_amp_ffmpeg";
+    //public static final String volume_amp_lms = "volume_amp_lms";
+    //public static final String volume_amp_ffmpeg = "volume_amp_ffmpeg";
 
 
-    public static final String toggle_wake_save = "toggle_wake_save";
-    public static final String toggle_wake_value = "toggle_wake_value";
-    public static final String toggle_voice_value = "toggle_voice_value";
-    public static final String toggle_voice_save = "toggle_voice_save";
+    //public static final String toggle_wake_save = "toggle_wake_save";
+    //public static final String toggle_wake_value = "toggle_wake_value";
+    //public static final String toggle_voice_value = "toggle_voice_value";
+    //public static final String toggle_voice_save = "toggle_voice_save";
 
     public static final String player_save = "player_save";
     public static final String player_remove = "player_remove";
@@ -53,11 +52,11 @@ public class PagePlayers {
     public static final String lms_port_value = "lms_port_value";
 
 
-    public static final String volumio_save = "volumio_save";
-    public static final String volumio_on = "volumio_on";
-    public static final String volumio_off = "volumio_off";
-    public static final String volumio_ip_value = "volumio_ip_value";
-    public static final String volumio_port_value = "volumio_port_value";
+    //public static final String volumio_save = "volumio_save";
+    //public static final String volumio_on = "volumio_on";
+    //public static final String volumio_off = "volumio_off";
+    //public static final String volumio_ip_value = "volumio_ip_value";
+    //public static final String volumio_port_value = "volumio_port_value";
 
     public static final String statusbar_refresh = "statusbar_refresh";
 
@@ -70,123 +69,26 @@ public class PagePlayers {
 
     public static String page() {
         String pageInner;
-        String autoremoteShow = "";
-        if (lmsPlayers.autoRemoteUrls == null) lmsPlayers.autoRemoteUrls = new ArrayList<>();
-        if (lmsPlayers.autoRemoteUrls.size() == 0) autoremoteShow = "";
-        else autoremoteShow = lmsPlayers.autoRemoteUrls.get(0);
 
         Yandex.devicesGetFromYandexInfo();
         log.info("YANDEX MUSIC ROOMS LIST: " + Yandex.roomsWithDevice);
 
-        String autoRemoteUrls = "";
-        if (lmsPlayers.autoRemoteUrls != null) autoRemoteUrls = lmsPlayers.autoRemoteUrls.stream()
-                .map(url -> "<label>" + url + "</label><br>" +
-                        "<form method='POST' action='/form'>" +
-                        "<input name='autoremote_value' type='hidden' value='" + url + "'>" +
-                        "<input name='action'           type='hidden' value='" + autoremote_remove + "'>" +
-                        "<button type='submit'>Удалить</button>" +
-                        "</form>" +
-                        "<br>")
-                .collect(Collectors.joining(""));
-        log.info("TASKER URLS: " + autoRemoteUrls);
+        //String autoRemoteUrls = "";
+        //if (lmsPlayers.autoRemoteUrls != null) autoRemoteUrls = lmsPlayers.autoRemoteUrls.stream()
+        //        .map(url -> "<label>" + url + "</label><br>" +
+        //                "<form method='POST' action='/form'>" +
+        //                "<input name='autoremote_value' type='hidden' value='" + url + "'>" +
+        //                "<input name='action'           type='hidden' value='" + autoremote_remove + "'>" +
+        //                "<button type='submit'>Удалить</button>" +
+        //                "</form>" +
+        //                "<br>")
+        //        .collect(Collectors.joining(""));
+        //log.info("TASKER URLS: " + autoRemoteUrls);
 
         if (lmsPlayers.players.size() == 0) {
             pageInner = "<b>Плееры в LMS не найдены</b>";
         } else
-            pageInner =
-                    lmsPlayers.players.stream().map(p -> playerSettings(p)).collect(Collectors.joining()) +
-
-                            "<br>" +
-                            "<form method='POST' action='/form'>" +
-                            "<label>Минут до сброса громкости на значаение по пресету когда не играет</label><br>" +
-                            "<input " +
-                            "required='required'" +
-                            "type='number'" + "min='1'" + "max='30'" +
-                            "name='" + delay_expire_value + "'" +
-                            "value='" + lmsPlayers.delayExpire + "'>" +
-                            "<input name='action' type='hidden'  value='" + delay_expire_save + "'>" +
-                            "<button type='submit'>Сохранить</button>" +
-                            "</form>" +
-
-
-                            //"<form method='POST' action='/form'>" +
-                            //"<label>Включать последнее игравшее на этой колонке (" + lmsPlayers.lastThis + ") иначе с последней игравшей колонки</label><br>" +
-                            //"<select name='" + last_this_value + "' required>" +
-                            //"<option value='true' " + (lmsPlayers.lastThis ? "selected" : "") + ">вкл</option>" +
-                            //"<option value='false' " + (!lmsPlayers.lastThis ? "selected" : "") + ">выкл</option>" +
-                            //"</select>" +
-                            //"<input type='hidden' name='action' value='last_this_save'>" +
-                            //"<button type='submit'>Сохранить</button>" +
-                            //"</form>" +
-
-                            "<form method='POST' action='/form'>" +
-                            "<label>Задержка пред включением</label><br>" +
-                            "<select name='" + toggle_wake_value + "' required>" +
-                            "<option value='true' " + (lmsPlayers.toggleWake ? "selected" : "") + ">вкл</option>" +
-                            "<option value='false' " + (!lmsPlayers.toggleWake ? "selected" : "") + ">выкл</option>" +
-                            "</select>" +
-                            "<input type='hidden' name='action' value='" + toggle_wake_save + "'>" +
-                            "<button type='submit'>Сохранить</button>" +
-                            "</form>" +
-
-
-////                            увеличивать громкость уведомлений в FFS
-                            "<form method='POST' action='/form'>" +
-                            "<label>Увеличивать громкость уведомлений в FFmpeg</label><br>" +
-                            "<select name='" + volume_amp_ffmpeg + "' required>" +
-                            "<option value='true' " + (lmsPlayers.volumeAmpFfmpeg ? "selected" : "") + ">вкл</option>" +
-                            "<option value='false' " + (!lmsPlayers.volumeAmpFfmpeg ? "selected" : "") + ">выкл</option>" +
-                            "</select>" +
-                            "<input type='hidden' name='action' value='" + volume_amp_ffmpeg + "'>" +
-                            "<button type='submit'>Сохранить</button>" +
-                            "</form>" +
-
-                            ////                            увеличивать громкость уведомлений в FFS
-                            "<form method='POST' action='/form'>" +
-                            "<label>Увеличивать громкость уведомлений в LMS</label><br>" +
-                            "<select name='" + volume_amp_lms + "' required>" +
-                            "<option value='true' " + (lmsPlayers.volumeAmpLms ? "selected" : "") + ">вкл</option>" +
-                            "<option value='false' " + (!lmsPlayers.volumeAmpLms ? "selected" : "") + ">выкл</option>" +
-                            "</select>" +
-                            "<input type='hidden' name='action' value='" + volume_amp_lms + "'>" +
-                            "<button type='submit'>Сохранить</button>" +
-                            "</form>" +
-
-
-
-
-                            "<form method='POST' action='/form'>" +
-                            "<label>Говорить уведомления</label><br>" +
-                            "<select name='" + toggle_voice_value.toString() + "' required>" +
-                            "<option value='true' " + (lmsPlayers.toggleVoice ? "selected" : "") + ">вкл</option>" +
-                            "<option value='false' " + (!lmsPlayers.toggleVoice ? "selected" : "") + ">выкл</option>" +
-                            "</select>" +
-                            "<input type='hidden' name='action' value='" + toggle_voice_save + "'>" +
-                            "<button type='submit'>Сохранить</button>" +
-                            "</form>" +
-
-//                            обновление виджетов Tasker на планшете
-//                            "<br>" +
-//                            "<fieldset>" +
-//                            "<legend>Tasker refresh</legend>" +
-//                            autoRemoteUrls +
-//                            "<form method='POST' action='/form'>" +
-//                            "<label>Tasker AutoRemote URL для обновления виджета на Android устройстве</label><br>" +
-//                            "<input " +
-//                            "required='required'" +
-//                            "type='url'" +
-//                            "name='" + autoremote_value + "'" +
-//                            "placeholder='https://autoremotejoaomgcd.appspot.com/sendmessage...'" +
-//                            "value='" + "autoremotejoaomgcd" + "'>" +
-//                            "<input name='action' type='hidden'  value='" + autoremote_save + "'>" +
-//                            "<button type='submit'>Сохранить</button>" +
-//                            "</form>" +
-//                            "Проверить настройки Autoremote. Батарея: использование в фоне без ограничений. Передача данных: в фоне не ограничена."+
-//                            "</fieldset>" +
-
-
-                            "";
-
+            pageInner = lmsPlayers.players.stream().map(p -> playerSettings(p)).collect(Collectors.joining());
         String page = pageOuter(pageInner, "Настройка плееров", "Настройка плееров");
         return page;
     }
@@ -243,10 +145,7 @@ public class PagePlayers {
                         "<button type='submit' name='action' value='player_remove'>Удалить</button>" +
 
                         "<br>" +
-//                        " <b>title:</b>" + p.requestTitle() + // PagePlayers
                         "  last play time:" + p.lastPlayTimePlayer +
-//                        "   <b>lastPath:</b>" + p.lastPathPlayer +
-//                        "   <b>currentTrackInPlaylist:</b>" + p.playerStatus.result.remoteMeta.title +
 
                         "</fieldset>" +
                         "</form>";

@@ -3,14 +3,14 @@ package org.knovash.squeezealice.provider;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Main;
-import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.Payload;
 import org.knovash.squeezealice.provider.response.ResponseYandex;
 import org.knovash.squeezealice.utils.JsonUtils;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 public class ProviderUserDevices {
@@ -31,16 +31,31 @@ public class ProviderUserDevices {
         log.info(Main.line);
         String xRequestId = context.requestHeaders.getFirst("X-request-id");
         log.info("XREQUESTID: " + xRequestId);
-        log.info("LOCAL DEVICES " + SmartHome.devices.size());
-        log.info("LOCAL ROOMS " + SmartHome.devices.stream().map(device -> device.room).collect(Collectors.toList()));
-        log.info("LOCAL IDS " + SmartHome.devices.stream().map(device -> device.id).collect(Collectors.toList()));
+        log.info("LOCAL DEVICES " + smartHome.devices.size());
+        List<String> rooms = smartHome.devices.stream().map(device -> device.room).collect(Collectors.toList());
+        log.info("LOCAL ROOMS " + rooms);
+        log.info("LOCAL IDS " + smartHome.devices.stream().map(device -> device.id).collect(Collectors.toList()));
 
         ResponseYandex responseYandex = new ResponseYandex();
         responseYandex.request_id = xRequestId;
         responseYandex.payload = new Payload();
         responseYandex.payload.user_id = config.yandexUid;
-        SmartHome.devices.forEach(device -> device.capabilities.forEach(capability -> capability.state = null));
-        responseYandex.payload.devices = SmartHome.devices;
+
+
+        // если девайсы локальные плееров не созданы - создать для каждого плеера
+        if (smartHome.devices == null || smartHome.devices.isEmpty()) {
+            log.info("CREATE ALL PLAYERS DEVICES FOR YANDEX");
+            lmsPlayers.players.stream()
+                    .filter(p -> p.room != null)
+                    .forEach(p -> smartHome.create(p.room, null));
+        }
+
+        // создать девайсы кнопок команд
+        log.info("CREATE TOGGLS IN ALL ROOMS " + rooms);
+        smartHome.createButtonsInAllRooms(rooms);
+
+        smartHome.devices.forEach(device -> device.capabilities.forEach(capability -> capability.state = null));
+        responseYandex.payload.devices = smartHome.devices;
         String json = JsonUtils.pojoToJson(responseYandex);
         log.info("USER: " + config.yandexUid);
         log.info("JSON: " + json);

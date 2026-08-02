@@ -5,11 +5,13 @@ import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.utils.Parser;
 import org.knovash.squeezealice.web.PageIndex;
 import org.knovash.squeezealice.web.PagePlayers;
+import org.knovash.squeezealice.web.Settings;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.Main.settings;
 import static org.knovash.squeezealice.web.PagePlayers.*;
 @Log4j2
 public class ProcessForm {
@@ -22,6 +24,16 @@ public class ProcessForm {
             String action = bodyMap.get("action");
             log.info("SWITCH CASE action: " + action);
             switch (action) {
+
+                //if (action.equals("settings_save_all")) {
+                //    return Settings.handleSaveAll(context);
+                //}
+
+                case "settings_save_all":
+                     settings.handleSaveAll(context);
+                    //context.bodyResponse = PagePlayers.page();
+                    break;
+
                 case statusbar_refresh:
                     PageIndex.refresh((HashMap<String, String>) bodyMap);
                     context.setRedirect("/");
@@ -30,40 +42,40 @@ public class ProcessForm {
                     lmsPlayers.delayExpireSave((HashMap<String, String>) bodyMap);
                     context.bodyResponse = PagePlayers.page();
                     break;
-                case toggle_wake_save:
-                    lmsPlayers.toggleWakeSave((HashMap<String, String>) bodyMap);
-                    context.bodyResponse = PagePlayers.page();
-                    break;
-                case toggle_voice_save:
-                    lmsPlayers.toggleVoiceSave((HashMap<String, String>) bodyMap);
-                    context.bodyResponse = PagePlayers.page();
-                    break;
-                case autoremote_save:
-                    lmsPlayers.autoremoteSave((HashMap<String, String>) bodyMap);
-                    context.bodyResponse = PagePlayers.page();
-                    break;
-                case autoremote_remove:
-                    lmsPlayers.autoremoteRemove((HashMap<String, String>) bodyMap);
-                    context.bodyResponse = PagePlayers.page();
-                    break;
+                //case toggle_wake_save:
+                //    lmsPlayers.toggleWakeSave((HashMap<String, String>) bodyMap);
+                //    context.bodyResponse = PagePlayers.page();
+                //    break;
+                //case toggle_voice_save:
+                //    lmsPlayers.toggleVoiceSave((HashMap<String, String>) bodyMap);
+                //    context.bodyResponse = PagePlayers.page();
+                //    break;
+                //case autoremote_save:
+                //    lmsPlayers.autoremoteSave((HashMap<String, String>) bodyMap);
+                //    context.bodyResponse = PagePlayers.page();
+                //    break;
+                //case autoremote_remove:
+                //    lmsPlayers.autoremoteRemove((HashMap<String, String>) bodyMap);
+                //    context.bodyResponse = PagePlayers.page();
+                //    break;
 //                case alt_sync_save:
 //                    lmsPlayers.altSyncSave((HashMap<String, String>) bodyMap);
 //                    context.bodyResponse = PagePlayers.page();
 //                    break;
-                case last_this_save:
-                    lmsPlayers.lastThisSave((HashMap<String, String>) bodyMap);
-                    context.bodyResponse = PagePlayers.page();
-                    break;
-
-
-                case volume_amp_lms:
-                    lmsPlayers.volumeAmpLmsSave((HashMap<String, String>) bodyMap);
-                    context.bodyResponse = PagePlayers.page();
-                    break;
-                case volume_amp_ffmpeg:
-                    lmsPlayers.volumeAmpFfmpegSave((HashMap<String, String>) bodyMap);
-                    context.bodyResponse = PagePlayers.page();
-                    break;
+//                case last_this_save:
+//                    lmsPlayers.lastThisSave((HashMap<String, String>) bodyMap);
+//                    context.bodyResponse = PagePlayers.page();
+//                    break;
+//
+//
+//                case volume_amp_lms:
+//                    lmsPlayers.volumeAmpLmsSave((HashMap<String, String>) bodyMap);
+//                    context.bodyResponse = PagePlayers.page();
+//                    break;
+//                case volume_amp_ffmpeg:
+//                    lmsPlayers.volumeAmpFfmpegSave((HashMap<String, String>) bodyMap);
+//                    context.bodyResponse = PagePlayers.page();
+//                    break;
 
 
                 case player_save:
@@ -78,10 +90,10 @@ public class ProcessForm {
                     lmsPlayers.lmsSave((HashMap<String, String>) bodyMap);
                     context.setRedirect("/lms");
                     break;
-                case volumio_save:
-                    lmsPlayers.volumioSave((HashMap<String, String>) bodyMap);
-                    context.setRedirect("/volumio_settings");
-                    break;
+                //case volumio_save:
+                //    lmsPlayers.volumioSave((HashMap<String, String>) bodyMap);
+                //    context.setRedirect("/volumio_settings");
+                //    break;
                 default:
                     log.info("ACTION ERROR " + action);
                     break;

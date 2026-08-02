@@ -91,7 +91,7 @@ public class SpotifyRequests {
 
     public static String requestGet(String uri) {
         HttpResponseResult result = executeRequest("GET", uri, null);
-        log.info("RESULT: " + result);
+        log.debug("RESULT: " + result);
         if (result.isSuccess()) {
             log.info("OK");
             return result.getBody();

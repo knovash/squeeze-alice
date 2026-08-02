@@ -54,6 +54,7 @@ public class PageIndex {
                 ">Инструкция</a></p>" +
                 "<p><a href=\\lms>Настройка LMS</a></p>" +
                 "<p><a href=\\players>Настройка плееров</a></p>" +
+                "<p><a href=\\settings>Настройки дополнительные</a></p>" +
                 "<p><a href=\\auth " +
                 "target=\"_blank\" rel=\"noopener noreferrer\"" +
                 ">Авторизация в Яндекс</a></p>" +
@@ -94,7 +95,7 @@ public class PageIndex {
         if (Yandex.rooms.size() == 0)
             msgRoomsYandex = "Комнаты Умного дома не найдены ";
 
-        List<String> listMusic = SmartHome.devices.stream()
+        List<String> listMusic = smartHome.devices.stream()
                 .filter(d -> d.room != null)
                 .map(d -> d.room)
                 .collect(Collectors.toList());
@@ -110,7 +111,7 @@ public class PageIndex {
 
 
         msgDevices = "Умный дом подключено: " + devicesSize;
-        if (SmartHome.devices.size() > devicesSize)
+        if (smartHome.devices.size() > devicesSize)
             PageIndex.msgDevices = "Умный дом подключено " + devicesSize + " Есть <b>новые</b> устройства Музыка! Обновите список устройств в приложении Умный дом с Алисой";
 
 

@@ -28,14 +28,10 @@ if 'server' not in settings:
 if 'voice' not in settings:
     print("ОШИБКА: в config.conf отсутствует секция 'voice'")
     sys.exit(1)
-if 'google' not in settings:
-    print("ОШИБКА: в config.conf отсутствует секция 'google'")
-    sys.exit(1)
 
 SERVER = settings['server'].rstrip('/')
 SPEAK_URL = f"{SERVER}/cmd"
 voice = settings['voice']
-google_conf = settings['google']
 
 # Параметры голоса
 EVENT_CODE = voice.get('event_code', 582)
@@ -43,18 +39,13 @@ DEVICE_NAME = voice.get('device_name', 'HAOBO Technology USB Composite Device Ke
 RECORD_SECONDS = voice.get('record_seconds', 4)
 ENABLE_START_BEEP = voice.get('enable_start_beep', True)
 START_DELAY = voice.get('start_delay', 1)
+YANDEX_API_KEY = voice.get('yandex_api_key', '')
+YANDEX_FOLDER_ID = voice.get('yandex_folder_id', '')
 SIGNAL_PLAYER = voice.get('signal_player', 'btremote')
 SIGNAL_VALUE = voice.get('signal_value', 'beep2')
 
-# Параметры Google
-CREDENTIALS_FILE = google_conf.get('credentials_file')
-PROJECT_ID = google_conf.get('project_id', '')
-ALTERNATIVE_LANGUAGES = google_conf.get('alternative_language_codes', [])
-PHRASES = google_conf.get('phrases', [])
-BOOST = google_conf.get('boost', 10.0)
-
 # Запасной путь из основной секции (если есть)
-BTDEV_FALLBACK = settings.get('btdevice')
+BTDEV_FALLBACK = settings.get('btdevice')  # может быть None или строка
 
 # ---------- ЛОГИРОВАНИЕ ----------
 log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -69,32 +60,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
-
-# ---------- ИНИЦИАЛИЗАЦИЯ GOOGLE SPEECH-TO-TEXT ----------
-from google.cloud import speech_v1p1beta1 as speech
-import os
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDENTIALS_FILE
-try:
-    speech_client = speech.SpeechClient()
-except Exception as e:
-    logger.error(f"❌ Не удалось инициализировать Google Speech клиент: {e}")
-    sys.exit(1)
-
-# Подготовка адаптации модели (если есть фразы)
-adaptation = None
-if PHRASES:
-    try:
-        # Создаём набор фраз (PhraseSet) прямо в запросе, не сохраняя в облаке
-        phrase_set = speech.PhraseSet(
-            phrases=[{"value": p} for p in PHRASES],
-            boost=BOOST
-        )
-        adaptation = speech.SpeechAdaptation(
-            phrase_sets=[phrase_set]
-        )
-        logger.info(f"✅ Адаптация модели включена с фразами: {PHRASES}")
-    except Exception as e:
-        logger.warning(f"⚠️ Не удалось создать адаптацию: {e}")
 
 # ---------- ФУНКЦИИ ----------
 
@@ -163,10 +128,11 @@ def send_custom_request(action, player, value):
         logger.error(f"❌ Ошибка отправки запроса: {e}")
 
 def record_and_recognize():
-    """Запись с микрофона и распознавание через Google Speech-to-Text."""
+    """Запись с микрофона и распознавание через Yandex SpeechKit."""
     if ENABLE_START_BEEP:
         logger.info("🔔 Сигнал к началу речи...")
         send_signal_request()
+        logger.info(f"Задержка для ожидания звукового сигнала в LMS колонке {START_DELAY} сек")
         time.sleep(START_DELAY)
 
     logger.info("⚡ Запись началась, говорите...")
@@ -183,42 +149,29 @@ def record_and_recognize():
 
     logger.info("🔔 Сигнал окончания записи")
     send_signal_request()
-    time.sleep(0.1)
+    time.sleep(0.9)
 
-    logger.info("⏹️ Запись завершена, распознаю через Google Speech-to-Text...")
+    logger.info("⏹️ Запись завершена, распознаю через Yandex SpeechKit...")
     recognized_text = ""
 
     try:
-        # Чтение файла
         with open(tmp_path, 'rb') as f:
             audio_data = f.read()
 
-        # Настройка конфигурации распознавания
-        config = speech.RecognitionConfig(
-            encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-            sample_rate_hertz=16000,
-            language_code="ru-RU",
-            alternative_language_codes=ALTERNATIVE_LANGUAGES if ALTERNATIVE_LANGUAGES else None,
-            adaptation=adaptation,
-            enable_automatic_punctuation=True,
-        )
+        url = "https://stt.api.cloud.yandex.net/speech/v1/stt:recognize"
+        headers = {"Authorization": f"Api-Key {YANDEX_API_KEY}"}
+        params = {"lang": "ru-RU", "format": "lpcm", "sampleRateHertz": 16000}
+        raw_audio = audio_data[44:]  # удаляем WAV-заголовок
+        response = requests.post(url, headers=headers, params=params, data=raw_audio, timeout=10)
 
-        audio = speech.RecognitionAudio(content=audio_data)
-
-        # Отправка запроса
-        response = speech_client.recognize(config=config, audio=audio)
-
-        # Извлечение текста
-        if response.results:
-            best_alternative = response.results[0].alternatives[0]
-            recognized_text = best_alternative.transcript.strip()
-            confidence = best_alternative.confidence
-            logger.info(f"📊 Уверенность: {confidence:.2f}")
+        if response.status_code == 200:
+            result = response.json()
+            recognized_text = result.get('result', '').strip()
         else:
-            logger.warning("⚠️ Результатов распознавания нет")
+            logger.error(f"❌ Ошибка SpeechKit: {response.status_code} - {response.text}")
 
     except Exception as e:
-        logger.error(f"❌ Ошибка при вызове Google Speech API: {e}")
+        logger.error(f"❌ Ошибка при вызове Yandex API: {e}")
     finally:
         try:
             os.unlink(tmp_path)
@@ -236,9 +189,11 @@ def record_and_recognize():
 def find_device(name_substring, vendor=None, product=None):
     """Возвращает путь (str) к первому подходящему устройству или None."""
     devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
+    # Поиск по имени (подстрока)
     for dev in devices:
         if name_substring in dev.name:
             return dev.path
+    # Поиск по vendor/product, если заданы
     if vendor is not None and product is not None:
         for dev in devices:
             if dev.info.vendor == vendor and dev.info.product == product:
@@ -247,7 +202,8 @@ def find_device(name_substring, vendor=None, product=None):
 
 # ---------- ОСНОВНОЙ ЦИКЛ С ПЕРЕПОДКЛЮЧЕНИЕМ ----------
 def main():
-    logger.info("🎤 Запуск voice.py (Google Speech) с автоматическим переподключением")
+    logger.info("🎤 Запуск voice.py с автоматическим переподключением")
+    # Отправка alive при старте
     try:
         send_custom_request("its_alive", "btremote", "voice_started")
     except:
@@ -264,6 +220,7 @@ def main():
         if fixed_path:
             dev_path = fixed_path
         else:
+            # Ищем по имени (и при необходимости по vendor/product)
             dev_path = find_device(DEVICE_NAME, 0x4842, 0x0001)
             if dev_path is None:
                 logger.error("❌ Устройство не найдено, повтор через 5 секунд")
@@ -274,6 +231,7 @@ def main():
         try:
             remote = evdev.InputDevice(dev_path)
             logger.info(f"🔌 Устройство открыто: {remote.path} - {remote.name}")
+            # Бесконечный цикл обработки событий
             for event in remote.read_loop():
                 if event.type == evdev.ecodes.EV_KEY and event.code == EVENT_CODE and event.value == 1:
                     record_and_recognize()
