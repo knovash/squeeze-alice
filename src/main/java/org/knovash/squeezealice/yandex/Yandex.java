@@ -7,7 +7,6 @@ import org.knovash.squeezealice.http.HttpClientWrapper;
 import org.knovash.squeezealice.http.HttpResponseResult;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
-import org.knovash.squeezealice.web.PageIndex;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -71,7 +70,7 @@ public class Yandex {
                 .filter(device -> device.name.equals(music))
                 .map(device -> roomNameByRoomId(device.room))
                 .collect(Collectors.toList());
-        PageIndex.msgDevices = "УДЯ подключено " + devicesSize + " устройств Музыка в комнатах " + roomsWithDevice;
+        //PageIndex.msgDevices = "УДЯ подключено " + devicesSize + " устройств Музыка в комнатах " + roomsWithDevice;
         log.info(finish);
         return musicDevices;
     }
@@ -127,7 +126,7 @@ public class Yandex {
         return deviceId;
     }
 
-    public static void sendAllStates() {
+    public static void sendDevicesStates() {
         log.info("\nSEND ALL DEVICES STATES ON/OFF TO YANDEX");
         Main.lmsPlayers.players.stream()
                 .filter(player -> player != null && player.room != null)

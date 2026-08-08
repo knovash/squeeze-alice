@@ -3,6 +3,8 @@ package org.knovash.squeezealice;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.server.Server;
 import org.knovash.squeezealice.utils.*;
+import org.knovash.squeezealice.web.ActionsRunner;
+import org.knovash.squeezealice.web.SettingsButtons;
 import org.knovash.squeezealice.web.Settings;
 import org.knovash.squeezealice.yandex.Yandex;
 import org.knovash.squeezealice.yandex.YandexUtils;
@@ -30,23 +32,25 @@ public class Main {
     public static Config config = new Config();
     public static Boolean lmsServerOnline;
     public static Hive hive;
-
+    public static List<YandexUtils.MusicDevice> yandexInfoDevices;
     public static String start = "- - - - STARTED - - - - -";
     public static String finish = "- - - - FINISHED - - - - -";
     public static String line = "-----------------------------------------------------------------------";
     public static String sayText = "привет";
     public static String music = "музыка";
     public static String myIp = "";
-    public static Settings settings = new Settings();
+    public static Settings settingsNew = new Settings();
+    public static SettingsButtons settingsButtons = new SettingsButtons();
+    public static ActionsRunner actionsRunner = new ActionsRunner();
 
     public static void main(String[] args) {
-        log.info("VERSION 2026.07.09");
+        log.info("VERSION 2026.08.08");
         log.info("TIME ZONE: " + zoneId + " TIME: " + LocalTime.now(zoneId).truncatedTo(MINUTES));
         System.setProperty("userApp.root", System.getProperty("user.home"));
         log.info("OS: " + System.getProperty("os.name") + ", user.home: " + System.getProperty("user.home") + " userApp.root: " + System.getProperty("userApp.root"));
         config.load();
         config.write();
-        settings.loadFromFile();
+        settingsNew.loadFromFile();
         setInfo(config.domain); // откуда получить информацию о ключах
         Utils.getMyIpAddress();
         lmsPlayers.searchForLmsIp();
@@ -55,11 +59,9 @@ public class Main {
         lmsPlayers.read(); // прочитать ранее сохраненные плееры LMS и их настройки
         lmsPlayers.updatePlayers(); // получить список плееров из LMS и создать плееры в сервисе
         lmsPlayers.logPlayersNames();
-        List<YandexUtils.MusicDevice> yandexInfoDevices = Yandex.devicesGetFromYandexInfo(); // получить устройства "Музыка" которые уже есть в Яндексе
+        yandexInfoDevices = Yandex.devicesGetFromYandexInfo(); // получить устройства "Музыка" которые уже есть в Яндексе
         log.info("YANDEX get yandexInfoDevices: " + yandexInfoDevices);
         Yandex.createDevicesFromYandexDevices(yandexInfoDevices); // создать устройства "Музыка" в сервисе для Яндекса
-
-        //log.info("OTHER DEVICES: " + otherDevices);
         Yandex.createOtherDevicesFromYandexDevices(otherDevices); // создать устройства  в сервисе для Яндекса // TODO
 
         log.info("YANDEX DEVICES saved local: " + smartHome.devices.stream().filter(Objects::nonNull).map(device -> device.room).collect(Collectors.toList()));

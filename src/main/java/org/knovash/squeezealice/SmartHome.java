@@ -4,12 +4,15 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.provider.response.*;
 import org.knovash.squeezealice.utils.JsonUtils;
+import org.knovash.squeezealice.web.SettingsButtons;
 import org.knovash.squeezealice.yandex.Yandex;
 import org.knovash.squeezealice.yandex.YandexUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.config;
 import static org.knovash.squeezealice.Main.smartHome;
@@ -229,7 +232,15 @@ public class SmartHome {
             roomsWithSpeaker = Yandex.getRoomsWithAliceOrMusic(yandexInfo);
         }
         log.info("ROOMS WITH SPEAKER: " + roomsWithSpeaker);
-        roomsWithSpeaker.stream().forEach(room -> devicesButtons.forEach(button -> createDeviceToggle(room, button)));
+
+        // создавать кнопки только разрешенные в настройках класс SettingsButtons
+        List<String> enabledButtonDescriptions = Arrays.stream(SettingsButtons.ToggleButton.values())
+                .filter(button -> button.getValue())
+                .map(button -> button.getDescription())
+                .collect(Collectors.toList());
+        roomsWithSpeaker.stream().forEach(room -> enabledButtonDescriptions.forEach(button -> createDeviceToggle(room, button)));
+
+        //roomsWithSpeaker.stream().forEach(room -> devicesButtons.forEach(button -> createDeviceToggle(room, button)));
     }
 
     public Device createDeviceToggle(String roomName, String deviceName) {

@@ -211,8 +211,10 @@ public class Player {
         return this;
     }
 
-    public Player savePlaylist(String playlistName) {
+    public Player savePlaylistWithCheck(String playlistName) {
         log.info(start);
+
+        //this.savedPlaylistOk = false;
         if (playlistName == null) return null;
         // проверить если сейчас плейлист пустой - не сохранять
         Integer tracksCount = this.playlistTracksCurrentCount();
@@ -225,7 +227,21 @@ public class Player {
         // TODO добавить проверку содержимого плейлиста
 //        сохранение плейлиста
         this.savedPlaylistName = playlistName;
+        this.savedPlaylistOk = true;
         Player.savedPlaylistNameCommon = playlistName;
+        Requests.postToLmsForStatus(RequestParameters.playlistSave(this.name, playlistName).toString());
+        log.info(finish);
+        return this;
+    }
+
+    public Player savePlaylist(String playlistName) {
+        log.info(start);
+        if (playlistName == null) return null;
+        this.savedPlaylistOk = true;
+        this.savedPlaylistName = playlistName;
+        Player.savedPlaylistNameCommon = playlistName;
+        log.info("PLAYLIST SAVE THIS: " + this.savedPlaylistName);
+        log.info("PLAYLIST SAVE COMMON: " + Player.savedPlaylistNameCommon);
         Requests.postToLmsForStatus(RequestParameters.playlistSave(this.name, playlistName).toString());
         log.info(finish);
         return this;
@@ -234,32 +250,8 @@ public class Player {
     public Player playlistRestore(String playlistName) {
         log.info(start);
         if (playlistName == null) return null;
-
-        // проверить если плейлист пустой - не загружать
-        //log.info("SAVED PLAYLIST CHECK IF EMPTY...");
-        //Integer tracksCount = this.savedPlaylistTracksCount(playlistName, 0, 8);
-        //if (tracksCount == null || tracksCount == 0) {
-        //    log.info("PLAYLIST EMPTY. SKIP RESTORE !!!");
-        //    return null;
-        //} else
-        //    log.info("PLAYLIST NOT EMPTY tracksCount: " + tracksCount);
-
-        // проверить плейлист содержимое если трек технический - не загружать
-        log.info("SAVED PLAYLIST CHECK CONTENT...");
-        List<PlaylistTracksLoop.Track> playlist = this.savedPlaylistGetTracksById(this.savedPlaylistGetIdByName(playlistName), 0, 10);
-        if (playlist == null || playlist.isEmpty()) {
-            log.info("PLAYLIST EMPTY. SKIP RESTORE !!!");
-            return null;
-        }
-        List<PlaylistTracksLoop.Track> errorTracks = playlist.stream().filter(p -> p.title.contains("restore")).collect(Collectors.toList());
-        if (errorTracks != null && !errorTracks.isEmpty()) {
-            log.info("BAD PLAYLIST SKIP RESTORE !!! " + errorTracks);
-            return null;
-        } else
-            log.info("PLAYLIST CHECK OK");
-
-
         String res = Requests.postToLmsForStatus(RequestParameters.playlistRestore(this.name, playlistName).toString());
+        //String res = Requests.postToLmsForStatus(RequestParameters.playlistRestoreById(this.name, playlistId).toString());
         log.info("RESTORE RESULT: " + res);
         if (res == null) return null;
         log.info(finish);
@@ -319,29 +311,15 @@ public class Player {
 
     public void savePlaylistScript() {
         log.info(start);
-        // Выбрать имя для сохранения плейлиста
-        String playlist = null;
-        String currentPlaylistName = this.playlistName();
-        if ("loop".equals(currentPlaylistName)) {
-//            this.savedPlaylistName = null;
-            this.savedPlaylistOk = false;
-            log.info("SKIP SAVE PLAYLIST: " + currentPlaylistName);
-            return;
-        }
-        if (currentPlaylistName != null) playlist = titleCrop(currentPlaylistName);
-        log.info("CURRENT PLAYLIST NAME: " + playlist);
-        if (playlist == null) playlist = this.name + "_restore";
-        this.savedPlaylistName = playlist;
-        // Получить: индекс трека, время трека, режим, громкость
-        PlayerStatus.Result result = this.statusFast();
-        if (result == null) {
-            this.savedPlaylistOk = false;
-            log.info("PLAYLIST RESTORE NOT SAVED OFFLINE " + this);
-            return;
-        }
-
-        this.savePlaylist(playlist); // Сохранить плейлист в LMS
-
+        log.info("++++++++++++++++ SAVED BEFORE ++++++++++++++++++++++++");
+        log.info("SAVED GROUP: " + this.savedGroup);
+        log.info("SAVED INDEX: " + this.savedPlaylistIndex);
+        log.info("SAVED TIME: " + this.savedPlaylistTime);
+        log.info("SAVED MODE: " + this.savedPlaylistMode);
+        log.info("SAVED VOLUME: " + this.savedPlaylistVolume);
+        log.info("SAVED PLAYLIST: " + this.savedPlaylistName);
+        log.info("SAVED OK: " + this.savedPlaylistOk);
+        log.info("+++++++++++++++++++++++++++++++++++++++++++++++");
         // Определить группу, если был в группе
         List<String> currentGroup = null;
         List<List<String>> groups = lmsPlayers.syncgroups();
@@ -353,16 +331,48 @@ public class Player {
                 }
             }
         }
-        log.info("CURRENT GROUP: " + currentGroup);
+        log.info("SAVE CURRENT GROUP: " + currentGroup);
         if (currentGroup != null && !currentGroup.isEmpty()) {
             currentGroup.remove(this.name);
         }
-        // Сохранить параметры в плеер
         this.savedGroup = currentGroup;
+
+        // проверить если сейчас плейлист пустой - не сохранять
+        Integer tracksCount = this.playlistTracksCurrentCount();
+        if (tracksCount == null || tracksCount == 0) {
+            log.info("PLAYLIST CURRENT EMPTY. SKIP SAVE");
+            log.info(finish);
+            return;
+        }
+
+        // Выбрать имя для сохранения плейлиста
+        String currentPlaylistName = this.playlistName();
+        if ("loop".equals(currentPlaylistName)) {
+            log.info("PLAYLIST CURRENT LOOP. SKIP SAVE " + currentPlaylistName);
+            log.info(finish);
+            return;
+        }
+        if (currentPlaylistName != null) currentPlaylistName = titleCrop(currentPlaylistName);
+        if (currentPlaylistName == null) currentPlaylistName = this.name + "_restore";
+        log.info("CURRENT PLAYLIST NAME: " + currentPlaylistName);
+
+        // Получить: индекс трека, время трека, режим, громкость
+        PlayerStatus.Result result = this.statusFast();
+        if (result == null) {
+            log.info("PLAYLIST RESTORE NOT SAVED PLAYER OFFLINE " + this);
+            log.info(finish);
+            return;
+        }
+
+        // Сохранить плейлист в LMS
+        Requests.postToLmsForStatus(RequestParameters.playlistSave(this.name, currentPlaylistName).toString());
+
+        // Сохранить параметры в плеер
+        Player.savedPlaylistNameCommon = currentPlaylistName;
+        this.savedPlaylistName = currentPlaylistName;
         this.savedPlaylistIndex = result.playlist_cur_index;
         this.savedPlaylistTime = result.time;
         this.savedPlaylistMode = result.mode;
-        this.savedPlaylistName = playlist;
         this.savedPlaylistVolume = String.valueOf(result.mixer_volume);
         this.savedPlaylistOk = true;
         log.info("++++++++++++++++ SAVED ++++++++++++++++++++++++");
@@ -378,8 +388,9 @@ public class Player {
         log.info(finish);
     }
 
-    public void restorePlaylistScript(Boolean restoreSync) {
+    public boolean restorePlaylistScript(Boolean restoreSync) {
         log.info(start);
+        boolean result = false;
         log.info("++++++++++++++++ RESTORE PLAYLIST ++++++++++++++++++++++++");
         log.info("RESTORE SYNC: " + restoreSync);
         log.info("LOAD GROUP: " + this.savedGroup);
@@ -387,37 +398,78 @@ public class Player {
         log.info("LOAD TIME: " + this.savedPlaylistTime);
         log.info("LOAD MODE: " + this.savedPlaylistMode);
         log.info("LOAD VOLUME: " + this.savedPlaylistVolume);
-        log.info("LOAD PLAYLIST: " + this.savedPlaylistName);
+        log.info("LOAD PLAYLIST THIS: " + this.savedPlaylistName);
+        log.info("LOAD PLAYLIST COMMON: " + Player.savedPlaylistNameCommon);
         log.info("LOAD OK: " + this.savedPlaylistOk);
         log.info("+++++++++++++++++++++++++++++++++++++++++++++++");
+
+
+        if ("loop".equals(this.savedPlaylistName)) this.savedPlaylistName = null;
+        if ("loop".equals(Player.savedPlaylistNameCommon)) Player.savedPlaylistNameCommon = null;
 
 //       если был в группе, вернуть в группу и завершить
         if (this.savedGroup != null && !this.savedGroup.isEmpty() && restoreSync) {
             log.info("RESTORE SYNC TO: " + this.savedGroup);
             this.syncTo(this.savedGroup.get(0));
             log.info(finish);
-            return;
+            return false;
         }
 
         if (!this.savedPlaylistOk) {
+            this.savedPlaylistName = null;
             log.info("SKIP RESTORE PLAYLIST savedPlaylistOk=" + this.savedPlaylistOk);
             log.info(finish);
-            return;
+            return false;
         }
 
         log.info("RESTORE PLAYLIST: " + this.savedPlaylistName);
         if (this.savedPlaylistOk) this.playlistRestore(this.savedPlaylistName); // загрузить плейлист
+
         this.waitMilSeconds(100);
-        if (!"0".equals(this.savedPlaylistIndex))
+
+        //TODO проверить что плейлист нормальный
+        // проверить если сейчас плейлист пустой - не сохранять
+        Integer tracksCount = this.playlistTracksCurrentCount();
+        log.info("CHECK TRACKS COUNT IN RESTORED PLAYLIST: " + tracksCount);
+        if (tracksCount == null) return false;
+        if (tracksCount == 0) return false;
+
+
+        // проверить плейлист содержимое если трек технический - не загружать
+        //log.info("SAVED PLAYLIST CHECK CONTENT...");
+        //Integer playlistId = this.savedPlaylistGetIdByName(playlistName);
+        //List<PlaylistTracksLoop.Track> playlist = this.savedPlaylistGetTracksById(playlistId, 0, 10);
+        //if (playlist == null || playlist.isEmpty()) {
+        //    log.info("PLAYLIST EMPTY. SKIP RESTORE !!!");
+        //    return null;
+        //}
+        //List<PlaylistTracksLoop.Track> errorTracks = playlist.stream().filter(p -> p.title.contains("restore")).collect(Collectors.toList());
+        //if (errorTracks != null && !errorTracks.isEmpty()) {
+        //    log.info("BAD PLAYLIST SKIP RESTORE !!! " + errorTracks);
+        //    return null;
+        //} else
+        //    log.info("PLAYLIST CHECK OK");
+
+
+        this.waitMilSeconds(100);
+        log.info("RESTORE SAVED INDEX: " + this.savedPlaylistIndex);
+        if (this.savedPlaylistIndex != null && !"0".equals(this.savedPlaylistIndex)) {
+            log.info("RESTORE SAVED INDEX: " + this.savedPlaylistIndex);
             this.playlistIndexSet(this.savedPlaylistIndex); // если трек превый 0 то ненадо восстанавливать индекс
-        if ("play".equals(this.savedPlaylistMode)) {
-            if (savedPlaylistTime > 5)
-                this.playlistTimeSet(this.savedPlaylistTime);
-            this.play();
-        } else {
-            this.stop().waitSeconds(1).stop();
         }
+        //log.info("RESTORE SAVED MODE: " +this.savedPlaylistMode);
+        //if ("play".equals(this.savedPlaylistMode)) {
+        //    if (savedPlaylistTime > 5)
+        //        this.playlistTimeSet(this.savedPlaylistTime);
+        //    this.play();
+        //} else {
+        //    log.info("RESTORE SAVED MODE STOP");
+        //    this.stop().waitSeconds(1).stop();
+        //}
+
+
         log.info(finish);
+        return true;
     }
 
     public void restoreSyncScript() {
@@ -534,9 +586,17 @@ public class Player {
     public Integer currentChannelIndexInFavorites() {
         String currentTitle = this.playlistName();
         log.info("CURRENT TITLE: " + currentTitle);
-        Integer currentChannelIndex = 0;
+        Integer currentChannelIndex = null;
         List<String> favList = this.favorites();
-        log.info("FAVORITES LIST: " + favList);
+
+
+        favList.forEach(f -> log.info(f));
+        favList.replaceAll(f -> titleCrop(f));
+        favList.forEach(f -> log.info(f));
+        currentTitle = titleCrop(currentTitle);
+
+        log.info("CURRENT TITLE CROP: " + currentTitle);
+        log.info("FAVORITES LIST CROP: " + favList);
         if (favList.contains(currentTitle)) currentChannelIndex = favList.indexOf(currentTitle);
         return currentChannelIndex;
     }
@@ -545,6 +605,8 @@ public class Player {
         int id = 1;
         if (channel == null || channel.equals(0)) return this;
         log.info("CHANNEL COMMAND: " + channel);
+        log.info("CHANNEL LAST THIS: " + this.lastChannelPlayer);
+        log.info("CHANNEL LAST COMMON: " + Player.lastChannelCommon);
         if (channel.contains("-")) id = channelGetRelative(channel) - 1 - 1;
         if (channel.contains("+")) id = channelGetRelative(channel) - 1 + 1;
         if (!(channel.contains("-") || channel.contains("+"))) id = Integer.parseInt(channel) - 1;
@@ -587,14 +649,14 @@ public class Player {
 
     public Player ctrlPrevChannel() {
         log.info("PLAYER: " + this.name + " PREV CHANNEL");
-        ifExpiredAndNotPlayingUnsyncWakeSetVolume(null);
+        ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
         playChannel("-1");
         return this;
     }
 
     public Player ctrlNextChannel() {
         log.info("PLAYER: " + this.name + " NEXT CHANNEL");
-        ifExpiredAndNotPlayingUnsyncWakeSetVolume(null);
+        ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
         playChannel("+1");
         return this;
     }
@@ -982,6 +1044,8 @@ public class Player {
         if (title == null) return null;
         title = title
                 .replaceAll(":.*", "")
+                .replaceAll("  .*", "")
+                .replaceAll("\\s+", " ")
                 .replaceAll(" - .*", "")
                 .replaceAll("\\(.*", "")
                 .replaceAll("\\[.*", "")
@@ -1001,8 +1065,15 @@ public class Player {
         log.info(start);
         log.info("PLAYER: " + this.name + " TURN ON MUSIC");
         if (!this.playing) this.unsync();
-        this.ifExpiredAndNotPlayingUnsyncWakeSetVolume(volume);
+        this.ifExpiredAndNotPlayingUnsyncWakeSetVolume(volume, true);
+        // wake - save playlist
+        // wake - restore playlist
+
+
         this.syncToPlayingOrPlayLast();
+        // restore playlist
+
+
         ActionsSync.answer = "Включаю музыку на " + this.name;
         this.saveLastTime();
         log.info(finish);
@@ -1051,56 +1122,31 @@ public class Player {
 
     public Player playLast() {
         log.info(start);
+
+        // если у плеера сейчас есть какойто путь и это не технический типа шума, тишины, уведомления то просто нажать плэй
         String thisPath = this.path();
-        String thisLastPath = this.lastPathPlayer;
-        String commonLastPath = Player.lastPathCommon;
-        log.info("+++++++++++++++ PLAY LAST +++++++++++++++++++");
-        log.info("THIS PATH: " + thisPath);
-        log.info("THIS SAVED PLAYLIST: " + this.savedPlaylistName);
-        log.info("COMMON SAVED PLAYLIST: " + savedPlaylistNameCommon);
-//        log.info("THIS LAST PATH: " + thisLastPath);
-//        log.info("COMMON LAST PATH: " + commonLastPath);
-//        log.info("LAST THIS PRIORITY: " + lmsPlayers.lastThis);
-        log.info("++++++++++++++++++++++++++++++++++++++++++++");
-
-        if ("loop".equals(this.savedPlaylistName)) this.savedPlaylistName = null;
-        if ("loop".equals(this.savedPlaylistNameCommon)) this.savedPlaylistNameCommon = null;
-
-//// 1. Если есть сохранённое состояние — восстановить его (приоритет)
-//        if (this.savedPlaylistOk) {
-//            log.info("RESTORING SAVED PLAYLIST STATE");
-//            this.restorePlaylistScript(false); // false = не синхронизировать группу
-//            log.info(finish);
-//            return this;
-//        }
-
-
-        if (pathIsOk(thisPath)) { // если у плеера сейчас есть какойто путь и это не технический типа шума, тишины, уведомления то просто нажать плэй
-            log.info("PUSH PLAY BUTTON: " + thisPath);
+        if (pathIsOk(thisPath)) {
+            log.info("PLAY LAST - PUSH PLAY BUTTON: " + thisPath);
             this.play();
             ActionsSync.answer = "Включаю музыку на " + this.name;
             log.info(finish);
             return this;
         }
 
-        Player tmp = null;
-        if (this.savedPlaylistName != null) {
-            // TODO эта проверка неработает. может загрузиться пустой плейлист
-            tmp = this.playlistRestore(this.savedPlaylistName);
-            if (tmp == null) log.info("LOAD THIS PLAYLIST ERROR " + this.savedPlaylistName);
+        // если у плеера путь пустой попытка восстановить сохраненный плейлист
+        log.info("PLAY LAST - RESTORE PLAYLIST TRY...");
+        if (this.restorePlaylistScript(true)) {
+            log.info("PLAY LAST - RESTORE PLAYLIST OK");
+            ActionsSync.answer = "Включаю сохраненный плейлист на " + this.name;
+            log.info(finish);
+            return this;
         }
 
-        if (this.savedPlaylistNameCommon != null && tmp == null) {
-            tmp = this.playlistRestore(this.savedPlaylistNameCommon);
-            if (tmp == null) log.info("LOAD COMMON PLAYLIST ERROR " + this.savedPlaylistNameCommon);
-        }
-
-        if (tmp == null) {
-            log.info("FAILED PLAY LAST !!! PLAY CHANNEL 1");
-            this.playChannel("1");
-        }
-
-        ActionsSync.answer = "Включаю последний плейлист на " + this.name;
+////        log.info("THIS LAST PATH: " + thisLastPath);
+////        log.info("COMMON LAST PATH: " + commonLastPath);
+        log.info("PLAY LAST - PLAY CHANNEL 1");
+        this.playChannel("1");
+        ActionsSync.answer = "Включаю первый канал на " + this.name;
         log.info(finish);
         return this;
     }
@@ -1153,7 +1199,7 @@ public class Player {
         }
         // если этот не играет подключить его к играющим
         if (!this.playing) {
-            this.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null)
+            this.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false)
                     .unsync().syncToPlayingOrPlayLast();
         }
         return this;
@@ -1230,19 +1276,11 @@ public class Player {
 //        CompletableFuture.runAsync(() -> {
 //            saveLastPathThis();
 //            savePlaylistScript();
-//        });
 //        lmsPlayers.write();
+//        });
         return this;
     }
 
-    public Player saveLastPathThis() {
-        String path = this.path();
-        if (path != null && !path.equals(config.silence)) {
-            this.lastPathPlayer = path;
-        }
-        log.info(this.name + " LAST PATH THIS: " + this.lastPathPlayer);
-        return this;
-    }
 
     // ========================================================================
     // Работа с просроченным состоянием и пробуждением
@@ -1266,17 +1304,23 @@ public class Player {
         return expired;
     }
 
+
     public Player ifExpiredAndNotPlayingUnsyncWakeSetVolume(String volume) {
+        return ifExpiredAndNotPlayingUnsyncWakeSetVolume(volume, true);
+    }
+
+    public Player ifExpiredAndNotPlayingUnsyncWakeSetVolume(String volume, boolean restore) {
+
         log.info(start);
         if (!this.connected) return this;
         // LMS неможет изменить горомкость плеера если он не играет, надо запустить воспроизведение и только тогда менять громкость !!!
         if (!this.playing && this.checkLastPlayTimeExpired()) {
-            log.info("PLAYER " + this.name + " NOT PLAY - WAKE, SET VOLUME " + volume);
-            this.wakeAndSetVolume(volume);
+            log.info("PLAYER " + this.name + " NOT PLAY - WAKE, SET VOLUME " + volume + " RESTORE " + restore);
+            this.wakeAndSetVolume(volume, restore);
             log.info(finish);
             return this;
         } else {
-            log.info("PLAYER " + this.name + " PLAYING - SKIP WAKE, SET VOLUME " + volume);
+            log.info("PLAYER " + this.name + " PLAYING - SKIP WAKE, SET VOLUME " + volume + " RESTORE " + restore);
             if (volume != null) this.volumeSetLimited(volume);
         }
         log.info(finish);
@@ -1299,9 +1343,9 @@ public class Player {
         return this;
     }
 
-    private Player wakeAndSetVolume(String volume) {
+    private Player wakeAndSetVolume(String volume, boolean restore) {
         log.info(start);
-        log.info("WAKE PLAYER: " + this.name + " WAIT: " + this.delay + " VOLUME: " + volume);
+        log.info("WAKE PLAYER: " + this.name + " WAIT: " + this.delay + " VOLUME: " + volume + " RESTORE " + restore);
         if (volume == null) volume = String.valueOf(this.valueVolumeByTime());
         if (this.delay == null) this.delay = config.delay;
 
@@ -1310,7 +1354,7 @@ public class Player {
             return this;
         }
 
-        this.savePlaylistScript(); // сохранить плейлист до
+        if (restore) this.savePlaylistScript(); // сохранить плейлист до
         this.unsync();
 
         log.info("******* WAKE START ******* count: " + this.delay);
@@ -1324,7 +1368,7 @@ public class Player {
         this.pause();
         log.info("******* WAKE FINISH *******");
 
-        this.restorePlaylistScript(false); // восстановить плейлист
+        if (restore) this.restorePlaylistScript(false); // восстановить плейлист
         this.saveLastTime();
         log.info(finish);
         return this;

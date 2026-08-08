@@ -146,7 +146,7 @@ public class Spotify {
     public static CurrentlyPlaying getCurrentlyPlaying() {
         log.info(start);
         String json = SpotifyRequests.requestGet("https://api.spotify.com/v1/me/player/currently-playing");
-       log.info("SPOTIFY RESPONSE PLAYING: " + json);
+       log.debug("SPOTIFY RESPONSE PLAYING: " + json);
         if (json == null) return null;
         json = json.replace("\\\"", "");
         CurrentlyPlaying cp = JsonUtils.jsonToPojo(json, CurrentlyPlaying.class);
@@ -324,7 +324,7 @@ public class Spotify {
         }
 
         player
-                .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null)
+                .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false)
                 .playPathSpotify(playingUri)
                 .waitFor(500)
                 .pause();

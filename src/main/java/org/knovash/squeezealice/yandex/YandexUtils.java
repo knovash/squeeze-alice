@@ -1,13 +1,9 @@
 package org.knovash.squeezealice.yandex;
 
 import lombok.extern.log4j.Log4j2;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import org.knovash.squeezealice.web.SettingsButtons;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.knovash.squeezealice.Main.smartHome;
 
 @Log4j2
 public class YandexUtils {
@@ -88,31 +84,24 @@ public class YandexUtils {
 
         Yandex.idsAndRooms = roomNameById;
 
+        // создавать кнопки только разрешенные в настройках класс SettingsButtons
+        List<String> enabledButtonDescriptions = Arrays.stream(SettingsButtons.ToggleButton.values())
+                .map(button -> button.getDescription())
+                .collect(Collectors.toList());
+
         List<MusicDevice> devices = yandexInfo.devices.stream()
                 .filter(device -> device.type != null && device.type.equals("devices.types.other"))
-                //.filter(device -> device.name != null && (
-                //                device.name.equals("Переключи сюда") ||
-                //                        device.name.equals("Дальше") ||
-                //                        device.name.equals("Назад") ||
-                //                        device.name.equals("Отдельно") ||
-                //                        device.name.equals("Вместе") ||
-                //                        device.name.equals("Подключи пульт")
-                //
-                //        )
-                //)
                 .filter(device -> device.name != null)
-                .filter(device -> smartHome.devicesButtons.contains(device.name))
+                .filter(device -> enabledButtonDescriptions.contains(device.name))
                 .map(device -> new MusicDevice(
                         device.room,
                         roomNameById.get(device.room),
-                        device.id,          // сохраняем ID Яндекса
+                        device.id,
                         device.external_id,
                         device.name
                 ))
                 .peek(ff -> log.info("OTHER DEVICE ROOM: {} NAME: {}", ff.roomName, ff.name))
                 .collect(Collectors.toList());
-        //log.info("OTHER DEVICES RECIEVED: " + devices);
-
         return devices;
     }
 

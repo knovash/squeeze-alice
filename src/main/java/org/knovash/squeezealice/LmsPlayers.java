@@ -12,6 +12,7 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.levenstein.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.player.ActionsSync;
+import org.knovash.squeezealice.yandex.Yandex;
 
 import java.time.LocalTime;
 import java.util.*;
@@ -22,6 +23,8 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.knovash.squeezealice.LmsSearchForIp.isLmsServer;
 import static org.knovash.squeezealice.Main.*;
 import static org.knovash.squeezealice.web.PagePlayers.*;
+import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_TASKER_REFRESH;
+import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_YANDEX_REFRESH;
 
 @Log4j2
 @Data
@@ -69,6 +72,10 @@ public class LmsPlayers {
 
     public void updatePlayers() {
         log.info(start);
+        if (!lmsServerOnline) {
+            log.info("LMS OFF LINE");
+            return;
+        }
         if (lmsPlayers.players == null) lmsPlayers.players = new ArrayList<>();
         String json = Requests.postToLmsForJsonBody(RequestParameters.statusServer().toString());
 //        log.info("JSON SERVER STATUS: " + json);
@@ -243,6 +250,7 @@ public class LmsPlayers {
                 .collect(Collectors.toList());
         if (playingPlayers == null || playingPlayers.isEmpty()) {
             log.info("NO PLAYING PLAYERS. EXCEPT NAME: " + exceptName + ". EXCEPT SEPARATED: " + exceptSeparated);
+            log.info(finish);
             return null;
         }
         log.info("SEARCH FOR PLAYING. EXCEPT NAME: " + exceptName + ". EXCEPT SEPARATED: " + exceptSeparated + " PLAYING PLAYERS: " + playingPlayers.stream().map(player -> player.name).collect(Collectors.toList()));
@@ -454,7 +462,6 @@ public class LmsPlayers {
         log.info("START");
 //        if (Utils.checkIpIsLms(config.lmsIp)) {
         if (isLmsServer(config.lmsIp, 9000)) {
-            lmsServerOnline = true;
             log.info("from config ok");
             return;
         }
@@ -462,20 +469,18 @@ public class LmsPlayers {
         String lmsIp = LmsSearchForIp.findServerIp();
         if (lmsIp != null) {
             log.info("LMS IP: " + lmsIp);
-            lmsServerOnline = true;
             config.lmsIp = lmsIp;
             config.write();
         } else {
             log.info("ERROR LMS NOT FOUND");
-            lmsServerOnline = false;
         }
     }
 
     public void afterAsync() {
         Tasker.ready = "yes";
         log.info("TASKER READY: " + Tasker.ready);
-//        this.players.stream().filter(player -> player.connected).forEach(player -> player.saveLastTimePath());
-//        Yandex.sendAllStates();
+        if (TOGGLE_TASKER_REFRESH.value) Tasker.sendRequestToTaskerRunRefresh();
+        if (TOGGLE_YANDEX_REFRESH.value) Yandex.sendDevicesStates();
     }
 
     public void logPlayersNames() {

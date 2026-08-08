@@ -47,13 +47,13 @@ public class SwitchNoPlayerCommand {
                 break;
             case "settings_get": // Tasker получает настройки
                 log.info("TASKER SETTINGS GET JSON");
-                settings.saveToFile();
-                response = settings.settingsGet();
+                settingsNew.saveToFile();
+                response = settingsNew.settingsGet();
                 break;
             case "settings_post": // Tasker присылает измененные настройки
                 log.info("TASKER SETTINGS POST JSON");
                 log.info("BODY" + body);
-                settings.settingsPost(body);
+                settingsNew.settingsPost(body);
                 response = "SETTINGS SAVED";
                 break;
             default:

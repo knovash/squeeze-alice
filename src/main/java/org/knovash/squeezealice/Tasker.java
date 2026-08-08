@@ -1,16 +1,20 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.knovash.squeezealice.http.HttpClientWrapper;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.yandex.Yandex;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
+import static org.knovash.squeezealice.web.Settings.KeyString.VALUE_TASKER_IP;
+import static org.knovash.squeezealice.web.Settings.KeyString.VALUE_TASKER_PORT;
 
 @Log4j2
 public class Tasker {
@@ -160,5 +164,23 @@ public class Tasker {
         log.info("READY: " + ready);
         if (ready == null) return "yes";
         return ready;
+    }
+
+    public static void sendRequestToTaskerRunRefresh(){
+        HttpClientWrapper httpClient = new HttpClientWrapper();
+        URI uri = null;
+        try {
+            uri = new URI("http", null,  VALUE_TASKER_IP.value, Integer.parseInt(VALUE_TASKER_PORT.value), null, null, null);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+
+
+        URI finalUri = uri;
+        CompletableFuture.runAsync(() ->
+                httpClient.doGet(String.valueOf(finalUri), headers)
+        );
     }
 }

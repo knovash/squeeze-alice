@@ -15,49 +15,18 @@ import static org.knovash.squeezealice.web.PageIndex.pageOuter;
 @Log4j2
 public class PagePlayers {
 
-    public static final String alt_sync_save = "alt_sync_save";
-    public static final String alt_sync_value = "alt_sync_value";
-
-    //public static final String autoremote_save = "autoremote_save";
-    //public static final String autoremote_remove = "autoremote_remove";
-    //public static final String autoremote_value = "autoremote_value";
-
     public static final String delay_expire_save = "delay_expire_save";
     public static final String delay_expire_value = "delay_expire_value";
-
-    //public static final String last_this_save = "last_this_save";
-    //public static final String last_this_value = "last_this_value";
-
-    //    volume_amp_lms
-    //public static final String volume_amp_lms = "volume_amp_lms";
-    //public static final String volume_amp_ffmpeg = "volume_amp_ffmpeg";
-
-
-    //public static final String toggle_wake_save = "toggle_wake_save";
-    //public static final String toggle_wake_value = "toggle_wake_value";
-    //public static final String toggle_voice_value = "toggle_voice_value";
-    //public static final String toggle_voice_save = "toggle_voice_save";
-
     public static final String player_save = "player_save";
     public static final String player_remove = "player_remove";
     public static final String player_name_value = "player_name_value";
     public static final String player_room_value = "player_room_value";
     public static final String player_delay_value = "player_delay_value";
     public static final String player_schedule_value = "player_schedule_value";
-    public static final String players_all_schedule_value = "players_all_schedule_value";
     public static final String player_volume_max_value = "player_volume_max_value";
-
     public static final String lms_save = "lms_save";
     public static final String lms_ip_value = "lms_ip_value";
     public static final String lms_port_value = "lms_port_value";
-
-
-    //public static final String volumio_save = "volumio_save";
-    //public static final String volumio_on = "volumio_on";
-    //public static final String volumio_off = "volumio_off";
-    //public static final String volumio_ip_value = "volumio_ip_value";
-    //public static final String volumio_port_value = "volumio_port_value";
-
     public static final String statusbar_refresh = "statusbar_refresh";
 
     public static Context action(Context context) {
@@ -69,22 +38,8 @@ public class PagePlayers {
 
     public static String page() {
         String pageInner;
-
         Yandex.devicesGetFromYandexInfo();
         log.info("YANDEX MUSIC ROOMS LIST: " + Yandex.roomsWithDevice);
-
-        //String autoRemoteUrls = "";
-        //if (lmsPlayers.autoRemoteUrls != null) autoRemoteUrls = lmsPlayers.autoRemoteUrls.stream()
-        //        .map(url -> "<label>" + url + "</label><br>" +
-        //                "<form method='POST' action='/form'>" +
-        //                "<input name='autoremote_value' type='hidden' value='" + url + "'>" +
-        //                "<input name='action'           type='hidden' value='" + autoremote_remove + "'>" +
-        //                "<button type='submit'>Удалить</button>" +
-        //                "</form>" +
-        //                "<br>")
-        //        .collect(Collectors.joining(""));
-        //log.info("TASKER URLS: " + autoRemoteUrls);
-
         if (lmsPlayers.players.size() == 0) {
             pageInner = "<b>Плееры в LMS не найдены</b>";
         } else

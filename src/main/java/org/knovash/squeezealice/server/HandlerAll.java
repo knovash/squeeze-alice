@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-import static org.knovash.squeezealice.Main.settings;
+import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
 public class HandlerAll implements HttpHandler {
@@ -43,6 +43,8 @@ public class HandlerAll implements HttpHandler {
         }
     }
 
+
+
     public static Context switchPath(Context context) {
         String path = context.path;
         switch (path) {
@@ -50,8 +52,16 @@ public class HandlerAll implements HttpHandler {
                 return PageIndex.action(context);
             case "/players":
                 return PagePlayers.action(context);
+
             case "/settings":
-                return settings.action(context);
+                return settingsNew.action(context);
+
+            case "/actions":
+                return actionsRunner.action(context);
+
+            case "/settings_buttons":
+                return settingsButtons.action(context);
+
             case "/manual":
                 return PageManual.action(context);
             case "/lms":

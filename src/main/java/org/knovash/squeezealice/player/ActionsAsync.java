@@ -231,7 +231,7 @@ public class ActionsAsync {
             log.info("CHANNEL: " + channel);
             int index = playlist.indexOf(channel) + 1;
             channel = channel.replaceAll(":.*", "");
-            player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null).playChannel(String.valueOf(index));
+            player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false).playChannel(String.valueOf(index));
             ActionsSync.answer = "Включаю канал " + index + ", " + channel;
         });
     }
@@ -356,7 +356,7 @@ public class ActionsAsync {
 
 //  если был в группе после уведомления надо вернуть в группу
             player
-                    .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null)
+                    .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false)
                     //.volumeByTimeSet()
                     .playChannel(value);
             ActionsSync.answer = "Включаю канал " + value;

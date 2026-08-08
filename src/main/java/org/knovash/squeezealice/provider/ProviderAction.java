@@ -3,6 +3,7 @@ package org.knovash.squeezealice.provider;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Player;
+import org.knovash.squeezealice.Tasker;
 import org.knovash.squeezealice.player.ActionsAsync;
 import org.knovash.squeezealice.player.ActionsSync;
 import org.knovash.squeezealice.provider.response.ActionResult;
@@ -20,6 +21,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
+import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_TASKER_REFRESH;
+import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_YANDEX_REFRESH;
 
 // НЕ используются классы ActionsSync или ActionsAsync
 // Используются только методы класса Player
@@ -91,9 +94,9 @@ public class ProviderAction {
                 try {
                     runMultipleDevicesCapabilities(devicesForAsync);
                 } finally {
-//                    lmsPlayers.afterAll(); // TODO тут возможно надо обновлять состояния в яндексе но только для измененных девайсов
-//                    Yandex.sendAllStates();
-
+                    log.info("- - - - AFTER PLAYERS ACTIONS SEND REFRESH TO TASKER AND YANDEX - - - - - ");
+                    if (TOGGLE_YANDEX_REFRESH.value) Yandex.sendDevicesStates();
+                    if (TOGGLE_TASKER_REFRESH.value) Tasker.sendRequestToTaskerRunRefresh();
                 }
             });
         }
@@ -334,8 +337,8 @@ public class ProviderAction {
 
     // отсоединить, остановить (если не играет ничего неделать)
     private static void runGroupForOff(List<Device> devices) {
-        log.info(start);
         if (devices == null || devices.isEmpty()) return;
+        log.info(start);
         log.info("SIZE GPOUP: " + devices.size());
         if (devices.size() > 1) { // если пришла команда выключить все комнаты то выключить вообще все плееры в лмс
             log.info("STOP ALL LMS PLAYERS");
@@ -354,8 +357,8 @@ public class ProviderAction {
 //    выбрать устройства которые  еще не играют - отсодинить, разбудить, соединить с устройством в группе играющих
 //    если группы играющих нет включить последнее
     private static void runGroupForOn(List<Device> devices) {
-        log.info(start);
         if (devices == null || devices.isEmpty()) return;
+        log.info(start);
         List<Player> players = devices.stream()
                 .map(device -> playerWithCapabilities(device))
                 .filter(Objects::nonNull)
@@ -381,13 +384,13 @@ public class ProviderAction {
                     .forEach(p -> p.syncTo(masterName)); // играющие соединить
             notPlaying.parallelStream()
                     .filter(Objects::nonNull)
-                    .forEach(p -> p.ifExpiredAndNotPlayingUnsyncWakeSetVolume(p.capVolume)); // неиграющие разбудить
+                    .forEach(p -> p.ifExpiredAndNotPlayingUnsyncWakeSetVolume(p.capVolume, false)); // неиграющие разбудить
             notPlaying.forEach(p -> p.syncTo(masterName)); // неиграющие подключить к играющим
         } else { // Нет играющих среди переданных устройств
             Player master = lmsPlayers.lastPlayedPlayer(players);
             notPlaying.parallelStream()
                     .filter(Objects::nonNull)
-                    .forEach(p -> p.ifExpiredAndNotPlayingUnsyncWakeSetVolume(p.capVolume)); // неиграющие разбудить
+                    .forEach(p -> p.ifExpiredAndNotPlayingUnsyncWakeSetVolume(p.capVolume)); // неиграющие разбудить // TODO
 
             master.syncToPlayingOrPlayLast(); // попытка подключиться к уже играющему. неподключать если он отделен и неподключать к отделенным если игращего нет включить последнее игравшее
             notPlaying.stream()
@@ -399,8 +402,8 @@ public class ProviderAction {
 
     // изменить громкость (если не играет ничего неделать)
     private static void runGroupForVolume(List<Device> devices) {
-        log.info(start);
         if (devices == null || devices.isEmpty()) return;
+        log.info(start);
         devices
                 .parallelStream() // TODO
                 .map(ProviderAction::playerWithCapabilities)
@@ -417,7 +420,7 @@ public class ProviderAction {
 
         if (size == 1) { // один отсоединять ненадо, разбудить, включить канал, подсоединить к нему другие играющие
             Player p = lmsPlayers.lastPlayedPlayer(players);
-            p.ifExpiredAndNotPlayingUnsyncWakeSetVolume(p.capVolume)
+            p.ifExpiredAndNotPlayingUnsyncWakeSetVolume(p.capVolume, false)
                     .playChannel(p.capChannel)
                     .syncOtherPlayingNotInGroupToThis();
         }
@@ -427,7 +430,7 @@ public class ProviderAction {
                     .filter(Objects::nonNull)
                     .forEach(player -> player
                             .unsync()
-                            .ifExpiredAndNotPlayingUnsyncWakeSetVolume(player.capVolume)
+                            .ifExpiredAndNotPlayingUnsyncWakeSetVolume(player.capVolume, false)
                             .playChannel(player.capChannel));
         }
 
@@ -446,7 +449,7 @@ public class ProviderAction {
                 .filter(Objects::nonNull)
                 .forEach(player -> player
                         .unsync()
-                        .ifExpiredAndNotPlayingUnsyncWakeSetVolume(player.capVolume)
+                        .ifExpiredAndNotPlayingUnsyncWakeSetVolume(player.capVolume, false)
                         .syncTo(master.name)
                 );
         master.playChannel(master.capChannel);

@@ -92,7 +92,12 @@ public class HttpClientWrapper {
             return new HttpResponseResult(statusCode, bodyString, bodyBytes, response.getAllHeaders());
 
         } catch (IOException e) {
-            log.error("HTTP request failed: {}", e.getMessage(), e);
+            // Логируем таймауты как DEBUG (ожидаемое поведение), остальное как ERROR
+            if (e instanceof java.net.SocketTimeoutException) {
+                log.debug("HTTP request timed out (expected): {}", e.getMessage());
+            } else {
+                log.error("HTTP request failed: {}", e.getMessage(), e);
+            }
             return HttpResponseResult.error("Request failed: " + e.getMessage());
         }
     }

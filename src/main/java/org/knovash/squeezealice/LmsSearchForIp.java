@@ -9,6 +9,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.knovash.squeezealice.Main.config;
+import static org.knovash.squeezealice.Main.lmsServerOnline;
 
 @Log4j2
 public class LmsSearchForIp {
@@ -98,6 +99,7 @@ public class LmsSearchForIp {
 
     public static boolean isLmsServer(String ip, int port) {
         log.info("CHECK IS LMS IP: " + ip + ":" + port);
+        lmsServerOnline = false;
         try {
             URL url = new URL("http://" + ip + ":" + port);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -109,8 +111,13 @@ public class LmsSearchForIp {
             if (responseCode == 200 || responseCode == 302) {
                 String serverHeader = conn.getHeaderField("Server");
                 if (serverHeader != null && serverHeader.contains("Lyrion Music Server")) {
+                    lmsServerOnline = true;
+                    log.info("OK");
                     return true;
                 }
+            }
+            else {
+                log.info("FAIL");
             }
         } catch (Exception e) {
             // Игнорируем любые ошибки подключения

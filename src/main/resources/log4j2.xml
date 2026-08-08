@@ -1,24 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Appenders>
-        <File name="File" fileName="data/log.txt" append="false">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} %c{1}.%method - %msg%n" charset="UTF-8"/>
-        </File>
-
+        <!-- Консоль (только INFO и выше) -->
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} %c{1}.%method - %msg%n" charset="UTF-8"/>
         </Console>
 
-        <File name="File2" fileName="${sys:user.home}/log_voice.txt" append="true">
+        <!-- Файл log.txt (только INFO и выше, перезаписывается) -->
+        <File name="File" fileName="data/log.txt" append="false">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %c{1}.%method - %msg%n" charset="UTF-8"/>
+        </File>
+
+        <!-- Файл log_debug.txt (всё, включая DEBUG, дописывается) -->
+        <File name="FileDebug" fileName="data/log_debug.txt" append="true">
             <PatternLayout pattern="%d{YYYY.MM.dd HH:mm:ss.SSS} %c{1}.%method - %msg%n" charset="UTF-8"/>
         </File>
+
+        <!-- (Опционально) Если вам больше не нужен старый File2, можете удалить -->
     </Appenders>
 
     <Loggers>
-        <Root level="info">
-            <AppenderRef ref="Console" level="info"/>
-            <AppenderRef ref="File" level="debug"/>
-            <AppenderRef ref="File2" level="info"/>
+        <Root level="debug">   <!-- пропускаем DEBUG на уровень выше -->
+            <AppenderRef ref="Console" level="info"/>   <!-- в консоль только INFO+ -->
+            <AppenderRef ref="File" level="info"/>      <!-- в log.txt только INFO+ -->
+            <AppenderRef ref="FileDebug" level="debug"/> <!-- в log_debug.txt всё, начиная с DEBUG -->
         </Root>
     </Loggers>
 </Configuration>

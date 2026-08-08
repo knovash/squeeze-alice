@@ -98,6 +98,12 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"playlist", "load", playlistName});
     }
 
+    public static RequestToLms playlistRestoreById(String player, Integer playlistId) {
+        return RequestToLms.create(player, new String[]{"playlist", "load", "playlist_id:" + playlistId});
+    }
+
+    //"playlist_id:" + playlistId
+
     public static RequestToLms playlistRename(String player, String nameOld, String nameNew) {
         return RequestToLms.create(player, new String[]{"playlist", "rename", nameOld, nameNew});
     }

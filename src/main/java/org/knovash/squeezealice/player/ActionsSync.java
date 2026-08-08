@@ -100,7 +100,7 @@ public class ActionsSync {
     public static String syncSwitchToHere(Player player) {
         log.info(start);
         if (player == null) return "ошибка, плеер не найден";
-        player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null);
+        player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
         log.info("SWITCH TO " + player.name);
         Spotify.currentlyPlaying();
         boolean spotifyPlaying = Spotify.currentlyPlaying != null && Spotify.currentlyPlaying.is_playing;
@@ -129,7 +129,7 @@ public class ActionsSync {
         }
         if (say) player.say("включаю " + Spotify.nameForSay, false, true);
         player
-                .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null)
+                .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false)
                 .volumeByTimeSet()
                 .playPathSpotify(link)
                 .syncOtherPlayingNotInGroupToThis();
@@ -399,7 +399,7 @@ public class ActionsSync {
 
         if (start) {
             log.info("TURN ON NEW PLAYER " + playerNew.name);
-            playerNew.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null);
+            playerNew.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
             if (!playerNew.playing)
                 if (playerNow.isPlaying()) playerNew.syncTo(playerNow.name);
                 else
