@@ -9,7 +9,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_SCHEDULER_SPOTIFY_REFRESH_TOKEN;
+import static org.knovash.squeezealice.web.Settings.KeyToggle.*;
 
 @Log4j2
 public class SchedulerSpotifyRefreshToken {

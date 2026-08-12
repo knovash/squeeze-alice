@@ -52,7 +52,7 @@ public class HandlePathCmd {
             lmsPlayers.updatePlayers(); // обновить состояние плееров
 
 // выбор действия где плеер не требуется
-        response = SwitchNoPlayerCommand.run(action, context.body);
+        response = SwitchNoPlayerCommand.run(action, value, context.body);
 
         if (response != null) {
             context.bodyResponse = response;

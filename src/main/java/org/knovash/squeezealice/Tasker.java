@@ -1,6 +1,7 @@
 package org.knovash.squeezealice;
 
 import lombok.extern.log4j.Log4j2;
+import org.json.JSONObject;
 import org.knovash.squeezealice.http.HttpClientWrapper;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.yandex.Yandex;
@@ -13,8 +14,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
-import static org.knovash.squeezealice.web.Settings.KeyString.VALUE_TASKER_IP;
-import static org.knovash.squeezealice.web.Settings.KeyString.VALUE_TASKER_PORT;
+import static org.knovash.squeezealice.web.SettingsTasker.KeyString.*;
+import static org.knovash.squeezealice.web.SettingsTasker.KeyToggle.*;
+import static org.knovash.squeezealice.web.SettingsTasker.*;
 
 @Log4j2
 public class Tasker {
@@ -29,6 +31,7 @@ public class Tasker {
     public static String widgetPlayersStop;
     public static String widgetPlaylist;
     public static String ready;
+    public static String taskerIp;
 
     public static String forTaskerWidgetsRefreshJson(Player player, String lines) {
         log.info(start);
@@ -76,7 +79,15 @@ public class Tasker {
     public static String forTaskerPlaylist(Player player, Integer lines) {
         log.info(start);
         log.info("CREATE PLAYLIST FOR TASKER. ACTIVE PLAYER: " + player);
-        int tracks = player.playlistTracksCurrentCount();
+
+        int tracks = 0;
+        //tracks = player.playlistTracksCurrentCount();
+        if (player.playerStatus != null && player.playerStatus.result != null
+                && player.playerStatus.result.playlist_loop != null) {
+            tracks = player.playerStatus.result.playlist_loop.size();
+        }
+
+
         if (tracks == 0) {
             log.info("PLAYLIST EMPTY");
             widgetPlaylist = "empty";
@@ -166,21 +177,49 @@ public class Tasker {
         return ready;
     }
 
-    public static void sendRequestToTaskerRunRefresh(){
+    public static void sendRequestToTaskerRunRefresh() {
+        if (!TASKER_TOGGLE_REFRESH.value) {
+            log.info("TOGGLE TASKER REFRESH STATES DISABLED !!!");
+            return;
+        }
+
+        log.info(start);
+        log.info("SEND REQUEST TO TASKER FOR RUN REFRESH");
         HttpClientWrapper httpClient = new HttpClientWrapper();
         URI uri = null;
         try {
-            uri = new URI("http", null,  VALUE_TASKER_IP.value, Integer.parseInt(VALUE_TASKER_PORT.value), null, null, null);
+            uri = new URI("http", null, TASKER_STRING_IP.value, Integer.parseInt(TASKER_STRING_PORT.value), null, null, null);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
-
-
         URI finalUri = uri;
-        CompletableFuture.runAsync(() ->
-                httpClient.doGet(String.valueOf(finalUri), headers)
+        CompletableFuture.runAsync(() -> {
+                    httpClient.doGet(String.valueOf(finalUri), headers);
+                    log.info(finish);
+                }
         );
+    }
+
+    public static void taskerIpSet(String body) {
+        TASKER_STRING_IP.value = "";
+        TASKER_STRING_PORT.value = "";
+        if (body == null || body.trim().isEmpty()) {
+            return;
+        }
+        try {
+            JSONObject json = new JSONObject(body);
+            if (json.has("ip")) {
+                TASKER_STRING_IP.value = json.getString("ip");
+            }
+            if (json.has("port")) {
+                Object portValue = json.get("port");
+                TASKER_STRING_PORT.value = portValue.toString();
+            }
+            settingsTasker.saveToFile();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

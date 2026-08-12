@@ -3,7 +3,9 @@ package org.knovash.squeezealice.web;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Main;
+import org.knovash.squeezealice.spotify.spotify_pojo.PlayerState;
 import org.knovash.squeezealice.yandex.Yandex;
+import org.knovash.squeezealice.yandex.YandexInfo;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -12,7 +14,6 @@ import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.LmsSearchForIp.isLmsServer;
 import static org.knovash.squeezealice.Main.*;
-import static org.knovash.squeezealice.yandex.Yandex.otherDevices;
 
 @Log4j2
 public class PageIndex {
@@ -55,20 +56,16 @@ public class PageIndex {
         //Yandex.devicesGetFromYandexInfo();
         //Utils.readRoomsAndAliceIds();
         String pageInner = statusBar() +
-                "<p><a href=\\html\\manual " +
-                "target=\"_blank\" rel=\"noopener noreferrer\"" +
-                ">Инструкция</a></p>" +
+                "<p><a href=\\html\\manual target=\"_blank\" rel=\"noopener noreferrer\">Инструкция</a></p>" +
+                "<p><a href=\\auth target=\"_blank\" rel=\"noopener noreferrer\">Авторизация в Яндекс</a></p>" +
+                "<p><a href=\\auth_spotify target=\"_blank\" rel=\"noopener noreferrer\">Авторизация в Spotify</a></p>" +
                 "<p><a href=\\lms>Настройка LMS</a></p>" +
-                "<p><a href=\\players>Настройка плееров</a></p>" +
-                "<p><a href=\\settings>Настройки дополнительные</a></p>" +
-                "<p><a href=\\settings_buttons>Настройки создания устройств действий</a></p>" +
-                "<p><a href=\\actions>Тесты действий</a></p>" +
-
-                "<p><a href=\\auth " + "target=\"_blank\" rel=\"noopener noreferrer\"" + ">Авторизация в Яндекс</a></p>" +
-
-                "<p><a href=\\auth_spotify " + "target=\"_blank\" rel=\"noopener noreferrer\"" + ">Авторизация в Spotify</a></p>" +
-
-
+                "<p><a href=\\players>Настройка плееров и комнат</a></p>" +
+                "<p><a href=\\settings>Настройки</a></p>" +
+                "<p><a href=\\settings_buttons>Настройки устройств-действий в УДЯ</a></p>" +
+                "<p><a href=\\settings_tasker>Настройки Tasker</a></p>" +
+                "<p><a href=\\settings_voice>Настройки голосовых уведомлений через плееры LMS</a></p>" +
+                //"<p><a href=\\actions>Тесты действий</a></p>" +
                 "";
         String page = pageOuter(pageInner, "Squeeze-Alice", "Squeeze-Alice");
         return page;
@@ -105,7 +102,8 @@ public class PageIndex {
         long seconds = d.toSecondsPart();
         //return hours + "ч " + minutes + "м " + seconds + "с";
 
-        if (config.spotifyToken != null) return "<span style='color: green;'>" + " подключен" + "</span>" + (" " +hours + "ч " + minutes + "м ");
+        if (config.spotifyToken != null)
+            return "<span style='color: green;'>" + " подключен" + "</span>" + (" " + hours + "ч " + minutes + "м ");
         else return
                 "<a href=\\auth_spotify " + "target=\"_blank\" rel=\"noopener noreferrer\"" + ">Авторизация в Spotify</a>";
     }
@@ -132,12 +130,26 @@ public class PageIndex {
     }
 
     private static String indexYandexRooms() {
-        if (Yandex.rooms == null || Yandex.rooms.isEmpty()) return "нет";
+        if (Yandex.rooms == null || Yandex.rooms.isEmpty()) return "<span style='color: red;'>нет</span>";
         else return Yandex.rooms.toString();
     }
 
     private static String indexMusicDevicesYanex() {
-        if (yandexInfoDevices == null || yandexInfoDevices.isEmpty()) return "нет";
+
+        if (yandexInfoDevices == null || yandexInfoDevices.isEmpty()){
+            if (Yandex.rooms != null && !Yandex.rooms.isEmpty()){
+                if (smartHome.devices != null || !smartHome.devices.isEmpty()){
+                    return "<span style='color: red;'>добавьте устройства в приложении УДЯ</span>";
+                }
+            }
+        }
+
+        if (yandexInfoDevices == null || yandexInfoDevices.isEmpty()) {
+            if (Yandex.rooms != null && !Yandex.rooms.isEmpty()) {
+                return "<a href=\\players>Настройка плееров и комнат</a>";
+            }
+            return "<span style='color: red;'>нет</span>";
+        }
         List<String> listMusic = yandexInfoDevices.stream()
                 .filter(d -> "музыка".equals(d.name.toLowerCase()))
                 .map(d -> d.roomName)
@@ -146,7 +158,9 @@ public class PageIndex {
     }
 
     private static String indexMusicDevicesLocal() {
-        if (smartHome.devices == null || smartHome.devices.isEmpty()) return "нет";
+        if (smartHome.devices == null || smartHome.devices.isEmpty()) {
+            return "<a href=\\players>Настройка плееров и комнат</a>";
+        }
         List<String> listMusic = smartHome.devices.stream()
                 //.filter(d -> d.room != null)
                 .filter(d -> "музыка".equals(d.name.toLowerCase()))
@@ -156,7 +170,7 @@ public class PageIndex {
     }
 
     private static String infoLmsPlayers() {
-        if (!lmsServerOnline) return "нет";
+        if (!lmsServerOnline) return "<span style='color: red;'>нет</span>";
         return lmsPlayers.players.stream().map(player -> player.name).collect(Collectors.toList()).toString();
     }
 

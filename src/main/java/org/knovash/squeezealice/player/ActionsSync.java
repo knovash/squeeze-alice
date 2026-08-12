@@ -121,76 +121,68 @@ public class ActionsSync {
     // ---- 1.3 Spotify ----
     // Используются в ActionsAsync.playArtist/Album/Track/Playlist -> HandlePathAlice
 
-    public static String spotifyPlayLink(String link, Player player, Boolean say) {
+    public static void spotifyPlayLink(String link, Player player) {
         log.info("PLAY LINK: " + link);
-        if (link == null) {
-            player.say("ошибка Spotify", true, true);
-            return "настройте спотифай";
-        }
-        if (say) player.say("включаю " + Spotify.nameForSay, false, true);
+        if (link == null || player == null) return;
         player
                 .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false)
-                .volumeByTimeSet()
-                .playPathSpotify(link)
-                .syncOtherPlayingNotInGroupToThis();
-        player.waitSeconds(2); // реально надо ждать пока плейлист спотифая запустится и потом сохранять
-        log.info("SAVE PLAYLIST: " + Spotify.nameForSay);
-        player.savePlaylist(Spotify.nameForSay);
-        lmsPlayers.afterAsync();
-        ActionsSync.answer = "включаю " + Spotify.nameForSay;
-        return "включаю " + Spotify.nameForSay;
+                .playPathSpotify(link);
+                //.syncOtherPlayingNotInGroupToThis();
+        //player.waitSeconds(2); // реально надо ждать пока плейлист спотифая запустится и потом сохранять
+        //player.savePlaylist(Spotify.currentGetName);
+        //player.savePlaylistScript();
+        //lmsPlayers.afterAsync();
     }
 
-    public static String spotifyPlayArtist(String command, Player player, Boolean say) {
-        String target = command
+    public static String extractTargetFromCommand(String command) {
+        log.info("COMMAND: " + command);
+        if (command == null) return null;
+        String target;
+        target = command.trim()
+                .toLowerCase();
+        target = target
                 .replaceAll(".*включи\\S*\\s", "")
-                .replaceAll(".*Включи\\S*\\s", "")
-                .replaceAll("\"", "")
-                .replaceAll("\\s\\s", " ");
-        log.info("GET LINK BY ARTIST: " + target);
-        String link = Spotify.getLinkArtist(target);
-        log.info("PLAY LINK: " + link);
-        return spotifyPlayLink(link, player, say);
-    }
-
-    public static String spotifyPlayAlbum(String command, Player player, Boolean say) {
-        log.info("SPOTIFY PLAY ALBUM");
-        String target = command.replaceAll(".*включи\\S*\\s", "")
                 .replaceAll("альбом", "")
-                .replaceAll("\"", "")
-                .replaceAll("\\s\\s", " ");
-        log.info("TARGET: " + target);
-        ActionsSync.answer = "Пытаюсь найти и включить альбом " + target;
-        String link = Spotify.getLinkAlbum(target);
-        log.info("PLAY LINK: " + link);
-        return spotifyPlayLink(link, player, say);
-    }
-
-    public static String spotifyPlayTrack(String command, Player player, Boolean say) {
-        log.info("SPOTIFY PLAY TRACK");
-        String target = command.replaceAll(".*включи\\S*\\s", "")
                 .replaceAll("трэк", "")
-                .replaceAll("\"", "")
-                .replaceAll("\\s\\s", " ");
-        log.info("TARGET: " + target);
-        ActionsSync.answer = "Пытаюсь найти и включить трек " + target;
-        String link = Spotify.getLinkTrack(target);
-        log.info("PLAY LINK: " + link);
-        return spotifyPlayLink(link, player, say);
-    }
-
-    public static String spotifyPlayPlaylist(String command, Player player, Boolean say) {
-        log.info("SPOTIFY PLAY PLAYLIST");
-        String target = command.replaceAll(".*включи\\S*\\s", "")
                 .replaceAll("плэйлист", "")
                 .replaceAll("\"", "")
                 .replaceAll("\\s\\s", " ");
         log.info("TARGET: " + target);
-        ActionsSync.answer = "Пытаюсь найти и включить плейлист " + target;
-        String link = Spotify.getLinkPlaylist(target);
-        log.info("PLAY LINK: " + link);
-        return spotifyPlayLink(link, player, say);
+        return target;
     }
+
+    public static String spotifyPlayArtist(String command, Player player, Boolean say) {
+        log.info("SPOTIFY PLAY ARTIST");
+        String target = extractTargetFromCommand(command);
+        String link = Spotify.getLinkArtist(target).uri;
+        spotifyPlayLink(link, player);
+        return answer;
+    }
+
+    public static String spotifyPlayAlbum(String command, Player player, Boolean say) {
+        log.info("SPOTIFY PLAY ALBUM");
+        String target = extractTargetFromCommand(command);
+        String link = Spotify.getLinkAlbum(target).uri;
+        spotifyPlayLink(link, player);
+        return answer;
+    }
+
+    public static String spotifyPlayTrack(String command, Player player, Boolean say) {
+        log.info("SPOTIFY PLAY TRACK");
+        String target = extractTargetFromCommand(command);
+        String link = Spotify.getLinkTrack(target).uri;
+        spotifyPlayLink(link, player);
+        return answer;
+    }
+
+    public static String spotifyPlayPlaylist(String command, Player player, Boolean say) {
+        log.info("SPOTIFY PLAY PLAYLIST");
+        String target = extractTargetFromCommand(command);
+        String link = Spotify.getLinkPlaylist(target).uri;
+        spotifyPlayLink(link, player);
+        return answer;
+    }
+
 
     // ---- 1.4 Bluetooth-пульт ----
     // Используется в ActionsAsync.connectBtRemote -> HandlePathAlice, SwitchPlayerCommand

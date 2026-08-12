@@ -35,7 +35,7 @@ public class SwitchRemoteVoiceCommand {
             if (command.startsWith("включи трек"))
                 return ActionsSync.spotifyPlayTrack(command, player, true);
             if (command.startsWith("включи плейлист"))
-                return ActionsAsync.playPlaylist(player, command);
+                return ActionsSync.spotifyPlayTrack(command, player, true);
             if (command.startsWith("включи"))
                 return ActionsSync.spotifyPlayArtist(command, player, true);
 

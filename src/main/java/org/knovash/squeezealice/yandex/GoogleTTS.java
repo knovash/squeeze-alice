@@ -14,10 +14,10 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.knovash.squeezealice.web.Settings.KeyString.VALUE_GOOGLE_API_KEY;
-import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_VOLUME_AMP_FFMPEG;
-import static org.knovash.squeezealice.web.Settings.KeyValue.VALUE_VOLUME_AMP_GOOGLE_TTS;
-import static org.knovash.squeezealice.web.Settings.KeyValue.VALUE_VOLUME_APM_FFMPEG;
+import static org.knovash.squeezealice.web.SettingsVoice.KeyString.*;
+import static org.knovash.squeezealice.web.SettingsVoice.KeyToggle.*;
+import static org.knovash.squeezealice.web.SettingsVoice.KeyValue.*;
+
 
 @Log4j2
 public class GoogleTTS {
@@ -53,10 +53,10 @@ public class GoogleTTS {
     }
 
     public static void volumeAmp(String outputFile) {
-        log.info("NOTIFICATION AMP FFMPEG " + TOGGLE_VOLUME_AMP_FFMPEG.value);
-        if (TOGGLE_VOLUME_AMP_FFMPEG.value) {
+        log.info("NOTIFICATION AMP FFMPEG " + VOICE_TOGGLE_VOLUME_AMP_FFMPEG.value);
+        if (VOICE_TOGGLE_VOLUME_AMP_FFMPEG.value) {
             log.info("VOLUME AMP FFMPEG");
-            double volumeGain = VALUE_VOLUME_APM_FFMPEG.value;
+            double volumeGain = VOICE_VALUE_VOLUME_APM_FFMPEG.value;
             try {
                 changeVolume(outputFile, outputFile, volumeGain);
             } catch (Exception e) {
@@ -68,20 +68,20 @@ public class GoogleTTS {
     }
 
     public static byte[] synthesize(String text) throws IOException {
-        log.info("VALUE_GOOGLE_TTS " + VALUE_VOLUME_AMP_GOOGLE_TTS.value);
+        log.info("VALUE_GOOGLE_TTS " + VOICE_VALUE_VOLUME_AMP_GOOGLE_TTS.value);
         String jsonPayload = String.format(
                 "{" +
                         "\"input\":{\"text\":\"%s\"}," +
                         "\"voice\":{\"languageCode\":\"ru-RU\",\"name\":\"ru-RU-Standard-A\",\"ssmlGender\":\"FEMALE\"}," +
                         //"\"audioConfig\":{\"audioEncoding\":\"MP3\",\"volumeGainDb\":5.0}" +
-                        "\"audioConfig\":{\"audioEncoding\":\"MP3\",\"volumeGainDb\":"+
-                        VALUE_VOLUME_AMP_GOOGLE_TTS.value
-                        +"}" +
+                        "\"audioConfig\":{\"audioEncoding\":\"MP3\",\"volumeGainDb\":" +
+                        VOICE_VALUE_VOLUME_AMP_GOOGLE_TTS.value
+                        + "}" +
                         "}",
                 escapeJson(text)
         );
 
-        String apiKey =VALUE_GOOGLE_API_KEY.value;
+        String apiKey = VOICE_STRING_GOOGLE_API_KEY.value;
         String urlString = "https://texttospeech.googleapis.com/v1/text:synthesize?key=" + apiKey;
 
         Map<String, String> headers = new HashMap<>();

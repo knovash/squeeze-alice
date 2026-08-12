@@ -5,6 +5,7 @@ import java.util.List;
 
 public class SettingsButtons extends SettingsBase {
 
+    public static SettingsButtons settingsButtons = new SettingsButtons();
     // ---- Переключатели кнопок ----
     public enum ToggleButton implements ToggleKey {
         TOGGLE_BUTTON_SWITCH_HERE(true, "Переключи сюда"),
@@ -12,7 +13,7 @@ public class SettingsButtons extends SettingsBase {
         TOGGLE_BUTTON_BACK(true, "Назад"),
         TOGGLE_BUTTON_SEPARATE(true, "Отдельно"),
         TOGGLE_BUTTON_TOGETHER(true, "Вместе"),
-        TOGGLE_BUTTON_WHAT_PLAYS(true, "Что играет"),
+        TOGGLE_BUTTON_WHAT_PLAYS(false, "Что играет"),
         TOGGLE_BUTTON_WHERE_REMOTE(false, "Где пульт"),
         TOGGLE_BUTTON_CONNECT_REMOTE(false, "Подключи пульт");
 
@@ -53,12 +54,12 @@ public class SettingsButtons extends SettingsBase {
 
     @Override
     protected String getPageTitle() {
-        return "Настройки кнопок";
+        return "Настройки устройств-действий в УДЯ";
     }
 
     @Override
     protected String getPageHeader() {
-        return "Создавать дополнительные устройства кнопки действий в УДЯ";
+        return "Настройки устройств-действий в УДЯ";
     }
 
     // getValueKeys() и getStringKeys() возвращают пустые списки (унаследовано от базового класса)

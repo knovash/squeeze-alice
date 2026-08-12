@@ -4,7 +4,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
-import org.knovash.squeezealice.spotify.SwitchSpotify;
+import org.knovash.squeezealice.spotify.SpotifyPlayerCommands;
 import org.knovash.squeezealice.cmd.HandlePathCmd;
 import org.knovash.squeezealice.provider.*;
 import org.knovash.squeezealice.voice.HandlePathAlice;
@@ -16,7 +16,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-import static org.knovash.squeezealice.Main.*;
+import static org.knovash.squeezealice.web.ActionsRunner.actionsRunner;
+import static org.knovash.squeezealice.web.Settings.settings;
+import static org.knovash.squeezealice.web.SettingsButtons.settingsButtons;
+import static org.knovash.squeezealice.web.SettingsTasker.settingsTasker;
+import static org.knovash.squeezealice.web.SettingsVoice.settingsVoice;
 
 @Log4j2
 public class HandlerAll implements HttpHandler {
@@ -26,7 +30,7 @@ public class HandlerAll implements HttpHandler {
         String path = httpExchange.getRequestURI().getPath();
 
         if (path.startsWith("/music/")) {
-            serveSoundFile(httpExchange, path); // отдать звукаовой файл
+            serveSoundFile(httpExchange, path); // отдать звуковой файл для уведомлений
             return;
         }
 
@@ -43,59 +47,52 @@ public class HandlerAll implements HttpHandler {
         }
     }
 
-
-
     public static Context switchPath(Context context) {
         String path = context.path;
         switch (path) {
+            //    YANDEX PROVIDER управление устройствами умного дома
+            case "/v1.0":
+                return ProviderCheck.providerCheckRun(context);
+            case "/v1.0/user/unlink":
+                return ProviderUserUnlink.providerUserUnlinkRun(context);
+            case "/v1.0/user/devices":
+                return ProviderUserDevices.providerUserDevicesRun(context);
+            case "/v1.0/user/devices/query":
+                return ProviderQuery.providerQueryRun(context);
+            case "/v1.0/user/devices/action":
+                return ProviderAction.providerActionRun(context);
+            //    YANDEX VOICE команды дополнительного голосового навыка
+            case "/alice/":
+                return HandlePathAlice.processContext(context);
+            //    COMMANDS команды из Tasker или Пульта
+            case "/cmd":
+                return HandlePathCmd.action(context);
+            // WEB
             case "/":
                 return PageIndex.action(context);
             case "/players":
                 return PagePlayers.action(context);
-
             case "/settings":
-                return settingsNew.action(context);
-
+                return settings.action(context);
+            case "/settings_tasker":
+                return settingsTasker.action(context);
+            case "/settings_voice":
+                return settingsVoice.action(context);
             case "/actions":
                 return actionsRunner.action(context);
-
             case "/settings_buttons":
                 return settingsButtons.action(context);
-
             case "/manual":
                 return PageManual.action(context);
             case "/lms":
                 return PageLms.action(context);
-            case "/cmd":
-                context = HandlePathCmd.action(context);
-                break;
+            //    SPOTIFY управление плеером
             case "/spotify":
-                context = SwitchSpotify.action(context);
-                break;
-            case "/alice/":
-                context = HandlePathAlice.processContext(context);
-                break;
-            case "/v1.0":
-                context = ProviderCheck.providerCheckRun(context);
-                break;
-            case "/v1.0/user/unlink":
-                context = ProviderUserUnlink.providerUserUnlinkRun(context);
-                break;
-            case "/v1.0/user/devices":
-                context = ProviderUserDevices.providerUserDevicesRun(context);
-                break;
-            case "/v1.0/user/devices/query":
-                context = ProviderQuery.providerQueryRun(context);
-                break;
-            case "/v1.0/user/devices/action":
-                context = ProviderAction.providerActionRun(context);
-                break;
+                return SpotifyPlayerCommands.action(context);
             default:
-                log.info("PATH ERROR " + path);
-                context = PageIndex.action(context);
-                break;
+                log.info("WARNING! NOT FOUND PATH: " + path);
+                return PageIndex.action(context);
         }
-        return context;
     }
 
     private static void serveSoundFile(HttpExchange exchange, String path) throws IOException {

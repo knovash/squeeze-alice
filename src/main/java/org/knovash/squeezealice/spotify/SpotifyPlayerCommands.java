@@ -3,13 +3,11 @@ package org.knovash.squeezealice.spotify;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.spotify.Spotify;
-import org.knovash.squeezealice.spotify.spotify_pojo.PlayerState;
 
 import java.util.HashMap;
 
 @Log4j2
-public class SwitchSpotify {
+public class SpotifyPlayerCommands {
 
     public static Context action(Context context) {
         HashMap<String, String> queryParams = context.queryMap;

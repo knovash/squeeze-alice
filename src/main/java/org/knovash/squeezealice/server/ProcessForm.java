@@ -10,7 +10,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.knovash.squeezealice.Main.*;
+import static org.knovash.squeezealice.web.ActionsRunner.actionsRunner;
 import static org.knovash.squeezealice.web.PagePlayers.*;
+import static org.knovash.squeezealice.web.Settings.settings;
+import static org.knovash.squeezealice.web.SettingsButtons.settingsButtons;
+import static org.knovash.squeezealice.web.SettingsTasker.settingsTasker;
+import static org.knovash.squeezealice.web.SettingsVoice.settingsVoice;
+
 @Log4j2
 public class ProcessForm {
 
@@ -31,10 +37,16 @@ public class ProcessForm {
             log.info("SWITCH CASE action: " + action);
             switch (action) {
                 case "settings_save_all":
-                     settingsNew.handleSaveAll(context);
+                    settings.handleSaveAll(context);
                     break;
                 case "settings_buttons_save":
                     settingsButtons.handleSaveAll(context);
+                    break;
+                case "settings_tasker_save":
+                    settingsTasker.handleSaveAll(context);
+                    break;
+                case "settings_voice_save":
+                    settingsVoice.handleSaveAll(context);
                     break;
                 case statusbar_refresh:
                     PageIndex.refresh((HashMap<String, String>) bodyMap);

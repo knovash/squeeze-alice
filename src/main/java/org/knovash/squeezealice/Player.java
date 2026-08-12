@@ -19,6 +19,8 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.knovash.squeezealice.Main.*;
 import static org.knovash.squeezealice.web.Settings.KeyToggle.*;
 import static org.knovash.squeezealice.web.Settings.KeyValue.*;
+import static org.knovash.squeezealice.web.SettingsVoice.KeyToggle.*;
+import static org.knovash.squeezealice.web.SettingsVoice.KeyValue.*;
 import static org.knovash.squeezealice.yandex.YandexTTS.waitForPlaybackCompletion;
 
 @Log4j2
@@ -1211,41 +1213,41 @@ public class Player {
 
     public Player say(String text, Boolean restorePlaylist, Boolean restoreSync) {
         log.info(start);
-        log.info("PLAYER: " + this.name + " TEXT: " + text + " TOGGLE: " + TOGGLE_VOICE.value);
-        if (!TOGGLE_VOICE.value || text == null) return this;
+        log.info("PLAYER: " + this.name + " TEXT: " + text + " TOGGLE: " + VOICE_TOGGLE_VOICE_TO_LMS.value);
+        if (!VOICE_TOGGLE_VOICE_TO_LMS.value || text == null) return this;
         if (restorePlaylist) this.savePlaylistScript(); // сохранить плейлист перед уведомлением
         if (restoreSync && !restorePlaylist) this.saveSyncScript(); // сохранить только группу
         this.savedPlaylistVolume = this.volumeGet(); // сохранить громкость
         this.unsync();
         this.pause();
 
-        if (TOGGLE_VOLUME_AMP_LMS.value) {
+        if (VOICE_TOGGLE_VOLUME_AMP_LMS.value) {
             int volume = this.valueVolumeByTime() + 10; // громкость уведомления по времени + 10
             this.volumeSetHardAsync(String.valueOf(volume), 300, 3); // громкость для уведомления
         }
 
-        if (TOGGLE_TTS_GOOGLE.value) {
+        if (VOICE_TOGGLE_TTS_GOOGLE.value) {
             this.playFile(GoogleTTS.textToVoiceFile(text)); // генерация через Google
-            log.info("***** WAIT " + GoogleTTS.duration * 1000 + VALUE_DELAY_AFTER_NOTIFICATION.value);
-            this.waitMilSeconds((int) (GoogleTTS.duration * 1000 + VALUE_DELAY_AFTER_NOTIFICATION.value));
-            waitForPlaybackCompletion(this, VALUE_WAIT_FOR_NOTIFICATION_COMPLITED.value);
+            log.info("***** WAIT " + GoogleTTS.duration * 1000 + VOICE_VALUE_DELAY_AFTER_NOTIFICATION.value);
+            this.waitMilSeconds((int) (GoogleTTS.duration * 1000 + VOICE_VALUE_DELAY_AFTER_NOTIFICATION.value));
+            waitForPlaybackCompletion(this, VOICE_VALUE_WAIT_FOR_NOTIFICATION_COMPLITED.value);
 
         }
-        if (TOGGLE_TTS_YANDEX.value) {
+        if (VOICE_TOGGLE_TTS_YANDEX.value) {
             this.playFile(YandexTTS.textToVoiceFile(text)); // воспроизведение уведомления
-            log.info("***** WAIT " + YandexTTS.duration * 1000 + VALUE_DELAY_AFTER_NOTIFICATION.value);
-            this.waitMilSeconds((int) (YandexTTS.duration * 1000 + VALUE_DELAY_AFTER_NOTIFICATION.value));
-            waitForPlaybackCompletion(this, VALUE_WAIT_FOR_NOTIFICATION_COMPLITED.value); // дождаться завершения уведомления
+            log.info("***** WAIT " + YandexTTS.duration * 1000 + VOICE_VALUE_DELAY_AFTER_NOTIFICATION.value);
+            this.waitMilSeconds((int) (YandexTTS.duration * 1000 + VOICE_VALUE_DELAY_AFTER_NOTIFICATION.value));
+            waitForPlaybackCompletion(this, VOICE_VALUE_WAIT_FOR_NOTIFICATION_COMPLITED.value); // дождаться завершения уведомления
         }
         log.info("***** WAIT FINISH");
 
-        if (TOGGLE_VOLUME_AMP_LMS.value) this.volumeSet(this.savedPlaylistVolume); // громкость восстановить
+        if (VOICE_TOGGLE_VOLUME_AMP_LMS.value) this.volumeSet(this.savedPlaylistVolume); // громкость восстановить
 
         this.playlistClear();
         if (restorePlaylist) this.restorePlaylistScript(restoreSync); // восстановить плейлист до уведомления
         if (!restorePlaylist || restoreSync) this.restoreSyncScript(); // восстановить плейлист до уведомления
 
-        if (TOGGLE_VOLUME_AMP_LMS.value) this.volumeSetHardAsync(this.savedPlaylistVolume, 500, 6);
+        if (VOICE_TOGGLE_VOLUME_AMP_LMS.value) this.volumeSetHardAsync(this.savedPlaylistVolume, 500, 6);
 
         log.info(finish);
         return this;
@@ -1253,13 +1255,13 @@ public class Player {
 
     public Player signal(String file) {
         log.info(start);
-        log.info("PLAYER: " + this.name + " FILE: " + file + " TOGGLE: " + TOGGLE_VOICE.value);
-        if (!TOGGLE_VOICE.value || file == null) return this;
+        log.info("PLAYER: " + this.name + " FILE: " + file + " TOGGLE: " + VOICE_TOGGLE_VOICE_TO_LMS.value);
+        if (!VOICE_TOGGLE_VOICE_TO_LMS.value || file == null) return this;
         this.unsync();
         //this.pause();
         this.playFile("http://" + Main.myIp + ":8010/music/sounds/" + file + ".mp3"); // воспроизведение уведомления
         this.waitMilSeconds(2000);
-        waitForPlaybackCompletion(this, VALUE_WAIT_FOR_NOTIFICATION_COMPLITED.value); // дождаться завершения уведомления
+        waitForPlaybackCompletion(this, VOICE_VALUE_WAIT_FOR_NOTIFICATION_COMPLITED.value); // дождаться завершения уведомления
         //this.playlistClear();
         log.info(finish);
         return this;
@@ -1288,7 +1290,7 @@ public class Player {
 
     public boolean checkLastPlayTimeExpired() {
         if (TOGGLE_EXPIRED_ALWAYS.value) {
-            log.info("ENABLED ALWAYS EXPIRED !!! " + TOGGLE_EXPIRED_ALWAYS.value);
+            log.info("TOGGLE LAST PLAY TIME ALWAYS EXPIRED ENABLED !!! ");
             return true;
         }
         long delayExpire = lmsPlayers.delayExpire;
@@ -1350,7 +1352,8 @@ public class Player {
         if (this.delay == null) this.delay = config.delay;
 
         if (!TOGGLE_WAKE.value) {
-            this.volumeSetHardAsync(volume, 500, 4);
+            log.info("TOGGLE WAKE DISABLED !!!");
+            this.volumeSet(volume);
             return this;
         }
 

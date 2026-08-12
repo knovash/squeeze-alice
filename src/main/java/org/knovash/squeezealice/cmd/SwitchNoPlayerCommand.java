@@ -7,15 +7,16 @@ import org.knovash.squeezealice.player.ActionsAsync;
 import org.knovash.squeezealice.player.ActionsSync;
 
 import static org.knovash.squeezealice.Main.*;
+import static org.knovash.squeezealice.web.SettingsTasker.settingsTasker;
 
 @Log4j2
 public class SwitchNoPlayerCommand {
 
     public static String run(String action) {
-        return run(action, null);
+        return run(action, null,null);
     }
 
-    public static String run(String action, String body) {
+    public static String run(String action, String value, String body) {
         log.info(start);
         String response = null;
         switch (action) {
@@ -47,13 +48,19 @@ public class SwitchNoPlayerCommand {
                 break;
             case "settings_get": // Tasker получает настройки
                 log.info("TASKER SETTINGS GET JSON");
-                settingsNew.saveToFile();
-                response = settingsNew.settingsGet();
+                settingsTasker.saveToFile();
+                response = settingsTasker.settingsGet();
                 break;
             case "settings_post": // Tasker присылает измененные настройки
                 log.info("TASKER SETTINGS POST JSON");
                 log.info("BODY" + body);
-                settingsNew.settingsPost(body);
+                settingsTasker.settingsPost(body);
+                response = "SETTINGS SAVED";
+                break;
+            case "tasker_ip": // Tasker присылает измененные настройки
+                log.info("TASKER SET IP PORT");
+                log.info("BODY" + body);
+                Tasker.taskerIpSet(body);
                 response = "SETTINGS SAVED";
                 break;
             default:

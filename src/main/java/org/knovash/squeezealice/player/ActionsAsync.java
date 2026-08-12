@@ -3,15 +3,19 @@ package org.knovash.squeezealice.player;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.Tasker;
-import org.knovash.squeezealice.utils.levenstein.Levenstein;
+import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.utils.Utils;
+import org.knovash.squeezealice.utils.levenstein.Levenstein;
+import org.knovash.squeezealice.yandex.Yandex;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.knovash.squeezealice.Main.*;
 import static org.knovash.squeezealice.player.ActionsSync.*;
-import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_LMS_SAY_CHANNEL_NAME;
+import static org.knovash.squeezealice.web.SettingsVoice.KeyToggle.*;
 
 @Log4j2
 public class ActionsAsync {
@@ -29,6 +33,16 @@ public class ActionsAsync {
         return async(null, action, null);
     }
 
+    public static String async(Runnable action, Integer delay) {
+        if (delay == null) delay = 100;
+        CompletableFuture.runAsync(() -> {
+            action.run();
+            lmsPlayers.afterAsync();
+        });
+        Utils.sleep(delay);
+        return ActionsSync.answer;
+    }
+
     public static String async(String initialAnswer, Runnable action, Integer delay) {
         if (delay == null) delay = 100;
         Tasker.ready = "no";
@@ -43,7 +57,9 @@ public class ActionsAsync {
                 log.info("TIME: " + duration / 1000000);
             }
         });
+        log.info(" ------------------- WAIT START --------------");
         Utils.sleep(delay);
+        log.info(" ------------------- WAIT FINISH --------------");
         return ActionsSync.answer;
     }
 
@@ -163,33 +179,164 @@ public class ActionsAsync {
     }
 
     // ---- 1.3 Spotify ----
-    public static String playArtist(Player player, String command) {
-        log.info("PLAY ARTIST");
-        return async("Сейчас включу spotify", () -> {
-            ActionsSync.spotifyPlayArtist(command, player, false);
-        }, 2000);
+    //public static String playArtist(Player player, String command) {
+    //    log.info("PLAY ARTIST");
+    //    return async("Сейчас включу spotify", () -> {
+    //        spotifyPlayArtist(command, player, false);
+    //    }, 2000);
+    //}
+
+    public static String playSpotify(Player player, String command, String type) {
+        log.info("PLAY SPOTIFY " + type + " COMMAND: " + command);
+        String target = extractTargetFromCommand(command);
+        log.info("TARGET: " + target);
+
+        // Запускаем асинхронный поиск в зависимости от типа
+        CompletableFuture<Spotify.GetLinkResult> future;
+        switch (type) {
+            case "artist":
+                future = CompletableFuture.supplyAsync(() -> Spotify.getLinkArtist(target));
+                break;
+            case "album":
+                future = CompletableFuture.supplyAsync(() -> Spotify.getLinkAlbum(target));
+                break;
+            case "track":
+                future = CompletableFuture.supplyAsync(() -> Spotify.getLinkTrack(target));
+                break;
+            case "playlist":
+                future = CompletableFuture.supplyAsync(() -> Spotify.getLinkPlaylist(target));
+                break;
+            default:
+                return "ошибка";
+        }
+
+        try {
+            // Ждём результат не более 1 секунды
+            Spotify.GetLinkResult result = future.get(1, TimeUnit.SECONDS);
+            String link = result.uri;
+            String name = result.name;
+            String answer = "включаю " + name;
+            log.info("LINK: " + link);
+            log.info("NAME: " + name);
+            log.info("ANSWER: " + answer);
+
+            // Воспроизведение в фоне, чтобы не задерживать ответ
+            CompletableFuture.runAsync(() -> {
+                if (VOICE_TOGGLE_LMS_SAY_CHANNEL_NAME.value) {
+                    player.say(answer, false, true);
+                }
+                spotifyPlayLink(link, player);
+                Tasker.sendRequestToTaskerRunRefresh();
+                Yandex.sendDevicesStates();
+            });
+            return answer;
+
+        } catch (TimeoutException e) {
+            // Не успели за 1 секунду – отвечаем без названия, а воспроизведение отложим
+            String fallbackAnswer = "Включаю Spotify";
+
+            // Подписываемся на завершение поиска (без таймаута)
+            future.thenAcceptAsync(result -> {
+                String link = result.uri;
+                String name = result.name;
+                String fullAnswer = "включаю " + name;
+                // Если включена голосовая подсказка, произносим полное название
+                if (VOICE_TOGGLE_LMS_SAY_CHANNEL_NAME.value) {
+                    player.say(fullAnswer, false, true);
+                }
+                spotifyPlayLink(link, player);
+                Tasker.sendRequestToTaskerRunRefresh();
+                Yandex.sendDevicesStates();
+            }).exceptionally(ex -> {
+                log.error("Failed to get Spotify link after timeout", ex);
+                // Здесь можно добавить дополнительную обработку ошибки воспроизведения
+                return null;
+            });
+
+            return fallbackAnswer;
+
+        } catch (Exception e) {
+            log.error("Error getting Spotify link", e);
+            return "Ошибка Spotify";
+        }
     }
 
-    public static String playAlbum(Player player, String command) {
-        log.info("PLAY ALBUM");
-        return async("Сейчас включу альбом", () -> {
-            spotifyPlayAlbum(command, player, false);
-        });
-    }
+    //public static String playSpotify(Player player, String command, String type) {
+    //    log.info("PLAY SPOTIFY " + type + " COMMAND: " + command);
+    //    String target = extractTargetFromCommand(command); // получить из команды название что надо включить
+    //    log.info("TARGET: " + target);
+    //
+    //    // получить по названию ссылку и название из Spotify
+    //    String answer;
+    //    String link;
+    //    String name;
+    //
+    //    CompletableFuture<Spotify.GetLinkResult> future = null;
+    //    switch (type) {
+    //        case "artist":
+    //            future = CompletableFuture.supplyAsync(() -> Spotify.getLinkArtist(target));
+    //            break;
+    //        case "album":
+    //            future = CompletableFuture.supplyAsync(() -> Spotify.getLinkAlbum(target));
+    //            break;
+    //        case "track":
+    //            future = CompletableFuture.supplyAsync(() -> Spotify.getLinkTrack(target));
+    //            break;
+    //        case "playlist":
+    //            future = CompletableFuture.supplyAsync(() -> Spotify.getLinkPlaylist(target));
+    //            break;
+    //        default:
+    //            return "ошибка";
+    //    }
+    //
+    //    Spotify.GetLinkResult result;
+    //    try {
+    //        result = future.get(1, TimeUnit.SECONDS); // ждём не более 1 секунды
+    //        link = result.uri;
+    //        name = result.name;
+    //        log.info("LINK: " + link);
+    //        log.info("NAME: " + name);
+    //        answer = "включаю " + name;
+    //        log.info("ANSWER: " + answer);
+    //    } catch (TimeoutException e) {
+    //
+    //        return "Включаю Spotify";
+    //    } catch (Exception e) {
+    //        return "Ошибка Spotify"; // ошибка выполнения getLinkArtist
+    //    }
+    //
+    //    CompletableFuture.runAsync(() -> {
+    //                if (VOICE_TOGGLE_LMS_SAY_CHANNEL_NAME.value)
+    //                    player.say(answer, false, true); // скзать включаю Название на колонке LMS перед воспроизведением. если включен тогл
+    //                spotifyPlayLink(link, player); // включить на плеере ссылку Spotify
+    //                Tasker.sendRequestToTaskerRunRefresh(); // обновить виджеты Таскер
+    //                Yandex.sendDevicesStates(); // обновить девайсы в Яндекс
+    //            }
+    //    );
+    //    return answer; // вернуть ответ Алисы
+    //}
 
-    public static String playTrack(Player player, String command) {
-        log.info("PLAY TRACK");
-        return async("Сейчас включу трек", () -> {
-            spotifyPlayTrack(command, player, false);
-        });
-    }
 
-    public static String playPlaylist(Player player, String command) {
-        log.info("PLAY PLAYLIST");
-        return async("Сейчас включу плейлист", () -> {
-            spotifyPlayPlaylist(command, player, false);
-        });
-    }
+    //public static String playAlbum(Player player, String command) {
+    //    log.info("PLAY ALBUM");
+    //    return async("Сейчас включу альбом", () -> {
+    //        spotifyPlayAlbum(command, player, false);
+    //    }, 2000);
+    //}
+    //
+    //public static String playTrack(Player player, String command) {
+    //    log.info("PLAY TRACK");
+    //    return async("Сейчас включу трек", () -> {
+    //        spotifyPlayTrack(command, player, false);
+    //    }, 2000);
+    //}
+    //
+    //public static String playPlaylist(Player player, String command) {
+    //    log.info("PLAY PLAYLIST");
+    //    return async("Сейчас включу плейлист", () -> {
+    //        spotifyPlayPlaylist(command, player, false);
+    //    }, 2000);
+    //}
 
     // ---- 1.4 Bluetooth-пульт ----
     public static String connectBtRemote(String command, Player player) {
@@ -347,7 +494,7 @@ public class ActionsAsync {
         return async("Сейчас включу канал", () -> {
 
             // Говорить включаю канал <название канала>
-            if (TOGGLE_LMS_SAY_CHANNEL_NAME.value) {
+            if (VOICE_TOGGLE_LMS_SAY_CHANNEL_NAME.value) {
                 int vv = Integer.parseInt(value) - 1;
                 String channelName = player.favorites().get(vv);
                 log.info("CHANNEL NAME GET FROM FAVORITES: " + channelName);

@@ -15,6 +15,8 @@ public class ActionsRunner extends ActionsBase {
     // Ссылки на реальные методы – можно передавать через лямбды
     // Здесь для примера используются заглушки – замените на реальные вызовы
 
+    public static ActionsRunner actionsRunner = new ActionsRunner();
+
     @Override
     protected List<Action> getActions() {
         return Arrays.asList(

@@ -3,16 +3,18 @@ package org.knovash.squeezealice.yandex;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Main;
+import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.http.HttpClientWrapper;
 import org.knovash.squeezealice.http.HttpResponseResult;
+import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
+import static org.knovash.squeezealice.web.Settings.KeyToggle.*;
 
 @Log4j2
 @Data
@@ -127,75 +129,86 @@ public class Yandex {
     }
 
     public static void sendDevicesStates() {
+        if (!TOGGLE_YANDEX_REFRESH.value) {
+            log.info("TOGGLE YANDEX REFRESH STATES DISABLED !!!");
+            return;
+        }
         log.info("\nSEND ALL DEVICES STATES ON/OFF TO YANDEX");
+
+        lmsPlayers.updatePlayers();
         Main.lmsPlayers.players.stream()
                 .filter(player -> player != null && player.room != null)
+                //.filter(player -> player.connected)
                 .forEach(player ->
-                        Yandex.sendDeviceState(player.room, "on_off", "on", String.valueOf(player.playing), null));
+                        {
+                            log.info(player);
+                            Yandex.sendDeviceState(SmartHome.deviceByRoom(player.room), "on_off", "on", String.valueOf(player.playing));
+                            //Yandex.sendDeviceState(SmartHome.deviceByRoom(player.room).id, "range", "volume", String.valueOf(player.volume));
+                        }
+                );
     }
 
-    public static void sendDeviceState(String room, String type, String instance, String capState, String status) {
-        log.debug(String.format(
-                "ID:%-15s PLAYER:%-15s INSTANCE:%-7s TYPE:%-7s STATE: ",
-                lmsPlayers.playerByRoom(room).name,
-                instance,
-                type,
-                capState
-        ));
+    public static void sendDeviceState(Device device, String type, String instance, String capState) {
 
-        CompletableFuture.runAsync(() -> {
-            try {
-                String url = "https://dialogs.yandex.net/api/v1/skills/" + config.skillId + "/callback/state";
-                Map<String, Object> deviceMap = new HashMap<>();
-                deviceMap.put("id", room);
+        log.info("DEVICE ROOM: " + device.room + " NAME " + device.name + " ID: " + device.id);
 
-                Map<String, Object> capabilityMap = new HashMap<>();
-                capabilityMap.put("type", "devices.capabilities." + type);
+        try {
+            String url = "https://dialogs.yandex.net/api/v1/skills/" + config.skillId + "/callback/state";
+            // Формируем устройство
+            Map<String, Object> deviceMap = new HashMap<>();
+            deviceMap.put("id", device.id);
 
-                Map<String, Object> stateMap = new HashMap<>();
-                stateMap.put("instance", instance);
+            // Формируем capability
+            Map<String, Object> capabilityMap = new HashMap<>();
+            capabilityMap.put("type", "devices.capabilities." + type);
 
-                if (instance.equals("volume")) {
-                    int valueInt = Integer.parseInt(capState);
-                    stateMap.put("value", valueInt);
-                } else {
-                    stateMap.put("value", capState);
-                }
-                capabilityMap.put("state", stateMap);
-                deviceMap.put("capabilities", Collections.singletonList(capabilityMap));
-                Map<String, Object> payload = new HashMap<>();
-                payload.put("user_id", config.yandexUid);
-                payload.put("devices", Collections.singletonList(deviceMap));
-                Map<String, Object> requestBody = new HashMap<>();
-                requestBody.put("ts", System.currentTimeMillis() / 1000.0);
-                requestBody.put("payload", payload);
-                String jsonBody = JsonUtils.pojoToJson(requestBody);
-                log.info("POST " + url);
-                Map<String, String> headers = new HashMap<>();
-                headers.put("Authorization", "OAuth " + config.yandextSkillTokenDeveloper);
-                headers.put("Content-Type", "application/json");
-                HttpResponseResult result = httpClient.doPost(url, jsonBody, headers);
-                if (!result.isSuccess()) {
-                    log.info("ERROR: Response status: " + result.getStatusCode() + " Response body: " + result.getBody());
-                }
-            } catch (Exception e) {
-                log.error("Error updating device state: " + e.getMessage(), e);
+            // Формируем состояние
+            Map<String, Object> stateMap = new HashMap<>();
+            stateMap.put("instance", instance);
+
+            if (instance.equals("volume")) {
+                int valueInt = Integer.parseInt(capState);
+                stateMap.put("value", valueInt);
+            } else {
+                stateMap.put("value", capState);
             }
-        });
+            capabilityMap.put("state", stateMap);
+            deviceMap.put("capabilities", Collections.singletonList(capabilityMap));
+
+
+            // Собираем payload
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("user_id", config.yandexUid);
+            payload.put("devices", Collections.singletonList(deviceMap));
+
+            // Собираем тело запроса
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("ts", System.currentTimeMillis() / 1000.0);
+            requestBody.put("payload", payload);
+            String jsonBody = JsonUtils.pojoToJson(requestBody);
+            log.info("POST " + url);
+
+
+            // Заголовки
+            Map<String, String> headers = new HashMap<>();
+            headers.put("Authorization", "OAuth " + config.yandextSkillTokenDeveloper);
+            headers.put("Content-Type", "application/json");
+
+
+            // Выполняем запрос (синхронно)
+            HttpResponseResult result = httpClient.doPost(url, jsonBody, headers);
+            if (!result.isSuccess()) {
+                log.info("ERROR: Response status: " + result.getStatusCode() + " Response body: " + result.getBody());
+            }
+        } catch (Exception e) {
+            log.error("Error updating device state: " + e.getMessage(), e);
+        }
+
     }
 
-    /**
-     * Синхронно отправляет состояние устройства в Яндекс.Диалоги.
-     *
-     * @param deviceId  external_id устройства (строка UUID)
-     * @param type      тип capability (например, "on_off")
-     * @param instance  экземпляр (например, "on")
-     * @param capState  значение состояния (true/false, on/off, число и т.д.)
-     * @return true, если запрос успешен (статус 202), иначе false
-     */
-    public static boolean sendDeviceOtherState(String deviceId, String type, String instance, String capState) {
-        log.info("Sending device state: deviceId={}, type={}, instance={}, state={}",
-                deviceId, type, instance, capState);
+    public static boolean sendDeviceOtherState(Device device, String type, String instance, String capState) {
+
+        log.info("OTHER DEVICE ROOM: " + device.room + " NAME " + device.name + " ID: " + device.id);
 
         Utils.sleep(200);
         try {
@@ -203,7 +216,7 @@ public class Yandex {
 
             // Формируем устройство
             Map<String, Object> deviceMap = new HashMap<>();
-            deviceMap.put("id", deviceId);
+            deviceMap.put("id", device.id);
 
             // Формируем capability
             Map<String, Object> capabilityMap = new HashMap<>();

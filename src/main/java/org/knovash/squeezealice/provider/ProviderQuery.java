@@ -3,14 +3,11 @@ package org.knovash.squeezealice.provider;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.Player;
-import org.knovash.squeezealice.player.ActionsAsync;
-import org.knovash.squeezealice.player.ActionsSync;
 import org.knovash.squeezealice.provider.response.*;
 import org.knovash.squeezealice.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;

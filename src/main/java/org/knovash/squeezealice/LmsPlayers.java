@@ -23,8 +23,8 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.knovash.squeezealice.LmsSearchForIp.isLmsServer;
 import static org.knovash.squeezealice.Main.*;
 import static org.knovash.squeezealice.web.PagePlayers.*;
-import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_TASKER_REFRESH;
-import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_YANDEX_REFRESH;
+import static org.knovash.squeezealice.web.Settings.KeyToggle.*;
+import static org.knovash.squeezealice.web.SettingsTasker.KeyToggle.TASKER_TOGGLE_REFRESH;
 
 @Log4j2
 @Data
@@ -479,8 +479,8 @@ public class LmsPlayers {
     public void afterAsync() {
         Tasker.ready = "yes";
         log.info("TASKER READY: " + Tasker.ready);
-        if (TOGGLE_TASKER_REFRESH.value) Tasker.sendRequestToTaskerRunRefresh();
-        if (TOGGLE_YANDEX_REFRESH.value) Yandex.sendDevicesStates();
+        if (TASKER_TOGGLE_REFRESH.value) Tasker.sendRequestToTaskerRunRefresh();
+         Yandex.sendDevicesStates();
     }
 
     public void logPlayersNames() {

@@ -6,7 +6,6 @@ import org.knovash.squeezealice.Main;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.player.ActionsAsync;
-import org.knovash.squeezealice.player.ActionsSync;
 import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.utils.JsonUtils;
 
@@ -15,6 +14,9 @@ import static org.knovash.squeezealice.Main.*;
 @Log4j2
 public class HandlePathAlice {
 
+    /**
+     * Метод должен вернуть ТЕКСТ для ответа Алисы и выполнить действие
+     */
     public static Context processContext(Context context) {
         log.info(start);
         String body = context.body;
@@ -46,11 +48,7 @@ public class HandlePathAlice {
 
         // Базовые команды без зависимостей
         if (command.isEmpty())
-            return "Я умею управлять плеерами подключенными в Lyrion Music Server. \n" +
-                    "Скажите Алисе:\n" +
-                    ", включи или выключи музыку \n" +
-                    ", музыку громче или тише \n" +
-                    ", переключи канал";
+            return "Я умею управлять плеерами подключенными в Lyrion Music Server";
         if (command.contains("помощь") || command.contains("помоги") || command.contains("подскажи"))
             return "У вас локально должен быть установлен Lyrion Music Server и приложение навыка";
         if (command.contains("что ты умеешь") || command.contains("что ты можешь"))
@@ -86,7 +84,7 @@ public class HandlePathAlice {
         if (player == null)
             return "колонка в комнате не выбрана, скажите навыку, выбери колонку, и название колонки";
 
-        // Обработка всех команд, требующих плеер (обернуто в try-catch для устойчивости)
+        // Обработка всех команд, требующих плеер
         try {
             if (command.contains("что играет")) // синхронно, собирает информацию и тут же отдает ответ
                 return ActionsAsync.whatsPlaying(player, true);
@@ -114,23 +112,20 @@ public class HandlePathAlice {
                 return ActionsAsync.repeatOn(player);
             if (command.matches("(выключи )?(повтор)"))
                 return ActionsAsync.repeatOff(player);
-            if (command.matches("(включи )?(дальше|следующий)")) {
-                ActionsAsync.nextChannelOrTrack(player);
-                return "включаю следующий";
-            }
-
+            if (command.matches("(включи )?(дальше|следующий)"))
+                return ActionsAsync.nextChannelOrTrack(player);
             if (command.matches("^(?:подключи пульт(?: (?:к|в|на).*)?|включи пульт)$"))
                 return ActionsAsync.connectBtRemote(command, player);
             if (command.contains("где пульт"))
                 return ActionsAsync.whereBtRemote();
             if (command.startsWith("включи альбом"))
-                return ActionsAsync.playAlbum(player, command);
+                return ActionsAsync.playSpotify(player, command, "album");
             if (command.startsWith("включи трек"))
-                return ActionsAsync.playTrack(player, command);
+                return ActionsAsync.playSpotify(player, command, "track");
             if (command.startsWith("включи плейлист"))
-                return ActionsAsync.playPlaylist(player, command);
+                return ActionsAsync.playSpotify(player, command, "playlist");
             if (command.startsWith("включи"))
-                return ActionsAsync.playArtist(player, command);
+                return ActionsAsync.playSpotify(player, command, "artist");
         } catch (Exception e) {
             log.error("Ошибка при обработке команды '{}': {}", command, e.getMessage(), e);
             return "Произошла внутренняя ошибка, попробуйте позже";

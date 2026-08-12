@@ -21,8 +21,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
-import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_TASKER_REFRESH;
-import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_YANDEX_REFRESH;
+import static org.knovash.squeezealice.web.Settings.KeyToggle.*;
+import static org.knovash.squeezealice.web.SettingsTasker.KeyToggle.*;
 
 // НЕ используются классы ActionsSync или ActionsAsync
 // Используются только методы класса Player
@@ -95,8 +95,8 @@ public class ProviderAction {
                     runMultipleDevicesCapabilities(devicesForAsync);
                 } finally {
                     log.info("- - - - AFTER PLAYERS ACTIONS SEND REFRESH TO TASKER AND YANDEX - - - - - ");
-                    if (TOGGLE_YANDEX_REFRESH.value) Yandex.sendDevicesStates();
-                    if (TOGGLE_TASKER_REFRESH.value) Tasker.sendRequestToTaskerRunRefresh();
+                    Yandex.sendDevicesStates();
+                    Tasker.sendRequestToTaskerRunRefresh();
                 }
             });
         }
@@ -123,7 +123,7 @@ public class ProviderAction {
                 case "Переключи сюда":
                     ActionsAsync.switchHere(player);
                     setResultDoneAndState(device, false);
-                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice.id, "on_off", "on", "false"));
+                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice, "on_off", "on", "false"));
                     break;
                 case "Что играет":
                     CompletableFuture.runAsync(() -> {
@@ -132,24 +132,24 @@ public class ProviderAction {
                         player.say(watsPlaying, true, true);
                     });
                     setResultDoneAndState(device, false);
-                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice.id, "on_off", "on", "false"));
+                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice, "on_off", "on", "false"));
                     break;
                 case "Где пульт":
                     CompletableFuture.runAsync(() -> {
                         player.say("пульт подключен к " + lmsPlayers.btPlayerName, true, true);
                     });
                     setResultDoneAndState(device, false);
-                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice.id, "on_off", "on", "false"));
+                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice, "on_off", "on", "false"));
                     break;
                 case "Дальше":
                     ActionsAsync.nextTrack(player);
                     setResultDoneAndState(device, false);
-                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice.id, "on_off", "on", "false"));
+                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice, "on_off", "on", "false"));
                     break;
                 case "Назад":
                     ActionsAsync.prevTrack(player);
                     setResultDoneAndState(device, false);
-                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice.id, "on_off", "on", "false"));
+                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice, "on_off", "on", "false"));
                     break;
                 case "Отдельно":
                 case "Вместе":
@@ -164,17 +164,17 @@ public class ProviderAction {
                     Device separeteOff = smartHome.deviceByName("Вместе", localDevice.room);
 
                     CompletableFuture.runAsync(() -> {
-                        Yandex.sendDeviceOtherState(separeteOn.id, "on_off", "on", String.valueOf(!state)); // Отдельно
+                        Yandex.sendDeviceOtherState(separeteOn, "on_off", "on", String.valueOf(!state)); // Отдельно
                     });
                     CompletableFuture.runAsync(() -> {
-                        Yandex.sendDeviceOtherState(separeteOff.id, "on_off", "on", String.valueOf(state)); // Вместе
+                        Yandex.sendDeviceOtherState(separeteOff, "on_off", "on", String.valueOf(state)); // Вместе
                     });
                     break;
                 case "Подключи пульт":
                     log.info("CASE Подключи пульт");
                     lmsPlayers.btPlayerName = player.name;
                     setResultDoneAndState(device, false);
-                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice.id, "on_off", "on", "false"));
+                    CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(localDevice, "on_off", "on", "false"));
                     break;
                 default:
                     log.info("COMMAND NOT FOUND: " + localDevice.name);

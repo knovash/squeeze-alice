@@ -15,8 +15,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.knovash.squeezealice.Main.*;
-import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_VOLUME_AMP_FFMPEG;
-import static org.knovash.squeezealice.web.Settings.KeyValue.VALUE_VOLUME_APM_FFMPEG;
+import static org.knovash.squeezealice.web.SettingsVoice.KeyToggle.*;
+import static org.knovash.squeezealice.web.SettingsVoice.KeyValue.*;
+import static org.knovash.squeezealice.web.SettingsVoice.KeyString.*;
 
 @Log4j2
 public class YandexTTS {
@@ -55,11 +56,12 @@ public class YandexTTS {
     }
 
     public static void volumeAmp(String outputFile) {
-        log.info("NOTIFICATION AMP FFMPEG " + TOGGLE_VOLUME_AMP_FFMPEG.value);
-        if (TOGGLE_VOLUME_AMP_FFMPEG.value) {
+        log.info("NOTIFICATION AMP FFMPEG " + VOICE_TOGGLE_VOLUME_AMP_FFMPEG.value);
+        if (VOICE_TOGGLE_VOLUME_AMP_FFMPEG.value) {
             log.info("VOLUME AMP FFMPEG");
             // Изменение громкости (коэффициент 1.5)
-            double volumeGain = VALUE_VOLUME_APM_FFMPEG.value; // можно вынести в config
+            double volumeGain = VOICE_VALUE_VOLUME_APM_FFMPEG.value; // можно вынести в config
+
             try {
                 changeVolume(outputFile, outputFile, volumeGain);
             } catch (Exception e) {

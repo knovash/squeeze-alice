@@ -2,6 +2,7 @@ package org.knovash.squeezealice.utils;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Main;
+import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.yandex.DeviceStateUpdate;
 import org.knovash.squeezealice.yandex.Yandex;
 
@@ -12,7 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import static org.knovash.squeezealice.web.Settings.KeyToggle.TOGGLE_SCHEDULER_UPDATE_PLAYERS;
+import static org.knovash.squeezealice.web.Settings.KeyToggle.*;
 import static org.knovash.squeezealice.yandex.DeviceStateUpdate.sendBatchStateUpdates;
 
 @Log4j2
@@ -40,7 +41,7 @@ public class SchedulerPlayersUpdate {
         cancelExistingTask();
 
         Runnable updateTask = () -> {
-            if (!TOGGLE_SCHEDULER_UPDATE_PLAYERS.value) return;
+            if (!TOGGLE_SCHEDULER_YANDEX_UPDATE_DEVICES.value) return;
 
             try {
                 log.info("Executing players state update");
@@ -120,8 +121,8 @@ public class SchedulerPlayersUpdate {
                             {
                                 player.volume = "0";
                                 if (player.connected) player.volumeGet();
-                                Yandex.sendDeviceState(player.room, "on_off", "on", String.valueOf(player.playing), null);
-                                Yandex.sendDeviceState(player.room, "range", "volume", String.valueOf(player.volume), null);
+                                Yandex.sendDeviceState(SmartHome.deviceByRoom(player.room), "on_off", "on", String.valueOf(player.playing));
+                                Yandex.sendDeviceState(SmartHome.deviceByRoom(player.room), "range", "volume", String.valueOf(player.volume));
 
                             }); // startPeriodicUpdate
                 } catch (Exception e) {
