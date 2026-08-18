@@ -27,7 +27,7 @@ public class ActionsRunner extends ActionsBase {
                         ctx -> {
                             log.info("Выполняется обновление Tasker");
                             //Tasker.postToTaskerRefresh();
-                            Tasker.sendRequestToTaskerRunRefresh();
+                            //Tasker.sendRequestToTaskerRunRefresh();
                             // Например: Tasker.refreshPost();
                             // Для демонстрации просто добавим сообщение в ответ
                             ctx.bodyResponse = "Tasker обновлён";

@@ -24,9 +24,8 @@ public class HandlePathCmd {
         String room = queryParams.get("room");
         String value = queryParams.get("value");
         String volume = queryParams.get("volume");
-        String response = null;
+        String response;
         log.info("QUERY PARAMS: PLAYER: " + playerName + " ROOM: " + room + " ACTION: " + action + " VALUE: " + value + " VOLUME: " + volume);
-
         if (context.body != null) log.info("BODY: " + context.body);
 
         if (value != null) {
@@ -51,29 +50,23 @@ public class HandlePathCmd {
         if (UpdateActions.contains(action))
             lmsPlayers.updatePlayers(); // обновить состояние плееров
 
-// выбор действия где плеер не требуется
-        response = SwitchNoPlayerCommand.run(action, value, context.body);
+        // действия где плеер не требуется
+        response = CommandsWithoutPlayer.run(action, value, context.body);
 
         if (response != null) {
             context.bodyResponse = response;
             return context;
         }
 
-// определение плеера по имени плеера или имени комнаты
+        // определение плеера по имени плеера или имени комнаты
         Player player = lmsPlayers.playerByPlayerNameOrRoomName(playerName, room);
         log.info("COMMAND TO PLAYER: " + player);
 
-// выбор действия с плеером
-        response = SwitchPlayerCommand.run(action, player, value);
+        // действия где плеер требуется
+        response = CommandsWithPlayer.run(action, player, value);
 
-        if (response == null) {
-            log.info("COMMAND ACTION NOT FOUND: " + action);
-            context.bodyResponse = response;
-            response = "COMMAND ACTION NOT FOUND: " + action;
-        }
-
+        if (response == null) response = "ERROR";
         lmsPlayers.write();
-
         context.bodyResponse = response;
         log.info(finish);
         log.info("");

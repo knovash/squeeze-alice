@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.config;
 import static org.knovash.squeezealice.Main.smartHome;
-import static org.knovash.squeezealice.yandex.Yandex.yandexInfo;
 
 @Log4j2
 @Data
@@ -59,7 +58,7 @@ public class SmartHome {
                 .orElse(null);
     }
 
-    public void create(String deviceByRoomName, YandexUtils.MusicDevice deviceFromYandex) {
+    public void create(String deviceByRoomName, YandexUtils.DeviceFromYandex deviceFromYandex) {
         if (devices == null) devices = new ArrayList<>();
 
         if (deviceFromYandex != null)
@@ -222,25 +221,18 @@ public class SmartHome {
         return device;
     }
 
-    public void createButtonsInAllRooms() {
-        createButtonsInAllRooms(null);
-    }
-
     public void createButtonsInAllRooms(List<String> roomsWithSpeaker) {
         log.info("ROOMS: " + Yandex.rooms);
         if (roomsWithSpeaker == null || roomsWithSpeaker.isEmpty()) {
-            roomsWithSpeaker = Yandex.getRoomsWithAliceOrMusic(yandexInfo);
+            roomsWithSpeaker = Yandex.getRoomsWithAliceOrMusic();
         }
         log.info("ROOMS WITH SPEAKER: " + roomsWithSpeaker);
-
         // создавать кнопки только разрешенные в настройках класс SettingsButtons
         List<String> enabledButtonDescriptions = Arrays.stream(SettingsButtons.ToggleButton.values())
                 .filter(button -> button.getValue())
                 .map(button -> button.getDescription())
                 .collect(Collectors.toList());
         roomsWithSpeaker.stream().forEach(room -> enabledButtonDescriptions.forEach(button -> createDeviceToggle(room, button)));
-
-        //roomsWithSpeaker.stream().forEach(room -> devicesButtons.forEach(button -> createDeviceToggle(room, button)));
     }
 
     public Device createDeviceToggle(String roomName, String deviceName) {
@@ -274,23 +266,22 @@ public class SmartHome {
         return device;
     }
 
-
-    public Device createDeviceToggle(YandexUtils.MusicDevice ddd) {
+    public Device createDeviceToggle(YandexUtils.DeviceFromYandex deviceFromYandex) {
         // Проверяем, существует ли уже устройство с таким externalId
         Device existing = devices.stream()
-                .filter(d -> ddd.externalId.equals(d.id)) // или d.external_id, смотря где храните
+                .filter(d -> deviceFromYandex.externalId.equals(d.id)) // или d.external_id, смотря где храните
                 .findFirst()
                 .orElse(null);
         if (existing != null) {
-            log.info("TOGGLE DEVICE ALREADY EXISTS: {} in room {} with id {}", ddd.name, ddd.roomName, ddd.externalId);
+            log.info("TOGGLE DEVICE ALREADY EXISTS: {} in room {} with id {}", deviceFromYandex.name, deviceFromYandex.roomName, deviceFromYandex.externalId);
             return existing;
         }
         // Если нет – создаём новое
-        String room = ddd.roomName;
+        String room = deviceFromYandex.roomName;
         Device device = new Device();
         device.room = room;
-        device.id = ddd.externalId;
-        device.name = ddd.name;
+        device.id = deviceFromYandex.externalId;
+        device.name = deviceFromYandex.name;
         device.type = "devices.types.other";
         Capability onOff = new Capability();
         onOff.type = "devices.capabilities.on_off";
@@ -303,7 +294,7 @@ public class SmartHome {
         onOff.state.relative = false;
         onOff.parameters = params;
         device.capabilities.add(onOff);
-        log.info("NEW TOGGLE DEVICE CREATED: {} in room {} with id {}", ddd.name, room, ddd.externalId);
+        log.info("NEW TOGGLE DEVICE CREATED: {} in room {} with id {}", deviceFromYandex.name, room, deviceFromYandex.externalId);
         devices.add(device);
         return device;
     }

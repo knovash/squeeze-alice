@@ -7,7 +7,7 @@ import org.knovash.squeezealice.Context;
 import org.knovash.squeezealice.spotify.SpotifyPlayerCommands;
 import org.knovash.squeezealice.cmd.HandlePathCmd;
 import org.knovash.squeezealice.provider.*;
-import org.knovash.squeezealice.voice.HandlePathAlice;
+import org.knovash.squeezealice.voice.HandleVoiceAlice;
 import org.knovash.squeezealice.web.*;
 
 import java.io.File;
@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import static org.knovash.squeezealice.web.ActionsRunner.actionsRunner;
 import static org.knovash.squeezealice.web.Settings.settings;
 import static org.knovash.squeezealice.web.SettingsButtons.settingsButtons;
+import static org.knovash.squeezealice.web.SettingsLms.settingsLms;
 import static org.knovash.squeezealice.web.SettingsTasker.settingsTasker;
 import static org.knovash.squeezealice.web.SettingsVoice.settingsVoice;
 
@@ -63,7 +64,7 @@ public class HandlerAll implements HttpHandler {
                 return ProviderAction.providerActionRun(context);
             //    YANDEX VOICE команды дополнительного голосового навыка
             case "/alice/":
-                return HandlePathAlice.processContext(context);
+                return HandleVoiceAlice.processContext(context);
             //    COMMANDS команды из Tasker или Пульта
             case "/cmd":
                 return HandlePathCmd.action(context);
@@ -82,6 +83,8 @@ public class HandlerAll implements HttpHandler {
                 return actionsRunner.action(context);
             case "/settings_buttons":
                 return settingsButtons.action(context);
+            case "/settings_lms":
+                return settingsLms.action(context);
             case "/manual":
                 return PageManual.action(context);
             case "/lms":

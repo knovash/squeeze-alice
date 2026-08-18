@@ -12,7 +12,6 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.levenstein.Levenstein;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.player.ActionsSync;
-import org.knovash.squeezealice.yandex.Yandex;
 
 import java.time.LocalTime;
 import java.util.*;
@@ -23,8 +22,6 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.knovash.squeezealice.LmsSearchForIp.isLmsServer;
 import static org.knovash.squeezealice.Main.*;
 import static org.knovash.squeezealice.web.PagePlayers.*;
-import static org.knovash.squeezealice.web.Settings.KeyToggle.*;
-import static org.knovash.squeezealice.web.SettingsTasker.KeyToggle.TASKER_TOGGLE_REFRESH;
 
 @Log4j2
 @Data
@@ -151,13 +148,16 @@ public class LmsPlayers {
         return player;
     }
 
-    public Player playerByNearestName(String player) {
-        if (player == null) return null;
+    public Player playerByNearestName(String playerName) {
+        if (playerName == null) return null;
         List<String> players = this.players.stream().map(p -> p.name).collect(Collectors.toList());
-        player = Utils.convertCyrilicToLatin(player);
-        String correctPlayerName = Levenstein.getNearestElementInListWord(player, players);
-        if (correctPlayerName == null) log.info("ERROR PLAYER " + player + " NOT EXISTS IN LMS ");
-//        log.info("CORRECT PLAYER: " + player + " -> " + correctPlayerName);
+        playerName = Utils.convertCyrilicToLatin(playerName);
+        String correctPlayerName = Levenstein.getNearestElementInListWord(playerName, players);
+        if (correctPlayerName == null) {
+            log.info("PLAYER " + playerName + " NOT EXISTS IN LMS ");
+            return null;
+        }
+        log.info("CORRECT PLAYER NAME: " + playerName + " -> " + correctPlayerName);
         Player correctPlayer = this.playerByName(correctPlayerName);
         return correctPlayer;
     }
@@ -185,18 +185,6 @@ public class LmsPlayers {
         if (room == null) return null;
         room = Utils.roomNameByNearest(room);
         return this.playerByRoom(room);
-    }
-
-    public Player playingPlayer(String exceptName, boolean exceptSeparated) {
-        List<Player> playingPlayers = playingPlayers(exceptName, exceptSeparated);
-        if (playingPlayers == null || playingPlayers.isEmpty()) {
-            return null;
-        }
-        return playingPlayers.stream()
-                .sorted(Comparator.comparing(Player::getLastPlayTimePlayer,
-                        Comparator.nullsLast(Comparator.naturalOrder())).reversed())
-                .findFirst()
-                .orElse(null);
     }
 
     public Player lastPlayedPlayer(List<Player> players) {
@@ -234,10 +222,24 @@ public class LmsPlayers {
             }
         }
         return ssss;
+    }
 
+    public Player playingPlayer(String exceptName, boolean exceptSeparated) {
+        // найти играющий плеер, приоритет последний включившийся
+        List<Player> playingPlayers = playingPlayers(exceptName, exceptSeparated);
+        if (playingPlayers == null || playingPlayers.isEmpty()) {
+            return null;
+        }
+        return playingPlayers.stream()
+                .sorted(Comparator.comparing(Player::getLastPlayTimePlayer,
+                        Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                .findFirst()
+                .orElse(null);
     }
 
     public List<Player> playingPlayers(String exceptName, boolean exceptSeparated) {
+        // найти все играющие плееры
+        // включи вместе
         log.info(start);
         log.info("ПРОВЕРЯТЬ ЧТО СОСТОЯНИЕ ПЛЕЕРОВ ОБНОВЛЕНО !!!");
         this.checkUpdated();
@@ -247,6 +249,14 @@ public class LmsPlayers {
                 .filter(p -> !exceptSeparated || !p.separate) // исключить отдельные
                 .filter(p -> p.playing) // выбрать играющие
                 .filter(p -> !exceptName.equals(p.name)) // кроме этого
+                //.filter(p -> {
+                //    if (TOGGLE_HLS_CHECK.value)
+                //    if (p.status().current_title.contains("Apple")) {
+                //        log.info("APPLE HLS SKIP PLAYING PLAYER");
+                //        return false;
+                //    }
+                //    return true;
+                //})
                 .collect(Collectors.toList());
         if (playingPlayers == null || playingPlayers.isEmpty()) {
             log.info("NO PLAYING PLAYERS. EXCEPT NAME: " + exceptName + ". EXCEPT SEPARATED: " + exceptSeparated);
@@ -292,7 +302,7 @@ public class LmsPlayers {
 //        Player playerNew =
 
         log.info("PLAYER SET ROOM START>>>>>>");
-        ActionsSync.selectPlayerInRoom(playerName, roomName, false); // playerSave
+        ActionsSync.selectNewPlayerInRoom(playerName, roomName, false); // playerSave
         log.info("PLAYER SET ROOM FINISHED <<<<");
 
 //        log.info("SELECT PLAYER NEW: " + playerNew);
@@ -410,12 +420,9 @@ public class LmsPlayers {
     //}
 
     public void turnOffMusicAll() { // для Таскер только
-        log.info("\nSTOP ALL");
-
-        lmsPlayers.checkUpdated(); // TODO DEBUG
+        log.info("STOP ALL");
         this.players.parallelStream()
                 .filter(player -> player.connected)
-                .peek(player -> log.info(player.name))
                 .forEach(player -> player.turnOffMusic());
     }
 
@@ -474,13 +481,6 @@ public class LmsPlayers {
         } else {
             log.info("ERROR LMS NOT FOUND");
         }
-    }
-
-    public void afterAsync() {
-        Tasker.ready = "yes";
-        log.info("TASKER READY: " + Tasker.ready);
-        if (TASKER_TOGGLE_REFRESH.value) Tasker.sendRequestToTaskerRunRefresh();
-         Yandex.sendDevicesStates();
     }
 
     public void logPlayersNames() {

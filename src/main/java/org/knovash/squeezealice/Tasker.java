@@ -8,6 +8,8 @@ import org.knovash.squeezealice.yandex.Yandex;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -35,22 +37,36 @@ public class Tasker {
 
     public static String forTaskerWidgetsRefreshJson(Player player, String lines) {
         log.info(start);
-        if (player == null) return null;
+
         log.info("TASKER SELECTED PLAYER " + player);
         log.info("CLEAR PLAYERS STATUS");
         lmsPlayers.players.forEach(p -> p.statusClear()); // TODO  public void statusClear() {
         log.info("UPDATE PLAYERS STATUS"); // TODO  public void resetPlayerStatus() {
         lmsPlayers.players.forEach(p -> p.status()); // статус каждого плеера потому что надо громкость каждого, сервер статус не дает громкость
-        nowPlaying = player.title; // для виджета одной иконкой для телефона где неработает плагин
-        nowPlayingTv = player.name + " - " + player.volume + " - " + player.mode + " - " + player.title; // для виджета одной иконкой для телефона где неработает плагин
 
-        log.info("FOR TASKER PLAYLIST");
-        forTaskerPlaylist(player, Integer.valueOf(lines)); // для виджета плейлиста
-        lmsPlayers.players.forEach(p -> p.title()); // обновить титулы всех плееров
+
         log.info("FOR TASKER PLAYERS LIST");
+        lmsPlayers.players.forEach(p -> p.title()); // обновить титулы всех плееров
         forTaskerPlayersList(); // для виджета списка плееров name-volume-mode-title
         log.info("FOR TASKER ICONS");
         forTaskerWidgetsIcons(); // для виджетов иконок плееров
+
+
+        String playerName = "unknown";
+        String playerVolume = "unknown";
+        String room = "null";
+
+        if (player != null) {
+            nowPlaying = player.title; // для виджета одной иконкой для телефона где неработает плагин
+            nowPlayingTv = player.name + " - " + player.volume + " - " + player.mode + " - " + player.title; // для виджета одной иконкой для телефона где неработает плагин
+            log.info("FOR TASKER PLAYLIST");
+            widgetPlaylist = forTaskerPlaylist(player, Integer.valueOf(lines), false); // для виджета плейлиста
+            if (player.room != null) room = player.room;
+            playerName = player.room;
+            playerVolume = player.volume;
+        } else {
+            widgetPlaylist = "no player in LMS";
+        }
 
         String responseJson = "{\n" +
                 "  \"PLAYLIST\": \"" + widgetPlaylist + "\",\n" +
@@ -62,7 +78,9 @@ public class Tasker {
                 "  \"SEPARATES\": \"" + widgetsSeparates + "\",\n" +
                 "  \"NOWPLAYING\": \"" + nowPlaying + "\",\n" +
                 "  \"NOWPLAYINGTV\": \"" + nowPlayingTv + "\",\n" +
-                "  \"CURRENTPLAYER\": \"" + player.name + "\"\n" +
+                "  \"CURRENTVOLUME\": \"" + playerVolume + "\",\n" +
+                "  \"CURRENTPLAYER\": \"" + playerName + "\",\n" +
+                "  \"CURRENTROOM\": \"" + room + "\"\n" +
                 "}";
         log.info(responseJson);
         log.info(finish);
@@ -76,43 +94,62 @@ public class Tasker {
         return name;
     }
 
-    public static String forTaskerPlaylist(Player player, Integer lines) {
+    public static String forTaskerPlaylist(Player player, Integer lines, boolean requestPlaylist) {
+        // TODO если запрос из таскер надо сделать запрос playlist_cur_index
+        // получить плейлист playlist_loop плеера player
+        // если плейлист пустой вернуть empty
+        // добавить нумерацию
+        // добавить > к текущей позиции
+        // удалить , из названий
         log.info(start);
         log.info("CREATE PLAYLIST FOR TASKER. ACTIVE PLAYER: " + player);
-
+        if (requestPlaylist) {
+            player.status();
+        }
         int tracks = 0;
-        //tracks = player.playlistTracksCurrentCount();
-        if (player.playerStatus != null && player.playerStatus.result != null
-                && player.playerStatus.result.playlist_loop != null) {
+        String playlistTitle = "";
+        if (player.playerStatus != null && player.playerStatus.result != null && player.playerStatus.result.playlist_loop != null) {
             tracks = player.playerStatus.result.playlist_loop.size();
         }
-
-
+        log.info("TRACKS: " + tracks);
         if (tracks == 0) {
-            log.info("PLAYLIST EMPTY");
-            widgetPlaylist = "empty";
+            log.info("TASKER PLAYLIST EMPTY");
+            log.info(finish);
             return "empty";
         }
-        List<String> playlist = player.playerStatus.result.playlist_loop.stream()
-                .map(item -> (item.playlist_index + 1) + ". " + item.title)
-                .collect(Collectors.toList());
-        if (playlist.size() > 1) {
+        List<String> playlist = null;
+        if (tracks > 1) {
+            playlist = player.playerStatus.result.playlist_loop.stream()
+                    .map(item -> (item.playlist_index + 1) + ". " + item.title)
+                    .collect(Collectors.toList());
             playlist.replaceAll(t -> t.replaceAll(",", " ")); // удалить из названий символы , потому что в таскере , разделитель строк
             Integer index = Integer.parseInt(player.playerStatus.result.playlist_cur_index);
             log.info("PLAYLIST CURRENT INDEX: " + index);
             playlist.set(index, ">" + playlist.get(index)); // Заменяем элемент по конкретному индексу
             playlist = Utils.linesFromList(playlist, index, lines); // показывать только часть плейлиста вокруг играющего
         } else {
-            playlist.replaceAll(t -> t.replaceAll("1.", ""));
+            log.info("PLAYLIST TITLE: " + player.title);
+
+            playlist = player.playerStatus.result.playlist_loop.stream()
+                    .map(item -> item.title)
+                    .collect(Collectors.toList());
+
+            if (!player.titleCrop(player.title).equals(playlist.get(0))) {
+                playlistTitle = player.titleCrop(player.title);
+                playlist.set(0, playlistTitle + " - " + playlist.get(0));
+            }
+
+            playlist.replaceAll(t -> t.replaceAll(",", " ")); // удалить из названий символы , потому что в таскере , разделитель строк
         }
+
+
         String result = String.join(", ", playlist);
         log.info("PLAYLIST: " + playlist);
-        widgetPlaylist = result;
         log.info(finish);
         return result;
     }
 
-    public static String forTaskerPlayersList() {
+    public static void forTaskerPlayersList() {
         log.info(start);
         Function<Player, String> formatter = p -> {
             String remote = "";
@@ -140,13 +177,11 @@ public class Tasker {
                 .map(formatter)
                 .collect(Collectors.joining(","));
         if (notPlaying.isEmpty()) notPlaying = "all players play";
-
         log.info("Playing: " + playing);
         log.info("Not playing: " + notPlaying);
         widgetPlayersPlay = playing;
         widgetPlayersStop = notPlaying;
         log.info(finish);
-        return playing + ";" + notPlaying;
     }
 
     public static void forTaskerWidgetsIcons() {
@@ -171,43 +206,42 @@ public class Tasker {
         log.info(finish);
     }
 
-    public static String ready() {
+    public static String ready() { // для варианта когда Таскер пулит запросы в ожидании разрешения обновления
         log.info("READY: " + ready);
         if (ready == null) return "yes";
         return ready;
     }
 
-    public static void sendRequestToTaskerRunRefresh() {
+    public static void sendRequestToTaskerRunRefreshAsync(String playerName, String roomName) { // для варианта когда сервер делает запрос в Таскер команду на обновление
         if (!TASKER_TOGGLE_REFRESH.value) {
             log.info("TOGGLE TASKER REFRESH STATES DISABLED !!!");
             return;
         }
-
         log.info(start);
-        log.info("SEND REQUEST TO TASKER FOR RUN REFRESH");
         HttpClientWrapper httpClient = new HttpClientWrapper();
         URI uri = null;
         try {
-            uri = new URI("http", null, TASKER_STRING_IP.value, Integer.parseInt(TASKER_STRING_PORT.value), null, null, null);
+            uri = new URI("http", null, TASKER_STRING_IP.value,
+                    Integer.parseInt(TASKER_STRING_PORT.value), null, null, null);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
+        JSONObject jsonBody = new JSONObject();
+        jsonBody.put("pleer", playerName);
+        jsonBody.put("room", roomName);
+        String body = jsonBody.toString();
+        log.info("TASKER REQUEST REFRESH" + uri + jsonBody);
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         URI finalUri = uri;
-        CompletableFuture.runAsync(() -> {
-                    httpClient.doGet(String.valueOf(finalUri), headers);
-                    log.info(finish);
-                }
-        );
+        CompletableFuture.runAsync(() -> httpClient.doPost(finalUri.toString(), body, headers));
+        log.info(finish);
     }
 
     public static void taskerIpSet(String body) {
         TASKER_STRING_IP.value = "";
         TASKER_STRING_PORT.value = "";
-        if (body == null || body.trim().isEmpty()) {
-            return;
-        }
+        if (body == null || body.trim().isEmpty()) return;
         try {
             JSONObject json = new JSONObject(body);
             if (json.has("ip")) {

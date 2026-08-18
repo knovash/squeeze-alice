@@ -44,7 +44,7 @@ public class SchedulerPlayersUpdate {
             if (!TOGGLE_SCHEDULER_YANDEX_UPDATE_DEVICES.value) return;
 
             try {
-                log.info("Executing players state update");
+                log.info("Executing players state update SEND STATE TO YANDEX");
                 Main.lmsPlayers.updatePlayers();
 
                 // Список для сбора обновлений
@@ -99,45 +99,6 @@ public class SchedulerPlayersUpdate {
         );
     }
 
-    public static void startPeriodicUpdate(int periodMinutes) {
-        log.info("Starting players state updates. Interval: {} minutes", periodMinutes);
-
-        cancelExistingTask();
-
-        Runnable updateTask = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    log.info("Executing players state update");
-
-
-                    List<DeviceStateUpdate> updates = new ArrayList<>();
-
-                    Main.lmsPlayers.updatePlayers(); // PlayersUpdateScheduler
-                    Main.lmsPlayers.players.stream()
-                            .filter(player -> player != null)
-                            .filter(player -> player.room != null)
-                            .forEach(player ->
-                            {
-                                player.volume = "0";
-                                if (player.connected) player.volumeGet();
-                                Yandex.sendDeviceState(SmartHome.deviceByRoom(player.room), "on_off", "on", String.valueOf(player.playing));
-                                Yandex.sendDeviceState(SmartHome.deviceByRoom(player.room), "range", "volume", String.valueOf(player.volume));
-
-                            }); // startPeriodicUpdate
-                } catch (Exception e) {
-                    log.error("Failed to update players state", e);
-                }
-            }
-        };
-
-        scheduledTask = executor.scheduleAtFixedRate(
-                updateTask,
-                1,      // Начальная задержка
-                periodMinutes,
-                TimeUnit.MINUTES
-        );
-    }
 
     /**
      * Останавливает выполнение периодических обновлений

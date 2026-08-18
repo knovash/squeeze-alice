@@ -118,6 +118,11 @@ public class SettingsVoice extends SettingsBase {
         super("data/settings_voice.properties", "settings_voice_save",  "/settings_voice");
     }
 
+    @Override
+    protected void applySettings() {
+
+    }
+
     // ---------- Переопределение методов для получения списков ключей ----------
     @Override
     protected List<? extends ToggleKey> getToggleKeys() {

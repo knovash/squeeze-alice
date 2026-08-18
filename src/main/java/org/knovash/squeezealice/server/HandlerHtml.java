@@ -15,7 +15,6 @@ public class HandlerHtml implements HttpHandler {
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        log.info("HANDLER HTML START >>>>>>>>>>>>>>>");
 
         Context context = Context.contextCreate(httpExchange);
         String path = context.path;
@@ -23,7 +22,6 @@ public class HandlerHtml implements HttpHandler {
         // Обработка запроса к manual.html (ресурс внутри JAR)
         if (path.equals("/html/manual")) {
             serveManualPage(httpExchange);
-            log.info("HANDLER HTML FINISH <<<<<<<<<<<<<<<");
             return;
         }
 
@@ -33,7 +31,6 @@ public class HandlerHtml implements HttpHandler {
 
         if (fileName.isEmpty()) {
             send404(httpExchange);
-            log.info("HANDLER HTML FINISH <<<<<<<<<<<<<<<");
             return;
         }
 
@@ -41,7 +38,6 @@ public class HandlerHtml implements HttpHandler {
         byte[] imageData = loadImageFromFileSystem(fileName);
         if (imageData == null) {
             send404(httpExchange);
-            log.info("HANDLER HTML FINISH <<<<<<<<<<<<<<<");
             return;
         }
 
@@ -52,8 +48,6 @@ public class HandlerHtml implements HttpHandler {
         try (OutputStream os = httpExchange.getResponseBody()) {
             os.write(imageData);
         }
-
-        log.info("HANDLER HTML FINISH <<<<<<<<<<<<<<<");
     }
 
     /**

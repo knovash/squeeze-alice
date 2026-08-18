@@ -12,11 +12,9 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import static org.knovash.squeezealice.Main.*;
 
 @Log4j2
-public class HandlePathAlice {
+public class HandleVoiceAlice {
 
-    /**
-     * Метод должен вернуть ТЕКСТ для ответа Алисы и выполнить действие
-     */
+    // Метод должен вернуть ТЕКСТ для ответа Алисы и выполнить действие
     public static Context processContext(Context context) {
         log.info(start);
         String body = context.body;
@@ -44,7 +42,7 @@ public class HandlePathAlice {
         log.info(start);
 
         command = command.trim().toLowerCase();
-        log.info("COMMAND: " + command);
+        log.info("COMMAND: " + command + " ROOM: " + room + " AliceID: " + aliceId);
 
         // Базовые команды без зависимостей
         if (command.isEmpty())
@@ -65,19 +63,16 @@ public class HandlePathAlice {
 
         // Получаем комнату по идентификатору сессии
         lmsPlayers.updatePlayers();
-        if (room == null)
-            return "скажите навыку, это комната и название комнаты";
+        if (room == null) return "скажите навыку, это комната и название комнаты";
 
         // Команды выбора колонки (требуют комнату, но не плеер)
-        if (command.matches("выбери колонку.*"))
-            return ActionsAsync.selectPlayerByCommand(command, room);
-        if (command.matches("включи колонку.*"))
-            return ActionsAsync.runPlayerByCommand(command, room);
+        if (command.matches("(выбери||включи) колонку.*"))
+            return ActionsAsync.selectNewPlayerInRoomByCommand(command, room, true);
 
         // Ищем устройство в комнате и соответствующий плеер
         Device device = SmartHome.deviceByRoom(room);
         if (device == null)
-            return "устройство в умном доме не найдено, скажите навыку, выбери колонку, и название колонки";
+            return "скажите навыку, выбери колонку, и название колонки";
 
         Player player = lmsPlayers.playerByRoom(device.room);
         log.info("PLAYER: " + player.name);
@@ -86,46 +81,22 @@ public class HandlePathAlice {
 
         // Обработка всех команд, требующих плеер
         try {
-            if (command.contains("что играет")) // синхронно, собирает информацию и тут же отдает ответ
-                return ActionsAsync.whatsPlaying(player, true);
-            if (command.contains("лимит")) // синхронно, собирает информацию и тут же отдает ответ
+            if (command.contains("что играет"))
+                return ActionsAsync.whatsPlayingAnswerForAlice(player, true);
+            if (command.contains("лимит"))
                 return ActionsAsync.volumeLimitSet(player, command);
-            if (command.contains("какая громкость")) // синхронно, собирает информацию и тут же отдает ответ
+            if (command.contains("какая громкость"))
                 return ActionsAsync.whatsVolume(player);
-            if (command.matches("(включи )?(канал|избранное) .*"))
-                return ActionsAsync.channelPlayByName(command, player);
-            if (command.matches("добавь( в)? избранное"))
-                return ActionsAsync.channelAdd(player);
-            if (command.matches("переключи.*сюда"))
-                return ActionsAsync.switchHere(player);
-            if (command.matches("(включи )?отдельно"))
-                return ActionsAsync.separateOn(player);
-            if (command.matches("(включи )?вместе"))
-                return ActionsAsync.separateOff(player);
-            if (command.matches("(включи )?только тут"))
-                return ActionsAsync.onlyHere(player);
-            if (command.matches("(включи )?(рандом|шафл|shuffle|random)"))
-                return ActionsAsync.shuffleOn(player);
-            if (command.matches("(выключи )?(рандом|шафл|shuffle|random)"))
-                return ActionsAsync.shuffleOff(player);
-            if (command.matches("(включи )?(повтор)"))
-                return ActionsAsync.repeatOn(player);
-            if (command.matches("(выключи )?(повтор)"))
-                return ActionsAsync.repeatOff(player);
-            if (command.matches("(включи )?(дальше|следующий)"))
-                return ActionsAsync.nextChannelOrTrack(player);
-            if (command.matches("^(?:подключи пульт(?: (?:к|в|на).*)?|включи пульт)$"))
-                return ActionsAsync.connectBtRemote(command, player);
             if (command.contains("где пульт"))
-                return ActionsAsync.whereBtRemote();
+                return "пульт подключен к " + lmsPlayers.btPlayerName;
             if (command.startsWith("включи альбом"))
-                return ActionsAsync.playSpotify(player, command, "album");
+                return ActionsAsync.spotifyPlayCommand(player, command, "album");
             if (command.startsWith("включи трек"))
-                return ActionsAsync.playSpotify(player, command, "track");
+                return ActionsAsync.spotifyPlayCommand(player, command, "track");
             if (command.startsWith("включи плейлист"))
-                return ActionsAsync.playSpotify(player, command, "playlist");
+                return ActionsAsync.spotifyPlayCommand(player, command, "playlist");
             if (command.startsWith("включи"))
-                return ActionsAsync.playSpotify(player, command, "artist");
+                return ActionsAsync.spotifyPlayCommand(player, command, "artist");
         } catch (Exception e) {
             log.error("Ошибка при обработке команды '{}': {}", command, e.getMessage(), e);
             return "Произошла внутренняя ошибка, попробуйте позже";

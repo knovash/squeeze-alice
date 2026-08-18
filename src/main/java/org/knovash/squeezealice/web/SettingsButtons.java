@@ -6,18 +6,20 @@ import java.util.List;
 public class SettingsButtons extends SettingsBase {
 
     public static SettingsButtons settingsButtons = new SettingsButtons();
-    // ---- Переключатели кнопок ----
+
     public enum ToggleButton implements ToggleKey {
         TOGGLE_BUTTON_SWITCH_HERE(true, "Переключи сюда"),
+        TOGGLE_BUTTON_WHAT_PLAYS(false, "Что играет"),
         TOGGLE_BUTTON_NEXT(true, "Дальше"),
         TOGGLE_BUTTON_BACK(true, "Назад"),
         TOGGLE_BUTTON_SEPARATE(true, "Отдельно"),
         TOGGLE_BUTTON_TOGETHER(true, "Вместе"),
-        TOGGLE_BUTTON_WHAT_PLAYS(false, "Что играет"),
+        TOGGLE_BUTTON_REPEAT(true, "Повтор"),
+        TOGGLE_BUTTON_SHUFFLE(true, "Рандом"),
         TOGGLE_BUTTON_WHERE_REMOTE(false, "Где пульт"),
         TOGGLE_BUTTON_CONNECT_REMOTE(false, "Подключи пульт");
 
-        private volatile boolean value;
+        public volatile boolean value;
         private final String description;
 
         ToggleButton(boolean value, String description) {
@@ -44,6 +46,11 @@ public class SettingsButtons extends SettingsBase {
     // ---- Конструктор ----
     public SettingsButtons() {
         super("data/settings_buttons.properties", "settings_buttons_save", "/settings_buttons");
+    }
+
+    @Override
+    protected void applySettings() {
+
     }
 
     // ---- Переопределяем только нужные методы ----

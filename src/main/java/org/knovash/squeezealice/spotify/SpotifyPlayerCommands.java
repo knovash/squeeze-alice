@@ -56,7 +56,7 @@ public class SpotifyPlayerCommands {
                 response = "Spotify transfer to: " + value;
                 break;
             case "currentlyPlaying":
-                response = "Spotify currently playing: " + Spotify.currentlyPlaying();
+                response = "Spotify currently playing: " + Spotify.checkSpotifyIsPlaying();
                 break;
             case "currentlyPlayingDetails":
                 response = "Spotify currently playing details: " + Spotify.currentlyPlayingDetails();

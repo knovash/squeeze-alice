@@ -69,6 +69,7 @@ public class DeviceStateUpdate {
         requestBody.put("payload", payload);
 
         String jsonBody = JsonUtils.pojoToJson(requestBody);
+        log.info("BODY DEVICES STATE UPDATE FOR YANDEX: " + jsonBody);
 
         // Асинхронная отправка через новый HTTP-клиент
         CompletableFuture.runAsync(() -> {

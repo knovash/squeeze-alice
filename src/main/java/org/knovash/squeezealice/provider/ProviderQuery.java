@@ -127,6 +127,16 @@ public class ProviderQuery {
                 log.info("CASE Вместе " + player1.name + " " + !player1.separate);
                 capability.state.value = String.valueOf(!player1.separate);
                 break;
+            case "Повтор":
+                player1.status();
+                log.info("CASE Повтор " + player1.name + " " + player1.repeat);
+                capability.state.value = String.valueOf(player1.repeat);
+                break;
+            case "Рандом":
+                player1.status();
+                log.info("CASE Рандом " + player1.name + " " + player1.shuffle);
+                capability.state.value = String.valueOf(player1.shuffle);
+                break;
             default:
                 capability.state.value = "false";
                 break;

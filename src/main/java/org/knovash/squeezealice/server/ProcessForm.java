@@ -14,6 +14,7 @@ import static org.knovash.squeezealice.web.ActionsRunner.actionsRunner;
 import static org.knovash.squeezealice.web.PagePlayers.*;
 import static org.knovash.squeezealice.web.Settings.settings;
 import static org.knovash.squeezealice.web.SettingsButtons.settingsButtons;
+import static org.knovash.squeezealice.web.SettingsLms.settingsLms;
 import static org.knovash.squeezealice.web.SettingsTasker.settingsTasker;
 import static org.knovash.squeezealice.web.SettingsVoice.settingsVoice;
 
@@ -38,12 +39,16 @@ public class ProcessForm {
             switch (action) {
                 case "settings_save_all":
                     settings.handleSaveAll(context);
+
                     break;
                 case "settings_buttons_save":
                     settingsButtons.handleSaveAll(context);
                     break;
                 case "settings_tasker_save":
                     settingsTasker.handleSaveAll(context);
+                    break;
+                case "settings_lms_save":
+                    settingsLms.handleSaveAll(context);
                     break;
                 case "settings_voice_save":
                     settingsVoice.handleSaveAll(context);

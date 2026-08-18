@@ -11,6 +11,7 @@ import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.utils.Utils;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
@@ -28,22 +29,20 @@ public class Yandex {
     public static int devicesMusicCounter;
     public static int devicesSize;
     public static List<String> roomsWithDevice;
-    public static List<YandexUtils.MusicDevice> otherDevices;
+    public static List<YandexUtils.DeviceFromYandex> otherDevices;
 
     public static List<String> rooms = new ArrayList<>();
     public static Map<String, String> idsAndRooms = new HashMap<>();
 
-    public static List<YandexUtils.MusicDevice> devicesGetFromYandexInfo() {
-        log.info(start);
+    public static YandexInfo getYandexInfo() {
         if (config.yandexToken == null || config.yandexToken.equals("")) {
             log.info("CANCELED TO GET DEVICES FROM YANDEX. USER NOT LOGGED IN YANDEX");
             return null;
         }
-        log.debug("GET ROOMS FROM YANDEX");
         String json;
         String bearer = config.yandexToken;
         try {
-            log.info("https://api.iot.yandex.net/v1.0/user/info");
+            log.info("GET YANDEX INFO https://api.iot.yandex.net/v1.0/user/info");
             Map<String, String> headers = new HashMap<>();
             headers.put("Authorization", "OAuth " + bearer);
             HttpResponseResult result = httpClient.doGet("https://api.iot.yandex.net/v1.0/user/info", headers);
@@ -57,15 +56,57 @@ public class Yandex {
             return null;
         }
         yandexInfo = JsonUtils.jsonToPojo(json, YandexInfo.class);
+        return yandexInfo;
+    }
+
+    public static String getScenarioIdByName(String scenarioName) {
+        if (scenarioName == null) return null;
+        YandexInfo info = getYandexInfo();
+        if (info == null || info.scenarios == null) return null;
+        for (YandexInfo.Scenario s : info.scenarios)
+            if (s.name.equals(scenarioName)) return s.id;
+        return null;
+    }
+
+    public static boolean runScenarioByName(String scenarioName) {
+        return runScenarioById(getScenarioIdByName(scenarioName));
+    }
+
+    public static boolean runScenarioById(String scenarioId) {
+        if (scenarioId == null) return false;
+        String iotToken = config.yandexToken;
+        String url = "https://api.iot.yandex.net/v1.0/scenarios/" + scenarioId + "/actions";
+        try {
+            Map<String, String> headers = new HashMap<>();
+            headers.put("Authorization", "Bearer " + iotToken);
+            headers.put("Content-Type", "application/json");
+            HttpResponseResult result = httpClient.doPost(url, "{}", headers);
+            if (!result.isSuccess()) {
+                log.error("Scenario action failed: " + result.getStatusCode());
+                return false;
+            } else {
+                log.info("Scenario action success");
+                return true;
+            }
+        } catch (Exception e) {
+            log.error("Scenario action error", e);
+            return false;
+        }
+    }
+
+    public static List<YandexUtils.DeviceFromYandex> devicesGetFromYandexInfo() {
+        log.info(start);
+        if (config.yandexToken == null || config.yandexToken.equals("")) {
+            log.info("CANCELED TO GET DEVICES FROM YANDEX. USER NOT LOGGED IN YANDEX");
+            return null;
+        }
+        yandexInfo = getYandexInfo();
         rooms = yandexInfo.rooms.stream().map(r -> r.name).collect(Collectors.toList());
         log.info("YANDEX ROOMS: " + rooms);
-
-        List<YandexUtils.MusicDevice> musicDevices = YandexUtils.extractMusicDevices(yandexInfo);
-
+        List<YandexUtils.DeviceFromYandex> musicDevices = YandexUtils.extractMusicDevices(yandexInfo);
         // Получить другие устройства
         otherDevices = YandexUtils.extractOtherDevices(yandexInfo);
         //log.info("OTHER: " + otherDevices);
-
         devicesSize = musicDevices.size();
         roomsWithDevice = yandexInfo.devices.stream()
                 .filter(device -> device.type.equals("devices.types.media_device.receiver"))
@@ -77,7 +118,7 @@ public class Yandex {
         return musicDevices;
     }
 
-    public static void createDevicesFromYandexDevices(List<YandexUtils.MusicDevice> yandexMusicDevices) {
+    public static void createMusicDevicesFromYandex(List<YandexUtils.DeviceFromYandex> yandexMusicDevices) {
         log.info(start);
         if (config.yandexToken == null || config.yandexToken.equals("")) {
             log.info("CANCELED TO CREATE DEVICES FROM YANDEX. USER NOT LOGGED IN YANDEX");
@@ -94,18 +135,18 @@ public class Yandex {
         log.info(finish);
     }
 
-    public static void createOtherDevicesFromYandexDevices(List<YandexUtils.MusicDevice> yandexMusicDevices) {
+    public static void createOtherDevicesFromYandexDevices(List<YandexUtils.DeviceFromYandex> devicesFromYandex) {
         log.info(start);
         if (config.yandexToken == null || config.yandexToken.equals("")) {
             log.info("CANCELED TO CREATE DEVICES FROM YANDEX. USER NOT LOGGED IN YANDEX");
             return;
         }
-        if (yandexMusicDevices == null || yandexMusicDevices.isEmpty()) {
+        if (devicesFromYandex == null || devicesFromYandex.isEmpty()) {
             log.info("FAILED TO CREATE DEVICES. NO DEVICES FROM YANDEX");
             return;
         }
         log.info("CREATE OTHER DEVICES FROM YANDEX");
-        yandexMusicDevices.forEach(device -> smartHome.createDeviceToggle(device));
+        devicesFromYandex.forEach(device -> smartHome.createDeviceToggle(device));
         lmsPlayers.write();
         //smartHome.write();
         log.info(finish);
@@ -128,24 +169,23 @@ public class Yandex {
         return deviceId;
     }
 
-    public static void sendDevicesStates() {
+    public static void sendDevicesStatesAsync() {
         if (!TOGGLE_YANDEX_REFRESH.value) {
             log.info("TOGGLE YANDEX REFRESH STATES DISABLED !!!");
             return;
         }
         log.info("\nSEND ALL DEVICES STATES ON/OFF TO YANDEX");
-
-        lmsPlayers.updatePlayers();
-        Main.lmsPlayers.players.stream()
-                .filter(player -> player != null && player.room != null)
-                //.filter(player -> player.connected)
-                .forEach(player ->
-                        {
-                            log.info(player);
-                            Yandex.sendDeviceState(SmartHome.deviceByRoom(player.room), "on_off", "on", String.valueOf(player.playing));
-                            //Yandex.sendDeviceState(SmartHome.deviceByRoom(player.room).id, "range", "volume", String.valueOf(player.volume));
-                        }
-                );
+        CompletableFuture.runAsync(() -> {
+            lmsPlayers.updatePlayers();
+            Main.lmsPlayers.players.stream()
+                    .filter(player -> player != null && player.room != null)
+                    .forEach(player ->
+                            {
+                                Yandex.sendDeviceState(SmartHome.deviceByRoom(player.room), "on_off", "on", String.valueOf(player.playing));
+                                //Yandex.sendDeviceState(SmartHome.deviceByRoom(player.room).id, "range", "volume", String.valueOf(player.volume));
+                            }
+                    );
+        });
     }
 
     public static void sendDeviceState(Device device, String type, String instance, String capState) {
@@ -301,7 +341,7 @@ public class Yandex {
         }
     }
 
-    public static List<String> getRoomsWithAliceOrMusic(YandexInfo yandexInfo) {
+    public static List<String> getRoomsWithAliceOrMusic() {
         if (yandexInfo == null || yandexInfo.devices == null || yandexInfo.rooms == null) {
             return Collections.emptyList();
         }

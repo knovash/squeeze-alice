@@ -2,14 +2,16 @@ package org.knovash.squeezealice.player;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Player;
+import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.spotify.Spotify;
 import org.knovash.squeezealice.utils.Utils;
 import org.knovash.squeezealice.utils.levenstein.Levenstein;
+import org.knovash.squeezealice.yandex.Yandex;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.Main.*;
@@ -19,42 +21,79 @@ public class ActionsSync {
 
     public static String answer = null;
 
-    // =========================================================================
-    // 1. МЕТОДЫ, ИСПОЛЬЗУЕМЫЕ В ActionsAsync (асинхронные обёртки)
-    //    (вызываются из асинхронных методов, которые, в свою очередь,
-    //     используются в HandlePathAlice, SwitchPlayerCommand и других)
-    // =========================================================================
+    // метод меняет плеер в комнате и возвращает ответ для Алисы
+    public static String selectNewPlayerInRoom(String playerNewName, String roomName, boolean turnOn) {
+        if (playerNewName == null || roomName == null) return null;
 
-    // ---- 1.1 Управление комнатами и плеерами ----
-    // Используется в ActionsAsync.selectRoomWithSpeaker -> HandlePathAlice
-    // Также вызывается из SwitchNoPlayerCommand? Нет, только голосовой навык.
+        // устройство Музыка еще небыло создано в комнате
+        Device device = smartHome.deviceByRoom(roomName);
+        if (device == null) {
+            log.info("CREATE NEW DEVICE FOR YANDEX IN ROOM: " + roomName + " PLAYER: " + playerNewName);
+            smartHome.create(roomName, null);
+        } else log.info("DEVICE ROOM: " + device.room + " ID: " + device.id);
+
+        Player playerNow = lmsPlayers.playerByRoom(roomName); // плеер сейчас в комнате
+        Player playerNew = lmsPlayers.playerByName(playerNewName); // плеер новый из ЛМС
+        if (playerNew == null) return "нет такого плеера";
+        if (playerNew.equals(playerNow)) return "плеер уже подключен";
+        if (!Boolean.TRUE.equals(playerNew.connected)) return "плеер недоступен";
+
+        if (playerNow != null) {
+            playerNow.room = null;
+            if (playerNow.name.equals(lmsPlayers.btPlayerName)) lmsPlayers.btPlayerName = playerNewName;
+            playerNow.unsync().pause();
+        }
+        playerNew.room = roomName;
+        roomsAndPlayers.put(playerNew.name, playerNew.room);
+        Utils.writeRoomsAndPlayers();
+        lmsPlayers.write();
+
+        if (turnOn) CompletableFuture.runAsync(() -> playerNew.turnOnMusic(null));
+
+        if (playerNow != null)
+            return "в комнате " + roomName + " изменена колонка " + playerNow.name + " на " + playerNewName;
+        else
+            return "подключена колонка " + playerNewName + " в комнате " + roomName;
+    }
+
+    // Раз Два это комната ... - привязка комнаты к AliceId
     public static String selectRoomWithSpeaker(String command, String aliceId) {
         log.info("START");
+        String answer;
         String targetRoom = command
                 .replaceAll(".*комната", "")
                 .replaceAll("с колонкой.*", "")
                 .replaceAll("\\s", "");
         String correctRoom = Utils.roomNameByNearest(targetRoom);
-        if (correctRoom == null) return "нет такой комнаты";
+        if (correctRoom == null) {
+            answer = "нет такой комнаты";
+            return answer;
+        }
         String room = correctRoom;
-        String player = command
+        String playerName = command
                 .replaceAll(".*с колонкой", "")
                 .replaceAll("\\s", "");
-        player = Utils.convertCyrilicToLatin(player);
-        player = playerNameMatch(player);
-        if (player == null) return "нет такой колонки";
+        playerName = Utils.convertCyrilicToLatin(playerName);
+        playerName = getNearestPlayerNameFromLmsPlayers(playerName);
+        if (playerName == null) {
+            answer = "нет такой колонки";
+            return answer;
+        }
         log.info("SELECT ROOM: " + room);
         selectRoomByCorrectRoom(room, aliceId);
-        log.info("SELECT PLAYER: " + player);
-        ActionsSync.answer = "это комната " + room + " с колонкой " + player;
-        Player playerNew = selectPlayerInRoom(player, room, false);
+        log.info("SELECT PLAYER: " + playerName);
+        answer = "это комната " + room + " с колонкой " + playerName;
+        log.info("ANSWER: " + answer);
+        selectNewPlayerInRoom(playerName, room, true);
+        Player playerNew = lmsPlayers.playerByRoom(room);
         if (playerNew != null) playerNew.turnOnMusic(null);
-        return ActionsSync.answer;
+        return answer;
     }
 
-    // Используется в ActionsAsync.selectRoomByCommand -> HandlePathAlice
+    // Раз Два это комната ... с колонкой ... - привязка комнаты к AliceId
     public static String selectRoomByCommand(String command, String aliceId) {
         log.info("SELECT ROOM BY COMMAND: " + command);
+        String answer;
         String target = command
                 .replaceAll(".*комната\\S*\\s", "")
                 .replaceAll("\"", "")
@@ -69,154 +108,85 @@ public class ActionsSync {
 
         log.info("SELECT ROOM OK");
         Player player = lmsPlayers.playerByRoom(room);
-        if (player != null) ActionsSync.answer = "это комната " + room + " с колонкой " + player.name;
+        if (player != null) answer = "это комната " + room + " с колонкой " + player.name;
         else
-            ActionsSync.answer = "колонка в комнате еще не выбрана";
-        return ActionsSync.answer;
+            answer = "колонка в комнате еще не выбрана";
+        return answer;
     }
 
-    // Используется в ActionsAsync.selectPlayerByCommand и ActionsAsync.runPlayerByCommand
-    // -> HandlePathAlice (выбери колонку, включи колонку)
-    public static void selectPlayerByCommand(String command, String room, Boolean start) {
+    // Раз Два выбери колонку ...
+    public static String getPlayerNameInRoomByCommand(String command) {
         log.info("SELECT PLAYER BY COMMAND: " + command);
-        String name = command
+        String playerInCommand = command
                 .replaceAll(".*колонку\\S*\\s", "")
                 .replaceAll("\"", "")
                 .replaceAll("\\s\\s", " ");
-        String target;
-        target = playerNameMatch(name);
-
-        log.info("NAME: " + name + " TARGET: " + target);
-        if (target == null) {
-            answer = "в медиасервере нет колонки " + name;
-            return;
-        }
-
-        selectPlayerInRoom(target, room, start);
+        String playerName = getNearestPlayerNameFromLmsPlayers(playerInCommand);
+        log.info("NAME: " + playerInCommand + " TARGET: " + playerName);
+        return playerName;
     }
 
-    // ---- 1.2 Переключение музыки (sync) ----
-    // Используется в ActionsAsync.switchHere -> HandlePathAlice, SwitchPlayerCommand
-    public static String syncSwitchToHere(Player player) {
+    // Раз Два Лимит ... - установить лимит - ответ: Лимит установлен ...
+    public static String volumeLimitSet(Player player, String command) {
+        log.info(">>> PLAYER: " + player);
+        log.info(">>> COMMAND: " + command);
+        String answer; // сверху используется future.get
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\d+");
+        java.util.regex.Matcher matcher = pattern.matcher(command);
+        Integer volume = null;
+        if (matcher.find()) volume = Integer.parseInt(matcher.group());
+        log.info(">>> LIMIT: " + volume);
+        if (volume != null && volume > 20 && volume < 100) {
+            player.volume_high = volume;
+            answer = player.name + ", ограничение громкости " + volume;
+        } else
+            answer = player.name + ", ошибка ограничения громкости. число должно быть от 20 до 100";
+        return answer;
+    }
+
+    // Девайс-кнопка Переключи сюда
+    public static void switchToHere(Player player) {
         log.info(start);
-        if (player == null) return "ошибка, плеер не найден";
-        player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
+        if (player == null) return;
         log.info("SWITCH TO " + player.name);
-        Spotify.currentlyPlaying();
-        boolean spotifyPlaying = Spotify.currentlyPlaying != null && Spotify.currentlyPlaying.is_playing;
-        if (spotifyPlaying) {
-            log.info("Spotify is playing. Transferring to player: {}", player.name);
-            ActionsSync.answer = "Переключаю spotify на " + player.name;
+        player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
+        Spotify.checkSpotifyIsPlaying();
+        if (Spotify.currentlyPlaying != null && Spotify.currentlyPlaying.is_playing) {
+            log.info("SWITCH SPOTIFY TO " + player.name);
             Spotify.transferSpotifyToLms(player);
         } else {
-            log.info("Spotify is not playing. Syncing to playing player and stopping others.");
-            ActionsSync.answer = "Переключаю музыку на " + player.name;
+            log.info("SWITCH MUSIC TO " + player.name);
             player.syncToPlayingOrPlayLast();
             player.stopOther();
         }
         log.info(finish);
-        return "преключаю музыку";
-    }
-
-    // ---- 1.3 Spotify ----
-    // Используются в ActionsAsync.playArtist/Album/Track/Playlist -> HandlePathAlice
-
-    public static void spotifyPlayLink(String link, Player player) {
-        log.info("PLAY LINK: " + link);
-        if (link == null || player == null) return;
-        player
-                .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false)
-                .playPathSpotify(link);
-                //.syncOtherPlayingNotInGroupToThis();
-        //player.waitSeconds(2); // реально надо ждать пока плейлист спотифая запустится и потом сохранять
-        //player.savePlaylist(Spotify.currentGetName);
-        //player.savePlaylistScript();
-        //lmsPlayers.afterAsync();
-    }
-
-    public static String extractTargetFromCommand(String command) {
-        log.info("COMMAND: " + command);
-        if (command == null) return null;
-        String target;
-        target = command.trim()
-                .toLowerCase();
-        target = target
-                .replaceAll(".*включи\\S*\\s", "")
-                .replaceAll("альбом", "")
-                .replaceAll("трэк", "")
-                .replaceAll("плэйлист", "")
-                .replaceAll("\"", "")
-                .replaceAll("\\s\\s", " ");
-        log.info("TARGET: " + target);
-        return target;
-    }
-
-    public static String spotifyPlayArtist(String command, Player player, Boolean say) {
-        log.info("SPOTIFY PLAY ARTIST");
-        String target = extractTargetFromCommand(command);
-        String link = Spotify.getLinkArtist(target).uri;
-        spotifyPlayLink(link, player);
-        return answer;
-    }
-
-    public static String spotifyPlayAlbum(String command, Player player, Boolean say) {
-        log.info("SPOTIFY PLAY ALBUM");
-        String target = extractTargetFromCommand(command);
-        String link = Spotify.getLinkAlbum(target).uri;
-        spotifyPlayLink(link, player);
-        return answer;
-    }
-
-    public static String spotifyPlayTrack(String command, Player player, Boolean say) {
-        log.info("SPOTIFY PLAY TRACK");
-        String target = extractTargetFromCommand(command);
-        String link = Spotify.getLinkTrack(target).uri;
-        spotifyPlayLink(link, player);
-        return answer;
-    }
-
-    public static String spotifyPlayPlaylist(String command, Player player, Boolean say) {
-        log.info("SPOTIFY PLAY PLAYLIST");
-        String target = extractTargetFromCommand(command);
-        String link = Spotify.getLinkPlaylist(target).uri;
-        spotifyPlayLink(link, player);
-        return answer;
     }
 
 
-    // ---- 1.4 Bluetooth-пульт ----
-    // Используется в ActionsAsync.connectBtRemote -> HandlePathAlice, SwitchPlayerCommand
-    public static String connectBtRemote(String command, Player player) {
+    // Пульт - голосовая команда - Подключи пульт ...
+    public static String remoteSetFromCommand(String command, Player player) {
         log.info("COMMAND: " + command + " PLAYER: " + player);
-        command = command
+        String target = command
                 .replaceAll("включи", "")
                 .replaceAll("подключи", "")
                 .replaceAll("пульт ", "")
                 .replaceAll(" к ", "")
                 .replaceAll(" в ", "")
-                .replaceAll(" на ", "");
-        command = command.trim();
-        log.info("COMMAND: _" + command + "_");
+                .replaceAll(" на ", "")
+                .trim();
+        log.info("TARGET: _" + target + "_");
 
-        Player playerByRoom = lmsPlayers.playerByPlayerNameOrRoomName(command, command);
+        Player playerByRoom = lmsPlayers.playerByPlayerNameOrRoomName(target, target);
         if (playerByRoom != null) player = playerByRoom;
 
         lmsPlayers.btPlayerName = player.name;
         lmsPlayers.btPlayerAliceId = ""; // сброс для следующих команд
         log.info("BT PLAYER NAME: " + lmsPlayers.btPlayerName);
         lmsPlayers.write();
-        answer = "пульт подключен к " + player.name;
-        return answer;
+        return "пульт подключен к " + lmsPlayers.btPlayerName;
     }
 
-    // Используется в ActionsAsync.whereBtRemote -> HandlePathAlice
-    public static String whereBtRemote() {
-        log.info("WHERE BT REMOTE");
-        answer = "пульт подключен к " + lmsPlayers.btPlayerName;
-        return answer;
-    }
-
-    // Используется в ActionsAsync.remoteSwitch -> SwitchNoPlayerCommand
+    // Пульт - кнопка - Переключи пульт на следующий плеер
     public static String remoteSwitch() {
         log.info("REMOTE SWITCH NEXT");
         log.info("SIZE: " + lmsPlayers.players.size() + " BT NOW: " + lmsPlayers.btPlayerName);
@@ -241,25 +211,21 @@ public class ActionsSync {
         return lmsPlayers.btPlayerName;
     }
 
-    // ---- 1.5 Избранное (каналы) ----
-    // Используется в ActionsAsync.channelAdd -> HandlePathAlice, SwitchPlayerCommand
-    public static String channelAdd(Player player) {
-        String answer = "";
-        log.info("FAVORITES ADD");
-        String addTitle = player.favoritesAdd();
-        answer = "добавила в избранное, " + addTitle;
-        return answer;
-    }
 
-    // ---- 1.6 Информационные запросы ----
-    // Используется в ActionsAsync.whatsPlaying -> HandlePathAlice, SwitchPlayerCommand
-    public static String whatsPlaying(Player player, Boolean sayAtPlayer) {
+    // возвращает ответ что играет и также кладет его в answer
+    public static String whatsPlaying(Player player, Boolean addAtPlayerName) {
         log.info(start);
         String answer = "";
         log.info("WHATS PLAYING ON " + player.name);
-        if (player == null) return "плеер не найден";
+        if (player == null) {
+            answer = "плеер не найден";
+            return answer;
+        }
         lmsPlayers.checkUpdated();
-        if (!player.connected) return "плеер " + player.name + "  не подключен к медиасерверу";
+        if (!player.connected) {
+            answer = "плеер " + player.name + "  не подключен к медиасерверу";
+            return answer;
+        }
 
         String title = player.title(); // получить что играет - название плейлиста или исполнителя
         player.volumeGet(); // получить громкость
@@ -278,7 +244,7 @@ public class ActionsSync {
             answerPlayingSeparate = ", отдельно играет " + String.join(", ", playingPlayersNamesNotInCurrentGrop);
 
         String atPlayer = "";
-        if (sayAtPlayer) atPlayer = "на " + player.name;
+        if (addAtPlayerName) atPlayer = "на " + player.name;
 
         if (player.mode.equals("play")) {
             answer = "сейчас " + atPlayer + " играет " + separate + title + ", громкость " + player.volume;
@@ -292,123 +258,16 @@ public class ActionsSync {
         return answer;
     }
 
-    // Используется в ActionsAsync.volumeLimitSet -> HandlePathAlice
-    public static String volumeLimitSet(Player player, String command) {
-        log.info(">>> PLAYER: " + player);
-        log.info(">>> COMMAND: " + command);
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\d+");
-        java.util.regex.Matcher matcher = pattern.matcher(command);
-        Integer volume = null;
-        if (matcher.find()) volume = Integer.parseInt(matcher.group());
-        log.info(">>> LIMIT: " + volume);
-        if (volume != null && volume > 20 && volume < 100) {
-            player.volume_high = volume;
-            answer = player.name + ", ограничение громкости " + volume;
-        } else
-            answer = player.name + ", ошибка ограничения громкости. число должно быть от 20 до 100";
 
-        return answer;
-    }
+    // PRIVATE ------------------------
 
-    // Используется в ActionsAsync.whatsVolume -> HandlePathAlice
-    public static String whatsVolume(Player player) {
-        String answer;
-        log.info("VOLUME");
-        String volume = player.volumeGet();
-        if (volume == null) return "медиасервер не отвечает";
-        answer = "сейчас на " + player.name + " громкость " + volume + ", ограничение " + player.volume_high;
-        return answer;
-    }
-
-    // =========================================================================
-    // 2. ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ (НЕ ВЫЗЫВАЮТСЯ НАПРЯМУЮ ИЗ ActionsAsync)
-    //    но используются внутри вышеперечисленных или в других частях системы
-    // =========================================================================
-
-    // ---- 2.1 Вспомогательные методы для управления комнатами ----
-    // Используется внутри selectRoomWithSpeaker, selectRoomByCommand
     private static void selectRoomByCorrectRoom(String target, String aliceId) {
         log.info("START SELECT ROOM: " + target);
         roomsAndAliceIds.put(aliceId, target);
         Utils.writeRoomsAndAliceIds();
     }
 
-    // Используется внутри selectPlayerByCommand, selectRoomWithSpeaker
-    public static Player selectPlayerInRoom(String playerName, String roomName, Boolean start) {
-        // TODO удалить использование в lmsPlayers и сделать приватным
-        if (playerName == null || roomName == null) {
-            log.info("PLAYER NAME OR ROOM IS NULL");
-            answer = "колонка недоступна";
-            return null;
-        }
-        Device device = smartHome.deviceByRoom(roomName);
-        if (device == null) {
-            log.info("CREATE NEW DEVICE FOR YANDEX IN ROOM: " + roomName + " PLAYER: " + playerName);
-            smartHome.create(roomName, null);
-        } else log.info("DEVICE ROOM: " + device.room + " ID: " + device.id);
-
-        log.info("SEARCH NEW PLAYER: " + playerName);
-        log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(player -> player.name).collect(Collectors.toList()));
-        Player playerNew = lmsPlayers.playerByName(playerName);
-        log.info("PLAYER NEW: " + playerNew);
-        lmsPlayers.checkUpdated();
-        if (!Boolean.TRUE.equals(playerNew.connected)) {
-            log.info("PLAYER NOT CONNECTED: {}", playerName);
-            answer = "колонка " + playerName + " недоступна";
-            return null;
-        }
-
-        Player playerNow = lmsPlayers.playerByRoom(roomName);
-
-        if (playerNow != null && playerNow.equals(playerNew)) {
-            log.info("NEW PLAYER = NOW PLAYER");
-            answer = "колонка " + playerName + " уже была подключена в комнате " + roomName;
-            roomsAndPlayers.put(playerNew.name, playerNew.room);
-            Utils.writeRoomsAndPlayers();
-            lmsPlayers.write();
-            return playerNow;
-        } else {
-            if (playerNow == null) {
-                playerNew.room = roomName;
-                log.info("ASSIGN NEW PLAYER: " + playerNew.name + " TO ROOM: " + roomName);
-                answer = "подключена новая колонка " + playerName + " в комнате " + roomName;
-            } else {
-                playerNew.room = roomName;
-                playerNow.room = null;
-                if (playerNow.playing) start = true;
-                if (playerNow.name.equals(lmsPlayers.btPlayerName)) lmsPlayers.btPlayerName = playerName;
-                log.info("CHANGE PLAYER " + playerNow.name + " TO " + playerNew.name + " IN ROOM " + roomName);
-                answer = "в комнате " + roomName + " изменена колонка " + playerNow.name + " на " + playerName;
-            }
-
-            roomsAndPlayers.put(playerNew.name, playerNew.room);
-            Utils.writeRoomsAndPlayers();
-            lmsPlayers.write();
-
-            log.info("LMS PLAYERS: " + lmsPlayers.players.stream().filter(Objects::nonNull).map(p -> p.name).collect(Collectors.toList()));
-            log.info("YANDEX DEVICES: " + smartHome.devices.stream().filter(Objects::nonNull).map(d -> d.room + " " + d.name + " ext:" + d.external_id + " id:" + d.id).collect(Collectors.toList()));
-        }
-
-        if (start) {
-            log.info("TURN ON NEW PLAYER " + playerNew.name);
-            playerNew.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
-            if (!playerNew.playing)
-                if (playerNow.isPlaying()) playerNew.syncTo(playerNow.name);
-                else
-                    playerNew.syncToPlayingOrPlayLast();
-
-            answer = answer + ". включаю";
-        } else log.info("NOT START PLAY (flag start false)");
-
-        if (playerNow != null) {
-            log.info("STOP PREVIOUS PLAYER IN ROOM " + playerNow.name);
-            playerNow.unsync().pause();
-        }
-        return playerNew;
-    }
-
-    // Используется в selectRoomWithSpeaker, selectPlayerByCommand
-    private static String playerNameMatch(String player) {
+    private static String getNearestPlayerNameFromLmsPlayers(String player) {
         List<String> players = lmsPlayers.players.stream().map(p -> p.name).collect(Collectors.toList());
         player = Utils.convertCyrilicToLatin(player);
         log.info("PLAYER " + player);

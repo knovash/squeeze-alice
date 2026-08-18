@@ -10,6 +10,7 @@ import org.knovash.squeezealice.yandex.YandexInfo;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.knovash.squeezealice.LmsSearchForIp.isLmsServer;
@@ -59,12 +60,12 @@ public class PageIndex {
                 "<p><a href=\\html\\manual target=\"_blank\" rel=\"noopener noreferrer\">Инструкция</a></p>" +
                 "<p><a href=\\auth target=\"_blank\" rel=\"noopener noreferrer\">Авторизация в Яндекс</a></p>" +
                 "<p><a href=\\auth_spotify target=\"_blank\" rel=\"noopener noreferrer\">Авторизация в Spotify</a></p>" +
-                "<p><a href=\\lms>Настройка LMS</a></p>" +
-                "<p><a href=\\players>Настройка плееров и комнат</a></p>" +
+                "<p><a href=\\settings_lms>Настройки LMS</a></p>" +
+                "<p><a href=\\players>Настройки плееров и комнат</a></p>" +
                 "<p><a href=\\settings>Настройки</a></p>" +
                 "<p><a href=\\settings_buttons>Настройки устройств-действий в УДЯ</a></p>" +
                 "<p><a href=\\settings_tasker>Настройки Tasker</a></p>" +
-                "<p><a href=\\settings_voice>Настройки голосовых уведомлений через плееры LMS</a></p>" +
+                "<p><a href=\\settings_voice>Настройки голосовых уведомлений</a></p>" +
                 //"<p><a href=\\actions>Тесты действий</a></p>" +
                 "";
         String page = pageOuter(pageInner, "Squeeze-Alice", "Squeeze-Alice");
@@ -77,10 +78,10 @@ public class PageIndex {
                 "<legend><b>" + "Информация" + "</b></legend>" +
                 "LMS: " + infoLmsIpStatus() + "<br>" +
                 "LMS плееры: " + infoLmsPlayers() + "<br>" +
-                "Yandex пользователь: " + infoUserYandex() + "<br>" +
+                "Yandex: " + infoUserYandex() + "<br>" +
                 "Yandex комнаты: " + indexYandexRooms() + "<br>" +
-                "Yandex устройства Музыка: " + indexMusicDevicesYanex() + "<br>" +
                 "Устройства Музыка тут: " + indexMusicDevicesLocal() + "<br>" +
+                "Yandex устройства Музыка: " + indexMusicDevicesYanex() + "<br>" +
                 "Spotify: " + infoUserSpoty() + "<br>" +
                 "Hive mqtt: " + infoHiveStatus() + "<br>" +
                 "<form method='POST' action='/form'>" +
@@ -109,7 +110,7 @@ public class PageIndex {
     }
 
     private static String infoUserYandex() {
-        if (config.yandexName != null) return config.yandexName;
+        if (config.yandexName != null) return "<span style='color: green;'> подключен</span>" + " " + config.yandexName;
         else return
                 "<a href=\\auth " + "target=\"_blank\" rel=\"noopener noreferrer\"" + ">Авторизация в Яндекс</a>";
     }
@@ -135,26 +136,51 @@ public class PageIndex {
     }
 
     private static String indexMusicDevicesYanex() {
-
-        if (yandexInfoDevices == null || yandexInfoDevices.isEmpty()){
-            if (Yandex.rooms != null && !Yandex.rooms.isEmpty()){
-                if (smartHome.devices != null || !smartHome.devices.isEmpty()){
-                    return "<span style='color: red;'>добавьте устройства в приложении УДЯ</span>";
-                }
-            }
+        // 1. Проверка локальных устройств
+        if (smartHome.devices == null || smartHome.devices.isEmpty()) {
+            return "<a href=\\players>Настройка плееров и комнат</a>";
         }
 
+        // 2. Собираем комнаты локальных устройств с именем "музыка"
+        Set<String> localMusicRooms = smartHome.devices.stream()
+                .filter(d -> "музыка".equals(d.name.toLowerCase()))
+                .map(d -> d.room)
+                .collect(Collectors.toSet());
+
+        // Если локальных устройств "музыка" нет – предлагаем настроить плееры
+        if (localMusicRooms.isEmpty()) {
+            return "<a href=\\players>Настройка плееров и комнат</a>";
+        }
+
+        // 3. Проверка наличия устройств из Яндекс.УДЯ
         if (yandexInfoDevices == null || yandexInfoDevices.isEmpty()) {
+            // Если есть комнаты в Яндексе, но нет устройств – просим добавить их в УДЯ
             if (Yandex.rooms != null && !Yandex.rooms.isEmpty()) {
-                return "<a href=\\players>Настройка плееров и комнат</a>";
+                return "<span style='color: red;'>добавьте устройства в приложении УДЯ</span> " +
+                        "<a href=\\settings_buttons>Выберите устройства-действий в УДЯ</a>";
+            } else {
+                return "Нет устройств в Яндексе";
             }
-            return "<span style='color: red;'>нет</span>";
         }
-        List<String> listMusic = yandexInfoDevices.stream()
+
+        // 4. Собираем комнаты из яндекс-устройств с именем "музыка"
+        Set<String> yandexMusicRooms = yandexInfoDevices.stream()
                 .filter(d -> "музыка".equals(d.name.toLowerCase()))
                 .map(d -> d.roomName)
-                .collect(Collectors.toList());
-        return listMusic.toString();
+                .collect(Collectors.toSet());
+
+        // Если в Яндексе нет устройств "музыка" – просим добавить их
+        if (yandexMusicRooms.isEmpty()) {
+            return "<span style='color: red;'>добавьте устройства в приложении УДЯ</span> " +
+                    "<a href=\\settings_buttons>Выберите устройства-действий в УДЯ</a>";
+        }
+
+        // 5. Сравниваем наборы комнат
+        String result = yandexMusicRooms.toString();
+        if (!yandexMusicRooms.equals(localMusicRooms)) {
+            result += " <span style='color: red;'>Обновите устройства в УДЯ</span>";
+        }
+        return result;
     }
 
     private static String indexMusicDevicesLocal() {

@@ -3,7 +3,6 @@ package org.knovash.squeezealice.spotify;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Player;
 import org.knovash.squeezealice.lms.PlayerStatus.PlaylistLoop;
-import org.knovash.squeezealice.player.ActionsSync;
 import org.knovash.squeezealice.spotify.spotify_pojo.*;
 import org.knovash.squeezealice.spotify.spotify_pojo.spotify_artists.SpotifyArtists;
 import org.knovash.squeezealice.utils.JsonUtils;
@@ -143,7 +142,7 @@ public class Spotify {
     }
 
     // Для обратной совместимости
-    public static String currentlyPlaying() {
+    public static String checkSpotifyIsPlaying() {
         log.info(start);
         log.info("CHECK SPOTIFY IS PLAYING...");
         Spotify.currentlyPlaying = null;
@@ -312,7 +311,7 @@ public class Spotify {
 
         player
                 .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false)
-                .playPathSpotify(playingUri)
+                .playPath(playingUri)
                 .waitFor(500)
                 .pause();
 

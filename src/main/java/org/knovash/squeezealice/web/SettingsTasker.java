@@ -21,7 +21,8 @@ public class SettingsTasker extends SettingsBase {
 
     // ---------- Булевы переключатели ----------
     public enum KeyToggle implements ToggleKey {
-        TASKER_TOGGLE_REFRESH(false, "Отправлять запрос в Tasker для обновления виджетов");
+        TASKER_TOGGLE_REFRESH(true, "Отправлять запрос в Tasker для обновления виджетов после каждого действия"),
+        TASKER_TOGGLE_SELECT_WIDGET(true, "При обновлении выбирать плеер на который была последняя команда");
 
         public final String description;
         public volatile boolean value;
@@ -108,6 +109,11 @@ public class SettingsTasker extends SettingsBase {
     public SettingsTasker() {
         // Имя файла, имя обработчика сохранения, URL редиректа (null — рендерить страницу после сохранения)
         super("data/settings_tasker.properties", "settings_tasker_save",  "/settings_tasker");
+    }
+
+    @Override
+    protected void applySettings() {
+
     }
 
     // ---------- Переопределение методов для получения списков ключей ----------

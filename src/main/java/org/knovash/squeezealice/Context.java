@@ -63,7 +63,7 @@ public class Context {
 
         String query = httpExchange.getRequestURI().getQuery();
         HashMap<String, String> queryMap = (HashMap<String, String>) Parser.bodyToMap(query);
-        log.info("QUERY: " + query);
+        if (query != null) log.info("QUERY: " + query);
 
         Context context = new Context();
         context.body = body;

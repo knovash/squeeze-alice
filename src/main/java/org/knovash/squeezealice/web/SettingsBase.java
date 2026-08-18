@@ -13,17 +13,6 @@ import static org.knovash.squeezealice.web.PageIndex.pageOuter;
 @Log4j2
 public abstract class SettingsBase {
 
-    // создать
-    // Main
-    // public static SettingsButtons settingsButtons = new SettingsButtons();
-    // HandlerAll
-    // case "/settings_buttons": return settingsButtons.action(context);
-    // PageIndex
-    // "<p><a href=\\settings_buttons>Настройки создания устройств действий</a></p>"
-    // Process Form
-    //  case "save_buttons": settingsButtons.handleSaveAll(context);
-    //  super("data/settings_buttons.properties", "save_buttons");
-
     protected static final ObjectMapper mapper = new ObjectMapper();
     protected final String propertiesFileName;
     public final String saveHandler;
@@ -250,6 +239,7 @@ public abstract class SettingsBase {
         Map<String, String> params = Parser.bodyToMap(context.body);
         updateFromRequest(params);
         saveToFile();
+        applySettings();
 
         // Если задан URL редиректа – перенаправляем, иначе рендерим страницу
         if (redirectUrl != null && !redirectUrl.isEmpty()) {
@@ -260,6 +250,8 @@ public abstract class SettingsBase {
         }
         return context;
     }
+
+    protected abstract void applySettings();
 
     public String settingsGet() {
         File file = new File(propertiesFileName);

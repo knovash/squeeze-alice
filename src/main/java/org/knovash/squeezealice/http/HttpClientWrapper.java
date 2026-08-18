@@ -33,6 +33,7 @@ public class HttpClientWrapper {
     }
 
     public HttpResponseResult doPost(String url, String body, Map<String, String> headers) {
+        log.info("DO POST");
         HttpPost request = new HttpPost(url);
         if (body != null) {
             request.setEntity(new StringEntity(body, ContentType.APPLICATION_JSON));

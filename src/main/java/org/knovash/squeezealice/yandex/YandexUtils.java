@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 @Log4j2
 public class YandexUtils {
 
-    public static List<MusicDevice> yandexDevices;
+    public static List<DeviceFromYandex> yandexDevices;
 
-    public static class MusicDevice {
+    public static class DeviceFromYandex {
 
         public final String roomId;
         public final String roomName;
@@ -18,7 +18,7 @@ public class YandexUtils {
         public final String externalId;
         public final String name;
 
-        public MusicDevice(String roomId, String roomName, String id, String externalId, String name) {
+        public DeviceFromYandex(String roomId, String roomName, String id, String externalId, String name) {
             this.roomId = roomId;
             this.roomName = roomName;
             this.id = id;
@@ -40,7 +40,7 @@ public class YandexUtils {
 
     //    из информации полученной запросом https://api.iot.yandex.net/v1.0/user/info
 //    создать лист устройств с названием комнаты, потому что у яндекса оно связано с девайсом по id
-    public static List<MusicDevice> extractMusicDevices(YandexInfo yandexInfo) {
+    public static List<DeviceFromYandex> extractMusicDevices(YandexInfo yandexInfo) {
         if (yandexInfo == null || yandexInfo.rooms == null || yandexInfo.devices == null) return List.of();
 
         Map<String, String> roomNameById = yandexInfo.rooms.stream() // комната и id комнаты
@@ -52,12 +52,12 @@ public class YandexUtils {
 
         Yandex.idsAndRooms = roomNameById;
 
-        List<MusicDevice> devices = yandexInfo.devices.stream()
+        List<DeviceFromYandex> devices = yandexInfo.devices.stream()
                 .filter(device -> device.type != null && (
                         device.type.contains("devices.types.media_device.receiver") &&
                                 device.name.contains("музыка")
                 ))
-                .map(device -> new MusicDevice(
+                .map(device -> new DeviceFromYandex(
                         device.room,                   // ID комнаты  "room": "787eaa19-0e6b-40bc-9949-41f68fcf0286"
                         roomNameById.get(device.room), // название комнаты "rooms": ["name": "Спальня"]
                         device.id,                     // "id": "7e4a5516-c751-4932-812c-6acc238ffa9d"
@@ -72,7 +72,7 @@ public class YandexUtils {
     }
 
 
-    public static List<MusicDevice> extractOtherDevices(YandexInfo yandexInfo) {
+    public static List<DeviceFromYandex> extractOtherDevices(YandexInfo yandexInfo) {
         if (yandexInfo == null || yandexInfo.rooms == null || yandexInfo.devices == null) return List.of();
 
         Map<String, String> roomNameById = yandexInfo.rooms.stream()
@@ -89,11 +89,11 @@ public class YandexUtils {
                 .map(button -> button.getDescription())
                 .collect(Collectors.toList());
 
-        List<MusicDevice> devices = yandexInfo.devices.stream()
+        List<DeviceFromYandex> devices = yandexInfo.devices.stream()
                 .filter(device -> device.type != null && device.type.equals("devices.types.other"))
                 .filter(device -> device.name != null)
                 .filter(device -> enabledButtonDescriptions.contains(device.name))
-                .map(device -> new MusicDevice(
+                .map(device -> new DeviceFromYandex(
                         device.room,
                         roomNameById.get(device.room),
                         device.id,

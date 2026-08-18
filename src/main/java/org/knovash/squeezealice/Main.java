@@ -34,7 +34,7 @@ public class Main {
     public static Config config = new Config();
     public static Boolean lmsServerOnline;
     public static Hive hive;
-    public static List<YandexUtils.MusicDevice> yandexInfoDevices;
+    public static List<YandexUtils.DeviceFromYandex> yandexInfoDevices;
     public static String start = "- - - - STARTED - - - - -";
     public static String finish = "- - - - FINISHED - - - - -";
     public static String line = "-----------------------------------------------------------------------";
@@ -63,7 +63,7 @@ public class Main {
         lmsPlayers.logPlayersNames();
         yandexInfoDevices = Yandex.devicesGetFromYandexInfo(); // получить устройства "Музыка" которые уже есть в Яндексе
         log.info("YANDEX get yandexInfoDevices: " + yandexInfoDevices);
-        Yandex.createDevicesFromYandexDevices(yandexInfoDevices); // создать устройства "Музыка" в сервисе для Яндекса
+        Yandex.createMusicDevicesFromYandex(yandexInfoDevices); // создать устройства "Музыка" в сервисе для Яндекса
         Yandex.createOtherDevicesFromYandexDevices(otherDevices); // создать устройства  в сервисе для Яндекса // TODO
         log.info("YANDEX DEVICES saved local: " + smartHome.devices.stream().filter(Objects::nonNull).map(device -> device.room).collect(Collectors.toList()));
         CopySoundsToLmsFolder.copySoundsToLmsFolder(); // звуки для уведомлений

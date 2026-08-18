@@ -2,195 +2,29 @@ package org.knovash.squeezealice.player;
 
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.Player;
+import org.knovash.squeezealice.SmartHome;
 import org.knovash.squeezealice.Tasker;
+import org.knovash.squeezealice.provider.response.Device;
 import org.knovash.squeezealice.spotify.Spotify;
-import org.knovash.squeezealice.utils.Utils;
-import org.knovash.squeezealice.utils.levenstein.Levenstein;
 import org.knovash.squeezealice.yandex.Yandex;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.knovash.squeezealice.Main.*;
-import static org.knovash.squeezealice.player.ActionsSync.*;
-import static org.knovash.squeezealice.web.SettingsVoice.KeyToggle.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.knovash.squeezealice.Main.lmsPlayers;
+import static org.knovash.squeezealice.Main.smartHome;
+import static org.knovash.squeezealice.web.SettingsVoice.KeyToggle.VOICE_TOGGLE_LMS_SAY_CHANNEL_NAME;
 
 @Log4j2
 public class ActionsAsync {
 
-    // =========================================================================
-    // ЕДИНЫЙ АСИНХРОННЫЙ ИСПОЛНИТЕЛЬ (приватный)
-    // =========================================================================
 
-
-    public static String async(String initialAnswer, Runnable action) {
-        return async(initialAnswer, action, null);
-    }
-
-    public static String async(Runnable action) {
-        return async(null, action, null);
-    }
-
-    public static String async(Runnable action, Integer delay) {
-        if (delay == null) delay = 100;
-        CompletableFuture.runAsync(() -> {
-            action.run();
-            lmsPlayers.afterAsync();
-        });
-        Utils.sleep(delay);
-        return ActionsSync.answer;
-    }
-
-    public static String async(String initialAnswer, Runnable action, Integer delay) {
-        if (delay == null) delay = 100;
-        Tasker.ready = "no";
-        ActionsSync.answer = initialAnswer;
-        CompletableFuture.runAsync(() -> {
-            long start = System.nanoTime();
-            try {
-                action.run();
-                lmsPlayers.afterAsync();
-            } finally {
-                long duration = System.nanoTime() - start;
-                log.info("TIME: " + duration / 1000000);
-            }
-        });
-        log.info(" ------------------- WAIT START --------------");
-        Utils.sleep(delay);
-        log.info(" ------------------- WAIT FINISH --------------");
-        return ActionsSync.answer;
-    }
-
-    // =========================================================================
-    // 1. МЕТОДЫ, ИСПОЛЬЗУЕМЫЕ В HandlePathAlice (все асинхронные) для голосового навыка
-    // =========================================================================
-
-    // ---- 1.1 Управление комнатами и плеерами ----
-    public static String selectRoomWithSpeaker(String command, String aliceId) {
-        log.info("SELECT ROOM WITH SPEAKER");
-        return async("Сейчас выберу комнату с колонкой", () -> {
-            ActionsSync.selectRoomWithSpeaker(command, aliceId);
-        });
-    }
-
-    public static String selectRoomByCommand(String command, String aliceId) {
-        log.info("SELECT ROOM BY COMMAND");
-        return async("Сейчас выберу комнату", () -> {
-            ActionsSync.selectRoomByCommand(command, aliceId);
-        });
-    }
-
-    public static String selectPlayerByCommand(String command, String room) {
-        log.info("SELECT PLAYER BY COMMAND: " + command + " IN ROOM: " + room);
-        return async("Сейчас подключу колонку в комнате " + room, () -> {
-            ActionsSync.selectPlayerByCommand(command, room, false);
-        });
-    }
-
-    public static String runPlayerByCommand(String command, String room) {
-        log.info("RUN PLAYER BY COMMAND");
-        return async("Сейчас включу колонку в комнате " + room, () -> {
-            ActionsSync.selectPlayerByCommand(command, room, true);
-        });
-    }
-
-    // ---- 1.2 Управление воспроизведением (переключение, режимы) ----
-    // Used in SwitchPlayerCommand
-    public static String switchHere(Player player) {
-        log.info(start);
-        return async("Сейчас переключу музыку на " + player.name, () -> {
-            ActionsSync.syncSwitchToHere(player);
-            log.info(finish);
-        });
-    }
-
-    // Used in SwitchPlayerCommand
-    public static String separateOn(Player player) {
-        log.info("SEPARATE ON");
-        return async("Сейчас включу отдельно " + player.name, () -> {
-            player.separateOn();
-            ActionsSync.answer = "Включаю отдельно " + player.name;
-        });
-    }
-
-    // Used in SwitchPlayerCommand
-    public static String separateOff(Player player) {
-        log.info("SEPARATE OFF");
-        return async("Сейчас соединю все плееры вместе", () -> {
-            player.separateOff();
-            ActionsSync.answer = "Соединяю все плееры вместе";
-        });
-    }
-
-    // Used in SwitchPlayerCommand
-    public static String onlyHere(Player player) {
-        log.info("ONLY HERE");
-        return async("Сейчас включу музыку только на " + player.name, () -> {
-            player.onlyHere();
-            ActionsSync.answer = "Включаю музыку только на " + player.name;
-        });
-    }
-
-    // Used in SwitchPlayerCommand
-    public static String shuffleOn(Player player) {
-        log.info("SHUFFLE ON");
-        return async("Сейчас включу рандом", () -> {
-            player.shuffleOn();
-            ActionsSync.answer = "Включаю рандом";
-        });
-    }
-
-    // Used in SwitchPlayerCommand
-    public static String shuffleOff(Player player) {
-        log.info("SHUFFLE OFF");
-        return async("Сейчас выключу рандом", () -> {
-            player.shuffleOff();
-            ActionsSync.answer = "Выключаю рандом";
-        });
-    }
-
-    // Used in SwitchPlayerCommand
-    public static String repeatOn(Player player) {
-        log.info("REPEAT ON");
-        return async("Сейчас включу повтор", () -> {
-            player.repeatOn();
-            ActionsSync.answer = "Включаю повтор";
-        });
-    }
-
-    // Used in SwitchPlayerCommand
-    public static String repeatOff(Player player) {
-        log.info("REPEAT OFF");
-        return async("Сейчас выключу повтор", () -> {
-            player.repeatOff();
-            ActionsSync.answer = "Выключаю повтор";
-        });
-    }
-
-    // Used in SwitchPlayerCommand (also in HandlePathAlice)
-    public static String nextChannelOrTrack(Player player) {
-        log.info("NEXT CHANNEL/TRACK " + player);
-        return async("Сейчас переключу следующий на " + player.name, () -> {
-            player.ctrlNextChannelOrTrack();
-            ActionsSync.answer = "Переключаю следующий на " + player.name;
-        });
-    }
-
-    // ---- 1.3 Spotify ----
-    //public static String playArtist(Player player, String command) {
-    //    log.info("PLAY ARTIST");
-    //    return async("Сейчас включу spotify", () -> {
-    //        spotifyPlayArtist(command, player, false);
-    //    }, 2000);
-    //}
-
-    public static String playSpotify(Player player, String command, String type) {
+    // Spotify
+    public static String spotifyPlayCommand(Player player, String command, String type) {
         log.info("PLAY SPOTIFY " + type + " COMMAND: " + command);
         String target = extractTargetFromCommand(command);
         log.info("TARGET: " + target);
-
         // Запускаем асинхронный поиск в зависимости от типа
         CompletableFuture<Spotify.GetLinkResult> future;
         switch (type) {
@@ -209,32 +43,30 @@ public class ActionsAsync {
             default:
                 return "ошибка";
         }
-
         try {
             // Ждём результат не более 1 секунды
-            Spotify.GetLinkResult result = future.get(1, TimeUnit.SECONDS);
+            Spotify.GetLinkResult result = future.get(1, SECONDS);
             String link = result.uri;
             String name = result.name;
             String answer = "включаю " + name;
             log.info("LINK: " + link);
             log.info("NAME: " + name);
             log.info("ANSWER: " + answer);
-
             // Воспроизведение в фоне, чтобы не задерживать ответ
             CompletableFuture.runAsync(() -> {
                 if (VOICE_TOGGLE_LMS_SAY_CHANNEL_NAME.value) {
                     player.say(answer, false, true);
                 }
-                spotifyPlayLink(link, player);
-                Tasker.sendRequestToTaskerRunRefresh();
-                Yandex.sendDevicesStates();
+                player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
+                player.playPath(link);
+                // обновить Таскер и Яндекс
+                Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
+                Yandex.sendDevicesStatesAsync();
             });
             return answer;
-
         } catch (TimeoutException e) {
             // Не успели за 1 секунду – отвечаем без названия, а воспроизведение отложим
             String fallbackAnswer = "Включаю Spotify";
-
             // Подписываемся на завершение поиска (без таймаута)
             future.thenAcceptAsync(result -> {
                 String link = result.uri;
@@ -244,289 +76,333 @@ public class ActionsAsync {
                 if (VOICE_TOGGLE_LMS_SAY_CHANNEL_NAME.value) {
                     player.say(fullAnswer, false, true);
                 }
-                spotifyPlayLink(link, player);
-                Tasker.sendRequestToTaskerRunRefresh();
-                Yandex.sendDevicesStates();
+                player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
+                player.playPath(link);
+                Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
+                Yandex.sendDevicesStatesAsync();
             }).exceptionally(ex -> {
                 log.error("Failed to get Spotify link after timeout", ex);
                 // Здесь можно добавить дополнительную обработку ошибки воспроизведения
                 return null;
             });
-
             return fallbackAnswer;
-
         } catch (Exception e) {
             log.error("Error getting Spotify link", e);
             return "Ошибка Spotify";
         }
     }
 
-    //public static String playSpotify(Player player, String command, String type) {
-    //    log.info("PLAY SPOTIFY " + type + " COMMAND: " + command);
-    //    String target = extractTargetFromCommand(command); // получить из команды название что надо включить
-    //    log.info("TARGET: " + target);
-    //
-    //    // получить по названию ссылку и название из Spotify
-    //    String answer;
-    //    String link;
-    //    String name;
-    //
-    //    CompletableFuture<Spotify.GetLinkResult> future = null;
-    //    switch (type) {
-    //        case "artist":
-    //            future = CompletableFuture.supplyAsync(() -> Spotify.getLinkArtist(target));
-    //            break;
-    //        case "album":
-    //            future = CompletableFuture.supplyAsync(() -> Spotify.getLinkAlbum(target));
-    //            break;
-    //        case "track":
-    //            future = CompletableFuture.supplyAsync(() -> Spotify.getLinkTrack(target));
-    //            break;
-    //        case "playlist":
-    //            future = CompletableFuture.supplyAsync(() -> Spotify.getLinkPlaylist(target));
-    //            break;
-    //        default:
-    //            return "ошибка";
-    //    }
-    //
-    //    Spotify.GetLinkResult result;
-    //    try {
-    //        result = future.get(1, TimeUnit.SECONDS); // ждём не более 1 секунды
-    //        link = result.uri;
-    //        name = result.name;
-    //        log.info("LINK: " + link);
-    //        log.info("NAME: " + name);
-    //        answer = "включаю " + name;
-    //        log.info("ANSWER: " + answer);
-    //    } catch (TimeoutException e) {
-    //
-    //        return "Включаю Spotify";
-    //    } catch (Exception e) {
-    //        return "Ошибка Spotify"; // ошибка выполнения getLinkArtist
-    //    }
-    //
-    //    CompletableFuture.runAsync(() -> {
-    //                if (VOICE_TOGGLE_LMS_SAY_CHANNEL_NAME.value)
-    //                    player.say(answer, false, true); // скзать включаю Название на колонке LMS перед воспроизведением. если включен тогл
-    //                spotifyPlayLink(link, player); // включить на плеере ссылку Spotify
-    //                Tasker.sendRequestToTaskerRunRefresh(); // обновить виджеты Таскер
-    //                Yandex.sendDevicesStates(); // обновить девайсы в Яндекс
-    //            }
-    //    );
-    //    return answer; // вернуть ответ Алисы
-    //}
+    // Раз Два это комната ...
+    // вернуть ответ: это комната ... с колонкой ...
+    public static String selectRoomWithSpeaker(String command, String aliceId) {
+        log.info("SELECT ROOM WITH SPEAKER");
+        return AsyncExecutor.executeWithTimeout(() -> ActionsSync.selectRoomWithSpeaker(command, aliceId));
+    }
 
+    // Раз Два это комната ...
+    // вернуть ответ: это комната ... с колонкой ...
+    public static String selectRoomByCommand(String command, String aliceId) {
+        log.info("SELECT ROOM BY COMMAND");
+        return AsyncExecutor.executeWithTimeout(() -> ActionsSync.selectRoomByCommand(command, aliceId), 2, SECONDS);
+    }
 
-    //public static String playAlbum(Player player, String command) {
-    //    log.info("PLAY ALBUM");
-    //    return async("Сейчас включу альбом", () -> {
-    //        spotifyPlayAlbum(command, player, false);
-    //    }, 2000);
-    //}
-    //
-    //public static String playTrack(Player player, String command) {
-    //    log.info("PLAY TRACK");
-    //    return async("Сейчас включу трек", () -> {
-    //        spotifyPlayTrack(command, player, false);
-    //    }, 2000);
-    //}
-    //
-    //public static String playPlaylist(Player player, String command) {
-    //    log.info("PLAY PLAYLIST");
-    //    return async("Сейчас включу плейлист", () -> {
-    //        spotifyPlayPlaylist(command, player, false);
-    //    }, 2000);
-    //}
+    // Раз Два выбери колонку ... или включи колонку ...
+    //вернуть ответ: в комнате ... выбрана колонка ... или включаю колонку ...
+    public static String selectNewPlayerInRoomByCommand(String command, String room, boolean turnOn) {
+        log.info("SELECT PLAYER BY COMMAND: " + command + " IN ROOM: " + room);
+        return AsyncExecutor.executeWithTimeout(() -> {
+            String playerName = ActionsSync.getPlayerNameInRoomByCommand(command);
+            return ActionsSync.selectNewPlayerInRoom(playerName, room, turnOn);
+        }, 2, SECONDS);
+    }
 
-    // ---- 1.4 Bluetooth-пульт ----
+    // Пульт - подключи пульт в ...
     public static String connectBtRemote(String command, Player player) {
-        log.info("COMMAND: " + command + " PLAYER: " + player);
-        return async("Сейчас подключу пульт", () -> {
-            ActionsSync.connectBtRemote(command, player);
-        });
+        log.info("REMOTE CONNECT COMMAND: " + command + " PLAYER: " + player);
+        return AsyncExecutor.executeWithTimeout(() -> ActionsSync.remoteSetFromCommand(command, player));
     }
 
-    public static String whereBtRemote() {
-        log.info("WHERE BT REMOTE ASYNC");
-        return async("Сейчас проверю, где пульт", () -> {
-            String result = ActionsSync.whereBtRemote();
-            ActionsSync.answer = result;
-        });
+    // Раз Два что играет?
+    // вернуть ответ: сейчас на ... играет ... , громкость ...
+    public static String whatsPlayingAnswerForAlice(Player player, boolean addAtPlayerName) {
+        log.info("WHATS PLAYING " + player.name);
+        return AsyncExecutor.executeWithTimeout(() -> ActionsSync.whatsPlaying(player, addAtPlayerName), 2, SECONDS);
     }
 
-    // ---- 1.5 Избранное (каналы) ----
-    public static String channelAdd(Player player) {
-        log.info("CHANNEL ADD");
-        return async("Сейчас добавлю в избранное", () -> {
-            String result = ActionsSync.channelAdd(player);
-            ActionsSync.answer = result;
-        });
-    }
-
-    public static String channelPlayByName(String command, Player player) {
-        log.info("CHANNEL PLAY BY NAME");
-        String target = command.replaceAll(".*(канал|избранное)\\S*\\s", "")
-                .replaceAll("\"", "").replaceAll("\\s\\s", " ");
-        log.info("TARGET LMS CHANNEL: " + target);
-        return async("Сейчас включу канал " + target, () -> {
-            List<String> playlist = player.favorites();
-            playlist.forEach(log::info);
-
-            String latin = Utils.convertCyrilicToLatin(target);
-
-            String channel = Levenstein.searchTitleInFavorites(latin, playlist);
-            log.info("CHANNEL: " + channel);
-            int index = playlist.indexOf(channel) + 1;
-            channel = channel.replaceAll(":.*", "");
-            player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false).playChannel(String.valueOf(index));
-            ActionsSync.answer = "Включаю канал " + index + ", " + channel;
-        });
-    }
-
-    // ---- 1.6 Информационные запросы ----
-    public static String whatsPlaying(Player player, boolean sayAtPlayer) {
-        log.info("WHATS PLAYING ASYNC");
-        return async("Сейчас проверю, что играет", () -> {
-            String result = ActionsSync.whatsPlaying(player, sayAtPlayer);
-            ActionsSync.answer = result;
-        }, 1000);
-    }
-
+    // Раз Два лимит установить - должен вернуть ответ
     public static String volumeLimitSet(Player player, String command) {
         log.info("VOLUME LIMIT SET ASYNC");
-        return async("Сейчас установлю ограничение громкости", () -> {
-            String result = ActionsSync.volumeLimitSet(player, command);
-            ActionsSync.answer = result;
-        });
+        return AsyncExecutor.executeWithTimeout(() -> ActionsSync.volumeLimitSet(player, command), 2, SECONDS);
     }
 
+    // Раз Два какая громкость - должен вернуть ответ
     public static String whatsVolume(Player player) {
         log.info("WHATS VOLUME ASYNC");
-        return async("Сейчас проверю громкость", () -> {
-            String result = ActionsSync.whatsVolume(player);
-            ActionsSync.answer = result;
+        return AsyncExecutor.executeWithTimeout(() -> {
+            String volume = player.volumeGet();
+            if (volume != null)
+                return "сейчас на " + player.name + " громкость " + volume + ", ограничение " + player.volume_high;
+            else return "Не удалось получить громкость";
+        }, 2, SECONDS);
+
+        //CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+        //    String volume = player.volumeGet();
+        //    if (volume != null)
+        //        return "сейчас на " + player.name + " громкость " + volume + ", ограничение " + player.volume_high;
+        //    else return "Не удалось получить громкость";
+        //});
+        //try {
+        //    return future.get(1, SECONDS);
+        //} catch (TimeoutException e) {
+        //    return "Не успела выполнить команду";
+        //} catch (Exception e) {
+        //    return "Ошибка выполнения команды";
+        //}
+    }
+
+
+    // Девайс - Переключи сюда
+    public static void switchHere(Player player) {
+        CompletableFuture.runAsync(() -> {
+            ActionsSync.switchToHere(player);
+
+            Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
+            Yandex.sendDevicesStatesAsync();
+            CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(SmartHome.deviceByRoom(player.room), "on_off", "on", "false"));
         });
     }
 
-    // =========================================================================
-    // 2. МЕТОДЫ, НЕ ИСПОЛЬЗУЕМЫЕ В HandlePathAlice (для возможного расширения)
-    // =========================================================================
+    // Девайс - Отдельно/Вместе
+    // Таскер - Отдельно/Вместе
+    public static void separateSet(Player player, String action) {
+        if ("Вместе".equals(action)) player.separateOff();
+        if ("Отдельно".equals(action)) player.separateOn();
 
-    // ---- 2.1 Управление воспроизведением (дополнительное) ----
-    // Used in SwitchPlayerCommand
-    public static String turnOnMusic(Player player) {
-        log.info(start);
-        log.info("TURN ON MUSIC " + player.name);
-        String result = async("Сейчас включу музыку", () -> {
+        Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
+        Device deviceSepareteOn = smartHome.deviceByName("Отдельно", player.room);
+        Device deviceSepareteOff = smartHome.deviceByName("Вместе", player.room);
+        CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(deviceSepareteOn, "on_off", "on", String.valueOf(player.separate))); // Отдельно
+        CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(deviceSepareteOff, "on_off", "on", String.valueOf(!player.separate))); // Вместе
+    }
+
+    // Девайс - Рандом
+    // Таскер - Рандом
+    public static void shuffleSet(Player player, boolean stateForRun) {
+        if (stateForRun) player.shuffleOn();
+        else player.shuffleOff();
+
+        Device deviceShuffle = smartHome.deviceByName("Рандом", player.room);
+        CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(deviceShuffle, "on_off", "on", String.valueOf(stateForRun)));
+    }
+
+    // Девайс - Повтор
+    // Таскер - Повтор
+    public static void repeatSet(Player player, boolean stateForRun) {
+        if (stateForRun) player.repeatOn();
+        else player.repeatOff();
+
+        Device deviceRepeat = smartHome.deviceByName("Повтор", player.room);
+        CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(deviceRepeat, "on_off", "on", String.valueOf(stateForRun)));
+    }
+
+
+    // сказать через LMS - где подключен пульт
+    public static void whereRemoteSayToLms(Player player) {
+        CompletableFuture.runAsync(() -> player.say("пульт подключен к " + lmsPlayers.btPlayerName, true, true));
+    }
+
+    // сказать через LMS - что играет
+    public static void whatsPlayingSayToLms(Player player, boolean addAtPlayerName) {
+        //if (TOGGLE_WATSPLAYING_TO_LMS.value)
+        if (false)
+            CompletableFuture.runAsync(() -> {
+                player.say(ActionsSync.whatsPlaying(player, addAtPlayerName), true, true); // сказать через колонку LMS
+            });
+    }
+
+
+    // Таскер или Пульт
+    public static void turnOnMusic(Player player) {
+        log.info("TURN ON MUSIC" + player.name);
+        CompletableFuture.runAsync(() -> {
             player.turnOnMusic(null);
-            answer = "Включаю музыку";
+
+            Yandex.sendDevicesStatesAsync();
+            Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
         });
-        return result;
     }
 
-    // Used in SwitchPlayerCommand
-    public static String toggleMusic(Player player) {
-        log.info("TOGGLE MUSIC PLAYER: " + player);
-        return async("Сейчас переключу воспроизведение на " + player.name, () -> {
+    // Таскер или Пульт
+    public static void toggleMusic(Player player) {
+        log.info("TOGGLE MUSIC " + player.name);
+        CompletableFuture.runAsync(() -> {
             player.toggleMusic();
-            ActionsSync.answer = "Переключил воспроизведение на " + player.name;
+
+            Yandex.sendDevicesStatesAsync();
+            Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
         });
     }
 
-    // Used in SwitchNoPlayerCommand
-    public static String stopAll() {
+    // Таскер или Пульт
+    public static void stopAll() {
         log.info("STOP ALL PLAYERS");
-        return async("Сейчас выключу всё", () -> {
-            lmsPlayers.turnOffMusicAll();
-            log.info("STOP ALL FINISH");
-            ActionsSync.answer = "Выключаю всё";
-        });
+        lmsPlayers.turnOffMusicAll();
+
+        Yandex.sendDevicesStatesAsync();
+        Tasker.sendRequestToTaskerRunRefreshAsync("", "");
     }
 
-    // Used in SwitchPlayerCommand
-    public static String nextTrack(Player player) {
-        log.info("NEXT TRACK");
-        return async("Сейчас переключу следующий трек на " + player.name, () -> {
+    // Девайс - Дальше
+    // Таскер или Пульт
+    public static void nextTrack(Player player) {
+        log.info("NEXT TRACK " + player.name);
+        CompletableFuture.runAsync(() -> {
+            player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
             player.ctrlNextTrack();
-            ActionsSync.answer = "Переключаю следующий трек на " + player.name;
+
+            Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
+            CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(SmartHome.deviceByRoom(player.room), "on_off", "on", "false"));
+            Yandex.sendDevicesStatesAsync();
         });
     }
 
-    // Used in SwitchPlayerCommand
-    public static String prevTrack(Player player) {
-        log.info("PREV TRACK");
-        return async("Сейчас переключу предыдущий трек на " + player.name, () -> {
+    // Девайс - Назад
+    // Таскер или Пульт
+    public static void prevTrack(Player player) {
+        log.info("PREV TRACK " + player.name);
+        CompletableFuture.runAsync(() -> {
+            player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
             player.ctrlPrevTrack();
-            ActionsSync.answer = "Переключаю предыдущий трек на " + player.name;
+
+            Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
+            CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(SmartHome.deviceByRoom(player.room), "on_off", "on", "false"));
+            Yandex.sendDevicesStatesAsync();
         });
     }
 
-    // Used in SwitchPlayerCommand
-    public static String ctrlNextChannel(Player player) {
-        log.info("CTRL NEXT CHANNEL");
-        return async("Сейчас переключу канал", () -> {
-            player.ctrlNextChannel();
-            ActionsSync.answer = "Включаю следующий";
-        });
-    }
-
-    // Used in SwitchPlayerCommand
-    public static String prevChannel(Player player) {
-        log.info("PREV CHANNEL");
-        return async("Сейчас переключу предыдущий канал на " + player.name, () -> {
+    // Таскер или Пульт
+    public static void prevChannel(Player player) {
+        log.info("PREV CHANNEL " + player.name);
+        CompletableFuture.runAsync(() -> {
+            player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
             player.ctrlPrevChannel();
-            ActionsSync.answer = "Переключаю предыдущий канал на " + player.name;
+
+            Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
+            CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(SmartHome.deviceByRoom(player.room), "on_off", "on", "false"));
+            Yandex.sendDevicesStatesAsync();
         });
     }
 
-    // Used in SwitchPlayerCommand
-    public static String prevChannelOrTrack(Player player) {
-        log.info("PREV CHANNEL/TRACK");
-        return async("Сейчас переключу предыдущий на " + player.name, () -> {
+    // Таскер или Пульт
+    public static void nextChannel(Player player) {
+        log.info("NEXT CHANNEL " + player.name);
+        CompletableFuture.runAsync(() -> {
+            player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
+            player.ctrlNextChannel();
+
+            Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
+            CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(SmartHome.deviceByRoom(player.room), "on_off", "on", "false"));
+            Yandex.sendDevicesStatesAsync();
+        });
+    }
+
+    // Таскер или Пульт
+    public static void prevChannelOrTrack(Player player) {
+        log.info("PREV CHANNEL/TRACK " + player.name);
+        CompletableFuture.runAsync(() -> {
+            player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
             player.ctrlPrevChannelOrTrack();
-            ActionsSync.answer = "Переключаю предыдущий на " + player.name;
+
+            Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
+            CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(SmartHome.deviceByRoom(player.room), "on_off", "on", "false"));
+            Yandex.sendDevicesStatesAsync();
         });
     }
 
-    // Used in SwitchPlayerCommand
-    public static String turnOnChannel(Player player, String value) {
-        log.info(start);
-        return async("Сейчас включу канал", () -> {
+    // Таскер или Пульт
+    public static void nextChannelOrTrack(Player player) {
+        log.info("NEXT CHANNEL/TRACK " + player.name);
+        CompletableFuture.runAsync(() -> {
+            player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
+            player.ctrlNextChannelOrTrack();
 
-            // Говорить включаю канал <название канала>
+            Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
+            CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(SmartHome.deviceByRoom(player.room), "on_off", "on", "false"));
+            Yandex.sendDevicesStatesAsync();
+        });
+    }
+
+    // Таскер или Пульт
+    public static void playChannelIndex(Player player, String value) { // разбудить плеер и потом использовать playChannel(value)
+        log.info("PLAY CHANNEL INDEX " + value + " PLAYER " + player.name);
+        CompletableFuture.runAsync(() -> {
+            // Сказать включаю канал через плеер LMS, если был в группе после уведомления надо вернуть в группу
             if (VOICE_TOGGLE_LMS_SAY_CHANNEL_NAME.value) {
-                int vv = Integer.parseInt(value) - 1;
-                String channelName = player.favorites().get(vv);
-                log.info("CHANNEL NAME GET FROM FAVORITES: " + channelName);
+                String channelName = player.favorites().get(Integer.parseInt(value) - 1);
                 player.say("включаю канал " + value + " " + channelName, false, true);
             }
+            player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
+            player.playChannel(value);
 
-//  если был в группе после уведомления надо вернуть в группу
-            player
-                    .ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false)
-                    //.volumeByTimeSet()
-                    .playChannel(value);
-            ActionsSync.answer = "Включаю канал " + value;
+            Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
+            Yandex.sendDevicesStatesAsync();
         });
     }
 
-    // ---- 2.2 Избранное (дополнительное) ----
-    // Used in SwitchPlayerCommand
-    public static String favoritesAdd(Player player) {
+    // Таскер или Пульт
+    public static void favoritesAdd(Player player) {
         log.info("FAVORITES ADD");
-        return async("Сейчас добавлю в избранное", () -> {
-            player.favoritesAdd();
-            ActionsSync.answer = "Добавляю в избранное";
-        });
+        CompletableFuture.runAsync(() -> player.favoritesAdd());
+
     }
 
-    // ---- 2.3 Bluetooth (дополнительное) ----
-    // Used in SwitchNoPlayerCommand
-    public static String remoteSwitch() {
-        log.info("REMOTE SWITCH");
-        return async("Сейчас переключу пульт", () -> {
-            String btname = ActionsSync.remoteSwitch();
-            ActionsSync.answer = "Пульт переключен на " + btname;
-        });
+    // Таскер или Пульт
+    public static void remoteSwitchToNextPlayer() {
+        log.info("REMOTE SWITCH TO NEXT PLAYER");
+        CompletableFuture.runAsync(() -> ActionsSync.remoteSwitch());
     }
+
+
+    // TODO плохо ищет на англиском, он получает текст на руском и делает транслит
+    //public static String channelPlayByName(String command, Player player) {
+    //    log.info("CHANNEL PLAY BY NAME");
+    //    String target = command.replaceAll(".*(канал|избранное)\\S*\\s", "")
+    //            .replaceAll("\"", "").replaceAll("\\s\\s", " ");
+    //    log.info("TARGET LMS CHANNEL: " + target);
+    //    ActionsSync.answer = "Не успела выполнить команду";
+    //    CompletableFuture.runAsync(() -> {
+    //        List<String> playlist = player.favorites();
+    //        playlist.forEach(log::info);
+    //        String latin = Utils.convertCyrilicToLatin(target);
+    //        String channel = Levenstein.searchTitleInFavorites(latin, playlist);
+    //        log.info("CHANNEL: " + channel);
+    //        int index = playlist.indexOf(channel) + 1;
+    //        channel = channel.replaceAll(":.*", "");
+    //        player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false).playChannel(String.valueOf(index));
+    //        ActionsSync.answer = "Включаю канал " + index + ", " + channel;
+    //    });
+    //    Utils.sleep(2000);
+    //    return ActionsSync.answer;
+    //}
+
+//     PRIVATE  ------------
+
+    private static String extractTargetFromCommand(String command) {
+        log.info("COMMAND: " + command);
+        if (command == null) return null;
+        String target;
+        target = command.trim()
+                .toLowerCase();
+        target = target
+                .replaceAll(".*включи\\S*\\s", "")
+                .replaceAll("альбом", "")
+                .replaceAll("трэк", "")
+                .replaceAll("плэйлист", "")
+                .replaceAll("\"", "")
+                .replaceAll("\\s\\s", " ");
+        log.info("TARGET: " + target);
+        return target;
+    }
+
+
 }

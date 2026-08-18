@@ -38,13 +38,13 @@ public class PagePlayers {
 
     public static String page() {
         String pageInner;
-        Yandex.devicesGetFromYandexInfo();
+        //Yandex.devicesGetFromYandexInfo();
         log.info("YANDEX MUSIC ROOMS LIST: " + Yandex.roomsWithDevice);
         if (lmsPlayers.players.size() == 0) {
             pageInner = "<b>Плееры в LMS не найдены</b>";
         } else
             pageInner = lmsPlayers.players.stream().map(p -> playerSettings(p)).collect(Collectors.joining());
-        String page = pageOuter(pageInner, "Настройка плееров", "Настройка плееров");
+        String page = pageOuter(pageInner, "Настройки плееров и комнат", "Настройки плееров и комнат");
         return page;
     }
 
@@ -55,7 +55,7 @@ public class PagePlayers {
         }
         String inLmsState = "LMS <span style='color: red;'>" + "отключен" + "</span>";
 
-        lmsPlayers.checkUpdated(); // TODO DEBUG
+        //lmsPlayers.checkUpdated(); // TODO DEBUG
         if (p.connected) inLmsState = "LMS <span style='color: green;'>" + "подключен" + "</span>";
         String roomState = "<span style='color: red;'>" + "комната" + "</span>";
         if (p.room != null) roomState = "<span style='color: green;'>" + "комната" + "</span>";
@@ -81,7 +81,7 @@ public class PagePlayers {
                         "name='" + player_delay_value + "' " +
                         "type='number'" + "min='0'" + "max='20'" +
                         "placeholder='10'" +
-                        "value='" + p.delay + "'> секунд, задержка включения колонки, для установки громкости по пресету перед проигрыванием музыки" + "<br>" +
+                        "value='" + p.delay + "'> задержка для ожидания выхода плеера из спящего режима (3 с)" + "<br>" +
 
                         "<input required " +
                         "name='" + player_volume_max_value + "' " +
