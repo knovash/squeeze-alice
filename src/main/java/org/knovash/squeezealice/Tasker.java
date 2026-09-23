@@ -62,7 +62,7 @@ public class Tasker {
             log.info("FOR TASKER PLAYLIST");
             widgetPlaylist = forTaskerPlaylist(player, Integer.valueOf(lines), false); // для виджета плейлиста
             if (player.room != null) room = player.room;
-            playerName = player.room;
+            playerName = player.name;
             playerVolume = player.volume;
         } else {
             widgetPlaylist = "no player in LMS";
@@ -153,11 +153,20 @@ public class Tasker {
         log.info(start);
         Function<Player, String> formatter = p -> {
             String remote = "";
-            if (p.name.equals(lmsPlayers.btPlayerName)) {
-                remote = " - R";
-            }
-            String name = (p.room != null) ? p.room + " - " + p.name : p.name;
-            String vol = (p.volume != null) ? p.volume : "-";
+            if (p.name.equals(lmsPlayers.btPlayerName)) remote = " - R";
+
+
+            String playerName = "";
+            if (TASKER_ADD_PLAYER_NAME.value) playerName = " - " + p.name;
+            String name;
+            if (p.room != null) name = p.room + playerName;
+            else name = p.name;
+
+
+            String vol;
+            if (p.volume != null) vol = p.volume;
+            else vol = "-";
+
             if (!p.connected) return name + " - offline";
             return name + remote + " - " + vol + " - " + p.title;
         };

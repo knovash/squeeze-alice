@@ -28,14 +28,18 @@ public class CommandsWithPlayer {
 
         switch (action) {
             case "volume_dn":
+                CompletableFuture.runAsync(() -> {
 //                player.volume("-3");
-                if (value == null) player.volumeSetLimited("-3");
-                player.volumeSetLimited("-" + value);
+                    if (value == null) player.volumeSetLimited("-3");
+                    player.volumeSetLimited("-" + value);
+                });
                 break;
             case "volume_up":
+                CompletableFuture.runAsync(() -> {
 //                player.volume("+3");
-                if (value == null) player.volumeSetLimited("+3");
-                player.volumeSetLimited("+" + value);
+                    if (value == null) player.volumeSetLimited("+3");
+                    player.volumeSetLimited("+" + value);
+                });
                 break;
             case "channel":
                 ActionsAsync.playChannelIndex(player, value);
@@ -60,6 +64,9 @@ public class CommandsWithPlayer {
             case "prev_track":
                 ActionsAsync.prevTrack(player);
                 break;
+            case "jump_track":
+                ActionsAsync.jumpTrack(player, value);
+                break;
             case "next_channel":
                 ActionsAsync.nextChannel(player);
                 break;
@@ -73,10 +80,10 @@ public class CommandsWithPlayer {
                 player.rewind();
                 break;
             case "switch_here":
-                Yandex.sendDevicesStatesAsync();
+                ActionsAsync.switchHere(player);
                 break;
             case "separate_on":
-                ActionsAsync.separateSet(player,"Отдельно");
+                ActionsAsync.separateSet(player, "Отдельно");
                 break;
             case "separate_off":
                 ActionsAsync.separateSet(player, "Вместе");

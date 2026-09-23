@@ -5,8 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.knovash.squeezealice.lms.*;
-import org.knovash.squeezealice.player.ActionsAsync;
-import org.knovash.squeezealice.player.ActionsSync;
 import org.knovash.squeezealice.utils.JsonUtils;
 import org.knovash.squeezealice.yandex.GoogleTTS;
 import org.knovash.squeezealice.yandex.YandexTTS;
@@ -511,6 +509,14 @@ public class Player {
         return this;
     }
 
+    public Player ctrlJumpTrack(String index) {
+        log.info("PLAYER: " + this.name + " NEXT TRACK");
+        this.repeatOff();
+        Requests.postToLmsForStatus(RequestParameters.jumpTrack(this.name, index).toString());
+        this.saveLastTime();
+        return this;
+    }
+
     public Player forward() {
         log.info("PLAYER: " + this.name + " FORWARD");
         Requests.postToLmsForStatus(RequestParameters.forward(this.name).toString());
@@ -525,7 +531,7 @@ public class Player {
 
     public Player playTrackNumber(String track) {
         log.info("PLAYER: " + this.name + " TRACK NUMBER " + track);
-        Requests.postToLmsForStatus(RequestParameters.track(this.name, track).toString());
+        Requests.postToLmsForStatus(RequestParameters.jumpTrack(this.name, track).toString());
         this.saveLastTime();
         return this;
     }

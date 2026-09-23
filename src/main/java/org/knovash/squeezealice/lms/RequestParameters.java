@@ -180,6 +180,7 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"playlist", "jump", "+1"});
     }
 
+
     public static RequestToLms forward(String player) {
         return RequestToLms.create(player, new String[]{"time", "+" + 20});
     }
@@ -188,7 +189,7 @@ public class RequestParameters {
         return RequestToLms.create(player, new String[]{"time", "-" + 20});
     }
 
-    public static RequestToLms track(String player, String track) {
+    public static RequestToLms jumpTrack(String player, String track) {
         return RequestToLms.create(player, new String[]{"playlist", "jump", track});
     }
 

@@ -280,6 +280,18 @@ public class ActionsAsync {
         });
     }
 
+    public static void jumpTrack(Player player, String index) {
+        log.info("JUMP TRACK " + player.name);
+        CompletableFuture.runAsync(() -> {
+            player.ifExpiredAndNotPlayingUnsyncWakeSetVolume(null, false);
+            player.ctrlJumpTrack(index);
+
+            Tasker.sendRequestToTaskerRunRefreshAsync(player.name, player.room);
+            CompletableFuture.runAsync(() -> Yandex.sendDeviceOtherState(SmartHome.deviceByRoom(player.room), "on_off", "on", "false"));
+            Yandex.sendDevicesStatesAsync();
+        });
+    }
+
     // Таскер или Пульт
     public static void prevChannel(Player player) {
         log.info("PREV CHANNEL " + player.name);
